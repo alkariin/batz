@@ -1,0 +1,13 @@
+{
+  "@@locale": "fr",
+  "appTitle": "batz",
+  "navHome": "Accueil",
+  "navTransactions": "Transactions",
+  "navYear": "Année",
+  "navWealth": "Fortune",
+  "navMore": "Plus",
+  "emptyPage": "Rien ici pour l'instant.",
+  "@emptyPage": {
+    "description": "Placeholder shown on pages that have no content yet."
+  }
+}

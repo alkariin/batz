@@ -1,0 +1,64 @@
+/// Swiss formats for amounts and dates: `1'234.50` and `31.12.2026`.
+///
+/// Amounts are always integer cents (specification, chapter 5): these
+/// functions never go through floating point.
+library;
+
+const _thousandsSeparator = "'";
+
+/// Formats [cents] as `1'234.50`, with a leading `-` when negative and, if
+/// [explicitPlus] is set, a leading `+` when positive.
+String formatAmount(int cents, {bool explicitPlus = false}) {
+  final negative = cents < 0;
+  // Work on the magnitude as a string to also handle the smallest int.
+  final digits = cents.toString().replaceFirst('-', '').padLeft(3, '0');
+  final whole = digits.substring(0, digits.length - 2);
+  final fraction = digits.substring(digits.length - 2);
+
+  final grouped = StringBuffer();
+  for (var i = 0; i < whole.length; i++) {
+    if (i > 0 && (whole.length - i) % 3 == 0) grouped.write(_thousandsSeparator);
+    grouped.write(whole[i]);
+  }
+  final sign = negative ? '-' : (explicitPlus && cents > 0 ? '+' : '');
+  return '$sign$grouped.$fraction';
+}
+
+final _amountPattern = RegExp(r'^([+-])?(\d+)(?:[.,](\d{1,2}))?$');
+
+/// Parses an amount typed by the user into cents, or returns null.
+///
+/// Accepts `1'234.50`, `1’234.5`, `1 234,50`, `-12`, `+3.05`: apostrophes and
+/// spaces group thousands, a dot or a comma separates at most two decimals.
+int? parseAmount(String input) {
+  final compact = input.trim().replaceAll(RegExp(r"['’\s  ]"), '');
+  final match = _amountPattern.firstMatch(compact);
+  if (match == null) return null;
+  final whole = BigInt.parse(match.group(2)!);
+  final fraction = int.parse((match.group(3) ?? '0').padRight(2, '0'));
+  final cents = whole * BigInt.from(100) + BigInt.from(fraction);
+  if (!cents.isValidInt) return null;
+  return match.group(1) == '-' ? -cents.toInt() : cents.toInt();
+}
+
+/// Formats a calendar date as `31.12.2026`. The time of day is ignored.
+String formatDate(DateTime date) {
+  String two(int v) => v.toString().padLeft(2, '0');
+  return '${two(date.day)}.${two(date.month)}.${date.year.toString().padLeft(4, '0')}';
+}
+
+final _datePattern = RegExp(r'^(\d{1,2})\.(\d{1,2})\.(\d{4})$');
+
+/// Parses `31.12.2026` (or `1.2.2026`) into a date at midnight UTC, or
+/// returns null for anything else, including impossible dates such as
+/// `31.02.2026`.
+DateTime? parseDate(String input) {
+  final match = _datePattern.firstMatch(input.trim());
+  if (match == null) return null;
+  final day = int.parse(match.group(1)!);
+  final month = int.parse(match.group(2)!);
+  final year = int.parse(match.group(3)!);
+  final date = DateTime.utc(year, month, day);
+  if (date.year != year || date.month != month || date.day != day) return null;
+  return date;
+}
