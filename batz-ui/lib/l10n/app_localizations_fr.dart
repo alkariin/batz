@@ -29,4 +29,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get emptyPage => 'Rien ici pour l\'instant.';
+
+  @override
+  String get startupErrorTitle => 'batz ne peut pas démarrer';
+
+  @override
+  String get startupErrorBody => 'La base de données locale n\'a pas pu être ouverte. Détail technique :';
 }

@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'app.dart';
+import 'services.dart';
 
-void main() {
-  runApp(const BatzApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    runApp(BatzApp(services: await AppServices.open()));
+  } catch (error) {
+    runApp(StartupErrorApp(error: error));
+  }
 }

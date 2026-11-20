@@ -9,5 +9,7 @@
   "emptyPage": "Rien ici pour l'instant.",
   "@emptyPage": {
     "description": "Placeholder shown on pages that have no content yet."
-  }
+  },
+  "startupErrorTitle": "batz ne peut pas démarrer",
+  "startupErrorBody": "La base de données locale n'a pas pu être ouverte. Détail technique :"
 }

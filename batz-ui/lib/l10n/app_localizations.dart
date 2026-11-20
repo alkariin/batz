@@ -132,6 +132,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Rien ici pour l\'instant.'**
   String get emptyPage;
+
+  /// No description provided for @startupErrorTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'batz ne peut pas démarrer'**
+  String get startupErrorTitle;
+
+  /// No description provided for @startupErrorBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'La base de données locale n\'a pas pu être ouverte. Détail technique :'**
+  String get startupErrorBody;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

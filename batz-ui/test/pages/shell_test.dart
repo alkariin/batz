@@ -2,6 +2,8 @@ import 'package:batz/app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../support/services.dart';
+
 const _labels = ['Accueil', 'Transactions', 'Année', 'Fortune', 'Plus'];
 
 Future<void> _pumpApp(WidgetTester tester, Size size, {Brightness brightness = Brightness.light}) async {
@@ -10,7 +12,9 @@ Future<void> _pumpApp(WidgetTester tester, Size size, {Brightness brightness = B
   tester.platformDispatcher.platformBrightnessTestValue = brightness;
   addTearDown(tester.view.reset);
   addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
-  await tester.pumpWidget(const BatzApp());
+  final services = (await tester.runAsync(testServices))!;
+  addTearDown(() => tester.runAsync(services.database.close));
+  await tester.pumpWidget(BatzApp(services: services));
   await tester.pumpAndSettle();
 }
 
@@ -81,5 +85,12 @@ void main() {
     expect(Localizations.localeOf(context).languageCode, 'fr');
     expect(MaterialLocalizations.of(context).okButtonLabel, 'OK');
     expect(MaterialLocalizations.of(context).cancelButtonLabel, 'Annuler');
+  });
+
+  testWidgets('a start-up failure is explained instead of a blank screen', (tester) async {
+    await tester.pumpWidget(StartupErrorApp(error: StateError('database key lost')));
+    await tester.pumpAndSettle();
+    expect(find.text('batz ne peut pas démarrer'), findsOneWidget);
+    expect(find.textContaining('database key lost'), findsOneWidget);
   });
 }

@@ -10,17 +10,37 @@ environment:
   sdk: ^3.13.5
 
 dependencies:
+  dio: ^5.11.1
+  drift: ^2.35.4
+  equatable: ^3.0.0
   flutter:
     sdk: flutter
+  flutter_bloc: ^9.1.1
   flutter_localizations:
     sdk: flutter
+  flutter_secure_storage: ^11.2.0
   intl: any
+  path_provider: ^2.1.6
+  sqlite3: ^3.9.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  drift_dev: ^2.35.3
+  build_runner: ^2.16.1
+  bloc_test: ^10.0.0
+  mocktail: ^1.0.5
 
 flutter:
   uses-material-design: true
   generate: true
+
+# The local database is encrypted with SQLCipher on Android only; desktops use
+# plain SQLite (docs/decisions.md, 2026-11-20).
+hooks:
+  user_defines:
+    sqlite3:
+      source:
+        android: sqlcipher
+        default: sqlite3
