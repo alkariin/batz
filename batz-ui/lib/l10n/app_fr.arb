@@ -383,5 +383,44 @@
   "syncServerChanged": "Le serveur a changé",
   "syncServerChangedHint": "Le serveur présente un autre certificat ou ne connaît plus cet appareil : il a sans doute été réinstallé. Associez cet appareil de nouveau : ses données, modifications non envoyées comprises, y seront recopiées.",
   "syncPairAgain": "Associer de nouveau",
-  "serverErrorUnknownDevice": "Le serveur ne connaît pas cet appareil : il a sans doute été réinstallé. Oubliez ce serveur puis associez l'appareil à nouveau."
+  "serverErrorUnknownDevice": "Le serveur ne connaît pas cet appareil : il a sans doute été réinstallé. Oubliez ce serveur puis associez l'appareil à nouveau.",
+  "tasksTitle": "À faire",
+  "tasksNone": "Rien à faire pour l'instant.",
+  "taskDuplicateName": "{count} catégories « {name} » en {year}",
+  "@taskDuplicateName": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "taskDuplicateNameHint": "Un nom n'apparaît qu'une fois dans l'arbre d'une année : renommez ou supprimez l'une d'elles.",
+  "taskDetailedAccounts": "{count} comptes détaillés",
+  "@taskDetailedAccounts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "taskDetailedAccountsHint": "Un seul compte reçoit les relevés : désactivez l'import sur les autres.",
+  "taskDetached": "{count, plural, =1{Une catégorie à replacer} other{{count} catégories à replacer}} en {year}",
+  "@taskDetached": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "taskDetachedHint": "Elles ne sont plus rattachées à l'arbre de l'année : déplacez-les.",
+  "categoryDuplicateName": "Nom en double dans cette année"
 }

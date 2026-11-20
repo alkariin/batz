@@ -1,6 +1,7 @@
 import '../journal/journal_entry.dart';
 import 'account.dart';
 import 'category.dart';
+import 'issues.dart';
 import 'ledger_exception.dart';
 import 'transaction.dart';
 
@@ -66,6 +67,33 @@ class Ledger {
     ];
   }
 
+  // ------------------------------------------------------------------ issues
+
+  /// The inconsistencies of decision H4 of phase 2, by year, then accounts:
+  /// categories with the same name in one year, several detailed accounts,
+  /// detached categories.
+  late final List<LedgerIssue> issues = () {
+    final result = <LedgerIssue>[];
+    final years = {...trees.keys, ...forest.yearsWithDetached}.toList()..sort();
+    for (final year in years) {
+      final tree = trees[year];
+      if (tree != null) {
+        final byName = <String, List<Category>>{};
+        for (final category in tree.ordered) {
+          (byName[normalizeName(category.name)] ??= []).add(category);
+        }
+        for (final same in byName.values) {
+          if (same.length > 1) result.add(DuplicateCategoryName(year, same));
+        }
+      }
+      final heads = forest.detachedHeads(year);
+      if (heads.isNotEmpty) result.add(DetachedCategories(year, heads));
+    }
+    final detailed = sortedAccounts.where((a) => a.isDetailed).toList();
+    if (detailed.length > 1) result.add(SeveralDetailedAccounts(detailed));
+    return result;
+  }();
+
   // ---------------------------------------------------------------- accounts
 
   /// Creates the account [id]. Refused if the name is empty, or if import is
@@ -96,9 +124,13 @@ class Ledger {
   int transactionsUsingAccount(String accountId) =>
       transactions.values.where((t) => t.accountId == accountId || t.counterpartAccountId == accountId).length;
 
+  /// A second detailed account is refused. An account that already is one
+  /// stays editable even when a merge left another detailed account
+  /// (decision H4 of phase 2: never blocking).
   void _checkAccount(String id, AccountDraft draft) {
     if (draft.name.trim().isEmpty) throw const LedgerException(LedgerError.nameRequired);
-    if (draft.importFormat != null && accounts.values.any((a) => a.id != id && a.isDetailed)) {
+    final alreadyDetailed = accounts[id]?.isDetailed ?? false;
+    if (draft.importFormat != null && !alreadyDetailed && accounts.values.any((a) => a.id != id && a.isDetailed)) {
       throw const LedgerException(LedgerError.secondDetailedAccount);
     }
   }

@@ -482,3 +482,20 @@ figure was 66.7 s.
   and tries another port if the bind failed. A server reinstalled at the same
   address is simulated by moving the devices' pairing to the new server's
   address, the old certificate still pinned, rather than by reusing a port.
+
+### 2.6 Inconsistencies after a merge (H4)
+
+**Decisions.**
+
+- `Ledger.issues` lists, year by year, the categories of one tree that share
+  a name (compared as names are, decision H1 of phase 1) and the detached
+  categories, then the accounts when more than one is detailed (archived ones
+  included, as for the rule itself). Computed on the snapshot, never stored.
+- The home screen lists them under « À faire », each leading to the screen
+  that corrects it: the categories of that year (duplicates are marked
+  « Nom en double dans cette année »; detached ones are under « À replacer »)
+  or the accounts.
+- Never blocking: an account that is already detailed stays editable while
+  another one is too; only making one more account detailed is refused.
+  Renaming or deleting one of two categories with the same name works as
+  usual.

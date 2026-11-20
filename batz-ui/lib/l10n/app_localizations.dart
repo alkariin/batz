@@ -1230,6 +1230,60 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le serveur ne connaît pas cet appareil : il a sans doute été réinstallé. Oubliez ce serveur puis associez l\'appareil à nouveau.'**
   String get serverErrorUnknownDevice;
+
+  /// No description provided for @tasksTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'À faire'**
+  String get tasksTitle;
+
+  /// No description provided for @tasksNone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien à faire pour l\'instant.'**
+  String get tasksNone;
+
+  /// No description provided for @taskDuplicateName.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} catégories « {name} » en {year}'**
+  String taskDuplicateName(int count, String name, int year);
+
+  /// No description provided for @taskDuplicateNameHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un nom n\'apparaît qu\'une fois dans l\'arbre d\'une année : renommez ou supprimez l\'une d\'elles.'**
+  String get taskDuplicateNameHint;
+
+  /// No description provided for @taskDetailedAccounts.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} comptes détaillés'**
+  String taskDetailedAccounts(int count);
+
+  /// No description provided for @taskDetailedAccountsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un seul compte reçoit les relevés : désactivez l\'import sur les autres.'**
+  String get taskDetailedAccountsHint;
+
+  /// No description provided for @taskDetached.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une catégorie à replacer} other{{count} catégories à replacer}} en {year}'**
+  String taskDetached(int count, int year);
+
+  /// No description provided for @taskDetachedHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Elles ne sont plus rattachées à l\'arbre de l\'année : déplacez-les.'**
+  String get taskDetachedHint;
+
+  /// No description provided for @categoryDuplicateName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom en double dans cette année'**
+  String get categoryDuplicateName;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

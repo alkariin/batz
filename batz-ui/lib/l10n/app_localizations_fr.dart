@@ -671,4 +671,44 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get serverErrorUnknownDevice =>
       'Le serveur ne connaît pas cet appareil : il a sans doute été réinstallé. Oubliez ce serveur puis associez l\'appareil à nouveau.';
+
+  @override
+  String get tasksTitle => 'À faire';
+
+  @override
+  String get tasksNone => 'Rien à faire pour l\'instant.';
+
+  @override
+  String taskDuplicateName(int count, String name, int year) {
+    return '$count catégories « $name » en $year';
+  }
+
+  @override
+  String get taskDuplicateNameHint =>
+      'Un nom n\'apparaît qu\'une fois dans l\'arbre d\'une année : renommez ou supprimez l\'une d\'elles.';
+
+  @override
+  String taskDetailedAccounts(int count) {
+    return '$count comptes détaillés';
+  }
+
+  @override
+  String get taskDetailedAccountsHint => 'Un seul compte reçoit les relevés : désactivez l\'import sur les autres.';
+
+  @override
+  String taskDetached(int count, int year) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count catégories à replacer',
+      one: 'Une catégorie à replacer',
+    );
+    return '$_temp0 en $year';
+  }
+
+  @override
+  String get taskDetachedHint => 'Elles ne sont plus rattachées à l\'arbre de l\'année : déplacez-les.';
+
+  @override
+  String get categoryDuplicateName => 'Nom en double dans cette année';
 }

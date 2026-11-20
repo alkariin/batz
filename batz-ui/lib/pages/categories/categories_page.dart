@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/calendar_date.dart';
 import '../../domain/ids.dart';
 import '../../domain/ledger/category.dart';
+import '../../domain/ledger/issues.dart';
 import '../../domain/ledger/ledger.dart';
 import '../../l10n/app_localizations.dart';
 import '../ledger_cubit.dart';
@@ -64,7 +65,17 @@ class _CategoriesPageState extends State<CategoriesPage> {
           body: ListView(
             padding: const EdgeInsets.only(bottom: 88),
             children: [
-              if (tree == null) _NoTree(year: _year, ledger: ledger) else ..._TreeView(tree: tree).tiles(context),
+              if (tree == null)
+                _NoTree(year: _year, ledger: ledger)
+              else
+                ..._TreeView(
+                  tree: tree,
+                  duplicates: {
+                    for (final issue in ledger.issues)
+                      if (issue is DuplicateCategoryName && issue.year == _year)
+                        for (final c in issue.categories) c.id,
+                  },
+                ).tiles(context),
               ..._detachedSection(context, ledger, tree),
             ],
           ),
@@ -180,9 +191,13 @@ class _NoTree extends StatelessWidget {
 enum _Action { addChild, rename, move, up, down, delete }
 
 class _TreeView {
-  const _TreeView({required this.tree});
+  const _TreeView({required this.tree, this.duplicates = const {}});
 
   final CategoryTree tree;
+
+  /// Categories whose name another category of the year also has, after a
+  /// merge (decision H4 of phase 2).
+  final Set<String> duplicates;
 
   List<Widget> tiles(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -192,7 +207,14 @@ class _TreeView {
           key: ValueKey(category.id),
           contentPadding: EdgeInsetsDirectional.only(start: 16.0 + 24.0 * tree.depthOf(category.id), end: 4),
           title: Text(category.name, style: category.isTopLevel ? const TextStyle(fontWeight: FontWeight.w600) : null),
-          subtitle: category.isTopLevel ? Text(natureText(l, category.nature!)) : null,
+          leading: duplicates.contains(category.id)
+              ? Icon(Icons.warning_amber_outlined, color: Theme.of(context).colorScheme.error)
+              : null,
+          subtitle: duplicates.contains(category.id)
+              ? Text(l.categoryDuplicateName)
+              : category.isTopLevel
+              ? Text(natureText(l, category.nature!))
+              : null,
           trailing: PopupMenuButton<_Action>(
             key: Key('categoryMenu-${category.name}'),
             onSelected: (action) => _run(context, category, action),
