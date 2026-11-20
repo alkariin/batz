@@ -1,0 +1,23 @@
+# Copy to docker-compose.yml (not tracked) and adapt.
+#
+# The image is loaded from a file, see docs/deployment.md:
+#   docker load -i batz-web-<version>.tar
+#
+# Pair a device:
+#   docker compose exec batz-web batz-web pairing-code
+services:
+  batz-web:
+    image: batz-web:latest
+    container_name: batz-web
+    restart: unless-stopped
+    ports:
+      - "8443:8443"
+    volumes:
+      # Must be writable by uid 10001 (the image's user):
+      #   mkdir -p data && sudo chown 10001:10001 data
+      - ./data:/data
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
