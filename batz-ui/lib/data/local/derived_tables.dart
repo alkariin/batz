@@ -1,24 +1,50 @@
 /// How journal entries of one entity are materialised into a table.
 ///
+/// Design rules (docs/decisions.md, phase 1):
+///
+/// - A derived table has no constraint: no uniqueness, no foreign key, no
+///   NOT NULL on a field. With synchronisation, the fields of a record arrive
+///   one by one and in any order; integrating them must never fail. Business
+///   rules are checked by the domain when the user enters data, and readers
+///   ignore incomplete records.
+/// - A derived table never migrates. Its definition is part of the derived
+///   schema; when the schema changes, every derived table is dropped,
+///   recreated and recomputed from the journal (see `Journal.open`).
+///
 /// The table has an `id TEXT PRIMARY KEY` column, a
 /// `deleted INTEGER NOT NULL DEFAULT 0` column fed by the deletion field, and
-/// one column per field. Field columns must accept NULL or have a default:
-/// with synchronisation, the fields of a record can arrive in any order.
-///
-/// The derived tables of the accounting entities come with phase 1; phase 0
-/// only provides the mechanism.
+/// one nullable column per field.
 class DerivedTable {
-  DerivedTable({required this.entity, required this.table, required Map<String, String> columns})
-    : columns = Map.unmodifiable(columns) {
-    if (!_identifier.hasMatch(table)) throw ArgumentError.value(table, 'table', 'invalid SQL identifier');
+  DerivedTable({
+    required this.entity,
+    required this.table,
+    required Map<String, DerivedColumn> columns,
+    List<List<String>> indexes = const [],
+  }) : columns = Map.unmodifiable(columns),
+       indexes = List.unmodifiable(indexes.map(List<String>.unmodifiable)) {
+    _checkIdentifier(table, 'table');
+    final names = <String>{};
     for (final column in columns.values) {
-      if (!_identifier.hasMatch(column) || column == 'id' || column == 'deleted') {
-        throw ArgumentError.value(column, 'column', 'invalid or reserved SQL identifier');
+      _checkIdentifier(column.name, 'column');
+      if (column.name == 'id' || column.name == 'deleted') {
+        throw ArgumentError.value(column.name, 'column', 'reserved SQL identifier');
+      }
+      if (!names.add(column.name)) throw ArgumentError.value(column.name, 'column', 'used twice');
+    }
+    for (final index in indexes) {
+      for (final column in index) {
+        if (!names.contains(column) && column != 'deleted') {
+          throw ArgumentError.value(column, 'index', 'unknown column');
+        }
       }
     }
   }
 
   static final _identifier = RegExp(r'^[a-z][a-z0-9_]*$');
+
+  static void _checkIdentifier(String name, String what) {
+    if (!_identifier.hasMatch(name)) throw ArgumentError.value(name, what, 'invalid SQL identifier');
+  }
 
   /// Entity name used in the journal.
   final String entity;
@@ -26,10 +52,46 @@ class DerivedTable {
   /// SQL table name.
   final String table;
 
-  /// Journal field name to SQL column name.
-  final Map<String, String> columns;
+  /// Journal field name to SQL column.
+  final Map<String, DerivedColumn> columns;
+
+  /// Plain (non-unique) indexes, each a list of column names: they speed up
+  /// reads and never refuse a row.
+  final List<List<String>> indexes;
+
+  /// Statements that create the table and its indexes.
+  List<String> get createStatements => [
+    'CREATE TABLE $table (id TEXT PRIMARY KEY, deleted INTEGER NOT NULL DEFAULT 0'
+        '${columns.values.map((c) => ', ${c.name} ${c.type.sql}').join()})',
+    for (final index in indexes) 'CREATE INDEX ${table}_${index.join('_')} ON $table (${index.join(', ')})',
+  ];
 }
 
-/// The derived tables of the app. Empty until phase 1 adds the first
-/// accounting entities.
+/// SQL storage class of a derived column. Booleans are stored as 0 or 1.
+enum SqlType {
+  text('TEXT'),
+  integer('INTEGER');
+
+  const SqlType(this.sql);
+  final String sql;
+}
+
+class DerivedColumn {
+  const DerivedColumn(this.name, this.type);
+
+  const DerivedColumn.text(this.name) : type = SqlType.text;
+  const DerivedColumn.integer(this.name) : type = SqlType.integer;
+
+  final String name;
+  final SqlType type;
+}
+
+/// The derived schema made of [tables]: the text that identifies it. Two
+/// schemas are the same if and only if their texts are equal.
+String derivedSchemaOf(List<DerivedTable> tables) {
+  final sorted = [...tables]..sort((a, b) => a.table.compareTo(b.table));
+  return sorted.expand((t) => t.createStatements).join(';\n');
+}
+
+/// The derived tables of the app.
 final List<DerivedTable> appDerivedTables = [];

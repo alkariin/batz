@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../../domain/ids.dart';
@@ -7,6 +9,13 @@ import 'database.dart';
 import 'derived_tables.dart';
 
 const _deviceIdKey = 'device_id';
+
+/// Local state keys of the derived schema in place: its text, and the names
+/// of its tables (to drop them once they are no longer part of the schema).
+const derivedSchemaKey = 'derived_schema';
+const derivedTablesKey = 'derived_tables';
+
+final _sqlIdentifier = RegExp(r'^[a-z][a-z0-9_]*$');
 
 /// The only way to change data: every write is a set of journal entries,
 /// applied to the derived tables in the same transaction.
@@ -18,6 +27,10 @@ class Journal {
   /// device identifier; on later ones it resumes the clock after the latest
   /// timestamp in the journal, so that time never goes backwards across
   /// restarts.
+  ///
+  /// If the derived [tables] differ from those in place (first launch, or a
+  /// new version of the app), they are dropped, recreated and recomputed from
+  /// the journal: derived tables never migrate.
   static Future<Journal> open(
     LocalDatabase db, {
     List<DerivedTable>? tables,
@@ -36,7 +49,45 @@ class Journal {
       db.journalEntries,
     )..addColumns([maxHlc])).map((r) => r.read(maxHlc)).getSingle();
     final clock = HlcClock(deviceId, last: latest == null ? null : Hlc.parse(latest), now: now);
-    return Journal._(db, deviceId, clock, tables ?? appDerivedTables);
+    final journal = Journal._(db, deviceId, clock, tables ?? appDerivedTables);
+    await journal._ensureDerivedSchema();
+    return journal;
+  }
+
+  /// Whether the last [open] had to recreate the derived tables.
+  bool get derivedTablesRebuilt => _derivedTablesRebuilt;
+  var _derivedTablesRebuilt = false;
+
+  Future<void> _ensureDerivedSchema() {
+    final schema = derivedSchemaOf(_tables.values.toList());
+    return _db.transaction(() async {
+      final state = {for (final row in await _db.select(_db.localState).get()) row.key: row.value};
+      if (state[derivedSchemaKey] == schema) return;
+
+      final previous = state[derivedTablesKey] == null
+          ? const <Object?>[]
+          : jsonDecode(state[derivedTablesKey]!) as List<Object?>;
+      final names = {...previous.whereType<String>(), ..._tables.values.map((t) => t.table)};
+      for (final name in names) {
+        if (!_sqlIdentifier.hasMatch(name)) throw StateError('Invalid derived table name: $name');
+        await _db.customStatement('DROP TABLE IF EXISTS $name');
+      }
+      for (final table in _tables.values) {
+        for (final statement in table.createStatements) {
+          await _db.customStatement(statement);
+        }
+      }
+      await _rebuildContents();
+      for (final entry in {
+        derivedSchemaKey: schema,
+        derivedTablesKey: jsonEncode([for (final t in _tables.values) t.table]..sort()),
+      }.entries) {
+        await _db
+            .into(_db.localState)
+            .insertOnConflictUpdate(LocalStateCompanion.insert(key: entry.key, value: entry.value));
+      }
+      _derivedTablesRebuilt = true;
+    });
   }
 
   final LocalDatabase _db;
@@ -82,17 +133,17 @@ class Journal {
   }
 
   /// Recomputes every derived table from the journal.
-  Future<void> rebuild() {
-    return _db.transaction(() async {
-      await _db.delete(_db.fieldVersions).go();
-      for (final table in _tables.values) {
-        await _db.customStatement('DELETE FROM ${table.table}');
-      }
-      final rows = await _db.select(_db.journalEntries).get();
-      for (final row in rows) {
-        await _apply(_toEntry(row));
-      }
-    });
+  Future<void> rebuild() => _db.transaction(_rebuildContents);
+
+  Future<void> _rebuildContents() async {
+    await _db.delete(_db.fieldVersions).go();
+    for (final table in _tables.values) {
+      await _db.customStatement('DELETE FROM ${table.table}');
+    }
+    final rows = await _db.select(_db.journalEntries).get();
+    for (final row in rows) {
+      await _apply(_toEntry(row));
+    }
   }
 
   /// Every entry of the journal, oldest first.
@@ -164,7 +215,7 @@ class Journal {
   /// not know it. With [strict], an unknown one is a programming error.
   String? _columnFor(String entity, String field, {required bool strict}) {
     final table = _tables[entity];
-    final column = field == deletedField ? 'deleted' : table?.columns[field];
+    final column = field == deletedField ? 'deleted' : table?.columns[field]?.name;
     if (table == null || column == null) {
       if (strict) throw ArgumentError('No derived table for $entity.$field');
       return null;

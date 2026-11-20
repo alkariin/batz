@@ -47,15 +47,14 @@ void main() {
     });
 
     test('a failure half-way leaves neither journal entries nor derived rows', () async {
-      // "broken" maps to a column that does not exist: the second statement fails.
-      final broken = DerivedTable(
-        entity: 'note',
-        table: 'notes',
-        columns: {'title': 'title', 'broken': 'no_such_column'},
+      final h = await Harness.open(deviceId: me);
+      // The second statement of the modification fails.
+      await h.db.customStatement(
+        'CREATE TRIGGER boom BEFORE UPDATE OF amount ON notes WHEN NEW.amount = 666 '
+        "BEGIN SELECT RAISE(ABORT, 'boom'); END",
       );
-      final h = await Harness.open(deviceId: me, tables: [broken]);
       await expectLater(
-        h.journal.write(Modification.set('note', 'n1', {'title': 'x', 'broken': 1})),
+        h.journal.write(Modification.set('note', 'n1', {'title': 'x', 'amount': 666})),
         throwsA(anything),
       );
       expect(await h.journal.entries(), isEmpty);
@@ -310,17 +309,83 @@ void main() {
       expect(await old.allRows(), isEmpty);
       await old.close();
 
+      // The new version knows the entity: opening recreates the derived
+      // tables and recomputes them from the journal, with no explicit call.
       final upgraded = await Harness.open(file: file, deviceId: me);
-      await upgraded.journal.rebuild();
+      expect(upgraded.journal.derivedTablesRebuilt, isTrue);
       expect((await upgraded.notes())['n1']!['title'], 'From a newer version');
       await upgraded.close();
     });
 
+    test('an unchanged schema is neither dropped nor recomputed at the next launch', () async {
+      final file = File('${dir.path}/batz.db');
+      final first = await Harness.open(file: file, deviceId: me);
+      expect(first.journal.derivedTablesRebuilt, isTrue, reason: 'first launch creates the tables');
+      await first.journal.write(Modification.set('note', 'n1', {'title': 'Kept'}));
+      await first.close();
+
+      final second = await Harness.open(file: file, deviceId: me);
+      expect(second.journal.derivedTablesRebuilt, isFalse);
+      expect((await second.notes())['n1']!['title'], 'Kept');
+      await second.close();
+    });
+
+    test('a schema change drops the tables, recreates them and recomputes them from the journal', () async {
+      final file = File('${dir.path}/batz.db');
+      final v1 = await Harness.open(file: file, deviceId: me);
+      await v1.journal.write(Modification.set('note', 'n1', {'title': 'A', 'amount': 5, 'done': true}));
+      await v1.close();
+
+      // Next version: the notes table loses a column, gains one, and a table
+      // of the old schema disappears.
+      final legacy = DerivedTable(entity: 'legacy', table: 'legacy_rows', columns: {});
+      final v2 = await Harness.open(file: file, deviceId: me, tables: [noteTable, legacy]);
+      await v2.close();
+      final v3Notes = DerivedTable(
+        entity: 'note',
+        table: 'notes',
+        columns: {'title': const DerivedColumn.text('title'), 'tag': const DerivedColumn.text('tag')},
+      );
+      final v3 = await Harness.open(file: file, deviceId: me, tables: [v3Notes]);
+      expect(v3.journal.derivedTablesRebuilt, isTrue);
+      final rows = await v3.db.customSelect('SELECT * FROM notes').get();
+      expect(rows.single.data, {'id': 'n1', 'deleted': 0, 'title': 'A', 'tag': null});
+      final tables = await v3.db.customSelect("SELECT name FROM sqlite_master WHERE type = 'table'").get();
+      expect(tables.map((r) => r.read<String>('name')), isNot(contains('legacy_rows')));
+      // The amount, unknown to this version, is still in the journal.
+      expect((await v3.journal.entries()).map((e) => e.field), containsAll(['title', 'amount', 'done']));
+      await v3.close();
+    });
+
+    test('derived tables carry no constraint: fields may arrive in any order, or never', () async {
+      final h = await Harness.open(deviceId: me);
+      final ddl = (await h.db.customSelect("SELECT sql FROM sqlite_master WHERE name = 'notes'").getSingle())
+          .read<String>('sql');
+      expect(ddl, isNot(contains('REFERENCES')));
+      expect(ddl, isNot(contains('UNIQUE')));
+      expect(RegExp('NOT NULL').allMatches(ddl), hasLength(1), reason: 'only the deletion flag');
+      expect(await h.journal.merge([entry(1000, 0, other, 'n1', 'done', true)]), 1);
+      expect(await h.notes(), {
+        'n1': {'title': null, 'amount': null, 'done': 1},
+      });
+      await h.close();
+    });
+
     test('definitions refuse unsafe or reserved identifiers', () {
-      expect(() => DerivedTable(entity: 'x', table: 'x; DROP TABLE journal', columns: {}), throwsArgumentError);
-      expect(() => DerivedTable(entity: 'x', table: 'x', columns: {'a': 'id'}), throwsArgumentError);
-      expect(() => DerivedTable(entity: 'x', table: 'x', columns: {'a': 'deleted'}), throwsArgumentError);
-      expect(() => DerivedTable(entity: 'x', table: 'x', columns: {'a': 'A'}), throwsArgumentError);
+      DerivedTable bad({String table = 'x', String column = 'a', List<List<String>> indexes = const []}) =>
+          DerivedTable(entity: 'x', table: table, columns: {'a': DerivedColumn.text(column)}, indexes: indexes);
+      expect(() => bad(table: 'x; DROP TABLE journal'), throwsArgumentError);
+      expect(() => bad(column: 'id'), throwsArgumentError);
+      expect(() => bad(column: 'deleted'), throwsArgumentError);
+      expect(() => bad(column: 'A'), throwsArgumentError);
+      expect(
+        () => bad(
+          indexes: [
+            ['nope'],
+          ],
+        ),
+        throwsArgumentError,
+      );
     });
   });
 }

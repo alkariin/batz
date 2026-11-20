@@ -69,16 +69,6 @@ class Hlc implements Comparable<Hlc> {
   String toString() => encode();
 }
 
-/// Thrown when the counter would overflow: more than 65536 events within one
-/// millisecond, or a wall clock that lags far behind the last timestamp seen.
-class HlcOverflowException implements Exception {
-  HlcOverflowException(this.last);
-  final Hlc last;
-
-  @override
-  String toString() => 'HlcOverflowException: counter exhausted after $last';
-}
-
 /// The clock of one device. It never goes backwards, even if the wall clock
 /// does, and it moves past every timestamp it has observed.
 class HlcClock {
@@ -121,8 +111,18 @@ class HlcClock {
     }
   }
 
+  /// Moves one step forward. When the counter is full (more than 65536
+  /// events within one millisecond, or a wall clock lagging behind a
+  /// timestamp seen from a device whose clock runs ahead), the clock moves to
+  /// the next millisecond instead of failing: the logical time then runs
+  /// slightly ahead of the wall clock until the wall clock catches up, and
+  /// writes are never blocked.
   void _increment() {
-    if (_counter == Hlc.maxCounter) throw HlcOverflowException(Hlc(_millis, _counter, deviceId));
-    _counter++;
+    if (_counter == Hlc.maxCounter) {
+      _millis++;
+      _counter = 0;
+    } else {
+      _counter++;
+    }
   }
 }

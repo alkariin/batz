@@ -117,10 +117,34 @@ void main() {
       }
     });
 
-    test('reports counter exhaustion', () {
+    test('a full counter moves to the next millisecond instead of failing', () {
       final clock = HlcClock(a, last: Hlc(1000, Hlc.maxCounter - 1, a), now: () => 1000);
       expect(clock.tick(), Hlc(1000, Hlc.maxCounter, a));
-      expect(clock.tick, throwsA(isA<HlcOverflowException>()));
+      expect(clock.tick(), Hlc(1001, 0, a));
+      expect(clock.tick(), Hlc(1001, 1, a));
+    });
+
+    test('a device far ahead in time never blocks the writes of the others', () {
+      // Another device's clock is an hour ahead and has used its whole
+      // counter: every local tick must still succeed and stay ahead.
+      final clock = HlcClock(a, now: () => 1000);
+      final ahead = Hlc(1000 + 3600000, Hlc.maxCounter, b);
+      clock.observe(ahead);
+      var previous = ahead;
+      for (var i = 0; i < 3 * (Hlc.maxCounter + 1); i++) {
+        final t = clock.tick();
+        expect(t > previous, isTrue);
+        previous = t;
+      }
+      expect(previous.millis, 1000 + 3600000 + 3);
+    });
+
+    test('the wall clock takes over again once it catches up', () {
+      var wall = 1000;
+      final clock = HlcClock(a, last: Hlc(1000, Hlc.maxCounter, b), now: () => wall);
+      expect(clock.tick(), Hlc(1001, 0, a));
+      wall = 5000;
+      expect(clock.tick(), Hlc(5000, 0, a));
     });
   });
 }

@@ -86,3 +86,40 @@ development machine and on GitHub runners.
 **Notes.** Artifact storage is capped at 500 MB on the Free plan and shared
 with GitHub Packages, so CI keeps build artifacts short-lived. Release assets
 attached to a GitHub release are not workflow artifacts.
+
+## 2026-11-20 — Phase 1 decisions taken during development
+
+Functional choices H1 to H6 are in `docs/plan/phase-1.md`. The decisions below
+were taken while implementing it.
+
+### 1.0 The clock rolls over instead of failing
+
+**Decision.** When the counter of the hybrid logical clock is full, the clock
+moves to the next millisecond with a counter of 0. `HlcOverflowException` is
+gone.
+
+**Why.** A device whose clock runs far ahead makes every other device adopt
+its time after a synchronisation; their counters then grow with each write
+until the wall clock catches up. Failing at 65536 writes would block them.
+Moving one millisecond ahead keeps every timestamp greater than all the
+previous ones; the logical time only runs slightly ahead of the wall clock.
+
+### 1.0 Derived tables are described in Dart and rebuilt on schema change
+
+**Decision.** Each derived table is a `DerivedTable` (entity, table, typed
+nullable columns, plain indexes) and its `CREATE` statements are generated.
+The text of all those statements is the *derived schema*; it is kept in
+`local_state` with the list of derived table names. At every start,
+`Journal.open` compares it with the schema of the running version; if they
+differ, it drops the old and new derived tables, recreates them, and replays
+the whole journal (with `field_versions`), in one transaction.
+
+**Why.** Rule 3 of the phase plan without a version number to maintain by
+hand: any change to a derived table, even a renamed column, triggers the
+rebuild. Drift's `schemaVersion` stays reserved for the journal tables, the
+only ones with real migrations; it is still 1.
+
+**Evidence.** `test/data/upgrade_test.dart` opens a database written by
+version 0.1.0 (`test/fixtures/v0.1.0/batz.db`), keeps its device identifier
+and journal; `test/data/journal_test.dart` covers the rebuild on schema change
+and the absence of rebuild when the schema is unchanged.
