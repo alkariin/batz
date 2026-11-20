@@ -87,6 +87,28 @@ development machine and on GitHub runners.
 with GitHub Packages, so CI keeps build artifacts short-lived. Release assets
 attached to a GitHub release are not workflow artifacts.
 
+## 2026-11-20 — Design rules for local data (from phase 1 on)
+
+Set by the phase 1 plan, as consequences of the change journal of phase 0.
+They hold for every later phase.
+
+1. **Derived tables have no constraint**: no uniqueness, no foreign key, no
+   NOT NULL on a field. Business rules are checked by the domain when the
+   user enters data. From phase 2 on, entries made on another device arrive
+   field by field, in any order, and integrating them must never fail.
+2. **An incomplete record is ignored when read**, without error. It appears
+   once its missing fields arrive.
+3. **Derived tables never migrate**: whenever their schema changes, they are
+   dropped, recreated and recomputed from the journal. Only the journal tables
+   have real migrations.
+4. **Copying a tree gives computed identifiers**, derived from the source
+   category and the target year. Two devices that copy the same tree offline
+   thus write the same records, not two trees.
+5. **Dates are calendar dates**, stored as `YYYY-MM-DD` text, with neither time
+   nor time zone.
+6. **No floating point in calculations**: amounts are integer cents, month
+   weights are exact fractions.
+
 ## 2026-11-20 — Phase 1 decisions taken during development
 
 Functional choices H1 to H6 are in `docs/plan/phase-1.md`. The decisions below

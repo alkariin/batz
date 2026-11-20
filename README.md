@@ -19,9 +19,19 @@ Server documentation: [architecture](batz-web/docs/architecture.md),
 
 ## Status
 
-Phase 0 (foundations): app and server skeletons, local database driven by a
-change journal, device pairing over pinned HTTPS, CI and releases. No
-accounting feature yet.
+Version 0.2.0, end of phase 1 (accounts and categories). The app is usable on
+its own, on one device:
+
+- accounts of the ten types of the specification, one of them detailed
+  (import enabled), archiving;
+- a category tree per year, copied from the previous one at the first
+  transaction of a year, freely editable;
+- manual expenses, incomes and refunds, transfers between accounts;
+- the period a payment concerns, spread over its months and years.
+
+Nothing is synchronised or imported yet: phases 2 and 3. Phase 0 provided the
+foundations: app and server skeletons, local database driven by a change
+journal, device pairing over pinned HTTPS, CI and releases.
 
 ## Development
 
