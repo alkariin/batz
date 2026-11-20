@@ -4,6 +4,7 @@ import 'package:batz/data/local/database.dart';
 import 'package:batz/data/local/journal.dart';
 import 'package:batz/domain/journal/journal_entry.dart';
 import 'package:batz/domain/ledger/ledger.dart';
+import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 
 /// The app's real derived tables on an in-memory database: a device.
@@ -11,6 +12,9 @@ class LedgerHarness {
   LedgerHarness._(this.db, this.journal) : repository = LedgerRepository(db, journal);
 
   static Future<LedgerHarness> open({String? deviceId, int Function()? now}) async {
+    // Simulated devices live side by side, each on its own in-memory
+    // executor: the race Drift warns about cannot happen.
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     final db = LocalDatabase(NativeDatabase.memory());
     final journal = await Journal.open(db, now: now, newDeviceId: deviceId == null ? newId : () => deviceId);
     return LedgerHarness._(db, journal);

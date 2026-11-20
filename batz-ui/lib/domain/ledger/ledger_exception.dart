@@ -1,6 +1,19 @@
 /// Why the domain refuses an operation. The app turns each reason into a
 /// message for the user.
-enum LedgerError { nameRequired, secondDetailedAccount, unknownAccount }
+enum LedgerError {
+  nameRequired,
+  secondDetailedAccount,
+  unknownAccount,
+  unknownCategory,
+  categoryNameTaken,
+  natureRequired,
+  treeExists,
+  noTree,
+  categoryLoop,
+  parentHasTransactions,
+  categoryHasChildren,
+  categoryInUse,
+}
 
 /// A business rule refuses the operation; nothing was written.
 class LedgerException implements Exception {

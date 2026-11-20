@@ -162,3 +162,38 @@ counts as the only detailed account.
 
 **Why.** A value written by a newer version (a new account type, a new
 statement format) must not be misread by an older one.
+
+### 1.3 Category trees
+
+**Decisions.**
+
+- Names are compared after trimming, lower-casing and replacing accented
+  Latin letters by their base letter (`normalizeName`, H1). Spaces inside a
+  name still count.
+- Top-level groups are groups in the sense of H2: they never hold a
+  transaction, even without children. Only a category without children below
+  a group does.
+- A group's nature is stored on the group only; the other categories inherit
+  it from their top-level group. Moving a category to the top level requires
+  choosing a nature; moving a group below another category makes it inherit.
+- When a year has no earlier tree to copy, the two default groups get
+  computed identifiers too (from the year and the nature), for the same reason
+  as copies (rule 4): two devices creating the first tree offline must not
+  produce two trees.
+- A tree is read only through its consistent part: a category whose parents
+  do not reach, within the same year, a top-level group with a nature, or that
+  is part of a loop, is ignored (rule 2). Two devices that move categories
+  concurrently can create such a loop; the categories involved disappear until
+  one of the moves is undone.
+- Until the first transaction of a year writes its tree, the transaction form
+  offers the categories of `treeOrPreview(year)`: the tree the copy would
+  give, with the same computed identifiers. The category picked there is thus
+  valid once the copy is written, in the same modification as the
+  transaction.
+- Deleting a category that has children is refused, in addition to H5.
+
+**Known limit, for phase 2.** The copy writes every field of the copied
+categories. If device A copies a year and then renames a copied category, and
+device B copies the same year offline later in time, B's copy wins over A's
+rename once synchronised. The records are the same on both devices, as
+required, but the rename is lost.

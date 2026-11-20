@@ -6,6 +6,7 @@ import 'package:batz/data/local/journal.dart';
 import 'package:batz/domain/ids.dart';
 import 'package:batz/domain/journal/hlc.dart';
 import 'package:batz/domain/journal/journal_entry.dart';
+import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 
 /// A derived table that exists only in tests: phase 0 has no accounting
@@ -25,6 +26,9 @@ class Harness {
   Harness._(this.db, this.journal);
 
   static Future<Harness> open({File? file, int Function()? now, String? deviceId, List<DerivedTable>? tables}) async {
+    // Simulated devices live side by side, each on its own executor: the
+    // race Drift warns about cannot happen.
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     final db = LocalDatabase(file == null ? NativeDatabase.memory() : NativeDatabase(file));
     final journal = await Journal.open(
       db,

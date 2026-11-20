@@ -250,4 +250,123 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorUnknownAccount => 'Ce compte n\'existe plus.';
+
+  @override
+  String get categoriesTitle => 'Catégories';
+
+  @override
+  String get categoriesYear => 'Année';
+
+  @override
+  String categoriesNoTree(int year) {
+    return 'Pas encore d\'arbre pour $year.';
+  }
+
+  @override
+  String categoriesNoTreeCopy(int source, int year) {
+    return 'Il sera copié de l\'arbre $source, puis modifiable sans effet sur $source. La première transaction de $year le crée aussi.';
+  }
+
+  @override
+  String categoriesNoTreeDefault(int year) {
+    return 'Il partira de deux groupes vides, « Revenus » et « Dépenses ». La première transaction de $year le crée aussi.';
+  }
+
+  @override
+  String categoriesCreateTree(int year) {
+    return 'Créer l\'arbre $year';
+  }
+
+  @override
+  String get categoriesNewGroup => 'Nouveau groupe';
+
+  @override
+  String get categoryName => 'Nom';
+
+  @override
+  String get categoryNature => 'Nature';
+
+  @override
+  String get categoryAddChild => 'Ajouter une sous-catégorie';
+
+  @override
+  String get categoryRename => 'Renommer';
+
+  @override
+  String get categoryMove => 'Déplacer';
+
+  @override
+  String get categoryMoveUp => 'Monter';
+
+  @override
+  String get categoryMoveDown => 'Descendre';
+
+  @override
+  String categoryMoveTitle(String name) {
+    return 'Déplacer « $name » vers';
+  }
+
+  @override
+  String categoryTopLevel(String nature) {
+    return 'Premier niveau, $nature';
+  }
+
+  @override
+  String categoryDeleteConfirm(String name) {
+    return 'Supprimer la catégorie « $name » ?';
+  }
+
+  @override
+  String get categoryDeleted => 'Catégorie supprimée.';
+
+  @override
+  String get natureIncome => 'revenus';
+
+  @override
+  String get natureExpense => 'dépenses';
+
+  @override
+  String get errorUnknownCategory => 'Cette catégorie n\'existe plus.';
+
+  @override
+  String get errorCategoryNameTaken =>
+      'Ce nom est déjà utilisé dans l\'arbre de cette année (majuscules, accents et espaces autour ne comptent pas).';
+
+  @override
+  String get errorNatureRequired => 'Choisissez la nature du groupe : revenus ou dépenses.';
+
+  @override
+  String get errorTreeExists => 'L\'arbre de cette année existe déjà.';
+
+  @override
+  String get errorNoTree => 'Cette année n\'a pas encore d\'arbre.';
+
+  @override
+  String get errorCategoryLoop =>
+      'Une catégorie ne peut pas être placée sous elle-même ni sous une de ses sous-catégories.';
+
+  @override
+  String errorParentHasTransactions(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transactions sont classées',
+      one: 'une transaction est classée',
+    );
+    return 'Impossible : $_temp0 dans cette catégorie. Seule une catégorie sans transaction peut recevoir des sous-catégories.';
+  }
+
+  @override
+  String get errorCategoryHasChildren => 'Supprimez ou déplacez d\'abord ses sous-catégories.';
+
+  @override
+  String errorCategoryInUse(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transactions utilisent',
+      one: 'une transaction utilise',
+    );
+    return 'Suppression refusée : $_temp0 cette catégorie.';
+  }
 }

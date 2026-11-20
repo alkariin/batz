@@ -516,6 +516,180 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce compte n\'existe plus.'**
   String get errorUnknownAccount;
+
+  /// No description provided for @categoriesTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Catégories'**
+  String get categoriesTitle;
+
+  /// No description provided for @categoriesYear.
+  ///
+  /// In fr, this message translates to:
+  /// **'Année'**
+  String get categoriesYear;
+
+  /// No description provided for @categoriesNoTree.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore d\'arbre pour {year}.'**
+  String categoriesNoTree(int year);
+
+  /// No description provided for @categoriesNoTreeCopy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il sera copié de l\'arbre {source}, puis modifiable sans effet sur {source}. La première transaction de {year} le crée aussi.'**
+  String categoriesNoTreeCopy(int source, int year);
+
+  /// No description provided for @categoriesNoTreeDefault.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il partira de deux groupes vides, « Revenus » et « Dépenses ». La première transaction de {year} le crée aussi.'**
+  String categoriesNoTreeDefault(int year);
+
+  /// No description provided for @categoriesCreateTree.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer l\'arbre {year}'**
+  String categoriesCreateTree(int year);
+
+  /// No description provided for @categoriesNewGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau groupe'**
+  String get categoriesNewGroup;
+
+  /// No description provided for @categoryName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get categoryName;
+
+  /// No description provided for @categoryNature.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nature'**
+  String get categoryNature;
+
+  /// No description provided for @categoryAddChild.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une sous-catégorie'**
+  String get categoryAddChild;
+
+  /// No description provided for @categoryRename.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renommer'**
+  String get categoryRename;
+
+  /// No description provided for @categoryMove.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déplacer'**
+  String get categoryMove;
+
+  /// No description provided for @categoryMoveUp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Monter'**
+  String get categoryMoveUp;
+
+  /// No description provided for @categoryMoveDown.
+  ///
+  /// In fr, this message translates to:
+  /// **'Descendre'**
+  String get categoryMoveDown;
+
+  /// No description provided for @categoryMoveTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déplacer « {name} » vers'**
+  String categoryMoveTitle(String name);
+
+  /// No description provided for @categoryTopLevel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Premier niveau, {nature}'**
+  String categoryTopLevel(String nature);
+
+  /// No description provided for @categoryDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la catégorie « {name} » ?'**
+  String categoryDeleteConfirm(String name);
+
+  /// No description provided for @categoryDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Catégorie supprimée.'**
+  String get categoryDeleted;
+
+  /// No description provided for @natureIncome.
+  ///
+  /// In fr, this message translates to:
+  /// **'revenus'**
+  String get natureIncome;
+
+  /// No description provided for @natureExpense.
+  ///
+  /// In fr, this message translates to:
+  /// **'dépenses'**
+  String get natureExpense;
+
+  /// No description provided for @errorUnknownCategory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette catégorie n\'existe plus.'**
+  String get errorUnknownCategory;
+
+  /// No description provided for @errorCategoryNameTaken.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce nom est déjà utilisé dans l\'arbre de cette année (majuscules, accents et espaces autour ne comptent pas).'**
+  String get errorCategoryNameTaken;
+
+  /// No description provided for @errorNatureRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez la nature du groupe : revenus ou dépenses.'**
+  String get errorNatureRequired;
+
+  /// No description provided for @errorTreeExists.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'arbre de cette année existe déjà.'**
+  String get errorTreeExists;
+
+  /// No description provided for @errorNoTree.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette année n\'a pas encore d\'arbre.'**
+  String get errorNoTree;
+
+  /// No description provided for @errorCategoryLoop.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une catégorie ne peut pas être placée sous elle-même ni sous une de ses sous-catégories.'**
+  String get errorCategoryLoop;
+
+  /// No description provided for @errorParentHasTransactions.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible : {count, plural, =1{une transaction est classée} other{{count} transactions sont classées}} dans cette catégorie. Seule une catégorie sans transaction peut recevoir des sous-catégories.'**
+  String errorParentHasTransactions(int count);
+
+  /// No description provided for @errorCategoryHasChildren.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimez ou déplacez d\'abord ses sous-catégories.'**
+  String get errorCategoryHasChildren;
+
+  /// No description provided for @errorCategoryInUse.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suppression refusée : {count, plural, =1{une transaction utilise} other{{count} transactions utilisent}} cette catégorie.'**
+  String errorCategoryInUse(int count);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

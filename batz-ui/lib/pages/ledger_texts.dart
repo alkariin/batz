@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../domain/journal/journal_entry.dart';
 import '../domain/ledger/account.dart';
+import '../domain/ledger/category.dart';
 import '../domain/ledger/ledger.dart';
 import '../domain/ledger/ledger_exception.dart';
 import '../l10n/app_localizations.dart';
@@ -12,6 +13,20 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.nameRequired => l.errorNameRequired,
   LedgerError.secondDetailedAccount => l.errorSecondDetailedAccount,
   LedgerError.unknownAccount => l.errorUnknownAccount,
+  LedgerError.unknownCategory => l.errorUnknownCategory,
+  LedgerError.categoryNameTaken => l.errorCategoryNameTaken,
+  LedgerError.natureRequired => l.errorNatureRequired,
+  LedgerError.treeExists => l.errorTreeExists,
+  LedgerError.noTree => l.errorNoTree,
+  LedgerError.categoryLoop => l.errorCategoryLoop,
+  LedgerError.parentHasTransactions => l.errorParentHasTransactions(e.count),
+  LedgerError.categoryHasChildren => l.errorCategoryHasChildren,
+  LedgerError.categoryInUse => l.errorCategoryInUse(e.count),
+};
+
+String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {
+  CategoryNature.income => l.natureIncome,
+  CategoryNature.expense => l.natureExpense,
 };
 
 String accountTypeText(AppLocalizations l, AccountType type) => switch (type) {

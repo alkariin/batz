@@ -136,5 +136,100 @@
   "accountTypeOther": "Autre",
   "errorNameRequired": "Le nom est obligatoire.",
   "errorSecondDetailedAccount": "Un seul compte peut être détaillé : l'import est déjà activé sur un autre compte.",
-  "errorUnknownAccount": "Ce compte n'existe plus."
+  "errorUnknownAccount": "Ce compte n'existe plus.",
+  "categoriesTitle": "Catégories",
+  "categoriesYear": "Année",
+  "categoriesNoTree": "Pas encore d'arbre pour {year}.",
+  "@categoriesNoTree": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "categoriesNoTreeCopy": "Il sera copié de l'arbre {source}, puis modifiable sans effet sur {source}. La première transaction de {year} le crée aussi.",
+  "@categoriesNoTreeCopy": {
+    "placeholders": {
+      "source": {
+        "type": "int"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "categoriesNoTreeDefault": "Il partira de deux groupes vides, « Revenus » et « Dépenses ». La première transaction de {year} le crée aussi.",
+  "@categoriesNoTreeDefault": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "categoriesCreateTree": "Créer l'arbre {year}",
+  "@categoriesCreateTree": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "categoriesNewGroup": "Nouveau groupe",
+  "categoryName": "Nom",
+  "categoryNature": "Nature",
+  "categoryAddChild": "Ajouter une sous-catégorie",
+  "categoryRename": "Renommer",
+  "categoryMove": "Déplacer",
+  "categoryMoveUp": "Monter",
+  "categoryMoveDown": "Descendre",
+  "categoryMoveTitle": "Déplacer « {name} » vers",
+  "@categoryMoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryTopLevel": "Premier niveau, {nature}",
+  "@categoryTopLevel": {
+    "placeholders": {
+      "nature": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryDeleteConfirm": "Supprimer la catégorie « {name} » ?",
+  "@categoryDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryDeleted": "Catégorie supprimée.",
+  "natureIncome": "revenus",
+  "natureExpense": "dépenses",
+  "errorUnknownCategory": "Cette catégorie n'existe plus.",
+  "errorCategoryNameTaken": "Ce nom est déjà utilisé dans l'arbre de cette année (majuscules, accents et espaces autour ne comptent pas).",
+  "errorNatureRequired": "Choisissez la nature du groupe : revenus ou dépenses.",
+  "errorTreeExists": "L'arbre de cette année existe déjà.",
+  "errorNoTree": "Cette année n'a pas encore d'arbre.",
+  "errorCategoryLoop": "Une catégorie ne peut pas être placée sous elle-même ni sous une de ses sous-catégories.",
+  "errorParentHasTransactions": "Impossible : {count, plural, =1{une transaction est classée} other{{count} transactions sont classées}} dans cette catégorie. Seule une catégorie sans transaction peut recevoir des sous-catégories.",
+  "@errorParentHasTransactions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorCategoryHasChildren": "Supprimez ou déplacez d'abord ses sous-catégories.",
+  "errorCategoryInUse": "Suppression refusée : {count, plural, =1{une transaction utilise} other{{count} transactions utilisent}} cette catégorie.",
+  "@errorCategoryInUse": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

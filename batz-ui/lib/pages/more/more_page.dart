@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../accounts/accounts_page.dart';
+import '../categories/categories_page.dart';
 import '../server/server_cubit.dart';
 import '../server/server_page.dart';
 
@@ -22,6 +23,12 @@ class MorePage extends StatelessWidget {
             title: Text(l.accountsTitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const AccountsPage())),
+          ),
+          ListTile(
+            leading: const Icon(Icons.account_tree_outlined),
+            title: Text(l.categoriesTitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const CategoriesPage())),
           ),
           ListTile(
             leading: const Icon(Icons.dns_outlined),

@@ -1,4 +1,5 @@
 import '../../domain/ledger/account.dart';
+import '../../domain/ledger/category.dart';
 
 /// How journal entries of one entity are materialised into a table.
 ///
@@ -96,7 +97,7 @@ String derivedSchemaOf(List<DerivedTable> tables) {
 }
 
 /// The derived tables of the app.
-final List<DerivedTable> appDerivedTables = [accountsTable];
+final List<DerivedTable> appDerivedTables = [accountsTable, categoriesTable];
 
 final accountsTable = DerivedTable(
   entity: AccountFields.entity,
@@ -106,5 +107,17 @@ final accountsTable = DerivedTable(
     AccountFields.type: const DerivedColumn.text('type'),
     AccountFields.importFormat: const DerivedColumn.text('import_format'),
     AccountFields.archived: const DerivedColumn.integer('archived'),
+  },
+);
+
+final categoriesTable = DerivedTable(
+  entity: CategoryFields.entity,
+  table: 'categories',
+  columns: {
+    CategoryFields.year: const DerivedColumn.integer('year'),
+    CategoryFields.name: const DerivedColumn.text('name'),
+    CategoryFields.parentId: const DerivedColumn.text('parent_id'),
+    CategoryFields.nature: const DerivedColumn.text('nature'),
+    CategoryFields.position: const DerivedColumn.integer('position'),
   },
 );

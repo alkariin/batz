@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../../domain/journal/journal_entry.dart';
 import '../../domain/ledger/account.dart';
+import '../../domain/ledger/category.dart';
 import '../../domain/ledger/ledger.dart';
 import '../local/database.dart';
 import '../local/derived_tables.dart';
@@ -24,7 +25,7 @@ class LedgerRepository {
   Future<void> write(Modification modification) => _journal.write(modification);
 
   Future<Ledger> load() async {
-    return Ledger(accounts: await _rows(accountsTable, _account));
+    return Ledger(accounts: await _rows(accountsTable, _account), categories: await _rows(categoriesTable, _category));
   }
 
   Future<List<T>> _rows<T>(DerivedTable table, T? Function(Map<String, Object?> row) read) async {
@@ -44,6 +45,26 @@ class LedgerRepository {
       type: type,
       importFormat: parsedFormat,
       archived: row['archived'] == 1,
+    );
+  }
+
+  /// A category needs a year and a name. Whether it belongs to a consistent
+  /// tree (parent present, nature on its top-level group) is decided by
+  /// [Ledger].
+  static Category? _category(Map<String, Object?> row) {
+    final year = row['year'];
+    final name = _string(row['name']);
+    final parentId = row['parent_id'];
+    final nature = row['nature'];
+    final position = row['position'];
+    if (year is! int || name == null || (parentId != null && parentId is! String)) return null;
+    return Category(
+      id: row['id']! as String,
+      year: year,
+      name: name,
+      parentId: parentId as String?,
+      nature: _enum(CategoryNature.values, nature),
+      position: position is int ? position : 0,
     );
   }
 
