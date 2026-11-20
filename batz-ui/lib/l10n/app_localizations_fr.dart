@@ -634,4 +634,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String syncClockWarning(int minutes) {
     return 'L\'horloge de cet appareil s\'écarte de $minutes minutes de celle du serveur. Corrigez-la : l\'ordre des modifications faites sur plusieurs appareils en dépend.';
   }
+
+  @override
+  String get syncDecision => 'Premier échange avec le serveur';
+
+  @override
+  String get syncDecisionHint =>
+      'Cet appareil et le serveur ont chacun des données, sans rien en commun : elles viennent d\'appareils utilisés séparément. Fusionner réunit les deux ; des doublons peuvent apparaître, ils seront signalés dans les tâches. Remplacer efface les données de cet appareil et reprend celles du serveur.';
+
+  @override
+  String get syncMerge => 'Fusionner';
+
+  @override
+  String get syncReplace => 'Remplacer celles de l\'appareil';
+
+  @override
+  String get syncReplaceAction => 'Remplacer les données de cet appareil par celles du serveur';
+
+  @override
+  String get syncReplaceConfirm =>
+      'Remplacer les données de cet appareil par celles du serveur ? Tout ce que cet appareil n\'a pas encore envoyé au serveur sera définitivement perdu.';
+
+  @override
+  String get syncReplaceDone => 'Les données de cet appareil sont maintenant celles du serveur.';
 }

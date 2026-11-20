@@ -33,6 +33,10 @@ enum SyncStatus {
   /// This app and the server cannot exchange; see [SyncState.incompatibility].
   incompatible,
 
+  /// First exchange: the device and the server hold unrelated data; the user
+  /// chooses to merge them or to replace the device's (decision H1).
+  decisionNeeded,
+
   /// Anything else; see [SyncState.error].
   error,
 }
@@ -134,7 +138,7 @@ class SyncCubit extends Cubit<SyncState> {
   final Duration period;
 
   /// Statuses in which automatic exchanges stop until the user acts.
-  static const _stopped = {SyncStatus.revoked, SyncStatus.incompatible};
+  static const _stopped = {SyncStatus.revoked, SyncStatus.incompatible, SyncStatus.decisionNeeded};
 
   Future<void>? _running;
   var _again = false;
@@ -166,6 +170,24 @@ class SyncCubit extends Cubit<SyncState> {
       }
     });
     return _running = run;
+  }
+
+  /// The answer to the question of the first exchange: merge the data of
+  /// the device with the server's.
+  Future<void> merge() => _exclusive(() => _run(manual: true, merge: true));
+
+  /// Replaces the data of this device by the server's (decision H1), after
+  /// the user confirmed: the modifications not sent yet are lost.
+  Future<void> replace() => _exclusive(() => _run(manual: true, replace: true));
+
+  Future<void> _exclusive(Future<void> Function() action) async {
+    // After the exchange in progress, and the one it may schedule.
+    for (var running = _running; running != null; running = _running) {
+      await running;
+    }
+    final run = action().whenComplete(() => _running = null);
+    _running = run;
+    return run;
   }
 
   /// A modification was written on this device.
@@ -229,7 +251,7 @@ class SyncCubit extends Cubit<SyncState> {
     if (!isClosed) emit(state.copyWith(pending: pending));
   }
 
-  Future<void> _run({required bool manual}) async {
+  Future<void> _run({required bool manual, bool merge = false, bool replace = false}) async {
     final pairing = await _server.pairing();
     if (isClosed) return;
     if (pairing == null) {
@@ -240,7 +262,9 @@ class SyncCubit extends Cubit<SyncState> {
     emit(state.copyWith(status: SyncStatus.syncing));
     final transport = _transport(pairing);
     try {
-      final report = await _engine.run(transport, pairingId: pairing.deviceId);
+      final report = replace
+          ? await _engine.replace(transport, pairingId: pairing.deviceId)
+          : await _engine.run(transport, pairingId: pairing.deviceId, merge: merge);
       final memory = await _store.read(pairing.deviceId);
       final pending = await _journal.pendingFor(memory?.known ?? KnownState.empty);
       if (isClosed) return;
@@ -252,7 +276,7 @@ class SyncCubit extends Cubit<SyncState> {
           clockOffset: report.clockOffset,
         ),
       );
-      if (report.receivedEntries > 0) await _onReceived?.call();
+      if (report.receivedEntries > 0 || report.replaced) await _onReceived?.call();
     } catch (error) {
       final memory = await _store.read(pairing.deviceId);
       final pending = await _journal.pendingFor(memory?.known ?? KnownState.empty);
@@ -269,6 +293,7 @@ class SyncCubit extends Cubit<SyncState> {
     return switch (error) {
       ServerUnreachableException() => status(SyncStatus.offline),
       ServerException(code: 'DEVICE_REVOKED') => status(SyncStatus.revoked),
+      UnrelatedDataException() => status(SyncStatus.decisionNeeded),
       SyncIncompatibleException(:final reason, :final serverVersion, :final minAppVersion) => SyncState(
         status: SyncStatus.incompatible,
         lastSync: lastSync,

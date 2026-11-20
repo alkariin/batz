@@ -47,6 +47,15 @@ void checkCompatibility(Health health) {
   if (protocol > syncProtocol) refuse(Incompatibility.appTooOld);
 }
 
+/// The first exchange of a device that holds data with a server that holds
+/// others, with no origin in common: the user chooses between merging the
+/// two and replacing the device's data by the server's (decision H1 of
+/// phase 2). Nothing was exchanged.
+class UnrelatedDataException implements Exception {
+  @override
+  String toString() => 'UnrelatedDataException: the device and the server hold unrelated data';
+}
+
 /// What an exchange did.
 class SyncReport {
   SyncReport({
@@ -55,7 +64,11 @@ class SyncReport {
     required this.calls,
     required this.serverTime,
     required this.clockOffset,
+    this.replaced = false,
   });
+
+  /// The data of the device were replaced by the server's.
+  final bool replaced;
 
   /// Entries of this device that were new to the server.
   final int sentEntries;
@@ -112,16 +125,64 @@ class SyncEngine {
 
   /// Runs one exchange to its end with the server reached through
   /// [transport], for the pairing [pairingId]. Throws what the transport
-  /// throws (server unreachable, refused, ...) or [SyncProtocolException];
-  /// whatever was integrated before stays.
-  Future<SyncReport> run(SyncTransport transport, {required String pairingId}) async {
+  /// throws (server unreachable, refused, ...), [SyncIncompatibleException]
+  /// or [SyncProtocolException]; whatever was integrated before stays.
+  ///
+  /// When the device and the server both hold data without any origin in
+  /// common, it throws [UnrelatedDataException] before exchanging anything,
+  /// unless [merge] says to merge them.
+  Future<SyncReport> run(SyncTransport transport, {required String pairingId, bool merge = false}) async {
     final health = await transport.health();
     checkCompatibility(health);
-    KnownState? server;
-    var more = true;
+    return _exchange(transport, health, pairingId: pairingId, checkRelated: !merge);
+  }
+
+  /// Replaces the data of this device by the server's, then exchanges as
+  /// usual (decision H1 of phase 2). The device takes a new journal
+  /// identifier. Nothing is erased unless the server answered first.
+  Future<SyncReport> replace(SyncTransport transport, {required String pairingId}) async {
+    final health = await transport.health();
+    checkCompatibility(health);
+    // Asked as a device that holds nothing: the server sends from scratch.
+    final started = _now();
+    final response = await _call(
+      transport,
+      health,
+      SyncRequest(appVersion: appVersion, known: KnownState.empty, page: JournalPage.empty, limit: requestedPageSize),
+    );
+    final received = await _journal.replaceWith(response.page);
+    await _store.save(pairingId, response.known);
+    final report = await _exchange(
+      transport,
+      health,
+      pairingId: pairingId,
+      checkRelated: false,
+      from: (response, _offset(response, started, _now())),
+    );
+    return SyncReport(
+      sentEntries: report.sentEntries,
+      receivedEntries: received + report.receivedEntries,
+      calls: report.calls + 1,
+      serverTime: report.serverTime,
+      clockOffset: report.clockOffset,
+      replaced: true,
+    );
+  }
+
+  /// The exchange loop. [from] is an answer already integrated, to continue
+  /// from.
+  Future<SyncReport> _exchange(
+    SyncTransport transport,
+    Health health, {
+    required String pairingId,
+    required bool checkRelated,
+    (SyncResponse, Duration)? from,
+  }) async {
+    KnownState? server = from?.$1.known;
+    var more = from?.$1.page.more ?? true;
     var sent = 0, received = 0, calls = 0, restarts = 0;
-    late DateTime serverTime;
-    late Duration offset;
+    var serverTime = from?.$1.serverTime;
+    var offset = from?.$2;
     while (true) {
       final outgoing = server == null
           ? JournalPage.empty
@@ -133,19 +194,12 @@ class SyncEngine {
       final started = _now();
       final SyncResponse response;
       try {
-        response = await transport.exchange(
+        response = await _call(
+          transport,
+          health,
           SyncRequest(appVersion: appVersion, known: known, page: outgoing, limit: requestedPageSize),
         );
       } on ServerException catch (e) {
-        // The server's own checks, should /healthz have said otherwise.
-        final refused = switch (e.code) {
-          'APP_VERSION_UNSUPPORTED' => Incompatibility.appTooOld,
-          'SYNC_PROTOCOL_UNSUPPORTED' || 'NOT_FOUND' => Incompatibility.serverTooOld,
-          _ => null,
-        };
-        if (refused != null) {
-          throw SyncIncompatibleException(refused, serverVersion: health.version, minAppVersion: health.minAppVersion);
-        }
         if (e.code != 'SYNC_STATE_CHANGED' || ++restarts > maxRestarts) rethrow;
         // The server no longer holds what the page continued from: start
         // again from its current state.
@@ -153,12 +207,12 @@ class SyncEngine {
         more = true;
         continue;
       }
-      final ended = _now();
       serverTime = response.serverTime;
-      offset = response.serverTime.difference(started.add(ended.difference(started) ~/ 2));
+      offset = _offset(response, started, _now());
       if (response.page.isEmpty && response.page.more) {
         throw SyncProtocolException('the server announced more entries but sent none');
       }
+      if (checkRelated && server == null && _unrelated(known, response.known)) throw UnrelatedDataException();
 
       try {
         received += await _journal.integrate(response.page);
@@ -175,8 +229,31 @@ class SyncEngine {
       sentEntries: sent,
       receivedEntries: received,
       calls: calls,
-      serverTime: serverTime,
-      clockOffset: offset,
+      serverTime: serverTime!,
+      clockOffset: offset!,
     );
+  }
+
+  /// Both hold data, and no origin is common to them: they never exchanged.
+  static bool _unrelated(KnownState device, KnownState server) =>
+      device.latest.isNotEmpty && server.latest.isNotEmpty && device.origins.intersection(server.origins).isEmpty;
+
+  static Duration _offset(SyncResponse response, DateTime started, DateTime ended) =>
+      response.serverTime.difference(started.add(ended.difference(started) ~/ 2));
+
+  /// One call; the server's own refusals of incompatible versions become
+  /// [SyncIncompatibleException].
+  Future<SyncResponse> _call(SyncTransport transport, Health health, SyncRequest request) async {
+    try {
+      return await transport.exchange(request);
+    } on ServerException catch (e) {
+      final refused = switch (e.code) {
+        'APP_VERSION_UNSUPPORTED' => Incompatibility.appTooOld,
+        'SYNC_PROTOCOL_UNSUPPORTED' || 'NOT_FOUND' => Incompatibility.serverTooOld,
+        _ => null,
+      };
+      if (refused == null) rethrow;
+      throw SyncIncompatibleException(refused, serverVersion: health.version, minAppVersion: health.minAppVersion);
+    }
   }
 }

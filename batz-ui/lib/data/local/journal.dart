@@ -22,7 +22,7 @@ final _sqlIdentifier = RegExp(r'^[a-z][a-z0-9_]*$');
 /// The only way to change data: every write is a set of journal entries,
 /// applied to the derived tables in the same transaction.
 class Journal {
-  Journal._(this._db, this.deviceId, this._clock, List<DerivedTable> tables)
+  Journal._(this._db, this._deviceId, this._clock, List<DerivedTable> tables, this._now)
     : _tables = {for (final t in tables) t.entity: t};
 
   /// Opens the journal of [db]. On the very first launch it creates the
@@ -51,7 +51,7 @@ class Journal {
       db.journalEntries,
     )..addColumns([maxHlc])).map((r) => r.read(maxHlc)).getSingle();
     final clock = HlcClock(deviceId, last: latest == null ? null : Hlc.parse(latest), now: now);
-    final journal = Journal._(db, deviceId, clock, tables ?? appDerivedTables);
+    final journal = Journal._(db, deviceId, clock, tables ?? appDerivedTables, now);
     await journal._ensureDerivedSchema();
     return journal;
   }
@@ -93,11 +93,15 @@ class Journal {
   }
 
   final LocalDatabase _db;
-  final HlcClock _clock;
+  HlcClock _clock;
   final Map<String, DerivedTable> _tables;
+  final int Function()? _now;
 
-  /// Identifier of this installation, created at the first launch.
-  final String deviceId;
+  /// Identifier of this copy of the journal: the origin of the entries
+  /// written here. Created at the first launch; replaced when the data of
+  /// the device are replaced by the server's ([replaceWith]).
+  String get deviceId => _deviceId;
+  String _deviceId;
 
   /// Records [modification] and applies it, atomically: either every entry
   /// is stored and applied, or none is. Returns the shared timestamp.
@@ -239,6 +243,36 @@ class Journal {
       );
     }
     await _db.customStatement('DROP TABLE temp.latest');
+  }
+
+  /// Replaces everything this journal holds by the [first] page received
+  /// from a server that sent it from scratch, in one operation: entries,
+  /// derived tables and field versions are erased, the device takes a new
+  /// identifier, and the page is integrated. Modifications not sent yet are
+  /// lost (decision H1 of phase 2). With a new identifier, the entries this
+  /// device writes from now on never follow, under the same origin, entries
+  /// that were erased. Returns how many entries were integrated.
+  Future<int> replaceWith(JournalPage first, {String Function() newDeviceId = newId}) async {
+    if (first.since.latest.isNotEmpty) throw ArgumentError('The first page must start from scratch');
+    final id = newDeviceId();
+    final (previousId, previousClock) = (_deviceId, _clock);
+    try {
+      return await _db.transaction(() async {
+        await _db.delete(_db.journalEntries).go();
+        await _db.delete(_db.fieldVersions).go();
+        for (final table in _tables.values) {
+          await _db.customStatement('DELETE FROM ${table.table}');
+        }
+        await _db.into(_db.localState).insertOnConflictUpdate(LocalStateCompanion.insert(key: _deviceIdKey, value: id));
+        _deviceId = id;
+        _clock = HlcClock(id, now: _now);
+        return _merge(first.entries);
+      });
+    } catch (_) {
+      _deviceId = previousId;
+      _clock = previousClock;
+      rethrow;
+    }
   }
 
   // ------------------------------------------------------------ exchange

@@ -98,4 +98,29 @@ void main() {
     await _pump(tester, const SyncState(status: SyncStatus.upToDate, clockOffset: Duration(minutes: 4)));
     expect(find.byKey(const Key('syncClockWarning')), findsNothing);
   });
+
+  testWidgets('first exchange: the question, merge, and replace after confirmation', (tester) async {
+    final cubit = await _pump(tester, const SyncState(status: SyncStatus.decisionNeeded, pending: 2));
+    when(cubit.merge).thenAnswer((_) async {});
+    when(cubit.replace).thenAnswer((_) async {});
+    expect(find.text('Premier échange avec le serveur'), findsOneWidget);
+    expect(find.textContaining('sans rien en commun'), findsOneWidget);
+    expect(find.byKey(const Key('syncNow')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('syncMerge')));
+    verify(cubit.merge).called(1);
+
+    await tester.tap(find.byKey(const Key('syncReplace')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('sera définitivement perdu'), findsOneWidget);
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
+    verifyNever(cubit.replace);
+
+    await tester.tap(find.byKey(const Key('syncReplace')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('syncReplaceConfirm')));
+    await tester.pumpAndSettle();
+    verify(cubit.replace).called(1);
+  });
 }

@@ -45,11 +45,17 @@ class SimDevice {
   }
 
   /// One exchange to its end; [wrap] can put a transport in between.
-  Future<SyncReport> sync({SyncTransport Function(SyncTransport client)? wrap}) async {
+  Future<SyncReport> sync({SyncTransport Function(SyncTransport client)? wrap, bool merge = false}) =>
+      _with((t, id) => engine.run(wrap == null ? t : wrap(t), pairingId: id, merge: merge));
+
+  /// Replaces the data of this device by the server's (decision H1).
+  Future<SyncReport> replace() => _with((t, id) => engine.replace(t, pairingId: id));
+
+  Future<SyncReport> _with(Future<SyncReport> Function(SyncTransport transport, String pairingId) action) async {
     final p = pairing!;
     final client = ServerClient(p.address, pin: p.fingerprint, deviceKey: p.deviceKey);
     try {
-      return await engine.run(wrap == null ? client : wrap(client), pairingId: p.deviceId);
+      return await action(client, p.deviceId);
     } finally {
       client.close();
     }

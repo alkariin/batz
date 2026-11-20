@@ -1164,6 +1164,48 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'L\'horloge de cet appareil s\'écarte de {minutes} minutes de celle du serveur. Corrigez-la : l\'ordre des modifications faites sur plusieurs appareils en dépend.'**
   String syncClockWarning(int minutes);
+
+  /// No description provided for @syncDecision.
+  ///
+  /// In fr, this message translates to:
+  /// **'Premier échange avec le serveur'**
+  String get syncDecision;
+
+  /// No description provided for @syncDecisionHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet appareil et le serveur ont chacun des données, sans rien en commun : elles viennent d\'appareils utilisés séparément. Fusionner réunit les deux ; des doublons peuvent apparaître, ils seront signalés dans les tâches. Remplacer efface les données de cet appareil et reprend celles du serveur.'**
+  String get syncDecisionHint;
+
+  /// No description provided for @syncMerge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fusionner'**
+  String get syncMerge;
+
+  /// No description provided for @syncReplace.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remplacer celles de l\'appareil'**
+  String get syncReplace;
+
+  /// No description provided for @syncReplaceAction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remplacer les données de cet appareil par celles du serveur'**
+  String get syncReplaceAction;
+
+  /// No description provided for @syncReplaceConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remplacer les données de cet appareil par celles du serveur ? Tout ce que cet appareil n\'a pas encore envoyé au serveur sera définitivement perdu.'**
+  String get syncReplaceConfirm;
+
+  /// No description provided for @syncReplaceDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les données de cet appareil sont maintenant celles du serveur.'**
+  String get syncReplaceDone;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

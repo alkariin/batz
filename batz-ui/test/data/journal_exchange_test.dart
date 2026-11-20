@@ -161,6 +161,33 @@ void main() {
       }
     },
   );
+
+  test('replacing the journal is one operation: on failure, data and identifier stay', () async {
+    final h = await Harness.open(deviceId: me);
+    await h.journal.write(Modification.set('note', 'n1', {'title': 'mine'}));
+    await h.db.customStatement(
+      'CREATE TRIGGER boom BEFORE INSERT ON notes WHEN NEW.id = \'n2000\' '
+      "BEGIN SELECT RAISE(ABORT, 'boom'); END",
+    );
+    await expectLater(
+      h.journal.replaceWith(JournalPage(modification(2000, other, 2)), newDeviceId: () => third),
+      throwsA(anything),
+    );
+    expect(h.journal.deviceId, me);
+    expect((await h.notes()).keys, ['n1']);
+
+    await h.db.customStatement('DROP TRIGGER boom');
+    expect(await h.journal.replaceWith(JournalPage(modification(3000, other, 2)), newDeviceId: () => third), 2);
+    expect(h.journal.deviceId, third);
+    expect((await h.notes()).keys, ['n3000']);
+    final stored = await h.db.customSelect("SELECT value FROM local_state WHERE key = 'device_id'").getSingle();
+    expect(stored.read<String>('value'), third, reason: 'kept for the next start');
+    await expectLater(
+      h.journal.replaceWith(JournalPage(const [], since: KnownState({other: Hlc(1, 0, other)}))),
+      throwsArgumentError,
+    );
+    await h.close();
+  });
 }
 
 /// Every copy holds, for each origin, exactly that origin's own entries up to

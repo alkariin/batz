@@ -372,5 +372,12 @@
         "type": "int"
       }
     }
-  }
+  },
+  "syncDecision": "Premier échange avec le serveur",
+  "syncDecisionHint": "Cet appareil et le serveur ont chacun des données, sans rien en commun : elles viennent d'appareils utilisés séparément. Fusionner réunit les deux ; des doublons peuvent apparaître, ils seront signalés dans les tâches. Remplacer efface les données de cet appareil et reprend celles du serveur.",
+  "syncMerge": "Fusionner",
+  "syncReplace": "Remplacer celles de l'appareil",
+  "syncReplaceAction": "Remplacer les données de cet appareil par celles du serveur",
+  "syncReplaceConfirm": "Remplacer les données de cet appareil par celles du serveur ? Tout ce que cet appareil n'a pas encore envoyé au serveur sera définitivement perdu.",
+  "syncReplaceDone": "Les données de cet appareil sont maintenant celles du serveur."
 }

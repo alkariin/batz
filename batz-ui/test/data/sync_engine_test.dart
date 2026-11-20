@@ -34,7 +34,7 @@ void main() {
   });
 
   test('an exchange sends and receives everything, page by page', () async {
-    final report = await engine.run(fake, pairingId: 'p');
+    final report = await engine.run(fake, pairingId: 'p', merge: true);
     expect(report.sentEntries, 3);
     expect(report.receivedEntries, 3);
     expect(await device.notes(), await server.notes());
@@ -51,7 +51,7 @@ void main() {
       if (++calls != 2) return;
       await server.db.customStatement("DELETE FROM journal WHERE record_id = 'mine1'");
     };
-    final report = await engine.run(fake, pairingId: 'p');
+    final report = await engine.run(fake, pairingId: 'p', merge: true);
     expect(fake.conflicts, 1, reason: 'the page continuing from mine1 was refused once');
     expect(report.sentEntries, 4, reason: 'mine1 was sent again');
     await server.journal.rebuild();
@@ -62,7 +62,7 @@ void main() {
   test('a server that announces more entries but sends none breaks the protocol', () async {
     fake.alter = (r) =>
         SyncResponse(serverTime: r.serverTime, known: r.known, page: JournalPage(const [], more: true), added: 0);
-    await expectLater(engine.run(fake, pairingId: 'p'), throwsA(isA<SyncProtocolException>()));
+    await expectLater(engine.run(fake, pairingId: 'p', merge: true), throwsA(isA<SyncProtocolException>()));
   });
 
   test('a page from the server that would leave a gap is refused, nothing integrated', () async {
@@ -72,7 +72,7 @@ void main() {
       page: JournalPage(r.page.entries, since: KnownState({other: _later(other)}), more: r.page.more),
       added: r.added,
     );
-    await expectLater(engine.run(fake, pairingId: 'p'), throwsA(isA<SyncProtocolException>()));
+    await expectLater(engine.run(fake, pairingId: 'p', merge: true), throwsA(isA<SyncProtocolException>()));
     expect((await device.notes()).keys.where((k) => k.startsWith('theirs')), isEmpty);
   });
 
@@ -84,17 +84,79 @@ void main() {
 
   test('an interrupted exchange keeps what was integrated and resumes', () async {
     fake.failNext = ServerUnreachableException('off');
-    await expectLater(engine.run(fake, pairingId: 'p'), throwsA(isA<ServerUnreachableException>()));
+    await expectLater(engine.run(fake, pairingId: 'p', merge: true), throwsA(isA<ServerUnreachableException>()));
     expect((await SyncStore(device.db).read('p')), isNull, reason: 'never reached the server');
-    await engine.run(fake, pairingId: 'p');
+    await engine.run(fake, pairingId: 'p', merge: true);
     expect(await device.notes(), await server.notes());
     expect((await SyncStore(device.db).read('p'))!.lastSuccess, isNotNull);
   });
 
   test('the offset of the server clock is measured', () async {
     fake = FakeServer(server.journal, clock: () => DateTime.now().add(const Duration(minutes: 7)));
-    final report = await engine.run(fake, pairingId: 'p');
+    final report = await engine.run(fake, pairingId: 'p', merge: true);
     expect(report.clockOffset.inSeconds, closeTo(7 * 60, 2));
+  });
+
+  group('first exchange (H1)', () {
+    test('both hold data with no origin in common: the question, before anything is exchanged', () async {
+      final serverBefore = await server.journal.entries();
+      await expectLater(engine.run(fake, pairingId: 'p'), throwsA(isA<UnrelatedDataException>()));
+      expect((await device.notes()).keys.where((k) => k.startsWith('theirs')), isEmpty);
+      expect(await server.journal.entries(), hasLength(serverBefore.length), reason: 'nothing sent');
+      expect(await SyncStore(device.db).read('p'), isNull);
+    });
+
+    test('merge: the two sets end up on both sides, and the question is not asked again', () async {
+      await engine.run(fake, pairingId: 'p', merge: true);
+      expect(await device.notes(), await server.notes());
+      expect((await device.notes()).keys, containsAll(['mine0', 'theirs0']));
+      await engine.run(fake, pairingId: 'p');
+    });
+
+    test('no question for a device holding nothing, nor for an empty server', () async {
+      final empty = await Harness.open(deviceId: '33333333-0000-4000-8000-000000000000');
+      addTearDown(empty.close);
+      await SyncEngine(empty.journal, SyncStore(empty.db)).run(fake, pairingId: 'p');
+      expect(await empty.notes(), await server.notes());
+
+      final emptyServer = await Harness.open(deviceId: '44444444-0000-4000-8000-000000000000');
+      addTearDown(emptyServer.close);
+      await engine.run(FakeServer(emptyServer.journal), pairingId: 'p');
+      expect(await emptyServer.notes(), await device.notes());
+    });
+
+    test('replace: the device holds exactly the server data, under a new identifier', () async {
+      final before = device.journal.deviceId;
+      final report = await engine.replace(fake, pairingId: 'p');
+      expect(report.replaced, isTrue);
+      expect(await device.notes(), await server.notes());
+      expect((await device.notes()).keys.where((k) => k.startsWith('mine')), isEmpty);
+      expect(
+        [for (final e in await device.journal.entries()) '$e'],
+        [for (final e in await server.journal.entries()) '$e'],
+      );
+      expect(device.journal.deviceId, isNot(before));
+      expect(
+        (await server.journal.entries()).where((e) => e.deviceId == before),
+        isEmpty,
+        reason: 'what was never sent is gone',
+      );
+
+      // The device goes on under its new identifier.
+      await device.journal.write(Modification.set('note', 'after', {'title': 'new'}));
+      await engine.run(fake, pairingId: 'p');
+      expect((await server.notes())['after'], isNotNull);
+      expect((await server.journal.entries()).last.deviceId, device.journal.deviceId);
+    });
+
+    test('replace erases nothing when the server does not answer', () async {
+      final notes = await device.notes();
+      final id = device.journal.deviceId;
+      fake.failNext = ServerUnreachableException('off');
+      await expectLater(engine.replace(fake, pairingId: 'p'), throwsA(isA<ServerUnreachableException>()));
+      expect(await device.notes(), notes);
+      expect(device.journal.deviceId, id);
+    });
   });
 }
 

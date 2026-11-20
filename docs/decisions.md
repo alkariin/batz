@@ -431,3 +431,26 @@ figure was 66.7 s.
 - The home screen, empty until now, shows the synchronisation card; Plus ›
   Serveur shows the same card above the server details. After an exchange
   that received entries, `LedgerCubit` reloads, so every screen shows them.
+
+### 2.4 First exchange and replacement (H1)
+
+**Decisions.**
+
+- The question is asked when the device and the server both hold entries and
+  no origin is common to their known states. That can only happen before
+  their first exchange: after one, each holds the other's origins. No flag
+  is stored. The check runs on the first answer, before anything of it is
+  integrated and before anything is sent, so leaving the question unanswered
+  changes nothing; automatic exchanges then wait for the answer.
+- « Fusionner » runs an ordinary exchange that skips the check. Duplicates it
+  creates are left to the tasks of step 2.6.
+- « Remplacer » asks the server as a device holding nothing, then, in one
+  transaction, erases the journal, the field versions and the derived tables,
+  stores a new journal identifier and integrates the first page; the exchange
+  then continues as usual. Nothing is erased if the server does not answer.
+  The new identifier guarantees that the entries written afterwards never
+  follow, under the same origin, entries that were erased. The same action is
+  offered in Plus › Serveur, after a confirmation that names the loss of the
+  modifications not sent.
+- `Journal.deviceId` is no longer final: it changes only through
+  `replaceWith`, and the clock restarts with it.

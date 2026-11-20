@@ -68,19 +68,21 @@ void main() {
   });
 
   test('at start it exchanges: status, date, nothing pending, and the screens reload when entries arrive', () async {
-    await server.journal.write(Modification.set('note', 'theirs', {'title': 'Coop'}));
     final c = cubit();
     final states = <SyncStatus>[];
     c.stream.listen((s) => states.add(s.status));
     await c.start();
+    await wait(0); // the stream delivers the last state asynchronously
     expect(states, containsAllInOrder([SyncStatus.neverSynced, SyncStatus.syncing, SyncStatus.upToDate]));
     expect(c.state.lastSync, isNotNull);
     expect(c.state.pending, 0);
+    expect(reloads, 0, reason: 'nothing received');
+
+    // Another device's modification reaches the server.
+    await server.journal.merge([entry(DateTime.now().millisecondsSinceEpoch, 0, other, 'theirs', 'title', 'Coop')]);
+    await c.sync(manual: true);
     expect(reloads, 1);
     expect((await device.notes()).keys, containsAll(['mine', 'theirs']));
-
-    await c.sync(manual: true);
-    expect(reloads, 1, reason: 'nothing new received, nothing to reload');
   });
 
   test('a server out of reach gives the offline status, no error, and counts what waits', () async {
@@ -202,5 +204,38 @@ void main() {
     await c.start();
     expect(c.state.status, SyncStatus.error);
     expect(c.state.error, contains('INTERNAL'));
+  });
+
+  group('first exchange (H1)', () {
+    setUp(() async => server.journal.write(Modification.set('note', 'theirs', {'title': 'Coop'})));
+
+    test('unrelated data: the question; automatic exchanges wait for the answer', () async {
+      final c = cubit(debounce: 20);
+      await c.start();
+      expect(c.state.status, SyncStatus.decisionNeeded);
+      await device.journal.write(Modification.set('note', 'mine', {'title': 'x'}));
+      await wait(100);
+      expect(fake.healthCalls, 1);
+      expect(fake.requests, hasLength(1), reason: 'only the first call, which learned the server state');
+    });
+
+    test('merge', () async {
+      final c = cubit();
+      await c.start();
+      await c.merge();
+      expect(c.state.status, SyncStatus.upToDate);
+      expect((await device.notes()).keys, containsAll(['mine', 'theirs']));
+      expect(reloads, 1);
+    });
+
+    test('replace, then the screens reload', () async {
+      final c = cubit();
+      await c.start();
+      await c.replace();
+      expect(c.state.status, SyncStatus.upToDate);
+      expect((await device.notes()).keys, ['theirs']);
+      expect(reloads, 1);
+      expect(c.state.pending, 0);
+    });
   });
 }

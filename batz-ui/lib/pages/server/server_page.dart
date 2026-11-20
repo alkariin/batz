@@ -213,6 +213,12 @@ class _PairedView extends StatelessWidget {
           child: Text(l.serverRefresh),
         ),
         const SizedBox(height: 8),
+        OutlinedButton(
+          key: const Key('serverReplace'),
+          onPressed: state.busy ? null : () => confirmReplace(context),
+          child: Text(l.syncReplaceAction),
+        ),
+        const SizedBox(height: 8),
         OutlinedButton(onPressed: state.busy ? null : () => _confirmUnpair(context), child: Text(l.serverUnpair)),
       ],
     );

@@ -1,7 +1,9 @@
 // End-to-end: devices exchange their journal through a real batz-web
 // process, with the app's operations and sync engine.
 import 'package:batz/data/server/server_client.dart';
+import 'package:batz/data/sync/sync_engine.dart';
 import 'package:batz/domain/journal/known_state.dart';
+import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/transaction.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -135,6 +137,51 @@ void main() {
     final state = await sender.state();
     expect(await receiver.state(), state);
     expect((await receiver.ledger.ledger()).transactions, hasLength(13));
+  });
+
+  group('first exchange of a device used separately (H1)', () {
+    late SimDevice c;
+    setUp(() async {
+      c = await SimDevice.create('C', deviceId: idC);
+      await c.ledger.apply(
+        (l) => l.createAccount('c-own', const AccountDraft(name: 'Compte de C', type: AccountType.cash)),
+      );
+      await c.pair(server);
+    });
+    tearDown(() => c.close());
+
+    test('the question comes first, nothing exchanged', () async {
+      final before = await c.state();
+      await expectLater(c.sync(), throwsA(isA<UnrelatedDataException>()));
+      expect(await c.state(), before);
+      await a.sync();
+      expect((await a.ledger.ledger()).accounts.containsKey('c-own'), isFalse);
+    });
+
+    test('replace: the device then holds exactly the server data', () async {
+      final report = await c.replace();
+      expect(report.replaced, isTrue);
+      expect(await c.state(), await a.state(), reason: 'tables, journal and field versions');
+      expect(c.ledger.journal.deviceId, isNot(idC));
+      expect((await c.ledger.ledger()).accounts.containsKey('c-own'), isFalse);
+
+      // From then on, an ordinary device.
+      await c.ledger.apply((l) => l.createAccount('c-new', const AccountDraft(name: 'Après', type: AccountType.cash)));
+      await c.sync();
+      await a.sync();
+      expect((await a.ledger.ledger()).accounts.keys, contains('c-new'));
+      expect((await a.ledger.ledger()).accounts.containsKey('c-own'), isFalse);
+    });
+
+    test('merge: both data sets end up on every device', () async {
+      await c.sync(merge: true);
+      await a.sync();
+      await b.sync();
+      expect((await a.ledger.ledger()).accounts.keys, contains('c-own'));
+      expect((await c.ledger.ledger()).transactions.keys, contains('t1'));
+      expect(await c.state(), await a.state());
+      expect(await b.state(), await a.state());
+    });
   });
 
   test(
