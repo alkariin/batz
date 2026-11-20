@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'helpers/theme.dart';
 import 'l10n/app_localizations.dart';
+import 'pages/server/server_cubit.dart';
 import 'pages/shell.dart';
 import 'services.dart';
 
@@ -13,7 +15,10 @@ class BatzApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _material(home: const AppShell());
+    return BlocProvider(
+      create: (_) => ServerCubit(services.server)..load(),
+      child: _material(home: const AppShell()),
+    );
   }
 }
 

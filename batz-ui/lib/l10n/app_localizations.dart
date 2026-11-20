@@ -144,6 +144,204 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'La base de données locale n\'a pas pu être ouverte. Détail technique :'**
   String get startupErrorBody;
+
+  /// No description provided for @cancel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get cancel;
+
+  /// No description provided for @confirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer'**
+  String get confirm;
+
+  /// No description provided for @serverTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Serveur'**
+  String get serverTitle;
+
+  /// No description provided for @serverPaired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Associé au serveur'**
+  String get serverPaired;
+
+  /// No description provided for @serverNotPaired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non associé'**
+  String get serverNotPaired;
+
+  /// No description provided for @serverPairingIntro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sur le serveur, lancez « batz-web pairing-code » puis saisissez ici son adresse et le code affiché.'**
+  String get serverPairingIntro;
+
+  /// No description provided for @serverAddress.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse du serveur'**
+  String get serverAddress;
+
+  /// No description provided for @serverCode.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code d\'association'**
+  String get serverCode;
+
+  /// No description provided for @serverDeviceName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de cet appareil'**
+  String get serverDeviceName;
+
+  /// No description provided for @serverPair.
+  ///
+  /// In fr, this message translates to:
+  /// **'Associer'**
+  String get serverPair;
+
+  /// No description provided for @serverAddressValue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse : {address}'**
+  String serverAddressValue(String address);
+
+  /// No description provided for @serverVersion.
+  ///
+  /// In fr, this message translates to:
+  /// **'Version du serveur : {version}'**
+  String serverVersion(String version);
+
+  /// No description provided for @serverFingerprint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Empreinte du certificat (à comparer avec celle affichée par le serveur)'**
+  String get serverFingerprint;
+
+  /// No description provided for @serverIncompatible.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette version de l\'app est trop ancienne pour le serveur, qui demande au moins la version {version}. Mettez l\'app à jour.'**
+  String serverIncompatible(String version);
+
+  /// No description provided for @serverDevices.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appareils associés'**
+  String get serverDevices;
+
+  /// No description provided for @serverThisDevice.
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} (cet appareil)'**
+  String serverThisDevice(String name);
+
+  /// No description provided for @serverDeviceSince.
+  ///
+  /// In fr, this message translates to:
+  /// **'Associé le {date}'**
+  String serverDeviceSince(String date);
+
+  /// No description provided for @serverDeviceRevoked.
+  ///
+  /// In fr, this message translates to:
+  /// **'Révoqué le {date}'**
+  String serverDeviceRevoked(String date);
+
+  /// No description provided for @serverRevoke.
+  ///
+  /// In fr, this message translates to:
+  /// **'Révoquer'**
+  String get serverRevoke;
+
+  /// No description provided for @serverRevokeConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Révoquer « {name} » ? Cet appareil ne pourra plus accéder au serveur.'**
+  String serverRevokeConfirm(String name);
+
+  /// No description provided for @serverRefresh.
+  ///
+  /// In fr, this message translates to:
+  /// **'Actualiser'**
+  String get serverRefresh;
+
+  /// No description provided for @serverUnpair.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dissocier cet appareil'**
+  String get serverUnpair;
+
+  /// No description provided for @serverUnpairConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dissocier cet appareil ? Sa clé sera révoquée sur le serveur.'**
+  String get serverUnpairConfirm;
+
+  /// No description provided for @serverForget.
+  ///
+  /// In fr, this message translates to:
+  /// **'Oublier ce serveur sur cet appareil'**
+  String get serverForget;
+
+  /// No description provided for @serverErrorAddress.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse invalide. Exemple : 192.168.1.95:8443.'**
+  String get serverErrorAddress;
+
+  /// No description provided for @serverErrorUnreachable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Serveur injoignable. Vérifiez qu\'il est allumé et que vous êtes sur le réseau de la maison.'**
+  String get serverErrorUnreachable;
+
+  /// No description provided for @serverErrorCertificate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur présente un autre certificat que celui mémorisé lors de l\'association. Connexion refusée.'**
+  String get serverErrorCertificate;
+
+  /// No description provided for @serverErrorCodeInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code d\'association incorrect.'**
+  String get serverErrorCodeInvalid;
+
+  /// No description provided for @serverErrorCodeExpired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce code a expiré. Demandez-en un nouveau au serveur.'**
+  String get serverErrorCodeExpired;
+
+  /// No description provided for @serverErrorCodeUsed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce code a déjà été utilisé. Demandez-en un nouveau au serveur.'**
+  String get serverErrorCodeUsed;
+
+  /// No description provided for @serverErrorName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le nom de l\'appareil doit compter de 1 à 64 caractères.'**
+  String get serverErrorName;
+
+  /// No description provided for @serverErrorRevoked.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet appareil a été révoqué. Oubliez ce serveur puis associez-le à nouveau.'**
+  String get serverErrorRevoked;
+
+  /// No description provided for @serverErrorOther.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur a répondu par une erreur inattendue.'**
+  String get serverErrorOther;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

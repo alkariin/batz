@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../components/empty_page.dart';
 import '../l10n/app_localizations.dart';
+import 'more/more_page.dart';
 
 /// Width from which navigation moves from the bottom bar to a side rail.
 const wideLayoutBreakpoint = 600.0;
@@ -50,7 +51,7 @@ class _AppShellState extends State<AppShell> {
     final l = AppLocalizations.of(context);
     final page = KeyedSubtree(
       key: ValueKey(_selected),
-      child: EmptyPage(title: _destinations[_selected]!.label(l)),
+      child: _selected == Section.more ? const MorePage() : EmptyPage(title: _destinations[_selected]!.label(l)),
     );
 
     return LayoutBuilder(

@@ -11,5 +11,87 @@
     "description": "Placeholder shown on pages that have no content yet."
   },
   "startupErrorTitle": "batz ne peut pas démarrer",
-  "startupErrorBody": "La base de données locale n'a pas pu être ouverte. Détail technique :"
+  "startupErrorBody": "La base de données locale n'a pas pu être ouverte. Détail technique :",
+  "cancel": "Annuler",
+  "confirm": "Confirmer",
+  "serverTitle": "Serveur",
+  "serverPaired": "Associé au serveur",
+  "serverNotPaired": "Non associé",
+  "serverPairingIntro": "Sur le serveur, lancez « batz-web pairing-code » puis saisissez ici son adresse et le code affiché.",
+  "serverAddress": "Adresse du serveur",
+  "serverCode": "Code d'association",
+  "serverDeviceName": "Nom de cet appareil",
+  "serverPair": "Associer",
+  "serverAddressValue": "Adresse : {address}",
+  "@serverAddressValue": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "serverVersion": "Version du serveur : {version}",
+  "@serverVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "serverFingerprint": "Empreinte du certificat (à comparer avec celle affichée par le serveur)",
+  "serverIncompatible": "Cette version de l'app est trop ancienne pour le serveur, qui demande au moins la version {version}. Mettez l'app à jour.",
+  "@serverIncompatible": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "serverDevices": "Appareils associés",
+  "serverThisDevice": "{name} (cet appareil)",
+  "@serverThisDevice": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "serverDeviceSince": "Associé le {date}",
+  "@serverDeviceSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "serverDeviceRevoked": "Révoqué le {date}",
+  "@serverDeviceRevoked": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "serverRevoke": "Révoquer",
+  "serverRevokeConfirm": "Révoquer « {name} » ? Cet appareil ne pourra plus accéder au serveur.",
+  "@serverRevokeConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "serverRefresh": "Actualiser",
+  "serverUnpair": "Dissocier cet appareil",
+  "serverUnpairConfirm": "Dissocier cet appareil ? Sa clé sera révoquée sur le serveur.",
+  "serverForget": "Oublier ce serveur sur cet appareil",
+  "serverErrorAddress": "Adresse invalide. Exemple : 192.168.1.95:8443.",
+  "serverErrorUnreachable": "Serveur injoignable. Vérifiez qu'il est allumé et que vous êtes sur le réseau de la maison.",
+  "serverErrorCertificate": "Le serveur présente un autre certificat que celui mémorisé lors de l'association. Connexion refusée.",
+  "serverErrorCodeInvalid": "Code d'association incorrect.",
+  "serverErrorCodeExpired": "Ce code a expiré. Demandez-en un nouveau au serveur.",
+  "serverErrorCodeUsed": "Ce code a déjà été utilisé. Demandez-en un nouveau au serveur.",
+  "serverErrorName": "Le nom de l'appareil doit compter de 1 à 64 caractères.",
+  "serverErrorRevoked": "Cet appareil a été révoqué. Oubliez ce serveur puis associez-le à nouveau.",
+  "serverErrorOther": "Le serveur a répondu par une erreur inattendue."
 }
