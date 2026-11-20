@@ -61,10 +61,13 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
-      # test/e2e pairs the app's code with this real server.
+      # test/e2e pairs the app's code with this real server, built with the
+      # version the tests expect (as test/e2e/server_harness.dart does).
       - name: Build the server for the end-to-end tests
         working-directory: batz-web/src
-        run: go build -o "$RUNNER_TEMP/batz-web" .
+        run: |
+          go build -o "$RUNNER_TEMP/batz-web" \
+            -ldflags "-X github.com/alkariin/batz/batz-web/internal/version.Version=v0.1.0-e2e" .
       - run: flutter pub get
       - name: Format
         run: dart format --output=none --set-exit-if-changed lib test
