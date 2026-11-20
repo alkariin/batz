@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/alkariin/batz/batz-web/internal/infrastructure/tlscert"
+	"github.com/alkariin/batz/batz-web/internal/version"
 )
 
 var (
@@ -183,7 +184,8 @@ func TestHealthzOverHTTPS(t *testing.T) {
 	assert.Equal(t, http.StatusOK, status)
 	assert.Equal(t, "ok", body["status"])
 	assert.Equal(t, "v0.0.0-e2e", body["version"])
-	assert.Equal(t, "0.1.0", body["minAppVersion"])
+	assert.Equal(t, version.MinAppVersion, body["minAppVersion"])
+	assert.Equal(t, float64(1), body["syncProtocol"])
 
 	// HTTPS only: a plain HTTP request gets no API answer.
 	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/healthz", s.port))
@@ -273,4 +275,71 @@ func TestAnotherCertificateIsRefused(t *testing.T) {
 	// Without the pin, the self-signed certificate is not trusted either.
 	_, err = (&http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{}}}).Get(genuine.url("/healthz"))
 	assert.Error(t, err)
+}
+
+func entryJSON(millis int, origin, record, field, value string) map[string]string {
+	return map[string]string{
+		"hlc": fmt.Sprintf("%015d:0000:%s", millis, origin), "entity": "note", "recordId": record, "field": field, "value": value,
+	}
+}
+
+func (s *server) exchange(key string, known map[string]string, since map[string]string, entries ...map[string]string) map[string]any {
+	s.t.Helper()
+	if entries == nil {
+		entries = []map[string]string{}
+	}
+	status, body := s.call("POST", "/api/v1/sync", key, map[string]any{
+		"protocol": 1, "appVersion": "0.3.0", "known": known, "since": since, "entries": entries, "limit": 2,
+	})
+	require.Equal(s.t, http.StatusOK, status, body)
+	return body
+}
+
+// Two simulated devices exchange their entries through the real binary,
+// with pages of two entries; the journal survives a restart.
+func TestSyncBetweenTwoDevices(t *testing.T) {
+	dir := t.TempDir()
+	s := start(t, dir)
+	_, phone := s.pair(s.pairingCode(), "Phone")
+	_, laptop := s.pair(s.pairingCode(), "Laptop")
+	phoneKey, laptopKey := phone["deviceKey"].(string), laptop["deviceKey"].(string)
+	const a, b = "aaaaaaaa-0000-4000-8000-000000000000", "bbbbbbbb-0000-4000-8000-000000000000"
+
+	page := []map[string]string{
+		entryJSON(1000, a, "n1", "title", `"Loyer"`),
+		entryJSON(1000, a, "n1", "amount", `-150000`),
+		entryJSON(2000, a, "n2", "title", `"Coop"`),
+	}
+	body := s.exchange(phoneKey, map[string]string{a: page[2]["hlc"]}, nil, page...)
+	assert.Equal(t, float64(3), body["added"])
+
+	// The laptop pages through them: two pages, the first modification whole.
+	pull := func(srv *server, key string, known map[string]string) []any {
+		var got []any
+		for range 10 {
+			body := srv.exchange(key, known, nil)
+			entries := body["entries"].([]any)
+			got = append(got, entries...)
+			for _, e := range entries {
+				known[a] = e.(map[string]any)["hlc"].(string)
+			}
+			if body["more"] == false {
+				break
+			}
+		}
+		return got
+	}
+	got := pull(s, laptopKey, map[string]string{})
+	require.Len(t, got, 3)
+
+	// The laptop's own change, sent the same way.
+	mine := entryJSON(3000, b, "n1", "title", `"Loyer et charges"`)
+	body = s.exchange(laptopKey, map[string]string{a: page[2]["hlc"], b: mine["hlc"]}, map[string]string{}, mine)
+	assert.Equal(t, float64(1), body["added"])
+
+	// After a restart, a device holding nothing receives all four once.
+	again := start(t, dir)
+	all := again.exchange(phoneKey, map[string]string{}, nil)
+	assert.Len(t, all["entries"].([]any), 2, "pages of two")
+	assert.Equal(t, map[string]any{a: page[2]["hlc"], b: mine["hlc"]}, all["known"])
 }

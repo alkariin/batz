@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -65,23 +66,21 @@ func run(args []string, out io.Writer) error {
 	}
 }
 
-func openDevices(cfg config.Config) (*application.Devices, func(), error) {
+func openDB(cfg config.Config) (*sql.DB, error) {
 	if err := os.MkdirAll(cfg.DataDir, 0o700); err != nil {
-		return nil, nil, fmt.Errorf("create data directory: %w", err)
+		return nil, fmt.Errorf("create data directory: %w", err)
 	}
-	db, err := persistence.Open(filepath.Join(cfg.DataDir, dbFile))
-	if err != nil {
-		return nil, nil, err
-	}
-	return application.NewDevices(persistence.NewDeviceStore(db), time.Now), func() { db.Close() }, nil
+	return persistence.Open(filepath.Join(cfg.DataDir, dbFile))
 }
 
 func serve(cfg config.Config) error {
-	devices, closeDB, err := openDevices(cfg)
+	db, err := openDB(cfg)
 	if err != nil {
 		return err
 	}
-	defer closeDB()
+	defer db.Close()
+	devices := application.NewDevices(persistence.NewDeviceStore(db), time.Now)
+	sync := application.NewSync(persistence.NewJournalStore(db), time.Now)
 	cert, err := tlscert.LoadOrCreate(cfg.DataDir, time.Now())
 	if err != nil {
 		return err
@@ -96,7 +95,7 @@ func serve(cfg config.Config) error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	router := web.NewRouter(devices, web.Health{Version: version.Version, MinAppVersion: version.MinAppVersion})
+	router := web.NewRouter(devices, sync, web.Health{Version: version.Version, MinAppVersion: version.MinAppVersion})
 	err = web.Serve(ctx, web.NewServer(router, cert), ln)
 	slog.Info("batz-web stopped")
 	return err
@@ -108,11 +107,12 @@ func pairingCode(cfg config.Config, args []string, out io.Writer) error {
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	devices, closeDB, err := openDevices(cfg)
+	db, err := openDB(cfg)
 	if err != nil {
 		return err
 	}
-	defer closeDB()
+	defer db.Close()
+	devices := application.NewDevices(persistence.NewDeviceStore(db), time.Now)
 	// The certificate is created here too if the server never started, so
 	// the fingerprint printed is the one the app will see.
 	cert, err := tlscert.LoadOrCreate(cfg.DataDir, time.Now())

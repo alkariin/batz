@@ -9,10 +9,15 @@ import (
 
 	"github.com/alkariin/batz/batz-web/internal/application"
 	"github.com/alkariin/batz/batz-web/internal/domain/device"
+	"github.com/alkariin/batz/batz-web/internal/domain/journal"
 )
 
-// maxBodyBytes caps JSON request bodies.
+// maxBodyBytes caps JSON request bodies, except exchanges.
 const maxBodyBytes = 1 << 20
+
+// maxSyncBodyBytes caps an exchange: a page of up to
+// application.MaxPageEntries entries.
+const maxSyncBodyBytes = 32 << 20
 
 // Health is what GET /healthz reports.
 type Health struct {
@@ -21,10 +26,10 @@ type Health struct {
 }
 
 // NewRouter wires the routes.
-func NewRouter(devices *application.Devices, health Health) *gin.Engine {
+func NewRouter(devices *application.Devices, sync *application.Sync, health Health) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
-	r.Use(gin.Recovery(), limitBody)
+	r.Use(gin.Recovery())
 	r.NoRoute(func(c *gin.Context) { abort(c, http.StatusNotFound, CodeNotFound, "no such route") })
 
 	r.GET("/healthz", func(c *gin.Context) {
@@ -32,22 +37,29 @@ func NewRouter(devices *application.Devices, health Health) *gin.Engine {
 			"status":        "ok",
 			"version":       health.Version,
 			"minAppVersion": health.MinAppVersion,
+			"syncProtocol":  journal.Protocol,
 		})
 	})
 
 	h := &deviceHandler{devices: devices}
 	api := r.Group("/api/v1")
-	api.POST("/pairing", h.pair)
+	small := api.Group("", limitBody(maxBodyBytes))
+	small.POST("/pairing", h.pair)
 
-	authed := api.Group("", authenticate(devices))
+	authed := small.Group("", authenticate(devices))
 	authed.GET("/devices", h.list)
 	authed.DELETE("/devices/:id", h.revoke)
+
+	s := &syncHandler{sync: sync}
+	api.POST("/sync", limitBody(maxSyncBodyBytes), authenticate(devices), s.exchange)
 	return r
 }
 
-func limitBody(c *gin.Context) {
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxBodyBytes)
-	c.Next()
+func limitBody(n int64) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, n)
+		c.Next()
+	}
 }
 
 const deviceKey = "device"

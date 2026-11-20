@@ -323,3 +323,38 @@ payment over two years, a transfer, a deletion. `test/data/upgrade_test.dart`
 opens it with the current version and checks that every record is read back
 and that new writes follow the old ones. Phase 2 changes neither the journal
 tables nor the derived tables.
+
+### 2.1 Exchange route: what the server checks and stores
+
+**Decisions.**
+
+- One table `journal`, `WITHOUT ROWID`, keyed by (timestamp, entity, record,
+  field) like the app's, with the origin device copied from the timestamp into
+  its own column and indexed with it: the known state is one
+  `MAX(hlc) GROUP BY origin` over that index. Each row also records which
+  paired device sent it and when, for diagnosis only.
+- A value travels as the JSON text of the field's value (`"value": "-4590"`,
+  `"value": "\"Coop\""`). The server checks that it is one JSON scalar the
+  journal accepts (null, boolean, 64-bit integer, string; at most 256 KiB),
+  then stores and returns that text unchanged: it never re-encodes.
+- A page carries `since`: for each origin present, the receiver's known
+  timestamp the page was computed from. The receiver refuses a page that
+  continues from more than it holds (`409 SYNC_STATE_CHANGED` on the server),
+  which would leave a gap, for instance after the server was restored from an
+  older copy between two calls. Each entry must also come after `since` for
+  its origin, and a page must be sorted by timestamp with no entry twice.
+- Limits: 10 000 entries per page and 32 MiB per request on `/sync` (the other
+  routes keep 1 MiB); the pages the server sends hold 1 000 entries unless the
+  app asks for another size, and stop at 8 MiB. A modification is never cut:
+  when a single one is larger than the page, it goes whole.
+- The request body is decoded strictly: an unknown field is a bad request, so
+  that a newer app is never half understood. The protocol number covers
+  evolutions.
+- `/healthz` reports `syncProtocol`. The server refuses an exchange whose
+  protocol differs (`400 SYNC_PROTOCOL_UNSUPPORTED`) or whose app version is
+  older than its minimum (`426 APP_VERSION_UNSUPPORTED`). The minimum stays
+  0.1.0 until the version bump of step 2.7, so that every commit of the phase
+  passes its tests.
+- Every exchange is one `BEGIN IMMEDIATE` transaction: check, insertion with
+  `ON CONFLICT DO NOTHING`, then the server state and the page for the app.
+  Exchanges are thus serialised and replaying one adds nothing.

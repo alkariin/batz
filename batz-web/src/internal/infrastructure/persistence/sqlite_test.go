@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+	"database/sql"
 	"path/filepath"
 	"testing"
 	"time"
@@ -47,4 +48,38 @@ func TestDeletePairingCodesBefore(t *testing.T) {
 	var n int
 	require.NoError(t, db.QueryRow(`SELECT count(*) FROM pairing_codes`).Scan(&n))
 	assert.Equal(t, 1, n)
+}
+
+// A database of server 0.2.0 (devices only, migration 1) gets the journal and
+// keeps its devices.
+func TestUpgradeFromTheDevicesOnlySchema(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "batz.db")
+	old, err := sql.Open("sqlite", "file:"+path)
+	require.NoError(t, err)
+	up, err := migrations.ReadFile("migrations/000001_devices.up.sql")
+	require.NoError(t, err)
+	for _, stmt := range []string{
+		string(up),
+		`CREATE TABLE schema_migrations (version uint64, dirty bool)`,
+		`CREATE UNIQUE INDEX version_unique ON schema_migrations (version)`,
+		`INSERT INTO schema_migrations VALUES (1, 0)`,
+		`INSERT INTO devices (id, name, key_hash, created_at) VALUES ('d1', 'Phone', 'k', 1)`,
+	} {
+		_, err := old.Exec(stmt)
+		require.NoError(t, err, stmt)
+	}
+	require.NoError(t, old.Close())
+
+	db, err := Open(path)
+	require.NoError(t, err)
+	defer db.Close()
+	d, err := NewDeviceStore(db).DeviceByKeyHash(context.Background(), "k")
+	require.NoError(t, err)
+	assert.Equal(t, "Phone", d.Name)
+	var version int
+	require.NoError(t, db.QueryRow(`SELECT version FROM schema_migrations`).Scan(&version))
+	assert.Equal(t, 2, version)
+	var n int
+	require.NoError(t, db.QueryRow(`SELECT count(*) FROM journal`).Scan(&n))
+	assert.Equal(t, 0, n)
 }

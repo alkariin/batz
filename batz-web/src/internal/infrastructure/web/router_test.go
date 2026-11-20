@@ -33,7 +33,8 @@ func newFixture(t *testing.T) *fixture {
 	t.Cleanup(func() { db.Close() })
 	f := &fixture{t: t, now: time.Date(2026, 11, 20, 10, 0, 0, 0, time.UTC)}
 	f.devices = application.NewDevices(persistence.NewDeviceStore(db), func() time.Time { return f.now })
-	f.handler = NewRouter(f.devices, Health{Version: "v9.9.9", MinAppVersion: "0.1.0"})
+	sync := application.NewSync(persistence.NewJournalStore(db), func() time.Time { return f.now })
+	f.handler = NewRouter(f.devices, sync, Health{Version: "v9.9.9", MinAppVersion: "0.1.0"})
 	return f
 }
 
@@ -82,7 +83,7 @@ func TestHealthz(t *testing.T) {
 	f := newFixture(t)
 	w, body := f.do("GET", "/healthz", "", nil)
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, map[string]any{"status": "ok", "version": "v9.9.9", "minAppVersion": "0.1.0"}, body)
+	assert.Equal(t, map[string]any{"status": "ok", "version": "v9.9.9", "minAppVersion": "0.1.0", "syncProtocol": float64(1)}, body)
 }
 
 func TestPairing(t *testing.T) {
