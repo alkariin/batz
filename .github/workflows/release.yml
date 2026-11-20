@@ -1,0 +1,224 @@
+name: Release
+
+# On publishing a GitHub release (tag vX.Y.Z), builds and attaches:
+#   - the Android APK, signed with the release key (arm64),
+#   - the Ubuntu and Windows builds, as archives,
+#   - the server image, as a file to `docker load` on the NAS.
+# Run by hand without a tag, it builds the selected branch and keeps the files
+# as short-lived workflow artifacts: a dry run that touches no release.
+#
+# Repository secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+# ANDROID_KEY_ALIAS. Repository variable: ANDROID_CERT_SHA256, the SHA-256 of
+# the signing certificate, checked on every APK (batz-web/docs/deployment.md).
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build (empty = dry run on the selected branch)
+        required: false
+        default: ''
+
+env:
+  FLUTTER_VERSION: '3.47.7'
+  TAG: ${{ github.event.release.tag_name || inputs.tag }}
+
+jobs:
+  check-version:
+    name: Tag matches the app version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG || github.ref }}
+      - name: Compare
+        if: env.TAG != ''
+        run: |
+          version=$(sed -n 's/^version: *\([0-9][0-9.]*\)+.*/\1/p' batz-ui/pubspec.yaml)
+          if [ "v$version" != "$TAG" ]; then
+            echo "::error::batz-ui/pubspec.yaml says $version, the release is $TAG"
+            exit 1
+          fi
+
+  apk:
+    name: Signed Android APK
+    needs: check-version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: batz-ui
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG || github.ref }}
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Write the signing config
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
+            echo "::error::the ANDROID_KEYSTORE_* / ANDROID_KEY_ALIAS secrets are not set"
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          cat > android/key.properties <<PROPS
+          storeFile=$RUNNER_TEMP/release.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEYSTORE_PASSWORD
+          PROPS
+      - run: flutter pub get
+      # arm64 only: every recent phone, and a single asset to pick.
+      - run: flutter build apk --release --target-platform android-arm64
+      # An APK signed with another key (a missing secret falling back to the
+      # debug key) could never upgrade the installed app: refuse it.
+      - name: Check the signature
+        env:
+          CERT_SHA256: ${{ vars.ANDROID_CERT_SHA256 }}
+        run: |
+          if [ -z "$CERT_SHA256" ]; then
+            echo "::error::the ANDROID_CERT_SHA256 repository variable is not set"
+            exit 1
+          fi
+          apksigner=$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -name apksigner | sort -V | tail -1)
+          certs=$("$apksigner" verify --print-certs build/app/outputs/flutter-apk/app-release.apk)
+          echo "$certs"
+          digests=$(echo "$certs" | sed -n 's/.*certificate SHA-256 digest: //p' | sort -u)
+          if [ "$digests" != "$CERT_SHA256" ]; then
+            echo "::error::APK signed by ${digests:-nothing}, expected $CERT_SHA256"
+            exit 1
+          fi
+      - name: Name it
+        run: mv build/app/outputs/flutter-apk/app-release.apk "$RUNNER_TEMP/batz-${TAG:-${GITHUB_SHA::7}}-android-arm64.apk"
+      - name: Attach it to the release
+        if: env.TAG != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" "$RUNNER_TEMP"/batz-*.apk --clobber --repo "$GITHUB_REPOSITORY"
+      - name: Keep it (dry run)
+        if: env.TAG == ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: batz-android
+          path: ${{ runner.temp }}/batz-*.apk
+          retention-days: 3
+
+  linux:
+    name: Ubuntu build
+    needs: check-version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: batz-ui
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG || github.ref }}
+      - run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libsecret-1-dev
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter build linux --release
+      - name: Archive
+        run: tar -C build/linux/x64/release/bundle -czf "$RUNNER_TEMP/batz-${TAG:-${GITHUB_SHA::7}}-linux-x64.tar.gz" .
+      - name: Attach it to the release
+        if: env.TAG != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" "$RUNNER_TEMP"/batz-*-linux-x64.tar.gz --clobber --repo "$GITHUB_REPOSITORY"
+      - name: Keep it (dry run)
+        if: env.TAG == ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: batz-linux
+          path: ${{ runner.temp }}/batz-*-linux-x64.tar.gz
+          retention-days: 3
+
+  windows:
+    name: Windows build
+    needs: check-version
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: batz-ui
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG || github.ref }}
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter build windows --release
+      - name: Archive
+        shell: pwsh
+        run: |
+          $name = if ($env:TAG) { $env:TAG } else { $env:GITHUB_SHA.Substring(0, 7) }
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "$env:RUNNER_TEMP/batz-$name-windows-x64.zip"
+      - name: Attach it to the release
+        if: env.TAG != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" "$RUNNER_TEMP"/batz-*-windows-x64.zip --clobber --repo "$GITHUB_REPOSITORY"
+      - name: Keep it (dry run)
+        if: env.TAG == ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: batz-windows
+          path: ${{ runner.temp }}/batz-*-windows-x64.zip
+          retention-days: 3
+
+  server-image:
+    name: Server image file
+    needs: check-version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG || github.ref }}
+      # One plain linux/amd64 image (the NAS is x86_64), without provenance or
+      # SBOM attestations that older Docker engines handle poorly.
+      - name: Build
+        run: |
+          version="${TAG:-dev-${GITHUB_SHA::7}}"
+          docker build batz-web --platform linux/amd64 --provenance=false --sbom=false \
+            --build-arg VERSION="$version" \
+            --label org.opencontainers.image.source="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+            --label org.opencontainers.image.version="$version" \
+            --tag batz-web:"$version" --tag batz-web:latest
+          docker save batz-web:"$version" batz-web:latest | gzip > "$RUNNER_TEMP/batz-web-$version.tar.gz"
+      - name: Attach it to the release
+        if: env.TAG != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" "$RUNNER_TEMP"/batz-web-*.tar.gz --clobber --repo "$GITHUB_REPOSITORY"
+      - name: Keep it (dry run)
+        if: env.TAG == ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: batz-web-image
+          path: ${{ runner.temp }}/batz-web-*.tar.gz
+          retention-days: 3
