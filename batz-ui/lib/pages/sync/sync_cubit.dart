@@ -191,13 +191,18 @@ class SyncCubit extends Cubit<SyncState> {
   Future<void> replace() => _exclusive(() => _run(manual: true, replace: true));
 
   Future<void> _exclusive(Future<void> Function() action) async {
-    // After the exchange in progress, and the one it may schedule.
-    for (var running = _running; running != null; running = _running) {
-      await running;
-    }
+    await whenIdle();
     final run = action().whenComplete(() => _running = null);
     _running = run;
     return run;
+  }
+
+  /// Completes once no exchange runs, including the one an exchange in
+  /// progress may have scheduled after it.
+  Future<void> whenIdle() async {
+    for (var running = _running; running != null; running = _running) {
+      await running;
+    }
   }
 
   /// A modification was written on this device.

@@ -125,7 +125,7 @@ func TestSyncChecksProtocolAndAppVersion(t *testing.T) {
 	assert.Equal(t, CodeSyncProtocolUnsupported, body["code"])
 
 	req = syncBody(nil)
-	req["appVersion"] = "0.0.9"
+	req["appVersion"] = "0.2.0"
 	w, body = f.do("POST", "/api/v1/sync", phone, req)
 	assert.Equal(t, http.StatusUpgradeRequired, w.Code)
 	assert.Equal(t, CodeAppVersionUnsupported, body["code"])

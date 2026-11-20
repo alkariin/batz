@@ -15,23 +15,28 @@ statements and keeps the reference copy of the change journal.
 | `legacy/` | Original Python scripts, kept as a reference for phase 3. |
 
 Server documentation: [architecture](batz-web/docs/architecture.md),
-[API](batz-web/docs/api.md), [deployment](batz-web/docs/deployment.md).
+[API](batz-web/docs/api.md), [synchronisation](batz-web/docs/sync.md),
+[deployment](batz-web/docs/deployment.md).
 
 ## Status
 
-Version 0.2.0, end of phase 1 (accounts and categories). The app is usable on
-its own, on one device:
+Version 0.3.0, end of phase 2 (synchronisation). The app works on its own,
+on each device, and synchronises with the server when it is reachable:
 
 - accounts of the ten types of the specification, one of them detailed
   (import enabled), archiving;
 - a category tree per year, copied from the previous one at the first
   transaction of a year, freely editable;
 - manual expenses, incomes and refunds, transfers between accounts;
-- the period a payment concerns, spread over its months and years.
+- the period a payment concerns, spread over its months and years;
+- the change journal exchanged through the server: modifications made
+  offline on several devices combine field by field, the latest winning; a
+  lost device is revoked, a lost server is rebuilt from any device
+  ([sync](batz-web/docs/sync.md)).
 
-Nothing is synchronised or imported yet: phases 2 and 3. Phase 0 provided the
-foundations: app and server skeletons, local database driven by a change
-journal, device pairing over pinned HTTPS, CI and releases.
+Nothing is imported yet: phase 3. Phase 0 provided the foundations: app and
+server skeletons, local database driven by a change journal, device pairing
+over pinned HTTPS, CI and releases.
 
 ## Development
 
@@ -50,6 +55,7 @@ BATZ_DATA_DIR=../data go run . pairing-code
 # or BATZ_SERVER_BIN must point to a built batz-web)
 cd batz-ui
 flutter analyze && flutter test
+flutter test benchmark/first_exchange_test.dart   # by hand: a first exchange of 20 000 entries
 flutter run -d linux
 ```
 

@@ -14,10 +14,11 @@ import (
 // A plain `go build` keeps "dev".
 var Version = "dev"
 
-// MinAppVersion is the oldest app version this server works with. The app
-// compares it with its own version and refuses to synchronise when it is
-// older; the server refuses its exchanges too.
-const MinAppVersion = "0.1.0"
+// MinAppVersion is the oldest app version this server works with: 0.3.0 is
+// the first that speaks the exchange protocol. The app compares it with its
+// own version and refuses to synchronise when it is older; the server refuses
+// its exchanges too.
+const MinAppVersion = "0.3.0"
 
 var versionPattern = regexp.MustCompile(`^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?`)
 

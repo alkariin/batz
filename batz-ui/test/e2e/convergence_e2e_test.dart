@@ -214,6 +214,8 @@ void main() {
         '${(reference['journal']! as List).length} journal entries, ${ledger.transactions.length} transactions, '
         '${ledger.categories.length} categories, ${ledger.forest.detached.length} detached',
       );
-    });
+      // About ten seconds alone, much more while the other test files run:
+      // hundreds of calls with pages of a few entries.
+    }, timeout: const Timeout(Duration(minutes: 3)));
   }
 }

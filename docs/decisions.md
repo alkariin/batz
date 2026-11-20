@@ -499,3 +499,18 @@ figure was 66.7 s.
   another one is too; only making one more account detailed is refused.
   Renaming or deleting one of two categories with the same name works as
   usual.
+
+### 2.7 Version 0.3.0
+
+The app and the server move to 0.3.0 together. The server's minimum app
+version becomes 0.3.0, the first that speaks the exchange protocol: an app
+0.2.0 paired with a server 0.3.0 shows that it is too old, and its
+exchanges would be refused anyway. The description of the exchange is in
+`batz-web/docs/sync.md`.
+
+The full suite runs its test files concurrently, several of them starting
+servers. Three tests written during this phase depended on timing and failed
+under that load: the convergence test now has a timeout of 3 minutes per seed
+(about 10 seconds alone), and the cubit tests wait for the events they check
+(`SyncCubit.whenIdle`, the states emitted) instead of fixed delays. Four
+consecutive full runs passed afterwards.

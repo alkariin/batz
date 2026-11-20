@@ -180,7 +180,7 @@ func TestProtocolAndAppVersion(t *testing.T) {
 	req.Protocol = 2
 	_, err := s.Exchange(t.Context(), phone, req)
 	assert.ErrorIs(t, err, application.ErrProtocolUnsupported)
-	for _, v := range []string{"0.0.9", "", "dev"} {
+	for _, v := range []string{"0.2.0", "0.0.9", "", "dev"} {
 		req = request(nil, nil)
 		req.AppVersion = v
 		_, err = s.Exchange(t.Context(), phone, req)

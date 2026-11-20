@@ -9,7 +9,7 @@ what is built and why.
 | Part | Does | Does not |
 |---|---|---|
 | App (`batz-ui`) | Every calculation, on a full local copy of the data. | Depend on the server to work. |
-| Server (`batz-web`) | Pair devices; later: keep the reference journal, extract PDF statements, store the original PDFs. | Compute anything accounting-related. |
+| Server (`batz-web`) | Pair devices; keep the reference copy of the change journal; later: extract PDF statements, store the original PDFs. | Interpret the journal or compute anything accounting-related. |
 
 The server is on the home network only and runs at weekends; the app must
 never need it except to synchronise and import.
@@ -24,10 +24,11 @@ batz-web/src
 └── internal
     ├── version                   build version, minimum app version
     ├── domain/device             devices, pairing codes, keys, errors
-    ├── application               use cases (Devices) and their ports
+    ├── domain/journal            journal entries, known states, shape checks
+    ├── application               use cases (Devices, Sync) and their ports
     └── infrastructure
         ├── config                environment, read once at start-up
-        ├── persistence           SQLite store and embedded migrations
+        ├── persistence           SQLite stores (devices, journal) and embedded migrations
         ├── tlscert               self-signed certificate, pinning helpers
         └── web                   routes, authentication, error mapping
 ```
@@ -50,6 +51,11 @@ batz-web/src
   codes are random enough that a slow hash adds nothing.
 - **Authentication**: `Authorization: Bearer <device key>`; revoked devices
   are refused. Revoking oneself is how an app unpairs.
+- **Journal**: `POST /api/v1/sync` exchanges the change journal with the apps
+  (see [sync.md](sync.md)). The server keeps the entries as received in one
+  `journal` table, keyed like the app's and indexed by origin device and
+  timestamp, and checks only their shape; each exchange is one transaction.
+  It never resolves conflicts: the apps do.
 
 ## App
 
@@ -66,8 +72,10 @@ batz-ui/lib
 │   ├── local     Drift database, journal, derived tables, opening and encryption
 │   ├── ledger    reads the ledger from the derived tables, writes to the journal
 │   ├── server    HTTPS client with certificate pinning, pairing repository
+│   ├── sync      exchange engine, wire format, memory of the server state
 │   └── secret_store.dart   system secret storage
-├── pages         shell, transactions, accounts, categories, server settings, cubits
+├── pages         shell, home (synchronisation, tasks), transactions, accounts,
+│                 categories, server settings, cubits (ledger, server, sync)
 ├── components    shared widgets
 ├── helpers       Swiss formats, theme
 └── l10n          French texts (ARB) and generated localisations
@@ -106,7 +114,20 @@ Every write goes through `Journal`:
    version knows them. Drift's schema version covers the journal tables only.
 
 The device identifier is a UUID created at the first launch and stored in the
-`local_state` table.
+`local_state` table. It is the *origin* of the entries the device writes, and
+changes only when the device's data are replaced by the server's.
+
+A modification writes only the fields whose value changes, compared with the
+exact JSON value currently in force: screens submit every field, and the
+unchanged ones must not overwrite, once synchronised, what another device
+changed.
+
+Entries received from the server are integrated a page at a time, in one
+transaction, with set-based statements: the page goes into a temporary table,
+the entries already held are dropped, the others are inserted, and for each
+field the latest new entry is applied when it is newer than `field_versions`.
+The rebuild of the derived tables uses the same statements over the whole
+journal.
 
 When the counter of the clock is full, the clock moves to the next
 millisecond, so that a device whose clock ran far ahead never blocks the
@@ -121,10 +142,15 @@ writes of the others.
 | `transaction` | `transactions` | accountId, date, amount, counterpartAccountId, description, note, status |
 | `transactionLine` | `transaction_lines` | transactionId, categoryId, amount, periodStart, periodEnd |
 
-`LedgerRepository` reads every table into an immutable `Ledger` and leaves
-out records that are incomplete or hold a value the version cannot read; a
-category is kept only if its parents reach, in the same year, a top-level
-group with a nature. Each operation is a method of `Ledger` that checks the
+`LedgerRepository` reads every table, by identifier, into an immutable
+`Ledger` and leaves out records that are incomplete or hold a value the
+version cannot read. A category whose parents do not reach, in the same year,
+a top-level group with a nature is *detached*: `CategoryForest` keeps it apart
+with its reason (loop, missing parent, parent in another year, group without
+nature), and the categories screen lists it under « À replacer ».
+`Ledger.issues` lists the inconsistencies a merge can leave (same name twice
+in a year, several detailed accounts, detached categories) for the home
+screen. Each operation is a method of `Ledger` that checks the
 business rules and returns the `Modification` to write, or throws a
 `LedgerException` whose reason the pages turn into a French message.
 `LedgerCubit` holds the current `Ledger` for every page.
@@ -151,6 +177,19 @@ unencrypted database. Android backups are disabled: a database restored
 without its key would be unreadable. Desktops use plain SQLite and rely on the
 protection of the operating system.
 
+### Synchronisation
+
+`SyncEngine` (`data/sync`) runs one exchange: `GET /healthz` to check the
+versions, then `POST /api/v1/sync` in a loop, each call carrying the device's
+known state and a page of what the server lacks, each answer integrated in one
+transaction. `SyncStore` remembers, in `local_state`, the server state seen at
+the last exchange and its date, to count the modifications waiting.
+`SyncCubit` decides when to run it (at start, back to the foreground, 3 s
+after a modification, every 5 minutes while shown, on demand), runs one at a
+time, and turns the outcome into the status shown on the home screen and in
+Plus › Serveur. The protocol, its invariant and the cases of a new device, a
+revoked one and a lost server are in [sync.md](sync.md).
+
 ### Pairing and certificate pinning
 
 The server certificate is self-signed, so the app trusts no certificate
@@ -167,9 +206,11 @@ keeps the pin, so another machine at that address is refused.
 
 ## Tests
 
-- Server: unit and HTTP tests per package; `test/e2e` builds the binary and
-  exercises pairing, refusals, revocation, restarts and certificate pinning
-  over real HTTPS.
+- Server: unit and HTTP tests per package, the exchange included (pages
+  never cutting a modification, a page refused as a whole, the same page twice
+  without duplicate, `since`, versions, sizes); `test/e2e` builds the binary
+  and exercises pairing, refusals, revocation, restarts, certificate pinning
+  and an exchange between two simulated devices over real HTTPS.
 - App: the clock and the resolution rule; the journal against a naive
   reference model on shuffled histories from three devices; deletion,
   restarts and failed transactions; derived schema changes and the opening of
@@ -179,4 +220,10 @@ keeps the pin, so another machine at that address is refused.
   ledger rebuilt from the journal; Swiss formats; widget tests of the
   navigation, the server, accounts and categories screens and the main path
   of the transactions screen; `test/e2e` drives the app's server code against
-  a real `batz-web` process.
+  a real `batz-web` process: pairing, and the synchronisation of simulated
+  devices (concurrent edits, deletions, cut exchanges, the first exchange of
+  H1, revocation, a rebuilt server, and a convergence test with random
+  operations, clocks, exchange orders and cuts). The synchronisation screens
+  and their cubit are tested against a server in memory.
+  `benchmark/first_exchange_test.dart`, run by hand, measures a first exchange
+  of 20 000 entries.

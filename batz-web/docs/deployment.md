@@ -10,7 +10,7 @@ attached to each GitHub release.
 
 | Variable | Default (image) | Meaning |
 |---|---|---|
-| `BATZ_DATA_DIR` | `/data` | Database and TLS certificate. Back this up. |
+| `BATZ_DATA_DIR` | `/data` | Database (paired devices and the reference copy of the journal) and TLS certificate. Back this up. |
 | `BATZ_PORT` | `8443` | HTTPS port. |
 
 The image runs as uid 10001 without privileges; the data directory on the host
@@ -26,14 +26,14 @@ Each release carries `batz-web-<version>.tar.gz`, a `docker save` of the image
 # On the NAS (Synology: docker lives in /usr/local/bin, which non-interactive
 # SSH sessions do not have on PATH)
 export PATH="$PATH:/usr/local/bin"
-gunzip -c batz-web-v0.1.0.tar.gz | docker load
+gunzip -c batz-web-v0.3.0.tar.gz | docker load
 mkdir -p /volume1/docker/batz/data
 sudo chown 10001:10001 /volume1/docker/batz/data
 docker rm -f batz-web 2>/dev/null
 docker run -d --name batz-web --restart unless-stopped \
   -p 8443:8443 -v /volume1/docker/batz/data:/data \
   --read-only --cap-drop ALL --security-opt no-new-privileges:true \
-  batz-web:v0.1.0
+  batz-web:v0.3.0
 docker inspect -f '{{.State.Health.Status}}' batz-web   # healthy after a few seconds
 ```
 
@@ -47,7 +47,7 @@ every paired app refuse the server until it is paired again.
 From the development machine, with SSH key access to the NAS:
 
 ```sh
-batz-web/scripts/deploy-nas.sh batz-web-v0.1.0.tar.gz user@192.168.1.95
+batz-web/scripts/deploy-nas.sh batz-web-v0.3.0.tar.gz user@192.168.1.95
 ```
 
 It streams the image to `docker load`, gives the data folder to uid 10001
@@ -60,6 +60,35 @@ upgrades the server and keeps its data and certificate.
 On Synology, shared folders carry ACLs that make new files readable by every
 NAS account, `tls/server.key` included, whatever the permissions the server
 sets. Keep the folder in a share that only administrators can open.
+
+### Upgrading to 0.3.0 (synchronisation)
+
+Server 0.3.0 adds the journal table (migration 2, applied at start-up, paired
+devices kept) and the route `POST /api/v1/sync`. It requires apps 0.3.0 or
+later: an older app shows that it is too old for the server. Upgrade the
+server first, then the apps; nothing needs to be paired again.
+
+The first exchange of each app sends its whole journal. When an app holds data
+and the server already holds data from another device it never exchanged with
+(devices used separately until then), the app asks whether to merge the two
+or to replace its own data by the server's. Merging can leave duplicates
+(two categories with the same name, two detailed accounts), listed as tasks on
+the home screen.
+
+### Losing the server
+
+Every app holds a full copy of the journal, so the server can always be
+rebuilt from them; a backup of the data directory only saves pairing every
+device again.
+
+1. Install the server again (empty data directory, or the last backup).
+2. The apps say « Le serveur a changé » (new certificate, or a database that
+   no longer knows them). On each: Plus › Serveur, forget the server, pair
+   again. The first exchange sends what the server lacks, modifications not
+   sent yet included.
+
+A server restored from an older backup with its certificate needs nothing:
+the apps' next exchanges send it what it lacks.
 
 ### Pair a device
 

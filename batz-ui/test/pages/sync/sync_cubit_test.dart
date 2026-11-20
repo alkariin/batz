@@ -107,7 +107,7 @@ void main() {
     final before = fake.healthCalls;
     final runs = [c.sync(), c.sync(), c.sync()];
     await Future.wait(runs);
-    await wait(200);
+    await c.whenIdle();
     expect(fake.maxActive, 1);
     expect(fake.healthCalls - before, 2, reason: 'the running one, then one more');
   });
@@ -115,27 +115,35 @@ void main() {
   test('a modification is sent a few seconds later', () async {
     final c = cubit(debounce: 50);
     await c.start();
-    await device.journal.write(Modification.set('note', 'mine', {'title': 'Loyer et charges'}));
-    await wait(10);
-    expect(c.state.pending, 1, reason: 'shown at once');
     final before = fake.requests.length;
-    await wait(300);
+    // Shown at once, before the exchange that follows.
+    final counted = c.stream.firstWhere((s) => s.pending == 1);
+    final sent = c.stream.firstWhere((s) => s.status == SyncStatus.upToDate && s.pending == 0);
+    await device.journal.write(Modification.set('note', 'mine', {'title': 'Loyer et charges'}));
+    await counted.timeout(const Duration(seconds: 10));
+    await sent.timeout(const Duration(seconds: 10));
     expect(fake.requests.length, greaterThan(before));
     expect((await server.notes())['mine']!['title'], 'Loyer et charges');
-    expect(c.state.pending, 0);
   });
 
   test('every period while the app is shown, never while it is hidden', () async {
     final c = cubit(period: 50);
     await c.start();
-    await wait(260);
-    final shown = fake.healthCalls;
-    expect(shown, greaterThanOrEqualTo(4));
+    final started = fake.healthCalls;
+    for (var i = 0; i < 100 && fake.healthCalls < started + 3; i++) {
+      await wait(20);
+    }
+    expect(fake.healthCalls, greaterThanOrEqualTo(started + 3), reason: 'exchanges keep coming while shown');
+
     c.paused();
-    await wait(260);
-    expect(fake.healthCalls, shown);
+    // An exchange triggered while shown may still finish.
+    await c.whenIdle();
+    final hidden = fake.healthCalls;
+    await wait(300);
+    expect(fake.healthCalls, hidden, reason: 'six periods without any exchange');
+
     await c.resumed();
-    expect(fake.healthCalls, shown + 1, reason: 'back to the foreground');
+    expect(fake.healthCalls, hidden + 1, reason: 'back to the foreground');
   });
 
   group('versions', () {
