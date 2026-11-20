@@ -690,6 +690,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Suppression refusée : {count, plural, =1{une transaction utilise} other{{count} transactions utilisent}} cette catégorie.'**
   String errorCategoryInUse(int count);
+
+  /// No description provided for @errorUnknownTransaction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette transaction n\'existe plus.'**
+  String get errorUnknownTransaction;
+
+  /// No description provided for @errorAmountRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez un montant supérieur à zéro.'**
+  String get errorAmountRequired;
+
+  /// No description provided for @errorArchivedAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte est archivé.'**
+  String get errorArchivedAccount;
+
+  /// No description provided for @errorDetailedAccountManual.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le compte détaillé ne reçoit que les transactions de ses relevés : pas de saisie manuelle.'**
+  String get errorDetailedAccountManual;
+
+  /// No description provided for @errorDebtsAccountManual.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un compte de dettes ne se modifie que par le tableau des dettes.'**
+  String get errorDebtsAccountManual;
+
+  /// No description provided for @errorCategoryNotAssignable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez une catégorie sans sous-catégorie, dans l\'arbre de l\'année du paiement.'**
+  String get errorCategoryNotAssignable;
+
+  /// No description provided for @errorPeriodInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'La fin de la période précède son début.'**
+  String get errorPeriodInvalid;
+
+  /// No description provided for @errorSameAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez deux comptes différents.'**
+  String get errorSameAccount;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -13,6 +13,14 @@ enum LedgerError {
   parentHasTransactions,
   categoryHasChildren,
   categoryInUse,
+  unknownTransaction,
+  amountRequired,
+  archivedAccount,
+  detailedAccountManual,
+  debtsAccountManual,
+  categoryNotAssignable,
+  periodInvalid,
+  sameAccount,
 }
 
 /// A business rule refuses the operation; nothing was written.

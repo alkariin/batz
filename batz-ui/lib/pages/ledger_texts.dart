@@ -22,6 +22,14 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.parentHasTransactions => l.errorParentHasTransactions(e.count),
   LedgerError.categoryHasChildren => l.errorCategoryHasChildren,
   LedgerError.categoryInUse => l.errorCategoryInUse(e.count),
+  LedgerError.unknownTransaction => l.errorUnknownTransaction,
+  LedgerError.amountRequired => l.errorAmountRequired,
+  LedgerError.archivedAccount => l.errorArchivedAccount,
+  LedgerError.detailedAccountManual => l.errorDetailedAccountManual,
+  LedgerError.debtsAccountManual => l.errorDebtsAccountManual,
+  LedgerError.categoryNotAssignable => l.errorCategoryNotAssignable,
+  LedgerError.periodInvalid => l.errorPeriodInvalid,
+  LedgerError.sameAccount => l.errorSameAccount,
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {

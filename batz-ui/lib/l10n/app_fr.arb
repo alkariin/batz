@@ -231,5 +231,13 @@
         "type": "int"
       }
     }
-  }
+  },
+  "errorUnknownTransaction": "Cette transaction n'existe plus.",
+  "errorAmountRequired": "Saisissez un montant supérieur à zéro.",
+  "errorArchivedAccount": "Ce compte est archivé.",
+  "errorDetailedAccountManual": "Le compte détaillé ne reçoit que les transactions de ses relevés : pas de saisie manuelle.",
+  "errorDebtsAccountManual": "Un compte de dettes ne se modifie que par le tableau des dettes.",
+  "errorCategoryNotAssignable": "Choisissez une catégorie sans sous-catégorie, dans l'arbre de l'année du paiement.",
+  "errorPeriodInvalid": "La fin de la période précède son début.",
+  "errorSameAccount": "Choisissez deux comptes différents."
 }

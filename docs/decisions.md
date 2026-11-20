@@ -197,3 +197,31 @@ categories. If device A copies a year and then renames a copied category, and
 device B copies the same year offline later in time, B's copy wins over A's
 rename once synchronised. The records are the same on both devices, as
 required, but the rename is lost.
+
+### 1.4 Transactions and transfers
+
+**Decisions.**
+
+- Entity names in the journal: `transaction` and `transactionLine`; tables
+  `transactions` and `transaction_lines`. In Dart the class is
+  `LedgerTransaction`, to avoid the name of database transactions.
+- A transfer has no line at all: no category, no period. Turning an entry
+  into a transfer is not offered; the app modifies an entry as an entry and a
+  transfer as a transfer.
+- The detailed account is refused on *both* sides of a manual transfer, not
+  only as the departure account: a transfer from cash to the detailed account
+  would be counted a second time when the statement that shows the deposit is
+  imported.
+- A debts account refuses manual expenses and incomes, as the plan states, but
+  accepts transfers in both directions: chapter 4.7 of the specification
+  records a pure loan as "a transfer to, then from, « Dettes »", and the
+  explanation table of the wealth view subtracts net transfers to it.
+- An archived account is no longer offered for new entries; an existing entry
+  on it can still be corrected.
+- The first manual entry of a year without a tree carries the copy of the tree
+  in the same modification (H6): the tree and the transaction are written
+  together, or not at all.
+- Cash-flow totals (`Ledger.cashTotals`) add each line to its category and to
+  every ancestor; the totals of income and expenses are those of the top-level
+  groups of each nature. A line without a category of the year's tree is
+  counted apart as unclassified.

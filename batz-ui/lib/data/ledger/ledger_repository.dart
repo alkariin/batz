@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import '../../domain/calendar_date.dart';
 import '../../domain/journal/journal_entry.dart';
 import '../../domain/ledger/account.dart';
 import '../../domain/ledger/category.dart';
 import '../../domain/ledger/ledger.dart';
+import '../../domain/ledger/transaction.dart';
 import '../local/database.dart';
 import '../local/derived_tables.dart';
 import '../local/journal.dart';
@@ -25,7 +27,12 @@ class LedgerRepository {
   Future<void> write(Modification modification) => _journal.write(modification);
 
   Future<Ledger> load() async {
-    return Ledger(accounts: await _rows(accountsTable, _account), categories: await _rows(categoriesTable, _category));
+    return Ledger(
+      accounts: await _rows(accountsTable, _account),
+      categories: await _rows(categoriesTable, _category),
+      transactions: await _rows(transactionsTable, _transaction),
+      lines: await _rows(transactionLinesTable, _line),
+    );
   }
 
   Future<List<T>> _rows<T>(DerivedTable table, T? Function(Map<String, Object?> row) read) async {
@@ -65,6 +72,49 @@ class LedgerRepository {
       parentId: parentId as String?,
       nature: _enum(CategoryNature.values, nature),
       position: position is int ? position : 0,
+    );
+  }
+
+  /// A transaction needs an account, a valid date, an amount and a known
+  /// status.
+  static LedgerTransaction? _transaction(Map<String, Object?> row) {
+    final accountId = row['account_id'];
+    final date = CalendarDate.tryParse(row['date'] is String ? row['date']! as String : null);
+    final amount = row['amount'];
+    final counterpart = row['counterpart_account_id'];
+    final status = _enum(TransactionStatus.values, row['status']);
+    if (accountId is! String || date == null || amount is! int || status == null) return null;
+    if (counterpart != null && counterpart is! String) return null;
+    return LedgerTransaction(
+      id: row['id']! as String,
+      accountId: accountId,
+      date: date,
+      amount: amount,
+      counterpartAccountId: counterpart as String?,
+      description: row['description'] is String ? row['description']! as String : '',
+      note: row['note'] is String ? row['note']! as String : '',
+      status: status,
+    );
+  }
+
+  /// A line needs its transaction, an amount and a valid period.
+  static TransactionLine? _line(Map<String, Object?> row) {
+    final transactionId = row['transaction_id'];
+    final categoryId = row['category_id'];
+    final amount = row['amount'];
+    final start = CalendarDate.tryParse(row['period_start'] is String ? row['period_start']! as String : null);
+    final end = CalendarDate.tryParse(row['period_end'] is String ? row['period_end']! as String : null);
+    if (transactionId is! String || amount is! int || start == null || end == null || end.isBefore(start)) {
+      return null;
+    }
+    if (categoryId != null && categoryId is! String) return null;
+    return TransactionLine(
+      id: row['id']! as String,
+      transactionId: transactionId,
+      categoryId: categoryId as String?,
+      amount: amount,
+      periodStart: start,
+      periodEnd: end,
     );
   }
 

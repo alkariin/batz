@@ -369,4 +369,30 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return 'Suppression refusée : $_temp0 cette catégorie.';
   }
+
+  @override
+  String get errorUnknownTransaction => 'Cette transaction n\'existe plus.';
+
+  @override
+  String get errorAmountRequired => 'Saisissez un montant supérieur à zéro.';
+
+  @override
+  String get errorArchivedAccount => 'Ce compte est archivé.';
+
+  @override
+  String get errorDetailedAccountManual =>
+      'Le compte détaillé ne reçoit que les transactions de ses relevés : pas de saisie manuelle.';
+
+  @override
+  String get errorDebtsAccountManual => 'Un compte de dettes ne se modifie que par le tableau des dettes.';
+
+  @override
+  String get errorCategoryNotAssignable =>
+      'Choisissez une catégorie sans sous-catégorie, dans l\'arbre de l\'année du paiement.';
+
+  @override
+  String get errorPeriodInvalid => 'La fin de la période précède son début.';
+
+  @override
+  String get errorSameAccount => 'Choisissez deux comptes différents.';
 }

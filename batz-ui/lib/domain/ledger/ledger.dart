@@ -2,6 +2,7 @@ import '../journal/journal_entry.dart';
 import 'account.dart';
 import 'category.dart';
 import 'ledger_exception.dart';
+import 'transaction.dart';
 
 /// Everything the user has entered, as read from the derived tables at one
 /// moment. Immutable; the rules below check an operation against it and
@@ -9,9 +10,30 @@ import 'ledger_exception.dart';
 class Ledger {
   /// [categories] that do not form a consistent tree are left out (see
   /// [CategoryTree.build]).
-  Ledger({Iterable<Account> accounts = const [], Iterable<Category> categories = const []})
-    : accounts = {for (final a in accounts) a.id: a},
-      trees = CategoryTree.build(categories);
+  /// [lines] are attached to their transaction; a line whose transaction is
+  /// absent is left out.
+  Ledger({
+    Iterable<Account> accounts = const [],
+    Iterable<Category> categories = const [],
+    Iterable<LedgerTransaction> transactions = const [],
+    Iterable<TransactionLine> lines = const [],
+  }) : accounts = {for (final a in accounts) a.id: a},
+       trees = CategoryTree.build(categories),
+       transactions = _attach(transactions, lines);
+
+  static Map<String, LedgerTransaction> _attach(
+    Iterable<LedgerTransaction> transactions,
+    Iterable<TransactionLine> lines,
+  ) {
+    final byTransaction = <String, List<TransactionLine>>{};
+    for (final line in lines) {
+      (byTransaction[line.transactionId] ??= []).add(line);
+    }
+    return {
+      for (final t in transactions)
+        t.id: t.withLines([...t.lines, ...?byTransaction[t.id]]..sort((a, b) => a.id.compareTo(b.id))),
+    };
+  }
 
   static final empty = Ledger();
 
@@ -19,6 +41,8 @@ class Ledger {
 
   /// The category tree of each year that has one.
   final Map<int, CategoryTree> trees;
+
+  final Map<String, LedgerTransaction> transactions;
 
   /// Every category of every year, by identifier.
   late final Map<String, Category> categories = {for (final tree in trees.values) ...tree.byId};
@@ -59,7 +83,8 @@ class Ledger {
   }
 
   /// The number of transactions on [accountId] or with it as counterpart.
-  int transactionsUsingAccount(String accountId) => 0;
+  int transactionsUsingAccount(String accountId) =>
+      transactions.values.where((t) => t.accountId == accountId || t.counterpartAccountId == accountId).length;
 
   void _checkAccount(String id, AccountDraft draft) {
     if (draft.name.trim().isEmpty) throw const LedgerException(LedgerError.nameRequired);
@@ -236,7 +261,8 @@ class Ledger {
   }
 
   /// The number of transactions classified in [categoryId].
-  int transactionsUsingCategory(String categoryId) => 0;
+  int transactionsUsingCategory(String categoryId) =>
+      transactions.values.where((t) => t.lines.any((line) => line.categoryId == categoryId)).length;
 
   Category _category(String id) {
     final category = categories[id];
@@ -254,6 +280,208 @@ class Ledger {
     if (!tree.byId.containsKey(parentId)) throw const LedgerException(LedgerError.unknownCategory);
     final used = transactionsUsingCategory(parentId);
     if (used > 0) throw LedgerException(LedgerError.parentHasTransactions, count: used);
+  }
+
+  // ------------------------------------------------------------ transactions
+
+  /// Transactions by payment date, most recent first, optionally only those
+  /// of [accountId] (as account or counterpart) and of [year].
+  List<LedgerTransaction> transactionList({String? accountId, int? year}) {
+    final list = [
+      for (final t in transactions.values)
+        if ((accountId == null || t.accountId == accountId || t.counterpartAccountId == accountId) &&
+            (year == null || t.date.year == year))
+          t,
+    ];
+    return list..sort((a, b) {
+      final byDate = b.date.compareTo(a.date);
+      return byDate != 0 ? byDate : b.id.compareTo(a.id);
+    });
+  }
+
+  /// Years that have transactions, in increasing order.
+  List<int> get yearsWithTransactions => {for (final t in transactions.values) t.date.year}.toList()..sort();
+
+  /// The type of [transaction], deduced from its counterpart, the nature of
+  /// its category and its sign; null while it is not classified.
+  TransactionKind? kindOf(LedgerTransaction transaction) {
+    if (transaction.isTransfer) return TransactionKind.transfer;
+    final category = categoryOf(transaction);
+    if (category == null) return null;
+    return switch (trees[category.year]!.natureOf(category.id)) {
+      CategoryNature.income => TransactionKind.income,
+      CategoryNature.expense => transaction.amount > 0 ? TransactionKind.refund : TransactionKind.expense,
+    };
+  }
+
+  /// The category of the line of [transaction], if it is one of the tree of
+  /// its payment year.
+  Category? categoryOf(LedgerTransaction transaction) {
+    final category = categories[transaction.line?.categoryId];
+    return category != null && category.year == transaction.date.year ? category : null;
+  }
+
+  /// Records a manual expense or income, [id] with its line [lineId]. It is
+  /// validated at once. If the year of the payment has no tree yet, the tree
+  /// is created by the same modification (decision H6).
+  Modification recordEntry(String id, String lineId, EntryDraft draft) {
+    _checkManualAccount(draft.accountId, transfer: false);
+    final changes = [
+      ..._entryChanges(id, lineId, draft),
+      FieldChange(TransactionFields.entity, id, TransactionFields.status, TransactionStatus.validated.name),
+      FieldChange(TransactionFields.entity, id, TransactionFields.counterpartAccountId, null),
+      ...treeChangesFor(draft.date.year),
+    ];
+    return Modification(changes);
+  }
+
+  /// Modifies the manual expense or income [id].
+  Modification updateEntry(String id, EntryDraft draft) {
+    final existing = _manualTransaction(id);
+    if (existing.isTransfer) throw const LedgerException(LedgerError.unknownTransaction);
+    _checkManualAccount(draft.accountId, transfer: false, allowArchived: draft.accountId == existing.accountId);
+    return Modification([
+      ..._entryChanges(id, existing.line?.id ?? fallbackLineId(id), draft),
+      ...treeChangesFor(draft.date.year),
+    ]);
+  }
+
+  /// The identifier of the line of a transaction that has lost its line.
+  static String fallbackLineId(String transactionId) => '$transactionId-line';
+
+  List<FieldChange> _entryChanges(String id, String lineId, EntryDraft draft) {
+    if (draft.cents <= 0) throw const LedgerException(LedgerError.amountRequired);
+    final tree = treeOrPreview(draft.date.year);
+    if (!tree.canHoldTransactions(draft.categoryId)) throw const LedgerException(LedgerError.categoryNotAssignable);
+    final start = draft.periodStart ?? draft.date;
+    final end = draft.periodEnd ?? (draft.periodStart == null ? draft.date : start);
+    if (end.isBefore(start)) throw const LedgerException(LedgerError.periodInvalid);
+    final amount = signedAmount(draft.cents, draft.direction);
+    return [
+      for (final field in {
+        TransactionFields.accountId: draft.accountId,
+        TransactionFields.date: draft.date.encode(),
+        TransactionFields.amount: amount,
+        TransactionFields.description: draft.description.trim(),
+        TransactionFields.note: draft.note.trim(),
+      }.entries)
+        FieldChange(TransactionFields.entity, id, field.key, field.value),
+      for (final field in {
+        LineFields.transactionId: id,
+        LineFields.categoryId: draft.categoryId,
+        LineFields.amount: amount,
+        LineFields.periodStart: start.encode(),
+        LineFields.periodEnd: end.encode(),
+      }.entries)
+        FieldChange(LineFields.entity, lineId, field.key, field.value),
+    ];
+  }
+
+  /// Records a transfer: one transaction on the account the money leaves,
+  /// with the receiving account as counterpart, and no category.
+  Modification recordTransfer(String id, TransferDraft draft) {
+    return Modification([
+      ..._transferChanges(id, draft, previous: null),
+      FieldChange(TransactionFields.entity, id, TransactionFields.status, TransactionStatus.validated.name),
+    ]);
+  }
+
+  Modification updateTransfer(String id, TransferDraft draft) {
+    final existing = _manualTransaction(id);
+    if (!existing.isTransfer) throw const LedgerException(LedgerError.unknownTransaction);
+    return Modification(_transferChanges(id, draft, previous: existing));
+  }
+
+  List<FieldChange> _transferChanges(String id, TransferDraft draft, {required LedgerTransaction? previous}) {
+    if (draft.cents <= 0) throw const LedgerException(LedgerError.amountRequired);
+    if (draft.fromAccountId == draft.toAccountId) throw const LedgerException(LedgerError.sameAccount);
+    _checkManualAccount(draft.fromAccountId, transfer: true, allowArchived: draft.fromAccountId == previous?.accountId);
+    _checkManualAccount(
+      draft.toAccountId,
+      transfer: true,
+      allowArchived: draft.toAccountId == previous?.counterpartAccountId,
+    );
+    return [
+      for (final field in {
+        TransactionFields.accountId: draft.fromAccountId,
+        TransactionFields.counterpartAccountId: draft.toAccountId,
+        TransactionFields.date: draft.date.encode(),
+        TransactionFields.amount: -draft.cents,
+        TransactionFields.description: draft.description.trim(),
+        TransactionFields.note: draft.note.trim(),
+      }.entries)
+        FieldChange(TransactionFields.entity, id, field.key, field.value),
+      // A transfer has no category: a line left by an earlier version of the
+      // transaction is deleted.
+      for (final line in previous?.lines ?? const <TransactionLine>[])
+        FieldChange(LineFields.entity, line.id, deletedField, true),
+    ];
+  }
+
+  /// Deletes the manual transaction [id] and its lines.
+  Modification deleteTransaction(String id) {
+    final transaction = _manualTransaction(id);
+    return Modification([
+      FieldChange(TransactionFields.entity, id, deletedField, true),
+      for (final line in transaction.lines) FieldChange(LineFields.entity, line.id, deletedField, true),
+    ]);
+  }
+
+  /// A transaction the user may modify or delete: not on the detailed
+  /// account, whose transactions come only from statements (4.3).
+  LedgerTransaction _manualTransaction(String id) {
+    final transaction = transactions[id];
+    if (transaction == null) throw const LedgerException(LedgerError.unknownTransaction);
+    if (accounts[transaction.accountId]?.isDetailed ?? false) {
+      throw const LedgerException(LedgerError.detailedAccountManual);
+    }
+    return transaction;
+  }
+
+  /// Manual entries are refused on the detailed account (its transactions
+  /// come only from statements) and, for expenses and incomes, on a debts
+  /// account (changed only through the debts table). See docs/decisions.md.
+  void _checkManualAccount(String accountId, {required bool transfer, bool allowArchived = false}) {
+    final account = accounts[accountId];
+    if (account == null) throw const LedgerException(LedgerError.unknownAccount);
+    if (account.archived && !allowArchived) throw const LedgerException(LedgerError.archivedAccount);
+    if (account.isDetailed) throw const LedgerException(LedgerError.detailedAccountManual);
+    if (!transfer && account.type == AccountType.debts) throw const LedgerException(LedgerError.debtsAccountManual);
+  }
+
+  // ------------------------------------------------------------------ totals
+
+  /// Cash-flow totals of [year], by category: every line of the transactions
+  /// paid in [year], at its payment date. Transfers have no line and never
+  /// count as income or expense.
+  YearTotals cashTotals(int year) {
+    final tree = trees[year];
+    final byCategory = <String, int>{};
+    var unclassified = 0;
+    for (final transaction in transactions.values) {
+      if (transaction.date.year != year || transaction.isTransfer) continue;
+      for (final line in transaction.lines) {
+        final categoryId = line.categoryId;
+        if (tree == null || categoryId == null || !tree.byId.containsKey(categoryId)) {
+          unclassified += line.amount;
+          continue;
+        }
+        for (String? id = categoryId; id != null; id = tree.byId[id]!.parentId) {
+          byCategory[id] = (byCategory[id] ?? 0) + line.amount;
+        }
+      }
+    }
+    int natureTotal(CategoryNature nature) => [
+      for (final root in tree?.roots ?? const <Category>[])
+        if (root.nature == nature) byCategory[root.id] ?? 0,
+    ].fold(0, (a, b) => a + b);
+    return YearTotals(
+      year: year,
+      byCategory: byCategory,
+      income: natureTotal(CategoryNature.income),
+      expenses: natureTotal(CategoryNature.expense),
+      unclassified: unclassified,
+    );
   }
 
   static int _nextPosition(Iterable<Category> siblings) =>

@@ -1,5 +1,6 @@
 import '../../domain/ledger/account.dart';
 import '../../domain/ledger/category.dart';
+import '../../domain/ledger/transaction.dart';
 
 /// How journal entries of one entity are materialised into a table.
 ///
@@ -97,7 +98,7 @@ String derivedSchemaOf(List<DerivedTable> tables) {
 }
 
 /// The derived tables of the app.
-final List<DerivedTable> appDerivedTables = [accountsTable, categoriesTable];
+final List<DerivedTable> appDerivedTables = [accountsTable, categoriesTable, transactionsTable, transactionLinesTable];
 
 final accountsTable = DerivedTable(
   entity: AccountFields.entity,
@@ -120,4 +121,36 @@ final categoriesTable = DerivedTable(
     CategoryFields.nature: const DerivedColumn.text('nature'),
     CategoryFields.position: const DerivedColumn.integer('position'),
   },
+);
+
+final transactionsTable = DerivedTable(
+  entity: TransactionFields.entity,
+  table: 'transactions',
+  columns: {
+    TransactionFields.accountId: const DerivedColumn.text('account_id'),
+    TransactionFields.date: const DerivedColumn.text('date'),
+    TransactionFields.amount: const DerivedColumn.integer('amount'),
+    TransactionFields.counterpartAccountId: const DerivedColumn.text('counterpart_account_id'),
+    TransactionFields.description: const DerivedColumn.text('description'),
+    TransactionFields.note: const DerivedColumn.text('note'),
+    TransactionFields.status: const DerivedColumn.text('status'),
+  },
+  indexes: [
+    ['date'],
+  ],
+);
+
+final transactionLinesTable = DerivedTable(
+  entity: LineFields.entity,
+  table: 'transaction_lines',
+  columns: {
+    LineFields.transactionId: const DerivedColumn.text('transaction_id'),
+    LineFields.categoryId: const DerivedColumn.text('category_id'),
+    LineFields.amount: const DerivedColumn.integer('amount'),
+    LineFields.periodStart: const DerivedColumn.text('period_start'),
+    LineFields.periodEnd: const DerivedColumn.text('period_end'),
+  },
+  indexes: [
+    ['transaction_id'],
+  ],
 );
