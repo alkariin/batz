@@ -35,8 +35,10 @@ class LedgerRepository {
     );
   }
 
+  /// Rows by identifier: the physical order of a derived table depends on
+  /// the order entries arrived in, which differs from one device to another.
   Future<List<T>> _rows<T>(DerivedTable table, T? Function(Map<String, Object?> row) read) async {
-    final rows = await _db.customSelect('SELECT * FROM ${table.table} WHERE deleted = 0').get();
+    final rows = await _db.customSelect('SELECT * FROM ${table.table} WHERE deleted = 0 ORDER BY id').get();
     return [for (final row in rows) ?read(row.data)];
   }
 

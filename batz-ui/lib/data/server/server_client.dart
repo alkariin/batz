@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
+import '../sync/sync_engine.dart';
+import '../sync/sync_protocol.dart';
 import 'certificate.dart';
 
 /// Default HTTPS port of batz-web.
@@ -48,9 +50,13 @@ class ServerUnreachableException implements Exception {
 }
 
 class Health {
-  Health({required this.version, required this.minAppVersion});
+  Health({required this.version, required this.minAppVersion, this.syncProtocol});
   final String version;
   final String minAppVersion;
+
+  /// The exchange protocol the server speaks; null for a server older than
+  /// the synchronisation (before 0.3.0).
+  final int? syncProtocol;
 }
 
 class PairingResult {
@@ -89,7 +95,7 @@ class ServerDevice {
 }
 
 /// Thin HTTP client of the batz-web API (batz-web/docs/api.md).
-class ServerClient {
+class ServerClient implements SyncTransport {
   /// [pin] is the certificate fingerprint to require; without it the first
   /// certificate seen is accepted and reported to [onCertificate].
   ServerClient(this.baseUrl, {this.pin, this.onCertificate, String? deviceKey})
@@ -118,7 +124,18 @@ class ServerClient {
 
   Future<Health> health() async {
     final body = await _send('GET', '/healthz') as Map<String, dynamic>;
-    return Health(version: body['version'] as String, minAppVersion: body['minAppVersion'] as String);
+    return Health(
+      version: body['version'] as String,
+      minAppVersion: body['minAppVersion'] as String,
+      syncProtocol: body['syncProtocol'] as int?,
+    );
+  }
+
+  /// One call of an exchange (`POST /api/v1/sync`).
+  @override
+  Future<SyncResponse> exchange(SyncRequest request) async {
+    final body = await _send('POST', '/api/v1/sync', data: request.toJson(), timeout: const Duration(seconds: 60));
+    return SyncResponse.fromJson(body);
   }
 
   Future<PairingResult> pair({required String code, required String name}) async {
@@ -135,13 +152,13 @@ class ServerClient {
     await _send('DELETE', '/api/v1/devices/${Uri.encodeComponent(deviceId)}');
   }
 
-  Future<Object?> _send(String method, String path, {Object? data}) async {
+  Future<Object?> _send(String method, String path, {Object? data, Duration? timeout}) async {
     final Response<Object?> response;
     try {
       response = await _dio.request<Object?>(
         path,
         data: data,
-        options: Options(method: method),
+        options: Options(method: method, receiveTimeout: timeout, sendTimeout: timeout),
       );
     } on DioException catch (e) {
       final seen = _lastFingerprint;

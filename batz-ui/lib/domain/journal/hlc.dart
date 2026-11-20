@@ -32,6 +32,9 @@ class Hlc implements Comparable<Hlc> {
   static const _millisDigits = 15;
   static const _counterDigits = 4;
 
+  /// Where the device identifier starts in [encode], counted from 0.
+  static const originOffset = _millisDigits + _counterDigits + 2;
+
   /// Largest wall time representable with 15 digits (year 33658).
   static const maxMillis = 999999999999999;
   static const maxCounter = 0xffff;

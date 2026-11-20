@@ -358,3 +358,44 @@ tables nor the derived tables.
 - Every exchange is one `BEGIN IMMEDIATE` transaction: check, insertion with
   `ON CONFLICT DO NOTHING`, then the server state and the page for the app.
   Exchanges are thus serialised and replaying one adds nothing.
+
+### 2.2 Sync engine of the app
+
+**Decisions.**
+
+- No new journal table and no Drift migration: the origin of an entry is the
+  end of its timestamp (`substr(hlc, 22)` in SQL), the known state is a
+  `GROUP BY` over it, and what another copy lacks is selected with
+  `json_each` over its known state, bounded below by the lowest of its
+  timestamps so that SQLite skips what both hold.
+- The memory of the server (its last known state and the date of the last
+  exchange that went to its end) is one row of `local_state`, tagged with the
+  identifier the server gave at pairing: after a new pairing it is ignored,
+  and every modification counts as waiting until the first exchange.
+- The engine's first call sends no entry: it learns the server state, then
+  each call sends what the server lacks according to the previous answer.
+  When the server answers `SYNC_STATE_CHANGED`, the exchange starts again
+  from its current state, at most three times. A page from the server that
+  would leave a gap, or an answer announcing more entries without any, stops
+  the exchange as a protocol error.
+- Pages sent: 500 entries or 4 MiB; pages asked: 1 000 entries.
+- A modification holds at most 10 000 changes (`maxModificationChanges`), the
+  largest page the server accepts, since pages never cut a modification.
+- Received pages are integrated with a few set-based statements per page
+  instead of one round trip per entry: the page goes into a temporary table,
+  the entries already held are dropped, the others are inserted, then for
+  each field the latest new entry is applied when it is newer than
+  `field_versions` (`json_extract` gives the SQL value). The rebuild of the
+  derived tables uses the same statements over the whole journal. The tests
+  that check the journal against a naive model, the rebuild tests and the
+  convergence test pass unchanged.
+- The ledger reads derived rows `ORDER BY id`: their physical order depends
+  on the order entries arrived in, which differs between devices.
+
+**Measure** (`batz-ui/benchmark/first_exchange_test.dart`, run on
+2026-11-20 on the development machine, Intel Core i7-14700KF, server and app
+on the same machine, database files in background isolates as in
+production): a device holding 20 000 entries sends them to an empty server in
+2.9 s (42 calls); a new device receives them in 3.0 s (21 calls). With the
+first version of the integration, one round trip per entry, the second
+figure was 66.7 s.

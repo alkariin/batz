@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import '../../domain/ids.dart';
 import '../../domain/journal/hlc.dart';
 import '../../domain/journal/journal_entry.dart';
+import '../../domain/journal/known_state.dart';
 import 'database.dart';
 import 'derived_tables.dart';
 
@@ -144,19 +145,208 @@ class Journal {
   /// stored and applied, known ones are ignored. Entries of an entity or
   /// field this version does not know are kept in the journal for a later
   /// version to apply. Returns how many entries were new.
-  Future<int> merge(Iterable<JournalEntry> entries) {
-    return _db.transaction(() async {
-      var added = 0;
-      for (final entry in entries) {
-        _clock.observe(entry.hlc);
-        if (await _insert(entry)) {
-          added++;
-          await _apply(entry);
-        }
-      }
-      return added;
-    });
+  Future<int> merge(Iterable<JournalEntry> entries) => _db.transaction(() => _merge(entries));
+
+  /// Stores the [entries] that are new and applies them, in a few set-based
+  /// statements rather than one round trip per entry: a first exchange
+  /// brings tens of thousands of entries. The result is the one of applying
+  /// them one by one with [supersedes].
+  Future<int> _merge(Iterable<JournalEntry> entries) async {
+    final list = entries.toList();
+    if (list.isEmpty) return 0;
+    _clock.observe(list.map((e) => e.hlc).reduce((a, b) => a > b ? a : b));
+    await _db.customStatement(
+      'CREATE TEMP TABLE IF NOT EXISTS incoming (hlc TEXT, entity TEXT, record_id TEXT, field TEXT, value TEXT, '
+      'PRIMARY KEY (hlc, entity, record_id, field))',
+    );
+    await _db.customStatement('DELETE FROM temp.incoming');
+    const rowsPerStatement = 150;
+    for (var start = 0; start < list.length; start += rowsPerStatement) {
+      final chunk = list.sublist(start, (start + rowsPerStatement).clamp(0, list.length));
+      await _db.customStatement(
+        'INSERT OR IGNORE INTO temp.incoming (hlc, entity, record_id, field, value) VALUES '
+        '${List.filled(chunk.length, '(?, ?, ?, ?, ?)').join(', ')}',
+        [
+          for (final e in chunk) ...[e.hlc.encode(), e.entity, e.recordId, e.field, e.encodedValue],
+        ],
+      );
+    }
+    // Only the entries this journal does not hold yet.
+    await _db.customStatement(
+      'DELETE FROM temp.incoming WHERE EXISTS (SELECT 1 FROM journal j WHERE j.hlc = incoming.hlc '
+      'AND j.entity = incoming.entity AND j.record_id = incoming.record_id AND j.field = incoming.field)',
+    );
+    await _db.customStatement(
+      'INSERT INTO journal (hlc, entity, record_id, field, value) '
+      'SELECT hlc, entity, record_id, field, value FROM temp.incoming',
+    );
+    final added = await _changes();
+    if (added > 0) {
+      await _applyLatest(
+        'SELECT entity, record_id, field, MAX(hlc) AS hlc FROM temp.incoming GROUP BY entity, record_id, field',
+      );
+    }
+    await _db.customStatement('DELETE FROM temp.incoming');
+    return added;
   }
+
+  /// Applies, for each field of [latestSql] (entity, record_id, field, hlc:
+  /// the latest of a set of journal entries per field), its entry if it is
+  /// newer than the one that gives the field its current value. Fields this
+  /// version does not know stay in the journal only.
+  Future<void> _applyLatest(String latestSql) async {
+    final known = [
+      for (final table in _tables.values)
+        for (final field in [deletedField, ...table.columns.keys]) (table.entity, field),
+    ];
+    if (known.isEmpty) return;
+    await _db.customStatement('DROP TABLE IF EXISTS temp.latest');
+    await _db.customStatement(
+      'CREATE TEMP TABLE latest AS SELECT l.* FROM ($latestSql) l '
+      'WHERE (l.entity, l.field) IN (VALUES ${List.filled(known.length, '(?, ?)').join(', ')}) '
+      'AND NOT EXISTS (SELECT 1 FROM field_versions v WHERE v.entity = l.entity AND v.record_id = l.record_id '
+      'AND v.field = l.field AND v.hlc >= l.hlc)',
+      [
+        for (final (entity, field) in known) ...[entity, field],
+      ],
+    );
+    await _db.customStatement(
+      'INSERT INTO field_versions (entity, record_id, field, hlc) SELECT entity, record_id, field, hlc '
+      'FROM temp.latest WHERE true '
+      'ON CONFLICT (entity, record_id, field) DO UPDATE SET hlc = excluded.hlc',
+    );
+    for (final (entity, field) in known) {
+      final table = _tables[entity]!;
+      final column = _columnFor(entity, field, strict: true)!;
+      // json_extract turns the JSON text into the SQL value: true and false
+      // become 1 and 0, like [_sqlValue].
+      await _db.customStatement(
+        'INSERT INTO ${table.table} (id, $column) '
+        "SELECT l.record_id, json_extract(j.value, '\$') FROM temp.latest l JOIN journal j "
+        'ON j.hlc = l.hlc AND j.entity = l.entity AND j.record_id = l.record_id AND j.field = l.field '
+        'WHERE l.entity = ? AND l.field = ? '
+        'ON CONFLICT (id) DO UPDATE SET $column = excluded.$column',
+        [entity, field],
+      );
+    }
+    await _db.customStatement('DROP TABLE temp.latest');
+  }
+
+  // ------------------------------------------------------------ exchange
+
+  /// SQL expression of the origin device of the entry of a journal row.
+  static const _originSql = 'substr(hlc, ${Hlc.originOffset + 1})';
+
+  /// For each origin device, the latest timestamp this journal holds.
+  Future<KnownState> knownState() async {
+    final rows = await _db
+        .customSelect('SELECT $_originSql AS origin, MAX(hlc) AS hlc FROM journal GROUP BY origin')
+        .get();
+    return KnownState({for (final row in rows) row.read<String>('origin'): Hlc.parse(row.read<String>('hlc'))});
+  }
+
+  /// The entries a copy with the [known] state lacks, oldest first: about
+  /// [limit] of them, at most about [maxBytes] once encoded, never cutting a
+  /// modification (a single modification larger than that goes whole).
+  Future<JournalPage> missingFrom(KnownState known, {int limit = 500, int maxBytes = 4 << 20}) async {
+    final rows = await _missing(known, limit: limit + 1);
+    var count = rows.length;
+    var size = 0;
+    for (var i = 0; i < rows.length; i++) {
+      size += _sizeOf(rows[i]);
+      if (i == limit || size > maxBytes) {
+        count = i;
+        break;
+      }
+    }
+    var entries = rows;
+    final more = count < rows.length;
+    if (more) {
+      // rows[count] is the first entry left out: the entries of its
+      // modification that made it in are left out too.
+      final cut = rows[count].hlc;
+      while (count > 0 && rows[count - 1].hlc == cut) {
+        count--;
+      }
+      entries = count > 0 ? rows.sublist(0, count) : await _modification(cut);
+    }
+    return JournalPage(entries, since: known.only({for (final e in entries) e.deviceId}), more: more);
+  }
+
+  /// The number of modifications this journal holds that a copy with the
+  /// [known] state lacks: for the server's state, the modifications waiting
+  /// to be sent.
+  Future<int> pendingFor(KnownState known) async {
+    final (where, variables) = await _missingCondition(known);
+    final row = await _db
+        .customSelect('SELECT COUNT(DISTINCT hlc) AS n FROM journal WHERE $where', variables: variables)
+        .getSingle();
+    return row.read<int>('n');
+  }
+
+  /// Integrates a [page] received from another copy, in one operation:
+  /// either every entry is stored and applied, or none is. The page must
+  /// continue from what this journal holds ([JournalPage.since]); otherwise
+  /// integrating it would leave a gap, and [JournalGapException] is thrown
+  /// with nothing written. Returns how many entries were new.
+  Future<int> integrate(JournalPage page) => _db.transaction(() async {
+    if (page.entries.isEmpty) return 0;
+    final held = await knownState();
+    for (final origin in {for (final e in page.entries) e.deviceId}) {
+      final since = page.since.latest[origin];
+      if (since != null && !held.holds(since)) throw JournalGapException(origin);
+    }
+    return _merge(page.entries);
+  });
+
+  /// The condition selecting the entries a copy with [known] lacks. They are
+  /// all after the lowest of its timestamps, unless it lacks an origin this
+  /// journal holds: the bound lets SQLite skip what both hold.
+  Future<(String, List<Variable<Object>>)> _missingCondition(KnownState known) async {
+    final held = await knownState();
+    var lower = '';
+    if (held.origins.isNotEmpty && held.origins.every(known.latest.containsKey)) {
+      lower = held.origins.map((o) => known.latest[o]!).reduce((a, b) => a.compareTo(b) <= 0 ? a : b).encode();
+    }
+    return (
+      'hlc > ? AND NOT EXISTS (SELECT 1 FROM json_each(?) k WHERE k.key = $_originSql AND hlc <= k.value)',
+      <Variable<Object>>[Variable.withString(lower), Variable.withString(jsonEncode(known.toJson()))],
+    );
+  }
+
+  Future<List<JournalEntry>> _missing(KnownState known, {required int limit}) async {
+    final (where, variables) = await _missingCondition(known);
+    final rows = await _db
+        .customSelect(
+          'SELECT * FROM journal WHERE $where ORDER BY hlc, entity, record_id, field LIMIT ?',
+          variables: [...variables, Variable.withInt(limit)],
+          readsFrom: {_db.journalEntries},
+        )
+        .get();
+    return [for (final row in rows) _toEntry(_db.journalEntries.map(row.data))];
+  }
+
+  Future<List<JournalEntry>> _modification(Hlc hlc) async {
+    final rows =
+        await (_db.select(_db.journalEntries)
+              ..where((j) => j.hlc.equals(hlc.encode()))
+              ..orderBy([
+                (j) => OrderingTerm.asc(j.entity),
+                (j) => OrderingTerm.asc(j.recordId),
+                (j) => OrderingTerm.asc(j.field),
+              ]))
+            .get();
+    return rows.map(_toEntry).toList();
+  }
+
+  /// About the size of [entry] once encoded in a page.
+  static int _sizeOf(JournalEntry entry) =>
+      64 +
+      entry.hlc.deviceId.length +
+      entry.entity.length +
+      entry.recordId.length +
+      entry.field.length +
+      entry.encodedValue.length;
 
   /// Recomputes every derived table from the journal.
   Future<void> rebuild() => _db.transaction(_rebuildContents);
@@ -166,10 +356,9 @@ class Journal {
     for (final table in _tables.values) {
       await _db.customStatement('DELETE FROM ${table.table}');
     }
-    final rows = await _db.select(_db.journalEntries).get();
-    for (final row in rows) {
-      await _apply(_toEntry(row));
-    }
+    await _applyLatest(
+      'SELECT entity, record_id, field, MAX(hlc) AS hlc FROM journal GROUP BY entity, record_id, field',
+    );
   }
 
   /// Every entry of the journal, oldest first.
@@ -254,4 +443,15 @@ class Journal {
     false => 0,
     _ => value,
   };
+}
+
+/// A page continues from more than this journal holds of [origin]:
+/// integrating it would leave a gap in that origin's entries.
+class JournalGapException implements Exception {
+  JournalGapException(this.origin);
+
+  final String origin;
+
+  @override
+  String toString() => 'JournalGapException: the page continues from more than is held of $origin';
 }

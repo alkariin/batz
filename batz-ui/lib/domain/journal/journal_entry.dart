@@ -36,11 +36,18 @@ class FieldChange {
   String toString() => '$entity/$recordId.$field = $value';
 }
 
+/// The largest modification: a page of the exchange with the server never
+/// cuts a modification, and holds at most that many entries.
+const maxModificationChanges = 10000;
+
 /// A user modification: changes applied together, in a single operation, or
 /// not at all. All its entries share one timestamp.
 class Modification {
   Modification(Iterable<FieldChange> changes) : changes = List.unmodifiable(changes) {
     if (this.changes.isEmpty) throw ArgumentError('A modification needs at least one change');
+    if (this.changes.length > maxModificationChanges) {
+      throw ArgumentError('A modification holds at most $maxModificationChanges changes');
+    }
     final seen = <(String, String, String)>{};
     for (final c in this.changes) {
       if (!seen.add((c.entity, c.recordId, c.field))) {
