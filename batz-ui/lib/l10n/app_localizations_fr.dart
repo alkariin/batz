@@ -395,4 +395,143 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorSameAccount => 'Choisissez deux comptes différents.';
+
+  @override
+  String get edit => 'Modifier';
+
+  @override
+  String get transactionsEmpty => 'Aucune transaction.';
+
+  @override
+  String get transactionsAllAccounts => 'Tous les comptes';
+
+  @override
+  String get transactionsAllYears => 'Toutes les années';
+
+  @override
+  String get transactionNew => 'Nouvelle transaction';
+
+  @override
+  String get transactionNewEntry => 'Dépense ou revenu';
+
+  @override
+  String get transactionNewTransfer => 'Transfert';
+
+  @override
+  String get entryNewTitle => 'Dépense ou revenu';
+
+  @override
+  String get entryEditTitle => 'Modifier la transaction';
+
+  @override
+  String get transferNewTitle => 'Nouveau transfert';
+
+  @override
+  String get transferEditTitle => 'Modifier le transfert';
+
+  @override
+  String get fieldAmount => 'Montant';
+
+  @override
+  String get fieldDate => 'Date (jj.mm.aaaa)';
+
+  @override
+  String get fieldAccount => 'Compte';
+
+  @override
+  String get fieldCategory => 'Catégorie';
+
+  @override
+  String get fieldDescription => 'Description';
+
+  @override
+  String get fieldNote => 'Note';
+
+  @override
+  String get fieldFrom => 'Compte de départ';
+
+  @override
+  String get fieldTo => 'Compte d\'arrivée';
+
+  @override
+  String get pickDate => 'Choisir la date';
+
+  @override
+  String get directionInflow => 'Entrée';
+
+  @override
+  String get directionOutflow => 'Sortie';
+
+  @override
+  String get periodCustom => 'Période différente du paiement';
+
+  @override
+  String get periodCustomHint => 'Par exemple une assurance payée pour douze mois.';
+
+  @override
+  String get periodStart => 'Début de la période';
+
+  @override
+  String get periodEnd => 'Fin de la période';
+
+  @override
+  String get errorAmountInvalid => 'Montant invalide : saisissez par exemple 45.90, sans signe.';
+
+  @override
+  String get errorDateInvalid => 'Date invalide : saisissez par exemple 31.12.2026.';
+
+  @override
+  String get errorAccountMissing => 'Choisissez un compte.';
+
+  @override
+  String get errorCategoryMissing => 'Choisissez une catégorie.';
+
+  @override
+  String get entryNoAccount => 'Aucun compte n\'accepte la saisie manuelle. Créez-en un dans Plus › Comptes.';
+
+  @override
+  String entryNoCategory(int year) {
+    return 'Aucune catégorie disponible en $year. Ajoutez-en dans Plus › Catégories.';
+  }
+
+  @override
+  String get kindExpense => 'Dépense';
+
+  @override
+  String get kindRefund => 'Remboursement';
+
+  @override
+  String get kindIncome => 'Revenu';
+
+  @override
+  String get kindTransfer => 'Transfert';
+
+  @override
+  String get kindUnclassified => 'Non classé';
+
+  @override
+  String transferAccounts(String from, String to) {
+    return '$from → $to';
+  }
+
+  @override
+  String get detailTitle => 'Transaction';
+
+  @override
+  String get detailType => 'Type';
+
+  @override
+  String get detailPeriod => 'Période';
+
+  @override
+  String get detailShares => 'Parts par mois';
+
+  @override
+  String get detailYearTotals => 'Total par année';
+
+  @override
+  String get transactionDeleteConfirm => 'Supprimer cette transaction ?';
+
+  @override
+  String get transactionDeleted => 'Transaction supprimée.';
 }

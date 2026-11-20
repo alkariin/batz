@@ -225,3 +225,22 @@ required, but the rename is lost.
   every ancestor; the totals of income and expenses are those of the top-level
   groups of each nature. A line without a category of the year's tree is
   counted apart as unclassified.
+
+### 1.5 Transactions screen
+
+**Decisions.**
+
+- Dates are typed in the Swiss format (`31.12.2026`) or picked from a
+  calendar; amounts are typed without sign, and a negative one is refused
+  (H3).
+- The form offers the categories of `treeOrPreview(year)` for the year of the
+  date typed. When the date moves to another year, the chosen category is
+  replaced by the category of the same name in that year (specification,
+  4.1), or cleared if there is none. Each category is shown with its nature,
+  so that the default direction (H3) is visible before saving.
+- The direction follows the category's nature until the user flips it.
+- In the list, a transfer shows its stored amount (negative, on the departure
+  account), except when the list is filtered on the arrival account, where it
+  shows the money coming in.
+- The detail of a payment shows its total per year, then its share per month
+  (`MM.YYYY`), computed by `allocate` from its line.

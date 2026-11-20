@@ -239,5 +239,67 @@
   "errorDebtsAccountManual": "Un compte de dettes ne se modifie que par le tableau des dettes.",
   "errorCategoryNotAssignable": "Choisissez une catégorie sans sous-catégorie, dans l'arbre de l'année du paiement.",
   "errorPeriodInvalid": "La fin de la période précède son début.",
-  "errorSameAccount": "Choisissez deux comptes différents."
+  "errorSameAccount": "Choisissez deux comptes différents.",
+  "edit": "Modifier",
+  "transactionsEmpty": "Aucune transaction.",
+  "transactionsAllAccounts": "Tous les comptes",
+  "transactionsAllYears": "Toutes les années",
+  "transactionNew": "Nouvelle transaction",
+  "transactionNewEntry": "Dépense ou revenu",
+  "transactionNewTransfer": "Transfert",
+  "entryNewTitle": "Dépense ou revenu",
+  "entryEditTitle": "Modifier la transaction",
+  "transferNewTitle": "Nouveau transfert",
+  "transferEditTitle": "Modifier le transfert",
+  "fieldAmount": "Montant",
+  "fieldDate": "Date (jj.mm.aaaa)",
+  "fieldAccount": "Compte",
+  "fieldCategory": "Catégorie",
+  "fieldDescription": "Description",
+  "fieldNote": "Note",
+  "fieldFrom": "Compte de départ",
+  "fieldTo": "Compte d'arrivée",
+  "pickDate": "Choisir la date",
+  "directionInflow": "Entrée",
+  "directionOutflow": "Sortie",
+  "periodCustom": "Période différente du paiement",
+  "periodCustomHint": "Par exemple une assurance payée pour douze mois.",
+  "periodStart": "Début de la période",
+  "periodEnd": "Fin de la période",
+  "errorAmountInvalid": "Montant invalide : saisissez par exemple 45.90, sans signe.",
+  "errorDateInvalid": "Date invalide : saisissez par exemple 31.12.2026.",
+  "errorAccountMissing": "Choisissez un compte.",
+  "errorCategoryMissing": "Choisissez une catégorie.",
+  "entryNoAccount": "Aucun compte n'accepte la saisie manuelle. Créez-en un dans Plus › Comptes.",
+  "entryNoCategory": "Aucune catégorie disponible en {year}. Ajoutez-en dans Plus › Catégories.",
+  "@entryNoCategory": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "kindExpense": "Dépense",
+  "kindRefund": "Remboursement",
+  "kindIncome": "Revenu",
+  "kindTransfer": "Transfert",
+  "kindUnclassified": "Non classé",
+  "transferAccounts": "{from} → {to}",
+  "@transferAccounts": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "detailTitle": "Transaction",
+  "detailType": "Type",
+  "detailPeriod": "Période",
+  "detailShares": "Parts par mois",
+  "detailYearTotals": "Total par année",
+  "transactionDeleteConfirm": "Supprimer cette transaction ?",
+  "transactionDeleted": "Transaction supprimée."
 }

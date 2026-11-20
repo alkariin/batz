@@ -738,6 +738,276 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Choisissez deux comptes différents.'**
   String get errorSameAccount;
+
+  /// No description provided for @edit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier'**
+  String get edit;
+
+  /// No description provided for @transactionsEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune transaction.'**
+  String get transactionsEmpty;
+
+  /// No description provided for @transactionsAllAccounts.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les comptes'**
+  String get transactionsAllAccounts;
+
+  /// No description provided for @transactionsAllYears.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les années'**
+  String get transactionsAllYears;
+
+  /// No description provided for @transactionNew.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle transaction'**
+  String get transactionNew;
+
+  /// No description provided for @transactionNewEntry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépense ou revenu'**
+  String get transactionNewEntry;
+
+  /// No description provided for @transactionNewTransfer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transfert'**
+  String get transactionNewTransfer;
+
+  /// No description provided for @entryNewTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépense ou revenu'**
+  String get entryNewTitle;
+
+  /// No description provided for @entryEditTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier la transaction'**
+  String get entryEditTitle;
+
+  /// No description provided for @transferNewTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau transfert'**
+  String get transferNewTitle;
+
+  /// No description provided for @transferEditTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le transfert'**
+  String get transferEditTitle;
+
+  /// No description provided for @fieldAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant'**
+  String get fieldAmount;
+
+  /// No description provided for @fieldDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date (jj.mm.aaaa)'**
+  String get fieldDate;
+
+  /// No description provided for @fieldAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte'**
+  String get fieldAccount;
+
+  /// No description provided for @fieldCategory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Catégorie'**
+  String get fieldCategory;
+
+  /// No description provided for @fieldDescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Description'**
+  String get fieldDescription;
+
+  /// No description provided for @fieldNote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Note'**
+  String get fieldNote;
+
+  /// No description provided for @fieldFrom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte de départ'**
+  String get fieldFrom;
+
+  /// No description provided for @fieldTo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte d\'arrivée'**
+  String get fieldTo;
+
+  /// No description provided for @pickDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir la date'**
+  String get pickDate;
+
+  /// No description provided for @directionInflow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrée'**
+  String get directionInflow;
+
+  /// No description provided for @directionOutflow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sortie'**
+  String get directionOutflow;
+
+  /// No description provided for @periodCustom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Période différente du paiement'**
+  String get periodCustom;
+
+  /// No description provided for @periodCustomHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Par exemple une assurance payée pour douze mois.'**
+  String get periodCustomHint;
+
+  /// No description provided for @periodStart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Début de la période'**
+  String get periodStart;
+
+  /// No description provided for @periodEnd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fin de la période'**
+  String get periodEnd;
+
+  /// No description provided for @errorAmountInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant invalide : saisissez par exemple 45.90, sans signe.'**
+  String get errorAmountInvalid;
+
+  /// No description provided for @errorDateInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date invalide : saisissez par exemple 31.12.2026.'**
+  String get errorDateInvalid;
+
+  /// No description provided for @errorAccountMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un compte.'**
+  String get errorAccountMissing;
+
+  /// No description provided for @errorCategoryMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez une catégorie.'**
+  String get errorCategoryMissing;
+
+  /// No description provided for @entryNoAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun compte n\'accepte la saisie manuelle. Créez-en un dans Plus › Comptes.'**
+  String get entryNoAccount;
+
+  /// No description provided for @entryNoCategory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune catégorie disponible en {year}. Ajoutez-en dans Plus › Catégories.'**
+  String entryNoCategory(int year);
+
+  /// No description provided for @kindExpense.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépense'**
+  String get kindExpense;
+
+  /// No description provided for @kindRefund.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement'**
+  String get kindRefund;
+
+  /// No description provided for @kindIncome.
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenu'**
+  String get kindIncome;
+
+  /// No description provided for @kindTransfer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transfert'**
+  String get kindTransfer;
+
+  /// No description provided for @kindUnclassified.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non classé'**
+  String get kindUnclassified;
+
+  /// No description provided for @transferAccounts.
+  ///
+  /// In fr, this message translates to:
+  /// **'{from} → {to}'**
+  String transferAccounts(String from, String to);
+
+  /// No description provided for @detailTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transaction'**
+  String get detailTitle;
+
+  /// No description provided for @detailType.
+  ///
+  /// In fr, this message translates to:
+  /// **'Type'**
+  String get detailType;
+
+  /// No description provided for @detailPeriod.
+  ///
+  /// In fr, this message translates to:
+  /// **'Période'**
+  String get detailPeriod;
+
+  /// No description provided for @detailShares.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parts par mois'**
+  String get detailShares;
+
+  /// No description provided for @detailYearTotals.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total par année'**
+  String get detailYearTotals;
+
+  /// No description provided for @transactionDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer cette transaction ?'**
+  String get transactionDeleteConfirm;
+
+  /// No description provided for @transactionDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transaction supprimée.'**
+  String get transactionDeleted;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
