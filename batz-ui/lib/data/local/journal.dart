@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
@@ -111,7 +112,7 @@ class Journal {
     for (final change in modification.changes) {
       _columnFor(change.entity, change.field, strict: true);
     }
-    return _db.transaction(() async {
+    final hlc = await _db.transaction(() async {
       final changed = [
         for (final change in modification.changes)
           if (await _currentValue(change.entity, change.recordId, change.field) != jsonEncode(change.value)) change,
@@ -125,7 +126,15 @@ class Journal {
       }
       return hlc;
     });
+    if (hlc != null) _localWrites.add(null);
+    return hlc;
   }
+
+  final _localWrites = StreamController<void>.broadcast(sync: true);
+
+  /// Emits after each modification written on this device: the
+  /// synchronisation follows a few seconds later (decision H2).
+  Stream<void> get localWrites => _localWrites.stream;
 
   /// The JSON-encoded value of the entry that gives [field] its current
   /// value, or null if no entry ever set it.

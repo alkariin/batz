@@ -82,6 +82,9 @@ class CutTransport implements SyncTransport {
   var calls = 0;
 
   @override
+  Future<Health> health() => _inner.health();
+
+  @override
   Future<SyncResponse> exchange(SyncRequest request) async {
     if (++calls == failAt) {
       if (afterServer) await _inner.exchange(request);

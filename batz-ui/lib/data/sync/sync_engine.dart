@@ -7,7 +7,44 @@ import 'sync_store.dart';
 
 /// How the engine reaches the server; [ServerClient] in the app.
 abstract interface class SyncTransport {
+  Future<Health> health();
   Future<SyncResponse> exchange(SyncRequest request);
+}
+
+/// Why this app and the server cannot exchange.
+enum Incompatibility {
+  /// The server requires a newer app.
+  appTooOld,
+
+  /// The server predates the exchange protocol of this app.
+  serverTooOld,
+}
+
+/// The exchange is refused because the versions are incompatible; nothing
+/// was exchanged.
+class SyncIncompatibleException implements Exception {
+  SyncIncompatibleException(this.reason, {required this.serverVersion, required this.minAppVersion});
+
+  final Incompatibility reason;
+  final String serverVersion;
+
+  /// The oldest app version the server accepts.
+  final String minAppVersion;
+
+  @override
+  String toString() => 'SyncIncompatibleException: ${reason.name} (server $serverVersion, app $appVersion)';
+}
+
+/// Checks that this app and the server described by [health] can exchange:
+/// the server must not require a newer app, and must speak this app's
+/// exchange protocol.
+void checkCompatibility(Health health) {
+  Never refuse(Incompatibility reason) =>
+      throw SyncIncompatibleException(reason, serverVersion: health.version, minAppVersion: health.minAppVersion);
+  if ((compareVersions(appVersion, health.minAppVersion) ?? 0) < 0) refuse(Incompatibility.appTooOld);
+  final protocol = health.syncProtocol;
+  if (protocol == null || protocol < syncProtocol) refuse(Incompatibility.serverTooOld);
+  if (protocol > syncProtocol) refuse(Incompatibility.appTooOld);
 }
 
 /// What an exchange did.
@@ -78,6 +115,8 @@ class SyncEngine {
   /// throws (server unreachable, refused, ...) or [SyncProtocolException];
   /// whatever was integrated before stays.
   Future<SyncReport> run(SyncTransport transport, {required String pairingId}) async {
+    final health = await transport.health();
+    checkCompatibility(health);
     KnownState? server;
     var more = true;
     var sent = 0, received = 0, calls = 0, restarts = 0;
@@ -98,6 +137,15 @@ class SyncEngine {
           SyncRequest(appVersion: appVersion, known: known, page: outgoing, limit: requestedPageSize),
         );
       } on ServerException catch (e) {
+        // The server's own checks, should /healthz have said otherwise.
+        final refused = switch (e.code) {
+          'APP_VERSION_UNSUPPORTED' => Incompatibility.appTooOld,
+          'SYNC_PROTOCOL_UNSUPPORTED' || 'NOT_FOUND' => Incompatibility.serverTooOld,
+          _ => null,
+        };
+        if (refused != null) {
+          throw SyncIncompatibleException(refused, serverVersion: health.version, minAppVersion: health.minAppVersion);
+        }
         if (e.code != 'SYNC_STATE_CHANGED' || ++restarts > maxRestarts) rethrow;
         // The server no longer holds what the page continued from: start
         // again from its current state.

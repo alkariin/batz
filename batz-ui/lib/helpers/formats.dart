@@ -47,6 +47,9 @@ String formatDate(DateTime date) {
   return '${two(date.day)}.${two(date.month)}.${date.year.toString().padLeft(4, '0')}';
 }
 
+/// Formats the time of day of [date] as `21:04`.
+String formatTime(DateTime date) => '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+
 final _datePattern = RegExp(r'^(\d{1,2})\.(\d{1,2})\.(\d{4})$');
 
 /// Parses `31.12.2026` (or `1.2.2026`) into a date at midnight UTC, or

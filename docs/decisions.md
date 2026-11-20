@@ -399,3 +399,35 @@ production): a device holding 20 000 entries sends them to an empty server in
 2.9 s (42 calls); a new device receives them in 3.0 s (21 calls). With the
 first version of the integration, one round trip per entry, the second
 figure was 66.7 s.
+
+### 2.3 Triggers, states and versions
+
+**Decisions.**
+
+- `SyncCubit` runs the exchanges of decision H2: at start, when the app comes
+  back to the foreground (`AppLifecycleListener.onResume`), 3 seconds after
+  the last local modification (`Journal.localWrites`), every 5 minutes while
+  the app is shown (the timer stops on `onHide`), and from the button. One
+  exchange runs at a time; a trigger during an exchange schedules exactly one
+  more after it.
+- Statuses: not paired, never synchronised, in progress, up to date,
+  offline, revoked, incompatible versions, error. An unreachable server only
+  gives « Hors ligne ». While the device is revoked or incompatible,
+  automatic exchanges stop; the button still tries, and the next start of the
+  app tries once.
+- The number of modifications waiting is the number of distinct timestamps
+  the device holds beyond the server state remembered at the last exchange;
+  it is recomputed after each local write and each exchange.
+- Compatibility is checked with `/healthz` before any exchange: the app
+  refuses when the server's `minAppVersion` is above its own version or when
+  the server speaks a newer protocol (app too old), and when the server
+  reports no `syncProtocol` or an older one (server too old, which is the
+  case of servers before 0.3.0). The refusals of `/sync` itself
+  (`APP_VERSION_UNSUPPORTED`, `SYNC_PROTOCOL_UNSUPPORTED`, `NOT_FOUND`) give
+  the same statuses. The reason and the versions are shown.
+- The clock offset is the server time of the answer minus the middle of the
+  call, measured at each call; beyond 5 minutes either way the card warns
+  (decision H5), without blocking anything.
+- The home screen, empty until now, shows the synchronisation card; Plus ›
+  Serveur shows the same card above the server details. After an exchange
+  that received entries, `LedgerCubit` reloads, so every screen shows them.

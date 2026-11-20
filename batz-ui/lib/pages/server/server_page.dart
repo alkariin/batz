@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/server/server_client.dart';
 import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
+import '../sync/sync_card.dart';
 import 'server_cubit.dart';
 
 /// Settings > Server: pairing, status, devices.
@@ -163,6 +164,7 @@ class _PairedView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const SyncCard(showPairing: false),
         Card(
           child: Padding(
             padding: const EdgeInsets.all(12),

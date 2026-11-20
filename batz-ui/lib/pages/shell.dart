@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../components/empty_page.dart';
 import '../l10n/app_localizations.dart';
+import 'home/home_page.dart';
 import 'more/more_page.dart';
+import 'sync/sync_cubit.dart';
 import 'transactions/transactions_page.dart';
 
 /// Width from which navigation moves from the bottom bar to a side rail.
@@ -45,6 +48,23 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   Section _selected = Section.home;
 
+  /// Synchronises when the app comes back to the foreground, and only
+  /// periodically while it is shown (decision H2 of phase 2).
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    final sync = context.read<SyncCubit>();
+    _lifecycle = AppLifecycleListener(onResume: sync.resumed, onHide: sync.paused);
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
   void _select(int index) => setState(() => _selected = Section.values[index]);
 
   @override
@@ -53,6 +73,7 @@ class _AppShellState extends State<AppShell> {
     final page = KeyedSubtree(
       key: ValueKey(_selected),
       child: switch (_selected) {
+        Section.home => const HomePage(),
         Section.transactions => const TransactionsPage(),
         Section.more => const MorePage(),
         _ => EmptyPage(title: _destinations[_selected]!.label(l)),

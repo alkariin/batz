@@ -8,12 +8,18 @@ import 'data/local/journal.dart';
 import 'data/local/open_database.dart';
 import 'data/secret_store.dart';
 import 'data/server/server_repository.dart';
+import 'data/sync/sync_engine.dart';
+import 'data/sync/sync_store.dart';
+import 'pages/sync/sync_cubit.dart';
 
 /// Long-lived objects created once at start-up.
 class AppServices {
-  AppServices({required this.database, required this.journal, required this.secrets})
+  AppServices({required this.database, required this.journal, required this.secrets, this.syncTransport})
     : server = ServerRepository(secrets),
-      ledger = LedgerRepository(database, journal);
+      ledger = LedgerRepository(database, journal),
+      syncStore = SyncStore(database) {
+    syncEngine = SyncEngine(journal, syncStore);
+  }
 
   /// Opens the local database (encrypted on Android) and its journal, which
   /// creates the device identifier on the very first launch.
@@ -33,4 +39,10 @@ class AppServices {
   final SecretStore secrets;
   final ServerRepository server;
   final LedgerRepository ledger;
+  final SyncStore syncStore;
+  late final SyncEngine syncEngine;
+
+  /// How the synchronisation reaches the server; the pinned HTTPS client
+  /// when null. Tests put a server in memory here.
+  final TransportFactory? syncTransport;
 }

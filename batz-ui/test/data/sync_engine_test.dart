@@ -1,4 +1,3 @@
-import 'package:batz/data/local/journal.dart';
 import 'package:batz/data/server/server_client.dart';
 import 'package:batz/data/sync/sync_engine.dart';
 import 'package:batz/data/sync/sync_protocol.dart';
@@ -8,51 +7,11 @@ import 'package:batz/domain/journal/journal_entry.dart';
 import 'package:batz/domain/journal/known_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../support/fake_server.dart';
 import '../support/journal_harness.dart';
 
 const me = '11111111-0000-4000-8000-000000000000';
 const other = '22222222-0000-4000-8000-000000000000';
-
-/// A server in memory, following the protocol with a journal of its own.
-class FakeServer implements SyncTransport {
-  FakeServer(this.journal, {this.clock});
-
-  final Journal journal;
-  final DateTime Function()? clock;
-  final requests = <SyncRequest>[];
-
-  /// Alters each answer.
-  SyncResponse Function(SyncResponse)? alter;
-
-  /// Runs after each answer is computed.
-  Future<void> Function()? restore;
-  Object? failNext;
-  var conflicts = 0;
-
-  @override
-  Future<SyncResponse> exchange(SyncRequest request) async {
-    requests.add(request);
-    if (failNext case final error?) {
-      failNext = null;
-      throw error;
-    }
-    final int added;
-    try {
-      added = await journal.integrate(request.page);
-    } on JournalGapException {
-      conflicts++;
-      throw ServerException(409, 'SYNC_STATE_CHANGED', 'state changed');
-    }
-    final response = SyncResponse(
-      serverTime: (clock ?? DateTime.now)(),
-      known: await journal.knownState(),
-      page: await journal.missingFrom(request.known, limit: request.limit ?? 1000),
-      added: added,
-    );
-    await restore?.call();
-    return alter == null ? response : alter!(response);
-  }
-}
 
 void main() {
   late Harness device, server;

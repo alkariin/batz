@@ -122,6 +122,7 @@ class ServerClient implements SyncTransport {
 
   void close() => _dio.close(force: true);
 
+  @override
   Future<Health> health() async {
     final body = await _send('GET', '/healthz') as Map<String, dynamic>;
     return Health(

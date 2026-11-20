@@ -5,6 +5,8 @@ import 'package:batz/helpers/theme.dart';
 import 'package:batz/l10n/app_localizations.dart';
 import 'package:batz/pages/server/server_cubit.dart';
 import 'package:batz/pages/server/server_page.dart';
+import 'package:batz/pages/sync/sync_cubit.dart';
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -29,12 +31,19 @@ ServerDevice _device(String id, String name, {bool current = false, DateTime? re
   current: current,
 );
 
+class _MockSyncCubit extends MockCubit<SyncState> implements SyncCubit {}
+
 Future<ServerCubit> _pump(WidgetTester tester, ServerRepository repo) async {
   final cubit = ServerCubit(repo);
   addTearDown(cubit.close);
+  final sync = _MockSyncCubit();
+  when(() => sync.state).thenReturn(const SyncState(status: SyncStatus.upToDate));
   await tester.pumpWidget(
-    BlocProvider.value(
-      value: cubit,
+    MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: cubit),
+        BlocProvider<SyncCubit>.value(value: sync),
+      ],
       child: MaterialApp(
         theme: buildTheme(Brightness.light),
         locale: const Locale('fr'),

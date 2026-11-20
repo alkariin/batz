@@ -556,4 +556,82 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get transactionDeleted => 'Transaction supprimée.';
+
+  @override
+  String get syncTitle => 'Synchronisation';
+
+  @override
+  String get syncNotPaired => 'Cet appareil n\'est associé à aucun serveur : ses données restent sur lui seul.';
+
+  @override
+  String get syncPairAction => 'Associer un serveur';
+
+  @override
+  String get syncNever => 'Jamais synchronisé';
+
+  @override
+  String get syncRunning => 'Synchronisation en cours…';
+
+  @override
+  String get syncUpToDate => 'À jour';
+
+  @override
+  String get syncOffline => 'Hors ligne';
+
+  @override
+  String get syncOfflineHint =>
+      'Le serveur est injoignable. Les modifications partiront à la prochaine synchronisation.';
+
+  @override
+  String get syncRevoked => 'Appareil révoqué';
+
+  @override
+  String get syncRevokedHint =>
+      'Le serveur a révoqué cet appareil : la synchronisation est arrêtée. Ses données restent sur cet appareil. Pour reprendre, oubliez ce serveur dans Plus › Serveur, puis associez l\'appareil à nouveau : ses modifications non envoyées partiront au premier échange.';
+
+  @override
+  String get syncIncompatible => 'Versions incompatibles';
+
+  @override
+  String syncAppTooOld(String version) {
+    return 'Synchronisation refusée : cette version de l\'app est trop ancienne pour le serveur, qui demande au moins la version $version. Mettez l\'app à jour.';
+  }
+
+  @override
+  String syncServerTooOld(String version) {
+    return 'Synchronisation refusée : le serveur (version $version) est trop ancien pour cette version de l\'app. Mettez le serveur à jour.';
+  }
+
+  @override
+  String get syncError => 'Erreur de synchronisation';
+
+  @override
+  String syncErrorHint(String detail) {
+    return 'La dernière synchronisation a échoué : $detail';
+  }
+
+  @override
+  String syncLast(String date, String time) {
+    return 'Dernière synchronisation : $date à $time';
+  }
+
+  @override
+  String syncPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count modifications en attente',
+      one: 'Une modification en attente',
+      zero: 'Aucune modification en attente',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncNow => 'Synchroniser';
+
+  @override
+  String syncClockWarning(int minutes) {
+    return 'L\'horloge de cet appareil s\'écarte de $minutes minutes de celle du serveur. Corrigez-la : l\'ordre des modifications faites sur plusieurs appareils en dépend.';
+  }
 }

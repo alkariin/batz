@@ -1050,6 +1050,120 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Transaction supprimée.'**
   String get transactionDeleted;
+
+  /// No description provided for @syncTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchronisation'**
+  String get syncTitle;
+
+  /// No description provided for @syncNotPaired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet appareil n\'est associé à aucun serveur : ses données restent sur lui seul.'**
+  String get syncNotPaired;
+
+  /// No description provided for @syncPairAction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Associer un serveur'**
+  String get syncPairAction;
+
+  /// No description provided for @syncNever.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jamais synchronisé'**
+  String get syncNever;
+
+  /// No description provided for @syncRunning.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchronisation en cours…'**
+  String get syncRunning;
+
+  /// No description provided for @syncUpToDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'À jour'**
+  String get syncUpToDate;
+
+  /// No description provided for @syncOffline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Hors ligne'**
+  String get syncOffline;
+
+  /// No description provided for @syncOfflineHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur est injoignable. Les modifications partiront à la prochaine synchronisation.'**
+  String get syncOfflineHint;
+
+  /// No description provided for @syncRevoked.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appareil révoqué'**
+  String get syncRevoked;
+
+  /// No description provided for @syncRevokedHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur a révoqué cet appareil : la synchronisation est arrêtée. Ses données restent sur cet appareil. Pour reprendre, oubliez ce serveur dans Plus › Serveur, puis associez l\'appareil à nouveau : ses modifications non envoyées partiront au premier échange.'**
+  String get syncRevokedHint;
+
+  /// No description provided for @syncIncompatible.
+  ///
+  /// In fr, this message translates to:
+  /// **'Versions incompatibles'**
+  String get syncIncompatible;
+
+  /// No description provided for @syncAppTooOld.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchronisation refusée : cette version de l\'app est trop ancienne pour le serveur, qui demande au moins la version {version}. Mettez l\'app à jour.'**
+  String syncAppTooOld(String version);
+
+  /// No description provided for @syncServerTooOld.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchronisation refusée : le serveur (version {version}) est trop ancien pour cette version de l\'app. Mettez le serveur à jour.'**
+  String syncServerTooOld(String version);
+
+  /// No description provided for @syncError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur de synchronisation'**
+  String get syncError;
+
+  /// No description provided for @syncErrorHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'La dernière synchronisation a échoué : {detail}'**
+  String syncErrorHint(String detail);
+
+  /// No description provided for @syncLast.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernière synchronisation : {date} à {time}'**
+  String syncLast(String date, String time);
+
+  /// No description provided for @syncPending.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucune modification en attente} =1{Une modification en attente} other{{count} modifications en attente}}'**
+  String syncPending(int count);
+
+  /// No description provided for @syncNow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchroniser'**
+  String get syncNow;
+
+  /// No description provided for @syncClockWarning.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'horloge de cet appareil s\'écarte de {minutes} minutes de celle du serveur. Corrigez-la : l\'ordre des modifications faites sur plusieurs appareils en dépend.'**
+  String syncClockWarning(int minutes);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

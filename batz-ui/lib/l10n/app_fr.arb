@@ -308,5 +308,69 @@
   "detailShares": "Parts par mois",
   "detailYearTotals": "Total par année",
   "transactionDeleteConfirm": "Supprimer cette transaction ?",
-  "transactionDeleted": "Transaction supprimée."
+  "transactionDeleted": "Transaction supprimée.",
+  "syncTitle": "Synchronisation",
+  "syncNotPaired": "Cet appareil n'est associé à aucun serveur : ses données restent sur lui seul.",
+  "syncPairAction": "Associer un serveur",
+  "syncNever": "Jamais synchronisé",
+  "syncRunning": "Synchronisation en cours…",
+  "syncUpToDate": "À jour",
+  "syncOffline": "Hors ligne",
+  "syncOfflineHint": "Le serveur est injoignable. Les modifications partiront à la prochaine synchronisation.",
+  "syncRevoked": "Appareil révoqué",
+  "syncRevokedHint": "Le serveur a révoqué cet appareil : la synchronisation est arrêtée. Ses données restent sur cet appareil. Pour reprendre, oubliez ce serveur dans Plus › Serveur, puis associez l'appareil à nouveau : ses modifications non envoyées partiront au premier échange.",
+  "syncIncompatible": "Versions incompatibles",
+  "syncAppTooOld": "Synchronisation refusée : cette version de l'app est trop ancienne pour le serveur, qui demande au moins la version {version}. Mettez l'app à jour.",
+  "@syncAppTooOld": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "syncServerTooOld": "Synchronisation refusée : le serveur (version {version}) est trop ancien pour cette version de l'app. Mettez le serveur à jour.",
+  "@syncServerTooOld": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "syncError": "Erreur de synchronisation",
+  "syncErrorHint": "La dernière synchronisation a échoué : {detail}",
+  "@syncErrorHint": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "syncLast": "Dernière synchronisation : {date} à {time}",
+  "@syncLast": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncPending": "{count, plural, =0{Aucune modification en attente} =1{Une modification en attente} other{{count} modifications en attente}}",
+  "@syncPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncNow": "Synchroniser",
+  "syncClockWarning": "L'horloge de cet appareil s'écarte de {minutes} minutes de celle du serveur. Corrigez-la : l'ordre des modifications faites sur plusieurs appareils en dépend.",
+  "@syncClockWarning": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  }
 }
