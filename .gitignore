@@ -1,0 +1,84 @@
+# -----------------------------
+# Personal data: never commit
+# (checked by scripts/check-personal-files.sh in CI)
+# -----------------------------
+privé - *
+prive - *
+config-*.yaml
+config-*.yaml.*
+specification.txt
+/personal/
+
+# -----------------------------
+# Secrets
+# -----------------------------
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+key.properties
+*.pem
+*.key
+*.p12
+*.pfx
+
+# -----------------------------
+# OS / editor
+# -----------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+*.swp
+*.log
+
+# -----------------------------
+# Flutter / Dart
+# -----------------------------
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/build/
+**/coverage/
+**/app.*.symbols
+**/app.*.map.json
+
+# Android
+**/android/.gradle/
+**/android/.kotlin/
+**/android/local.properties
+**/android/**/build/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+
+# -----------------------------
+# Go
+# -----------------------------
+batz-web/src/batz-web
+*.exe
+*.test
+*.out
+bin/
+dist/
+go.work
+go.work.sum
+
+# -----------------------------
+# Local runtime
+# -----------------------------
+/data/
+/batz-web/data/
+docker-data/
+docker-compose.yml
+*.tar
+*.tar.gz
+
+# Python caches (legacy scripts)
+__pycache__/
+
+# Claude Code
+.claude/
