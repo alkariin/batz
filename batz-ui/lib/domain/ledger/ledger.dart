@@ -378,18 +378,21 @@ class Ledger {
   }
 
   /// Records a transfer: one transaction on the account the money leaves,
-  /// with the receiving account as counterpart, and no category.
+  /// with the receiving account as counterpart, and no category. Like any
+  /// first transaction of a year without a tree, it creates that tree in the
+  /// same modification (step 1.3 of the phase 1 plan, decision H6).
   Modification recordTransfer(String id, TransferDraft draft) {
     return Modification([
       ..._transferChanges(id, draft, previous: null),
       FieldChange(TransactionFields.entity, id, TransactionFields.status, TransactionStatus.validated.name),
+      ...treeChangesFor(draft.date.year),
     ]);
   }
 
   Modification updateTransfer(String id, TransferDraft draft) {
     final existing = _manualTransaction(id);
     if (!existing.isTransfer) throw const LedgerException(LedgerError.unknownTransaction);
-    return Modification(_transferChanges(id, draft, previous: existing));
+    return Modification([..._transferChanges(id, draft, previous: existing), ...treeChangesFor(draft.date.year)]);
   }
 
   List<FieldChange> _transferChanges(String id, TransferDraft draft, {required LedgerTransaction? previous}) {

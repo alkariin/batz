@@ -182,6 +182,23 @@ void main() {
       expect(l.transactionList(accountId: 'cash').single.id, 't', reason: 'listed on both accounts');
     });
 
+    test('a transfer dated in a year without a tree creates it, like any first transaction (H6)', () async {
+      var l = await h.ledger();
+      expect(l.trees.containsKey(2027), isFalse);
+      l = await h.apply((l) => l.recordTransfer('t', transfer(date: d(2027, 1, 4))));
+      expect(l.transactions['t']!.date.year, 2027);
+      expect(l.trees[2027]!.ordered.map((c) => c.name), l.trees[2026]!.ordered.map((c) => c.name));
+      expect(l.trees[2027]!.byId.keys.toSet(), {for (final id in l.trees[2026]!.byId.keys) copiedCategoryId(id, 2027)});
+      // A transfer moved to another year without a tree creates that one.
+      l = await h.apply((l) => l.updateTransfer('t', transfer(date: d(2028, 3, 1))));
+      expect(l.trees.containsKey(2028), isTrue);
+      // Once the tree exists, a transfer does not copy it again.
+      expect(
+        l.recordTransfer('t2', transfer(date: d(2027, 2, 1))).changes.where((c) => c.entity == 'category'),
+        isEmpty,
+      );
+    });
+
     test('two different accounts are required', () async {
       final l = await h.ledger();
       expect(() => l.recordTransfer('t', transfer(from: 'cash', to: 'cash')), refusedWith(LedgerError.sameAccount));

@@ -240,9 +240,11 @@ required, but the rename is lost.
   explanation table of the wealth view subtracts net transfers to it.
 - An archived account is no longer offered for new entries; an existing entry
   on it can still be corrected.
-- The first manual entry of a year without a tree carries the copy of the tree
-  in the same modification (H6): the tree and the transaction are written
-  together, or not at all.
+- The first transaction of a year without a tree, expense, income or
+  transfer, carries the copy of the tree in the same modification (step 1.3,
+  H6): the tree and the transaction are written together, or not at all. A
+  transfer has no category, but it is still a transaction dated in that year.
+  The same holds when a modification moves a transaction into such a year.
 - Cash-flow totals (`Ledger.cashTotals`) add each line to its category and to
   every ancestor; the totals of income and expenses are those of the top-level
   groups of each nature. A line without a category of the year's tree is
