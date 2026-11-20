@@ -8,3 +8,11 @@
   (`b0000000-0000-4000-8000-000000000002`): name `Espèces`, type `cash`,
   archived `false`. Used by `test/data/upgrade_test.dart`. Never regenerate
   it with a later version.
+- `v0.2.0/batz.db`: a desktop (unencrypted) database created by version 0.2.0
+  of the app (commit `ce7076b`) through `openLocalDatabase`, `Journal.open` and
+  the operations of `Ledger`, with a fixed clock. Device identifier
+  `a0000000-0000-4000-8000-000000000002`. Its 140 journal entries hold two
+  accounts (a third one deleted), the trees 2026 and 2027 (the 2027 one copied
+  by the first transaction of 2027), an expense corrected once, a payment
+  spread over two years, a transfer and a deleted expense. Used by
+  `test/data/upgrade_test.dart`. Never regenerate it with a later version.

@@ -625,6 +625,48 @@ abstract class AppLocalizations {
   /// **'Catégorie supprimée.'**
   String get categoryDeleted;
 
+  /// No description provided for @categoriesToReplace.
+  ///
+  /// In fr, this message translates to:
+  /// **'À replacer'**
+  String get categoriesToReplace;
+
+  /// No description provided for @categoriesToReplaceHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces catégories ne sont plus rattachées à l\'arbre, souvent après des modifications faites en même temps sur deux appareils. Déplacez-les pour les replacer ; leurs sous-catégories suivent.'**
+  String get categoriesToReplaceHint;
+
+  /// No description provided for @detachedLoop.
+  ///
+  /// In fr, this message translates to:
+  /// **'Placée sous une de ses propres sous-catégories'**
+  String get detachedLoop;
+
+  /// No description provided for @detachedMissingParent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sa catégorie parente a été supprimée'**
+  String get detachedMissingParent;
+
+  /// No description provided for @detachedParentInOtherYear.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sa catégorie parente appartient à une autre année'**
+  String get detachedParentInOtherYear;
+
+  /// No description provided for @detachedGroupWithoutNature.
+  ///
+  /// In fr, this message translates to:
+  /// **'Groupe sans nature (revenus ou dépenses)'**
+  String get detachedGroupWithoutNature;
+
+  /// No description provided for @detachedAncestor.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sous une catégorie à replacer'**
+  String get detachedAncestor;
+
   /// No description provided for @natureIncome.
   ///
   /// In fr, this message translates to:

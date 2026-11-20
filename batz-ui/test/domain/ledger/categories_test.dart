@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:batz/domain/journal/journal_entry.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/ledger.dart';
@@ -263,4 +265,125 @@ void main() {
       expect(l.trees.keys, [2026]);
     });
   });
+
+  group('detached categories (phase 2, H4)', () {
+    Ledger detachedSample() => Ledger(
+      categories: [
+        const Category(id: 'g', year: 2026, name: 'Dépenses', nature: CategoryNature.expense),
+        const Category(id: 'ok', year: 2026, name: 'Loyer', parentId: 'g'),
+        const Category(id: 'orphan', year: 2026, name: 'Orphelin', parentId: 'deleted-parent'),
+        const Category(id: 'below-orphan', year: 2026, name: 'Sous orphelin', parentId: 'orphan'),
+        const Category(id: 'deep', year: 2026, name: 'Tout en bas', parentId: 'below-orphan'),
+        const Category(id: 'other-year', year: 2027, name: 'Autre année', parentId: 'g'),
+        const Category(id: 'loop-a', year: 2026, name: 'A', parentId: 'loop-b'),
+        const Category(id: 'loop-b', year: 2026, name: 'B', parentId: 'loop-a'),
+        const Category(id: 'into-loop', year: 2026, name: 'Vers la boucle', parentId: 'loop-a'),
+        const Category(id: 'self', year: 2026, name: 'Soi', parentId: 'self'),
+        const Category(id: 'no-nature', year: 2026, name: 'Sans nature'),
+        const Category(id: 'below-no-nature', year: 2026, name: 'Dessous', parentId: 'no-nature'),
+      ],
+    );
+
+    test('each detached category has its reason; none is lost', () {
+      final l = detachedSample();
+      final reasons = {for (final d in l.forest.detached.values) d.category.id: d.reason};
+      expect(reasons, {
+        'orphan': DetachReason.missingParent,
+        'below-orphan': DetachReason.detachedAncestor,
+        'deep': DetachReason.detachedAncestor,
+        'other-year': DetachReason.parentInOtherYear,
+        'loop-a': DetachReason.loop,
+        'loop-b': DetachReason.loop,
+        'into-loop': DetachReason.detachedAncestor,
+        'self': DetachReason.loop,
+        'no-nature': DetachReason.groupWithoutNature,
+        'below-no-nature': DetachReason.detachedAncestor,
+      });
+      expect(l.categories.length + l.forest.detached.length, 12);
+    });
+
+    test('the result does not depend on the order of the categories', () {
+      final categories = [...detachedSample().forest.detached.values.map((d) => d.category)];
+      final attached = detachedSample().categories.values;
+      final expected = detachedSample().forest.detached;
+      for (var seed = 0; seed < 20; seed++) {
+        final shuffled = [...categories, ...attached]..shuffle(Random(seed));
+        expect(Ledger(categories: shuffled).forest.detached, expected, reason: 'seed $seed');
+      }
+    });
+
+    test('heads are listed per year, the categories below them follow', () {
+      final forest = detachedSample().forest;
+      expect(forest.yearsWithDetached, [2026, 2027]);
+      expect(forest.detachedHeads(2026).map((d) => d.category.name), ['A', 'B', 'Orphelin', 'Sans nature', 'Soi']);
+      expect(forest.detachedHeads(2027).map((d) => d.category.id), ['other-year']);
+      expect(forest.detachedChildrenOf('orphan').map((c) => c.id), ['below-orphan']);
+      expect(forest.detachedChildrenOf('below-orphan').map((c) => c.id), ['deep']);
+      expect(forest.detachedChildrenOf('loop-a').map((c) => c.id), ['into-loop'], reason: 'loop members are heads');
+    });
+
+    test('a detached category is put back by a move, with what is below it', () {
+      var l = detachedSample();
+      l = applyAll(l, l.moveCategory('orphan', parentId: 'g'));
+      expect(l.trees[2026]!.byId.keys, containsAll(['orphan', 'below-orphan', 'deep']));
+      expect(l.trees[2026]!.depthOf('deep'), 3);
+
+      l = applyAll(l, l.moveCategory('loop-a', nature: CategoryNature.income));
+      expect(l.trees[2026]!.byId.keys, containsAll(['loop-a', 'loop-b', 'into-loop']));
+      expect(l.trees[2026]!.natureOf('loop-b'), CategoryNature.income);
+
+      // A group without nature only needs one.
+      final m = l.moveCategory('no-nature', nature: CategoryNature.expense);
+      expect(m.changes.map((c) => c.field), containsAll(['nature', 'position']));
+      l = applyAll(l, m);
+      expect(l.trees[2026]!.byId.keys, containsAll(['no-nature', 'below-no-nature']));
+
+      // A year without any tree: to the top level only.
+      expect(() => l.moveCategory('other-year', parentId: 'g'), refusedWith(LedgerError.unknownCategory));
+      l = applyAll(l, l.moveCategory('other-year', nature: CategoryNature.expense));
+      expect(l.trees[2027]!.byId.keys, ['other-year']);
+
+      // Its own parent.
+      l = applyAll(l, l.moveCategory('self', parentId: 'g'));
+      expect(l.forest.detached, isEmpty);
+    });
+
+    test('a detached category cannot go under another detached one', () {
+      final l = detachedSample();
+      expect(() => l.moveCategory('orphan', parentId: 'loop-a'), refusedWith(LedgerError.unknownCategory));
+    });
+  });
+}
+
+/// Applies [m] to every category of [ledger], detached ones included.
+Ledger applyAll(Ledger ledger, Modification m) {
+  final byId = {
+    for (final c in [...ledger.categories.values, ...ledger.forest.detached.values.map((d) => d.category)]) c.id: c,
+  };
+  final fields = {
+    for (final c in byId.values)
+      c.id: <String, Object?>{
+        'year': c.year,
+        'name': c.name,
+        'parentId': c.parentId,
+        'nature': c.nature?.name,
+        'position': c.position,
+      },
+  };
+  for (final change in m.changes) {
+    (fields[change.recordId] ??= {})[change.field] = change.value;
+  }
+  return Ledger(
+    categories: [
+      for (final e in fields.entries)
+        Category(
+          id: e.key,
+          year: e.value['year']! as int,
+          name: e.value['name']! as String,
+          parentId: e.value['parentId'] as String?,
+          nature: CategoryNature.values.where((n) => n.name == e.value['nature']).firstOrNull,
+          position: (e.value['position'] as int?) ?? 0,
+        ),
+    ],
+  );
 }

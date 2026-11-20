@@ -320,6 +320,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get categoryDeleted => 'Catégorie supprimée.';
 
   @override
+  String get categoriesToReplace => 'À replacer';
+
+  @override
+  String get categoriesToReplaceHint =>
+      'Ces catégories ne sont plus rattachées à l\'arbre, souvent après des modifications faites en même temps sur deux appareils. Déplacez-les pour les replacer ; leurs sous-catégories suivent.';
+
+  @override
+  String get detachedLoop => 'Placée sous une de ses propres sous-catégories';
+
+  @override
+  String get detachedMissingParent => 'Sa catégorie parente a été supprimée';
+
+  @override
+  String get detachedParentInOtherYear => 'Sa catégorie parente appartient à une autre année';
+
+  @override
+  String get detachedGroupWithoutNature => 'Groupe sans nature (revenus ou dépenses)';
+
+  @override
+  String get detachedAncestor => 'Sous une catégorie à replacer';
+
+  @override
   String get natureIncome => 'revenus';
 
   @override

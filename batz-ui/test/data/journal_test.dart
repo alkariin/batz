@@ -74,6 +74,51 @@ void main() {
       await h.close();
     });
 
+    test('only the fields whose value changes are written', () async {
+      var wall = 1000;
+      final h = await Harness.open(now: () => wall, deviceId: me);
+      await h.journal.write(Modification.set('note', 'n1', {'title': 'Loyer', 'amount': 1, 'done': false}));
+      wall = 2000;
+      final hlc = await h.journal.write(Modification.set('note', 'n1', {'title': 'Loyer', 'amount': 2, 'done': false}));
+      final latest = (await h.journal.entries()).where((e) => e.hlc == hlc).toList();
+      expect(latest.map((e) => e.field), ['amount'], reason: 'title and done keep their value');
+      expect(await h.notes(), {
+        'n1': {'title': 'Loyer', 'amount': 2, 'done': 0},
+      });
+      await h.close();
+    });
+
+    test('a modification that changes nothing writes nothing', () async {
+      final h = await Harness.open(now: () => 1000, deviceId: me);
+      await h.journal.write(Modification.set('note', 'n1', {'title': 'Loyer', 'amount': null}));
+      expect(await h.journal.write(Modification.set('note', 'n1', {'title': 'Loyer', 'amount': null})), isNull);
+      expect(await h.journal.entries(), hasLength(2));
+      await h.close();
+    });
+
+    test('a value is compared with its exact journal value, not its column', () async {
+      final h = await Harness.open(now: () => 1000, deviceId: me);
+      await h.journal.write(Modification.set('note', 'n1', {'done': 1}));
+      // Stored as 1 in the column too, but true is another journal value.
+      await h.journal.write(Modification.set('note', 'n1', {'done': true}));
+      expect((await h.journal.entries()).map((e) => e.value), [1, true]);
+      await h.close();
+    });
+
+    test('a field never set is written, even to null', () async {
+      final h = await Harness.open(now: () => 1000, deviceId: me);
+      await h.journal.write(Modification.set('note', 'n1', {'title': 'x', 'amount': null}));
+      expect((await h.journal.entries()).map((e) => e.field), containsAll(['title', 'amount']));
+      await h.close();
+    });
+
+    test('a value that arrived from another device counts as the current value', () async {
+      final h = await Harness.open(now: () => 5000, deviceId: me);
+      await h.journal.merge([entry(4000, 0, other, 'n1', 'title', 'Theirs')]);
+      expect(await h.journal.write(Modification.set('note', 'n1', {'title': 'Theirs'})), isNull);
+      await h.close();
+    });
+
     test('several writes in the same millisecond keep their order', () async {
       final h = await Harness.open(now: () => 1000, deviceId: me);
       for (final title in ['1', '2', '3']) {
@@ -265,7 +310,7 @@ void main() {
         'n2': {'title': 'Remote', 'amount': null, 'done': null},
       });
       final hlc = await second.journal.write(Modification.set('note', 'n1', {'title': 'After restart'}));
-      expect(hlc > lastBefore, isTrue);
+      expect(hlc! > lastBefore, isTrue);
       expect((await second.notes())['n1']!['title'], 'After restart');
       await second.close();
     });

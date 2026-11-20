@@ -8,8 +8,8 @@ import 'transaction.dart';
 /// moment. Immutable; the rules below check an operation against it and
 /// return the [Modification] to write to the journal.
 class Ledger {
-  /// [categories] that do not form a consistent tree are left out (see
-  /// [CategoryTree.build]).
+  /// [categories] that do not form a consistent tree are kept apart, as
+  /// detached categories (see [CategoryForest.build]).
   /// [lines] are attached to their transaction; a line whose transaction is
   /// absent is left out.
   Ledger({
@@ -17,9 +17,16 @@ class Ledger {
     Iterable<Category> categories = const [],
     Iterable<LedgerTransaction> transactions = const [],
     Iterable<TransactionLine> lines = const [],
-  }) : accounts = {for (final a in accounts) a.id: a},
-       trees = CategoryTree.build(categories),
-       transactions = _attach(transactions, lines);
+  }) : this._(accounts, CategoryForest.build(categories), transactions, lines);
+
+  Ledger._(
+    Iterable<Account> accounts,
+    this.forest,
+    Iterable<LedgerTransaction> transactions,
+    Iterable<TransactionLine> lines,
+  ) : accounts = {for (final a in accounts) a.id: a},
+      trees = forest.trees,
+      transactions = _attach(transactions, lines);
 
   static Map<String, LedgerTransaction> _attach(
     Iterable<LedgerTransaction> transactions,
@@ -41,6 +48,9 @@ class Ledger {
 
   /// The category tree of each year that has one.
   final Map<int, CategoryTree> trees;
+
+  /// The trees and the detached categories, which belong to no tree.
+  final CategoryForest forest;
 
   final Map<String, LedgerTransaction> transactions;
 
@@ -214,16 +224,26 @@ class Ledger {
   /// [parentId] is null. Refused if it would create a loop, or if the new
   /// parent holds transactions (decision H2). The category goes last among
   /// its new siblings.
+  ///
+  /// A detached category (decision H4 of phase 2) is moved the same way, to
+  /// the top level or under a category of its year's tree: this is how it is
+  /// put back, with the categories below it.
   Modification moveCategory(String id, {String? parentId, CategoryNature? nature}) {
-    final category = _category(id);
-    final tree = trees[category.year]!;
+    final category = categories[id] ?? forest.detached[id]?.category;
+    if (category == null) throw const LedgerException(LedgerError.unknownCategory);
+    final tree = trees[category.year];
     if (parentId == null) {
       if (nature == null) throw const LedgerException(LedgerError.natureRequired);
     } else {
-      if (tree.subtreeOf(id).contains(parentId)) throw const LedgerException(LedgerError.categoryLoop);
+      if (tree == null) throw const LedgerException(LedgerError.unknownCategory);
+      if (tree.byId.containsKey(id) && tree.subtreeOf(id).contains(parentId)) {
+        throw const LedgerException(LedgerError.categoryLoop);
+      }
       _checkParent(tree, parentId);
     }
-    final siblings = (parentId == null ? tree.roots : tree.childrenOf(parentId)).where((c) => c.id != id);
+    final siblings = (parentId == null ? tree?.roots ?? const <Category>[] : tree!.childrenOf(parentId)).where(
+      (c) => c.id != id,
+    );
     return Modification.set(CategoryFields.entity, id, {
       CategoryFields.parentId: parentId,
       CategoryFields.nature: parentId == null ? nature!.name : null,

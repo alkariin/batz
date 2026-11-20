@@ -37,6 +37,14 @@ String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) 
   CategoryNature.expense => l.natureExpense,
 };
 
+String detachReasonText(AppLocalizations l, DetachReason reason) => switch (reason) {
+  DetachReason.loop => l.detachedLoop,
+  DetachReason.missingParent => l.detachedMissingParent,
+  DetachReason.parentInOtherYear => l.detachedParentInOtherYear,
+  DetachReason.groupWithoutNature => l.detachedGroupWithoutNature,
+  DetachReason.detachedAncestor => l.detachedAncestor,
+};
+
 String accountTypeText(AppLocalizations l, AccountType type) => switch (type) {
   AccountType.privateAccount => l.accountTypePrivateAccount,
   AccountType.savings => l.accountTypeSavings,

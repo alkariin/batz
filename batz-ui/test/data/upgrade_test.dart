@@ -7,9 +7,12 @@ import 'package:batz/data/secret_store.dart';
 import 'package:batz/domain/ledger/account.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// A database written by version 0.1.0 (see test/fixtures/README.md).
+/// Databases written by versions 0.1.0 and 0.2.0 (see
+/// test/fixtures/README.md).
 const _fixture = 'test/fixtures/v0.1.0/batz.db';
 const _fixtureDeviceId = 'a0000000-0000-4000-8000-000000000001';
+const _fixture020 = 'test/fixtures/v0.2.0/batz.db';
+const _fixture020DeviceId = 'a0000000-0000-4000-8000-000000000002';
 
 void main() {
   late Directory dir;
@@ -18,6 +21,43 @@ void main() {
     File(_fixture).copySync('${dir.path}/$databaseFileName');
   });
   tearDown(() => dir.deleteSync(recursive: true));
+
+  test('a database of version 0.2.0 opens with this version, data kept', () async {
+    File(_fixture020).copySync('${dir.path}/$databaseFileName');
+    final db = await openLocalDatabase(directory: dir, secrets: MemorySecretStore(), encrypt: false);
+    final journal = await Journal.open(db);
+    expect(journal.deviceId, _fixture020DeviceId);
+    expect(await journal.entries(), hasLength(140));
+
+    final repository = LedgerRepository(db, journal);
+    final ledger = await repository.load();
+    expect(ledger.sortedAccounts.map((a) => a.name), ['Compte privé', 'Espèces'], reason: 'one account deleted');
+    expect(ledger.trees.keys.toList()..sort(), [2026, 2027]);
+    expect(ledger.trees[2026]!.ordered.map((c) => c.name), [
+      'Revenus',
+      'Salaire',
+      'Dépenses',
+      'Logement',
+      'Loyer',
+      'Nourriture',
+    ]);
+    expect(ledger.trees[2027]!.ordered.map((c) => c.name), ledger.trees[2026]!.ordered.map((c) => c.name));
+    expect(ledger.forest.detached, isEmpty);
+    expect(ledger.transactions.keys.toSet(), {'tx-food', 'tx-rent', 'tx-withdrawal', 'tx-2027'});
+    final food = ledger.transactions['tx-food']!;
+    expect((food.amount, food.description, food.note), (-4790, 'Marché', 'Légumes et fruits'));
+    expect(ledger.transactions['tx-withdrawal']!.counterpartAccountId, 'acc-cash');
+    final rent = ledger.transactions['tx-rent']!.line!;
+    expect((rent.periodStart.encode(), rent.periodEnd.encode()), ('2026-09-01', '2027-08-31'));
+    expect(ledger.cashTotals(2026).expenses, -4790 - 210000);
+
+    // The new version writes into it, after the latest entry of 0.2.0.
+    final before = (await journal.entries()).last.hlc;
+    final hlc = await journal.write(ledger.renameCategory('cat-food', 'Alimentation'));
+    expect(hlc! > before, isTrue);
+    expect((await repository.load()).categories['cat-food']!.name, 'Alimentation');
+    await db.close();
+  });
 
   test('a database of version 0.1.0 opens with this version, device identifier kept', () async {
     final db = await openLocalDatabase(directory: dir, secrets: MemorySecretStore(), encrypt: false);

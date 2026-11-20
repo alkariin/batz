@@ -268,3 +268,58 @@ required, but the rename is lost.
   shows the money coming in.
 - The detail of a payment shows its total per year, then its share per month
   (`MM.YYYY`), computed by `allocate` from its line.
+
+## 2026-11-20 — Phase 2 decisions taken during development
+
+Functional choices H1 to H6 are in `docs/plan/phase-2.md`. The decisions below
+were taken while implementing it.
+
+### 2.0 A modification writes only the fields whose value changes
+
+**Decision.** `Journal.write` compares each field of the modification with
+the current value of that field, inside the same transaction, and writes only
+those that differ. The comparison uses the exact JSON value of the journal
+entry that gives the field its value (`field_versions` joined with
+`journal`), not the derived column, so that `true` and `1` stay different. A
+field that no entry ever set is written, even to `null`. When nothing
+changes, nothing is written and `write` returns null.
+
+**Why.** Screens submit every field of a record. Without the rule, the most
+recent modification would also carry the unchanged fields, and once
+synchronised it would overwrite what another device changed in the meantime
+(the first acceptance criterion of phase 2). The rule sits in the journal, so
+every entity of later phases follows it without anything to remember.
+
+**Evidence.** `test/data/journal_test.dart` (fields left out, nothing
+written, exact comparison, field never set, value received from another
+device) and `test/data/field_merge_test.dart`: a note corrected on one device
+and a category changed later on another, both through `Ledger.updateEntry`
+with every field submitted, are both kept on both devices.
+
+### 2.0 Detached categories are kept and listed, never dropped
+
+**Decision.** `CategoryForest.build` sorts the categories into the trees of
+their years and *detached* categories, each with its reason: part of a loop,
+parent missing (deleted or not arrived), parent in another year, top-level
+group without a nature, or below one of those (`detachedAncestor`). The first
+four are the *heads*: the categories screen lists them under « À replacer »,
+with the categories below them, and offers to move them; moving a head puts
+back everything below it. A detached category can be moved to the top level
+of its year (with a nature) or under a category of its year's tree, never
+under another detached one, so a move cannot create a new loop.
+
+A year whose categories are all detached has no tree: its first transaction
+still copies the closest earlier tree. Transactions classified in a detached
+category count as unclassified until it is put back.
+
+This replaces the phase 1 behaviour, where such categories were ignored and
+disappeared from every screen.
+
+### 2.0 Database of version 0.2.0
+
+`test/fixtures/v0.2.0/batz.db` was written by version 0.2.0 (commit
+`ce7076b`) through its own operations: accounts, two trees, expenses, a
+payment over two years, a transfer, a deletion. `test/data/upgrade_test.dart`
+opens it with the current version and checks that every record is read back
+and that new writes follow the old ones. Phase 2 changes neither the journal
+tables nor the derived tables.

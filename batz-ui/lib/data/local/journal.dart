@@ -99,19 +99,45 @@ class Journal {
 
   /// Records [modification] and applies it, atomically: either every entry
   /// is stored and applied, or none is. Returns the shared timestamp.
-  Future<Hlc> write(Modification modification) async {
+  ///
+  /// Only the fields whose value changes are written: a field that already
+  /// holds the value, set by an earlier entry, is left out. Screens submit
+  /// every field of a record; without this rule, the latest modification
+  /// would also overwrite, once synchronised, the fields another device
+  /// changed in the meantime. When no field changes, nothing is written and
+  /// null is returned.
+  Future<Hlc?> write(Modification modification) async {
     for (final change in modification.changes) {
       _columnFor(change.entity, change.field, strict: true);
     }
     return _db.transaction(() async {
+      final changed = [
+        for (final change in modification.changes)
+          if (await _currentValue(change.entity, change.recordId, change.field) != jsonEncode(change.value)) change,
+      ];
+      if (changed.isEmpty) return null;
       final hlc = _clock.tick();
-      for (final change in modification.changes) {
+      for (final change in changed) {
         final entry = JournalEntry(hlc, change);
         await _insert(entry);
         await _apply(entry);
       }
       return hlc;
     });
+  }
+
+  /// The JSON-encoded value of the entry that gives [field] its current
+  /// value, or null if no entry ever set it.
+  Future<String?> _currentValue(String entity, String recordId, String field) async {
+    final row = await _db
+        .customSelect(
+          'SELECT j.value AS value FROM field_versions v JOIN journal j '
+          'ON j.hlc = v.hlc AND j.entity = v.entity AND j.record_id = v.record_id AND j.field = v.field '
+          'WHERE v.entity = ? AND v.record_id = ? AND v.field = ?',
+          variables: [Variable.withString(entity), Variable.withString(recordId), Variable.withString(field)],
+        )
+        .getSingleOrNull();
+    return row?.read<String>('value');
   }
 
   /// Integrates entries made on other devices (or replayed): unknown ones are

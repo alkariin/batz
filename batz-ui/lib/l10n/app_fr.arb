@@ -207,6 +207,13 @@
     }
   },
   "categoryDeleted": "Catégorie supprimée.",
+  "categoriesToReplace": "À replacer",
+  "categoriesToReplaceHint": "Ces catégories ne sont plus rattachées à l'arbre, souvent après des modifications faites en même temps sur deux appareils. Déplacez-les pour les replacer ; leurs sous-catégories suivent.",
+  "detachedLoop": "Placée sous une de ses propres sous-catégories",
+  "detachedMissingParent": "Sa catégorie parente a été supprimée",
+  "detachedParentInOtherYear": "Sa catégorie parente appartient à une autre année",
+  "detachedGroupWithoutNature": "Groupe sans nature (revenus ou dépenses)",
+  "detachedAncestor": "Sous une catégorie à replacer",
   "natureIncome": "revenus",
   "natureExpense": "dépenses",
   "errorUnknownCategory": "Cette catégorie n'existe plus.",

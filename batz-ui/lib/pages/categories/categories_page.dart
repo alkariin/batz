@@ -26,7 +26,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
   /// The years offered: those with a tree, the current one, and the next
   /// one after the last tree, whose tree can be created by hand (H6).
   List<int> _years(Ledger ledger) {
-    final years = {...ledger.yearsWithTree, CalendarDate.today().year, _year};
+    final years = {...ledger.yearsWithTree, ...ledger.forest.yearsWithDetached, CalendarDate.today().year, _year};
     if (ledger.yearsWithTree.isNotEmpty) years.add(ledger.yearsWithTree.last + 1);
     return years.toList()..sort();
   }
@@ -61,9 +61,75 @@ class _CategoriesPageState extends State<CategoriesPage> {
                   icon: const Icon(Icons.add),
                   label: Text(l.categoriesNewGroup),
                 ),
-          body: tree == null ? _NoTree(year: _year, ledger: ledger) : _TreeView(tree: tree),
+          body: ListView(
+            padding: const EdgeInsets.only(bottom: 88),
+            children: [
+              if (tree == null) _NoTree(year: _year, ledger: ledger) else ..._TreeView(tree: tree).tiles(context),
+              ..._detachedSection(context, ledger, tree),
+            ],
+          ),
         );
       },
+    );
+  }
+
+  /// « À replacer »: the detached categories of the year (decision H4 of
+  /// phase 2), each with the categories below it, and the action that moves
+  /// it back into the tree.
+  List<Widget> _detachedSection(BuildContext context, Ledger ledger, CategoryTree? tree) {
+    final heads = ledger.forest.detachedHeads(_year);
+    if (heads.isEmpty) return const [];
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final rows = <Widget>[];
+    void below(Category parent, int depth) {
+      for (final child in ledger.forest.detachedChildrenOf(parent.id)) {
+        rows.add(
+          ListTile(
+            key: ValueKey('detached-${child.id}'),
+            dense: true,
+            contentPadding: EdgeInsetsDirectional.only(start: 16.0 + 24.0 * depth, end: 4),
+            title: Text(child.name),
+          ),
+        );
+        below(child, depth + 1);
+      }
+    }
+
+    for (final head in heads) {
+      rows.add(
+        ListTile(
+          key: ValueKey('detached-${head.category.id}'),
+          title: Text(head.category.name),
+          subtitle: Text(detachReasonText(l, head.reason)),
+          trailing: TextButton(
+            key: Key('detachedMove-${head.category.name}'),
+            onPressed: () => _moveDetached(context, head.category, tree),
+            child: Text(l.categoryMove),
+          ),
+        ),
+      );
+      below(head.category, 1);
+    }
+    return [
+      const Divider(),
+      ListTile(
+        title: Text(l.categoriesToReplace, style: theme.textTheme.titleMedium),
+        subtitle: Text(l.categoriesToReplaceHint),
+      ),
+      ...rows,
+    ];
+  }
+
+  Future<void> _moveDetached(BuildContext context, Category category, CategoryTree? tree) async {
+    final target = await showDialog<_MoveTarget>(
+      context: context,
+      builder: (_) => _MoveDialog(tree: tree, category: category),
+    );
+    if (target == null || !context.mounted) return;
+    await applyToLedger(
+      context,
+      (ledger) => ledger.moveCategory(category.id, parentId: target.parentId, nature: target.nature),
     );
   }
 
@@ -113,41 +179,34 @@ class _NoTree extends StatelessWidget {
 
 enum _Action { addChild, rename, move, up, down, delete }
 
-class _TreeView extends StatelessWidget {
+class _TreeView {
   const _TreeView({required this.tree});
 
   final CategoryTree tree;
 
-  @override
-  Widget build(BuildContext context) {
+  List<Widget> tiles(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 88),
-      children: [
-        for (final category in tree.ordered)
-          ListTile(
-            key: ValueKey(category.id),
-            contentPadding: EdgeInsetsDirectional.only(start: 16.0 + 24.0 * tree.depthOf(category.id), end: 4),
-            title: Text(
-              category.name,
-              style: category.isTopLevel ? const TextStyle(fontWeight: FontWeight.w600) : null,
-            ),
-            subtitle: category.isTopLevel ? Text(natureText(l, category.nature!)) : null,
-            trailing: PopupMenuButton<_Action>(
-              key: Key('categoryMenu-${category.name}'),
-              onSelected: (action) => _run(context, category, action),
-              itemBuilder: (_) => [
-                PopupMenuItem(value: _Action.addChild, child: Text(l.categoryAddChild)),
-                PopupMenuItem(value: _Action.rename, child: Text(l.categoryRename)),
-                PopupMenuItem(value: _Action.move, child: Text(l.categoryMove)),
-                PopupMenuItem(value: _Action.up, child: Text(l.categoryMoveUp)),
-                PopupMenuItem(value: _Action.down, child: Text(l.categoryMoveDown)),
-                PopupMenuItem(value: _Action.delete, child: Text(l.delete)),
-              ],
-            ),
+    return [
+      for (final category in tree.ordered)
+        ListTile(
+          key: ValueKey(category.id),
+          contentPadding: EdgeInsetsDirectional.only(start: 16.0 + 24.0 * tree.depthOf(category.id), end: 4),
+          title: Text(category.name, style: category.isTopLevel ? const TextStyle(fontWeight: FontWeight.w600) : null),
+          subtitle: category.isTopLevel ? Text(natureText(l, category.nature!)) : null,
+          trailing: PopupMenuButton<_Action>(
+            key: Key('categoryMenu-${category.name}'),
+            onSelected: (action) => _run(context, category, action),
+            itemBuilder: (_) => [
+              PopupMenuItem(value: _Action.addChild, child: Text(l.categoryAddChild)),
+              PopupMenuItem(value: _Action.rename, child: Text(l.categoryRename)),
+              PopupMenuItem(value: _Action.move, child: Text(l.categoryMove)),
+              PopupMenuItem(value: _Action.up, child: Text(l.categoryMoveUp)),
+              PopupMenuItem(value: _Action.down, child: Text(l.categoryMoveDown)),
+              PopupMenuItem(value: _Action.delete, child: Text(l.delete)),
+            ],
           ),
-      ],
-    );
+        ),
+    ];
   }
 
   Future<void> _run(BuildContext context, Category category, _Action action) async {
@@ -306,13 +365,18 @@ class _MoveTarget {
 class _MoveDialog extends StatelessWidget {
   const _MoveDialog({required this.tree, required this.category});
 
-  final CategoryTree tree;
+  /// The tree of the category's year; null when the year has only detached
+  /// categories.
+  final CategoryTree? tree;
   final Category category;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final excluded = tree.subtreeOf(category.id);
+    final tree = this.tree;
+    final excluded = tree == null || !tree.byId.containsKey(category.id)
+        ? const <String>{}
+        : tree.subtreeOf(category.id);
     return SimpleDialog(
       title: Text(l.categoryMoveTitle(category.name)),
       children: [
@@ -321,13 +385,13 @@ class _MoveDialog extends StatelessWidget {
             onPressed: () => Navigator.of(context).pop(_MoveTarget(nature: nature)),
             child: Text(l.categoryTopLevel(natureText(l, nature))),
           ),
-        const Divider(),
-        for (final target in tree.ordered)
+        if (tree != null) const Divider(),
+        for (final target in tree?.ordered ?? const <Category>[])
           if (!excluded.contains(target.id))
             SimpleDialogOption(
               onPressed: () => Navigator.of(context).pop(_MoveTarget(parentId: target.id)),
               child: Padding(
-                padding: EdgeInsetsDirectional.only(start: 16.0 * tree.depthOf(target.id)),
+                padding: EdgeInsetsDirectional.only(start: 16.0 * tree!.depthOf(target.id)),
                 child: Text(target.name),
               ),
             ),
