@@ -123,3 +123,18 @@ only ones with real migrations; it is still 1.
 version 0.1.0 (`test/fixtures/v0.1.0/batz.db`), keeps its device identifier
 and journal; `test/data/journal_test.dart` covers the rebuild on schema change
 and the absence of rebuild when the schema is unchanged.
+
+### 1.1 Allocation: exact fractions, halves rounded away from zero
+
+**Decision.** `allocate` (in `batz-ui/lib/domain/allocation.dart`) computes
+each month's weight as an exact `Fraction` (BigInt numerator and
+denominator). A share is the amount times its weight divided by the total
+weight, rounded to the nearest cent with halves rounded up; the last month
+takes the remainder. A negative amount is allocated as its opposite, then
+negated, which makes the two results exact opposites, as the plan requires.
+Calendar dates are a `CalendarDate` value (year, month, day), stored as
+`YYYY-MM-DD`.
+
+**Why.** Exact fractions make "twelve months" exactly 12 for a period from
+14 March to 13 March, with no tolerance in the tests. Rounding the magnitude
+rather than the signed value is what gives exact symmetry.
