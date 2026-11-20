@@ -42,8 +42,24 @@ are embedded and run at start-up; keep the data directory across upgrades.
 The certificate is created on the first start and kept: deleting `tls/` makes
 every paired app refuse the server until it is paired again.
 
-`scripts/deploy-nas.sh` (phase 0, step 0.8) will automate the copy, load,
-restart and `/healthz` check over SSH.
+### With the deployment script
+
+From the development machine, with SSH key access to the NAS:
+
+```sh
+batz-web/scripts/deploy-nas.sh batz-web-v0.1.0.tar.gz user@192.168.1.95
+```
+
+It streams the image to `docker load`, gives the data folder to uid 10001
+through a short-lived container (no `sudo` needed), recreates the container,
+waits for Docker's health check, calls `/healthz` over HTTPS and prints the
+certificate fingerprint. `BATZ_NAS_DIR` (default `/volume1/docker/batz`) and
+`BATZ_PORT` (default `8443`) change the folder and port. Running it again
+upgrades the server and keeps its data and certificate.
+
+On Synology, shared folders carry ACLs that make new files readable by every
+NAS account, `tls/server.key` included, whatever the permissions the server
+sets. Keep the folder in a share that only administrators can open.
 
 ### Pair a device
 
