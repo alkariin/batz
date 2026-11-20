@@ -93,5 +93,48 @@
   "serverErrorCodeUsed": "Ce code a déjà été utilisé. Demandez-en un nouveau au serveur.",
   "serverErrorName": "Le nom de l'appareil doit compter de 1 à 64 caractères.",
   "serverErrorRevoked": "Cet appareil a été révoqué. Oubliez ce serveur puis associez-le à nouveau.",
-  "serverErrorOther": "Le serveur a répondu par une erreur inattendue."
+  "serverErrorOther": "Le serveur a répondu par une erreur inattendue.",
+  "save": "Enregistrer",
+  "delete": "Supprimer",
+  "accountsTitle": "Comptes",
+  "accountsEmpty": "Aucun compte. Créez-en un avec le bouton +.",
+  "accountsArchivedSection": "Archivés",
+  "accountNew": "Nouveau compte",
+  "accountEdit": "Modifier le compte",
+  "accountName": "Nom",
+  "accountType": "Type",
+  "accountImport": "Import des relevés PostFinance",
+  "accountImportHint": "Compte détaillé : ses transactions viennent uniquement des relevés. Un seul compte peut l'être.",
+  "accountArchived": "Archivé",
+  "accountDetailed": "Détaillé",
+  "accountDeleteConfirm": "Supprimer le compte « {name} » ? S'il est utilisé par des transactions, il sera archivé.",
+  "@accountDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "accountArchivedInstead": "Compte archivé et non supprimé : {count, plural, =1{une transaction l'utilise} other{{count} transactions l'utilisent}}.",
+  "@accountArchivedInstead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accountDeleted": "Compte supprimé.",
+  "accountTypePrivateAccount": "Compte privé",
+  "accountTypeSavings": "Épargne",
+  "accountTypePillar3": "3e pilier",
+  "accountTypePillar2": "2e pilier",
+  "accountTypeInvestments": "Investissements",
+  "accountTypeVehicle": "Véhicule",
+  "accountTypeRentDeposit": "Garantie de loyer",
+  "accountTypeCash": "Espèces",
+  "accountTypeDebts": "Dettes",
+  "accountTypeOther": "Autre",
+  "errorNameRequired": "Le nom est obligatoire.",
+  "errorSecondDetailedAccount": "Un seul compte peut être détaillé : l'import est déjà activé sur un autre compte.",
+  "errorUnknownAccount": "Ce compte n'existe plus."
 }

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import 'data/ledger/ledger_repository.dart';
 import 'data/local/database.dart';
 import 'data/local/journal.dart';
 import 'data/local/open_database.dart';
@@ -11,7 +12,8 @@ import 'data/server/server_repository.dart';
 /// Long-lived objects created once at start-up.
 class AppServices {
   AppServices({required this.database, required this.journal, required this.secrets})
-    : server = ServerRepository(secrets);
+    : server = ServerRepository(secrets),
+      ledger = LedgerRepository(database, journal);
 
   /// Opens the local database (encrypted on Android) and its journal, which
   /// creates the device identifier on the very first launch.
@@ -30,4 +32,5 @@ class AppServices {
   final Journal journal;
   final SecretStore secrets;
   final ServerRepository server;
+  final LedgerRepository ledger;
 }

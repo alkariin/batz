@@ -151,4 +151,103 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get serverErrorOther => 'Le serveur a répondu par une erreur inattendue.';
+
+  @override
+  String get save => 'Enregistrer';
+
+  @override
+  String get delete => 'Supprimer';
+
+  @override
+  String get accountsTitle => 'Comptes';
+
+  @override
+  String get accountsEmpty => 'Aucun compte. Créez-en un avec le bouton +.';
+
+  @override
+  String get accountsArchivedSection => 'Archivés';
+
+  @override
+  String get accountNew => 'Nouveau compte';
+
+  @override
+  String get accountEdit => 'Modifier le compte';
+
+  @override
+  String get accountName => 'Nom';
+
+  @override
+  String get accountType => 'Type';
+
+  @override
+  String get accountImport => 'Import des relevés PostFinance';
+
+  @override
+  String get accountImportHint =>
+      'Compte détaillé : ses transactions viennent uniquement des relevés. Un seul compte peut l\'être.';
+
+  @override
+  String get accountArchived => 'Archivé';
+
+  @override
+  String get accountDetailed => 'Détaillé';
+
+  @override
+  String accountDeleteConfirm(String name) {
+    return 'Supprimer le compte « $name » ? S\'il est utilisé par des transactions, il sera archivé.';
+  }
+
+  @override
+  String accountArchivedInstead(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transactions l\'utilisent',
+      one: 'une transaction l\'utilise',
+    );
+    return 'Compte archivé et non supprimé : $_temp0.';
+  }
+
+  @override
+  String get accountDeleted => 'Compte supprimé.';
+
+  @override
+  String get accountTypePrivateAccount => 'Compte privé';
+
+  @override
+  String get accountTypeSavings => 'Épargne';
+
+  @override
+  String get accountTypePillar3 => '3e pilier';
+
+  @override
+  String get accountTypePillar2 => '2e pilier';
+
+  @override
+  String get accountTypeInvestments => 'Investissements';
+
+  @override
+  String get accountTypeVehicle => 'Véhicule';
+
+  @override
+  String get accountTypeRentDeposit => 'Garantie de loyer';
+
+  @override
+  String get accountTypeCash => 'Espèces';
+
+  @override
+  String get accountTypeDebts => 'Dettes';
+
+  @override
+  String get accountTypeOther => 'Autre';
+
+  @override
+  String get errorNameRequired => 'Le nom est obligatoire.';
+
+  @override
+  String get errorSecondDetailedAccount =>
+      'Un seul compte peut être détaillé : l\'import est déjà activé sur un autre compte.';
+
+  @override
+  String get errorUnknownAccount => 'Ce compte n\'existe plus.';
 }

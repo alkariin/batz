@@ -342,6 +342,180 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le serveur a répondu par une erreur inattendue.'**
   String get serverErrorOther;
+
+  /// No description provided for @save.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer'**
+  String get save;
+
+  /// No description provided for @delete.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer'**
+  String get delete;
+
+  /// No description provided for @accountsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comptes'**
+  String get accountsTitle;
+
+  /// No description provided for @accountsEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun compte. Créez-en un avec le bouton +.'**
+  String get accountsEmpty;
+
+  /// No description provided for @accountsArchivedSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Archivés'**
+  String get accountsArchivedSection;
+
+  /// No description provided for @accountNew.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau compte'**
+  String get accountNew;
+
+  /// No description provided for @accountEdit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le compte'**
+  String get accountEdit;
+
+  /// No description provided for @accountName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get accountName;
+
+  /// No description provided for @accountType.
+  ///
+  /// In fr, this message translates to:
+  /// **'Type'**
+  String get accountType;
+
+  /// No description provided for @accountImport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Import des relevés PostFinance'**
+  String get accountImport;
+
+  /// No description provided for @accountImportHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte détaillé : ses transactions viennent uniquement des relevés. Un seul compte peut l\'être.'**
+  String get accountImportHint;
+
+  /// No description provided for @accountArchived.
+  ///
+  /// In fr, this message translates to:
+  /// **'Archivé'**
+  String get accountArchived;
+
+  /// No description provided for @accountDetailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Détaillé'**
+  String get accountDetailed;
+
+  /// No description provided for @accountDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer le compte « {name} » ? S\'il est utilisé par des transactions, il sera archivé.'**
+  String accountDeleteConfirm(String name);
+
+  /// No description provided for @accountArchivedInstead.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte archivé et non supprimé : {count, plural, =1{une transaction l\'utilise} other{{count} transactions l\'utilisent}}.'**
+  String accountArchivedInstead(int count);
+
+  /// No description provided for @accountDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte supprimé.'**
+  String get accountDeleted;
+
+  /// No description provided for @accountTypePrivateAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte privé'**
+  String get accountTypePrivateAccount;
+
+  /// No description provided for @accountTypeSavings.
+  ///
+  /// In fr, this message translates to:
+  /// **'Épargne'**
+  String get accountTypeSavings;
+
+  /// No description provided for @accountTypePillar3.
+  ///
+  /// In fr, this message translates to:
+  /// **'3e pilier'**
+  String get accountTypePillar3;
+
+  /// No description provided for @accountTypePillar2.
+  ///
+  /// In fr, this message translates to:
+  /// **'2e pilier'**
+  String get accountTypePillar2;
+
+  /// No description provided for @accountTypeInvestments.
+  ///
+  /// In fr, this message translates to:
+  /// **'Investissements'**
+  String get accountTypeInvestments;
+
+  /// No description provided for @accountTypeVehicle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Véhicule'**
+  String get accountTypeVehicle;
+
+  /// No description provided for @accountTypeRentDeposit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Garantie de loyer'**
+  String get accountTypeRentDeposit;
+
+  /// No description provided for @accountTypeCash.
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces'**
+  String get accountTypeCash;
+
+  /// No description provided for @accountTypeDebts.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dettes'**
+  String get accountTypeDebts;
+
+  /// No description provided for @accountTypeOther.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get accountTypeOther;
+
+  /// No description provided for @errorNameRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le nom est obligatoire.'**
+  String get errorNameRequired;
+
+  /// No description provided for @errorSecondDetailedAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un seul compte peut être détaillé : l\'import est déjà activé sur un autre compte.'**
+  String get errorSecondDetailedAccount;
+
+  /// No description provided for @errorUnknownAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte n\'existe plus.'**
+  String get errorUnknownAccount;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

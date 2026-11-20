@@ -1,3 +1,5 @@
+import '../../domain/ledger/account.dart';
+
 /// How journal entries of one entity are materialised into a table.
 ///
 /// Design rules (docs/decisions.md, phase 1):
@@ -94,4 +96,15 @@ String derivedSchemaOf(List<DerivedTable> tables) {
 }
 
 /// The derived tables of the app.
-final List<DerivedTable> appDerivedTables = [];
+final List<DerivedTable> appDerivedTables = [accountsTable];
+
+final accountsTable = DerivedTable(
+  entity: AccountFields.entity,
+  table: 'accounts',
+  columns: {
+    AccountFields.name: const DerivedColumn.text('name'),
+    AccountFields.type: const DerivedColumn.text('type'),
+    AccountFields.importFormat: const DerivedColumn.text('import_format'),
+    AccountFields.archived: const DerivedColumn.integer('archived'),
+  },
+);

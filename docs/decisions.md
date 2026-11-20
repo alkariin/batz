@@ -138,3 +138,27 @@ Calendar dates are a `CalendarDate` value (year, month, day), stored as
 **Why.** Exact fractions make "twelve months" exactly 12 for a period from
 14 March to 13 March, with no tolerance in the tests. Rounding the magnitude
 rather than the signed value is what gives exact symmetry.
+
+### 1.2 Domain rules work on an in-memory snapshot of the ledger
+
+**Decision.** `LedgerRepository.load` reads every derived table into an
+immutable `Ledger`. Each operation is a method of `Ledger` that checks the
+business rules against that snapshot and returns the `Modification` to write,
+or throws a `LedgerException` whose reason the app turns into a French
+message. `LedgerCubit` holds the snapshot for all pages and reloads it after
+each write.
+
+**Why.** The data of one person fits in memory for years, and pure Dart
+rules are tested without a database. The same rules will check entries made
+on this device in phase 2; entries from other devices bypass them (rule 1).
+
+### 1.2 Reading a record: required fields and unknown values
+
+**Decision.** An account needs a name and a known type; an unknown import
+format also makes it unreadable. A missing `archived` reads as false. Records
+that do not qualify are left out of the `Ledger`, without error, and appear as
+soon as the missing field arrives (rule 2). An archived detailed account still
+counts as the only detailed account.
+
+**Why.** A value written by a newer version (a new account type, a new
+statement format) must not be misread by an older one.

@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:batz/data/ledger/ledger_repository.dart';
 import 'package:batz/data/local/journal.dart';
 import 'package:batz/data/local/open_database.dart';
 import 'package:batz/data/secret_store.dart';
+import 'package:batz/domain/ledger/account.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// A database written by version 0.1.0 (see test/fixtures/README.md).
@@ -26,6 +28,9 @@ void main() {
     final entries = await journal.entries();
     expect(entries, hasLength(3));
     expect(entries.map((e) => e.field), containsAll(['name', 'type', 'archived']));
+    // Entries 0.1.0 could only keep are now applied.
+    final ledger = await LedgerRepository(db, journal).load();
+    expect(ledger.accounts.values, [const Account(id: 'acc-1', name: 'Espèces', type: AccountType.cash)]);
     await db.close();
 
     // The next launch finds the schema in place and changes nothing.

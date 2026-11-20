@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'helpers/theme.dart';
 import 'l10n/app_localizations.dart';
+import 'pages/ledger_cubit.dart';
 import 'pages/server/server_cubit.dart';
 import 'pages/shell.dart';
 import 'services.dart';
@@ -15,8 +16,11 @@ class BatzApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ServerCubit(services.server)..load(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => ServerCubit(services.server)..load()),
+        BlocProvider(create: (_) => LedgerCubit(services.ledger)..load()),
+      ],
       child: _material(home: const AppShell()),
     );
   }
