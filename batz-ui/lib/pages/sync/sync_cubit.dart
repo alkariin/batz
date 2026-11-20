@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/local/journal.dart';
+import '../../data/server/certificate.dart';
 import '../../data/server/server_client.dart';
 import '../../data/server/server_repository.dart';
 import '../../data/sync/sync_engine.dart';
@@ -29,6 +30,10 @@ enum SyncStatus {
 
   /// The server revoked this device: exchanges stop (decision H6).
   revoked,
+
+  /// The server presents another certificate, or no longer knows this
+  /// device: it was probably reinstalled. Pairing again rebuilds it.
+  serverChanged,
 
   /// This app and the server cannot exchange; see [SyncState.incompatibility].
   incompatible,
@@ -138,7 +143,12 @@ class SyncCubit extends Cubit<SyncState> {
   final Duration period;
 
   /// Statuses in which automatic exchanges stop until the user acts.
-  static const _stopped = {SyncStatus.revoked, SyncStatus.incompatible, SyncStatus.decisionNeeded};
+  static const _stopped = {
+    SyncStatus.revoked,
+    SyncStatus.serverChanged,
+    SyncStatus.incompatible,
+    SyncStatus.decisionNeeded,
+  };
 
   Future<void>? _running;
   var _again = false;
@@ -293,6 +303,7 @@ class SyncCubit extends Cubit<SyncState> {
     return switch (error) {
       ServerUnreachableException() => status(SyncStatus.offline),
       ServerException(code: 'DEVICE_REVOKED') => status(SyncStatus.revoked),
+      CertificateMismatchException() || ServerException(code: 'DEVICE_KEY_INVALID') => status(SyncStatus.serverChanged),
       UnrelatedDataException() => status(SyncStatus.decisionNeeded),
       SyncIncompatibleException(:final reason, :final serverVersion, :final minAppVersion) => SyncState(
         status: SyncStatus.incompatible,

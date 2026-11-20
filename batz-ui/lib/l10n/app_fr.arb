@@ -379,5 +379,9 @@
   "syncReplace": "Remplacer celles de l'appareil",
   "syncReplaceAction": "Remplacer les données de cet appareil par celles du serveur",
   "syncReplaceConfirm": "Remplacer les données de cet appareil par celles du serveur ? Tout ce que cet appareil n'a pas encore envoyé au serveur sera définitivement perdu.",
-  "syncReplaceDone": "Les données de cet appareil sont maintenant celles du serveur."
+  "syncReplaceDone": "Les données de cet appareil sont maintenant celles du serveur.",
+  "syncServerChanged": "Le serveur a changé",
+  "syncServerChangedHint": "Le serveur présente un autre certificat ou ne connaît plus cet appareil : il a sans doute été réinstallé. Associez cet appareil de nouveau : ses données, modifications non envoyées comprises, y seront recopiées.",
+  "syncPairAgain": "Associer de nouveau",
+  "serverErrorUnknownDevice": "Le serveur ne connaît pas cet appareil : il a sans doute été réinstallé. Oubliez ce serveur puis associez l'appareil à nouveau."
 }

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:batz/data/secret_store.dart';
+import 'package:batz/data/server/certificate.dart';
 import 'package:batz/data/server/server_client.dart';
 import 'package:batz/data/server/server_repository.dart';
 import 'package:batz/data/sync/sync_engine.dart';
@@ -237,5 +238,29 @@ void main() {
       expect(reloads, 1);
       expect(c.state.pending, 0);
     });
+  });
+
+  group('a server that changed (2.5)', () {
+    for (final (name, error) in [
+      ('another certificate', CertificateMismatchException('AB:CD', 'EF:01') as Object),
+      ('an unknown device', ServerException(401, 'DEVICE_KEY_INVALID', 'device key is unknown')),
+    ]) {
+      test('$name: the server changed; automatic exchanges stop; a new pairing starts afresh', () async {
+        fake.failNext = error;
+        final notes = await device.notes();
+        final c = cubit(debounce: 20);
+        await c.start();
+        expect(c.state.status, SyncStatus.serverChanged);
+        expect(await device.notes(), notes);
+        await device.journal.write(Modification.set('note', 'mine', {'title': 'still here'}));
+        await wait(100);
+        expect(fake.healthCalls, 1, reason: 'no automatic retry');
+
+        // Paired again (here with the same fake): everything goes.
+        await c.pairingChanged();
+        expect(c.state.status, SyncStatus.upToDate);
+        expect((await server.notes())['mine']!['title'], 'still here');
+      });
+    }
   });
 }

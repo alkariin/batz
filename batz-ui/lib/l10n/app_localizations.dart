@@ -1206,6 +1206,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les données de cet appareil sont maintenant celles du serveur.'**
   String get syncReplaceDone;
+
+  /// No description provided for @syncServerChanged.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur a changé'**
+  String get syncServerChanged;
+
+  /// No description provided for @syncServerChangedHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur présente un autre certificat ou ne connaît plus cet appareil : il a sans doute été réinstallé. Associez cet appareil de nouveau : ses données, modifications non envoyées comprises, y seront recopiées.'**
+  String get syncServerChangedHint;
+
+  /// No description provided for @syncPairAgain.
+  ///
+  /// In fr, this message translates to:
+  /// **'Associer de nouveau'**
+  String get syncPairAgain;
+
+  /// No description provided for @serverErrorUnknownDevice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur ne connaît pas cet appareil : il a sans doute été réinstallé. Oubliez ce serveur puis associez l\'appareil à nouveau.'**
+  String get serverErrorUnknownDevice;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

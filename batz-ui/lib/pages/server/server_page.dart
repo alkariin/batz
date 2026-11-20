@@ -44,6 +44,7 @@ String problemText(AppLocalizations l, ServerProblem problem) => switch (problem
   ServerProblem.codeUsed => l.serverErrorCodeUsed,
   ServerProblem.nameInvalid => l.serverErrorName,
   ServerProblem.deviceRevoked => l.serverErrorRevoked,
+  ServerProblem.unknownDevice => l.serverErrorUnknownDevice,
   ServerProblem.other => l.serverErrorOther,
 };
 

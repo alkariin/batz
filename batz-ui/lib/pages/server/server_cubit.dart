@@ -15,6 +15,9 @@ enum ServerProblem {
   codeUsed,
   nameInvalid,
   deviceRevoked,
+
+  /// The server does not know this device's key: it was reinstalled.
+  unknownDevice,
   other,
 }
 
@@ -26,6 +29,7 @@ ServerProblem problemOf(Object error) => switch (error) {
   ServerException(code: 'PAIRING_CODE_USED') => ServerProblem.codeUsed,
   ServerException(code: 'DEVICE_NAME_INVALID') => ServerProblem.nameInvalid,
   ServerException(code: 'DEVICE_REVOKED') => ServerProblem.deviceRevoked,
+  ServerException(code: 'DEVICE_KEY_INVALID') => ServerProblem.unknownDevice,
   _ => ServerProblem.other,
 };
 

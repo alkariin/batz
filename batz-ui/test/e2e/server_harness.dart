@@ -40,16 +40,24 @@ class LocalServer {
     return port;
   }
 
+  /// Starts a server on [dataDir] (a new one by default) and a free port.
+  ///
+  /// Test files run concurrently and each starts servers: a port found free
+  /// can be taken by another server before this one binds it. The server is
+  /// thus considered started only once its own process reports that it
+  /// listens; if it could not bind, another port is tried.
   static Future<LocalServer> start({Directory? dataDir}) async {
     final dir = dataDir ?? Directory.systemTemp.createTempSync('batz-e2e');
-    final port = await _freePort();
-    final process = await Process.start(await binary(), ['serve'], environment: _env(dir, port));
-    final logs = StringBuffer();
-    process.stdout.transform(utf8.decoder).listen(logs.write);
-    process.stderr.transform(utf8.decoder).listen(logs.write);
-    final server = LocalServer._(dir, port, process, logs);
-    await server._waitUntilListening();
-    return server;
+    for (var attempt = 1; ; attempt++) {
+      final port = await _freePort();
+      final process = await Process.start(await binary(), ['serve'], environment: _env(dir, port));
+      final logs = StringBuffer();
+      process.stdout.transform(utf8.decoder).listen(logs.write);
+      process.stderr.transform(utf8.decoder).listen(logs.write);
+      final server = LocalServer._(dir, port, process, logs);
+      if (await server._waitUntilListening()) return server;
+      if (attempt == 5) throw StateError('batz-web did not start:\n$logs');
+    }
   }
 
   static Map<String, String> _env(Directory dir, int port) => {
@@ -67,16 +75,15 @@ class LocalServer {
 
   String get logs => _logs.toString();
 
-  Future<void> _waitUntilListening() async {
+  /// True once this process listens; false if it exited first (port taken).
+  Future<bool> _waitUntilListening() async {
+    var exited = false;
+    unawaited(_process.exitCode.then((_) => exited = true));
     final deadline = DateTime.now().add(const Duration(seconds: 15));
     while (DateTime.now().isBefore(deadline)) {
-      try {
-        final socket = await Socket.connect(InternetAddress.loopbackIPv4, port);
-        socket.destroy();
-        return;
-      } on SocketException {
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-      }
+      if (logs.contains('batz-web started')) return true;
+      if (exited) return false;
+      await Future<void>.delayed(const Duration(milliseconds: 20));
     }
     throw StateError('batz-web did not start:\n$logs');
   }

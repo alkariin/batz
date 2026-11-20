@@ -90,6 +90,12 @@ void main() {
     expect(find.text('Appareil révoqué'), findsOneWidget);
     expect(find.textContaining('Ses données restent sur cet appareil'), findsOneWidget);
 
+    await _pump(tester, const SyncState(status: SyncStatus.serverChanged, pending: 4));
+    expect(find.text('Le serveur a changé'), findsOneWidget);
+    expect(find.textContaining('Associez cet appareil de nouveau'), findsOneWidget);
+    expect(find.text('4 modifications en attente'), findsOneWidget);
+    expect(find.byKey(const Key('syncPairAgain')), findsOneWidget);
+
     await _pump(tester, const SyncState(status: SyncStatus.error, error: 'boom'));
     expect(find.text('La dernière synchronisation a échoué : boom'), findsOneWidget);
 

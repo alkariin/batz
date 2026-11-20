@@ -657,4 +657,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get syncReplaceDone => 'Les données de cet appareil sont maintenant celles du serveur.';
+
+  @override
+  String get syncServerChanged => 'Le serveur a changé';
+
+  @override
+  String get syncServerChangedHint =>
+      'Le serveur présente un autre certificat ou ne connaît plus cet appareil : il a sans doute été réinstallé. Associez cet appareil de nouveau : ses données, modifications non envoyées comprises, y seront recopiées.';
+
+  @override
+  String get syncPairAgain => 'Associer de nouveau';
+
+  @override
+  String get serverErrorUnknownDevice =>
+      'Le serveur ne connaît pas cet appareil : il a sans doute été réinstallé. Oubliez ce serveur puis associez l\'appareil à nouveau.';
 }

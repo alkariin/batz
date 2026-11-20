@@ -454,3 +454,31 @@ figure was 66.7 s.
   modifications not sent.
 - `Journal.deviceId` is no longer final: it changes only through
   `replaceWith`, and the clock restarts with it.
+
+### 2.5 Revocation and a lost server
+
+**Decisions.**
+
+- A revoked device (`DEVICE_REVOKED`) stops its automatic exchanges and says
+  so; nothing of its data is touched and it can still be used. Paired again
+  (Plus › Serveur: forget the server, then pair), it is an ordinary device:
+  its first exchange sends what the server lacks, its unsent modifications
+  included.
+- A server that presents another certificate, or that answers
+  `DEVICE_KEY_INVALID` (same certificate, database lost), gives the status
+  « Le serveur a changé », which stops automatic exchanges and invites to pair
+  again. The server screen explains `DEVICE_KEY_INVALID` too and offers to
+  forget the server. No data is erased on the device: after pairing again,
+  the first exchange rebuilds the server (an empty server is an ordinary
+  exchange), and the other devices follow the same way without being asked
+  the question of H1, since they share their origins with the rebuilt server.
+- A server restored from an older copy needs nothing at all: each device's
+  next exchange sends what the copy lacks.
+- `test/e2e/rebuild_e2e_test.dart` covers the revoked device, both forms of a
+  reinstalled server at the same address, and a restored copy, with a new
+  device checked against the rebuilt server.
+- End-to-end test files run concurrently, each starting servers: the harness
+  considers a server started only once its own process logs that it listens,
+  and tries another port if the bind failed. A server reinstalled at the same
+  address is simulated by moving the devices' pairing to the new server's
+  address, the old certificate still pinned, rather than by reusing a port.

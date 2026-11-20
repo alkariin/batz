@@ -60,6 +60,7 @@ class SyncCard extends StatelessWidget {
           SyncStatus.upToDate => (Icons.cloud_done_outlined, l.syncUpToDate),
           SyncStatus.offline => (Icons.cloud_off_outlined, l.syncOffline),
           SyncStatus.revoked => (Icons.block, l.syncRevoked),
+          SyncStatus.serverChanged => (Icons.dns_outlined, l.syncServerChanged),
           SyncStatus.incompatible => (Icons.warning_amber_outlined, l.syncIncompatible),
           SyncStatus.decisionNeeded => (Icons.call_merge, l.syncDecision),
           SyncStatus.error || SyncStatus.notPaired => (Icons.error_outline, l.syncError),
@@ -67,6 +68,7 @@ class SyncCard extends StatelessWidget {
         final problem = switch (state.status) {
           SyncStatus.offline => l.syncOfflineHint,
           SyncStatus.revoked => l.syncRevokedHint,
+          SyncStatus.serverChanged => l.syncServerChangedHint,
           SyncStatus.incompatible => switch (state.incompatibility) {
             Incompatibility.appTooOld => l.syncAppTooOld(state.minAppVersion ?? ''),
             _ => l.syncServerTooOld(state.serverVersion ?? ''),
@@ -76,7 +78,12 @@ class SyncCard extends StatelessWidget {
           _ => null,
         };
         final colors = theme.colorScheme;
-        final alarming = {SyncStatus.revoked, SyncStatus.incompatible, SyncStatus.error}.contains(state.status);
+        final alarming = {
+          SyncStatus.revoked,
+          SyncStatus.serverChanged,
+          SyncStatus.incompatible,
+          SyncStatus.error,
+        }.contains(state.status);
         return Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -108,6 +115,16 @@ class SyncCard extends StatelessWidget {
                     style: TextStyle(color: colors.error),
                   ),
                 ],
+                if (state.status == SyncStatus.serverChanged && showPairing)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      key: const Key('syncPairAgain'),
+                      onPressed: () =>
+                          Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ServerPage())),
+                      child: Text(l.syncPairAgain),
+                    ),
+                  ),
                 if (state.status == SyncStatus.decisionNeeded)
                   Wrap(
                     alignment: WrapAlignment.end,

@@ -148,4 +148,17 @@ void main() {
     verify(repo.forget).called(1);
     expect(find.text('Associer'), findsOneWidget);
   });
+
+  testWidgets('a server that no longer knows this device: explained, and the pairing can be forgotten', (tester) async {
+    final repo = _MockRepository();
+    when(repo.pairing).thenAnswer((_) async => _pairing);
+    when(() => repo.status(any())).thenThrow(ServerException(401, 'DEVICE_KEY_INVALID', 'device key is unknown'));
+    when(repo.forget).thenAnswer((_) async {});
+    await _pump(tester, repo);
+
+    expect(find.textContaining('ne connaît pas cet appareil'), findsOneWidget);
+    await tester.tap(find.text('Oublier ce serveur sur cet appareil'));
+    await tester.pumpAndSettle();
+    verify(repo.forget).called(1);
+  });
 }
