@@ -99,14 +99,17 @@ class _ClassifyPageState extends State<ClassifyPage> {
     }
   }
 
+  /// The form starts with a keyword found in the bank text of the line, so
+  /// that the rule classifies at least this line (step 4.0).
   Future<void> _createRule(LedgerTransaction t) async {
+    final keyword = suggestedKeyword(_description.text, t.rawText ?? '');
     await Navigator.of(context).push(
       MaterialPageRoute<bool>(
         builder: (_) => RuleFormPage(
           year: t.date.year,
           initial: RuleDraft(
             year: t.date.year,
-            keywords: [if (t.description.trim().isNotEmpty) t.description.trim()],
+            keywords: [?keyword],
             targetCategoryId: _transfer ? null : _categoryId,
             targetAccountId: _transfer ? _accountId : null,
           ),

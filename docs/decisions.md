@@ -988,3 +988,58 @@ the history (commit `806a457`). The import is described in
 `batz-web/docs/import.md`; the API, the architecture, the deployment (with
 the upgrade to 0.4.0 and the restoration of a copy of the database) and the
 README follow.
+
+## 2026-11-21 — Phase 4 decisions taken during development
+
+Functional choices H1 to H8 are in `docs/plan/phase-4.md`. The decisions below
+were taken while implementing it.
+
+### 4.0 The keyword of « Créer une règle » is in the bank text
+
+**Decision.** The rule form no longer starts from the description as a
+whole: `suggestedKeyword` (in `domain/ledger/rule.dart`) gives the longest
+run of consecutive words of the description found in the bank text as rules
+read it (lower case, without accents, spaces collapsed), the first one among
+equals, with at least three letters or digits. When there is none (the user
+wrote their own description), it gives the line of the bank text with the
+most letters, the first line left aside when there are others (it names the
+type of operation). A candidate that starts with `re:` is skipped: it would
+be read as a regular expression. The keyword is therefore always in the text
+of the line, and the rule classifies at least that line as long as its
+keywords are kept.
+
+**Why.** The short label (decision H3 of phase 3) joins the lines of the
+bank text that remain once the generic ones are left out; a card or IBAN
+line between two kept lines makes it absent from the text as a whole.
+
+**Evidence.** `test/domain/ledger/rules_test.dart` checks every line of the
+three fictitious statements and three lines built for the case (two labels
+whose lines are not consecutive, a description rewritten by the user):
+the keyword is found and the rule proposes the line. Checked locally on the
+three real statements, without displaying them: 181 lines, the 3 whose label
+is not in the text (one per statement) now get a run of 8, 14 and 12 words of
+it; all 181 keywords are in their text.
+
+### 4.0 Reloading after a write, measured with ten years of data
+
+**Measure** (`test/data/reload_performance_test.dart`, part of the suite,
+run on 2026-11-21 on the development machine, Intel Core i7-14700KF, database
+file in a background isolate as in production). Data from
+`test/support/large_ledger.dart`: 10 000 transactions over five years (60
+statements of 160 lines and 400 manual expenses), five trees of 50
+categories, 200 mapping rules, 160 lines to validate. Reading the derived
+tables, building the ledger, the proposals of the lines to validate and the
+tasks takes 60 to 99 ms over five runs; the write before it 47 to 97 ms.
+Below the 300 ms of the plan: nothing to correct. The test fails when the
+best of five runs exceeds 300 ms (the suite runs files concurrently).
+
+### 4.0 Database of version 0.4.1
+
+`batz-ui/test/fixtures/v0.4.1/batz.db` was written by version 0.4.1 through
+its own operations, with a fixed clock, in a worktree of commit `f906f86`:
+three accounts (one detailed), the trees 2026 and 2027, three mapping rules
+and their copies, the fictitious statement of January imported (7 proposals
+confirmed, one line classified by hand over the year, 19 lines to validate)
+and two manual expenses, one over two years. `test/data/upgrade_test.dart`
+opens it with the current version and checks every kind of record, then that
+a new rule proposes for the lines left to validate.

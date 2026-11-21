@@ -166,3 +166,51 @@ List<String>? decodeKeywords(Object? value) {
 /// Identifier of the copy, in [year], of the rule [sourceId]: computed like
 /// the copies of categories, which rules follow (step 3.4).
 String copiedRuleId(String sourceId, int year) => derivedId('rule-copy/$sourceId/$year');
+
+/// The keyword « Créer une règle » starts with for a line whose bank text is
+/// [rawText] and whose description is [description] (step 4.0): always a
+/// keyword found in that text as rules read it, so that the rule classifies
+/// at least that line as long as its keywords are kept.
+///
+/// The description is usually the short label: lines of the bank text
+/// joined by spaces, generic lines (a card number, an IBAN) left out between
+/// them, so that it is not always in the text as a whole. The keyword is the
+/// longest run of consecutive words of the description found in the text,
+/// the first one among equals, with at least three letters or digits (« du »
+/// alone would match most lines). When there is none (the user wrote their
+/// own description), it is the line of the text with the most letters, the
+/// first line left aside when there are others: it names the type of
+/// operation. Null when the text is empty.
+String? suggestedKeyword(String description, String rawText) {
+  final text = normalizeText(rawText);
+  if (text.trim().isEmpty) return null;
+  bool found(String candidate) {
+    // A keyword written `re:…` would be read as a regular expression.
+    if (candidate.startsWith(regexKeywordPrefix)) return false;
+    final plain = normalizeText(candidate);
+    return plain.isNotEmpty && text.contains(plain);
+  }
+
+  int count(RegExp pattern, String s) => pattern.allMatches(s).length;
+  final alphanumeric = RegExp(r'[\p{L}\p{N}]', unicode: true), letter = RegExp(r'\p{L}', unicode: true);
+
+  final words = description.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+  for (var length = words.length; length > 0; length--) {
+    for (var start = 0; start + length <= words.length; start++) {
+      final candidate = words.sublist(start, start + length).join(' ');
+      if (count(alphanumeric, candidate) >= 3 && found(candidate)) return candidate;
+    }
+  }
+  final lines = [
+    for (final line in rawText.split('\n'))
+      if (line.trim().isNotEmpty) line.trim().replaceAll(RegExp(r'\s+'), ' '),
+  ];
+  for (final candidates in [lines.length > 1 ? lines.sublist(1) : lines, lines]) {
+    String? best;
+    for (final line in candidates) {
+      if (found(line) && (best == null || count(letter, line) > count(letter, best))) best = line;
+    }
+    if (best != null) return best;
+  }
+  return null;
+}

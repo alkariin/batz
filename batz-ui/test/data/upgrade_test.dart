@@ -6,9 +6,13 @@ import 'package:batz/data/local/open_database.dart';
 import 'package:batz/data/secret_store.dart';
 import 'package:batz/data/sync/sync_store.dart';
 import 'package:batz/domain/ledger/account.dart';
+import 'package:batz/domain/ledger/category.dart';
+import 'package:batz/domain/ledger/proposal.dart';
+import 'package:batz/domain/ledger/rule.dart';
+import 'package:batz/domain/period_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Databases written by versions 0.1.0, 0.2.0 and 0.3.0 (see
+/// Databases written by versions 0.1.0, 0.2.0, 0.3.0 and 0.4.1 (see
 /// test/fixtures/README.md).
 const _fixture = 'test/fixtures/v0.1.0/batz.db';
 const _fixtureDeviceId = 'a0000000-0000-4000-8000-000000000001';
@@ -18,6 +22,8 @@ const _fixture030 = 'test/fixtures/v0.3.0/batz.db';
 const _fixture030DeviceId = 'a0000000-0000-4000-8000-000000000003';
 const _fixture030Other = 'b0000000-0000-4000-8000-000000000004';
 const _fixture030Pairing = 'c0000000-0000-4000-8000-000000000005';
+const _fixture041 = 'test/fixtures/v0.4.1/batz.db';
+const _fixture041DeviceId = 'a0000000-0000-4000-8000-000000000041';
 
 void main() {
   late Directory dir;
@@ -26,6 +32,78 @@ void main() {
     File(_fixture).copySync('${dir.path}/$databaseFileName');
   });
   tearDown(() => dir.deleteSync(recursive: true));
+
+  test('a database of version 0.4.1 opens with this version: statement, rules, validated lines and lines to '
+      'validate kept', () async {
+    File(_fixture041).copySync('${dir.path}/$databaseFileName');
+    final db = await openLocalDatabase(directory: dir, secrets: MemorySecretStore(), encrypt: false);
+    final journal = await Journal.open(db);
+    expect(journal.deviceId, _fixture041DeviceId);
+    final entries = await journal.entries();
+    expect(entries, hasLength(419));
+
+    final repository = LedgerRepository(db, journal);
+    final ledger = await repository.load();
+    expect(ledger.sortedAccounts.map((a) => a.name), ['Compte privé', 'Espèces', 'Épargne']);
+    expect(ledger.accounts['acc-bank']!.importFormat, ImportFormat.postfinance);
+    final names = ['Revenus', 'Salaire', 'Dépenses', 'Logement', 'Loyer', 'Nourriture', 'Assurances'];
+    expect(ledger.trees.keys.toList()..sort(), [2026, 2027]);
+    expect(ledger.trees[2026]!.ordered.map((c) => c.name), names);
+    expect(ledger.trees[2027]!.ordered.map((c) => c.name), names);
+
+    // The rules and their copies.
+    expect(ledger.rulesOf(2026).map((r) => r.id).toSet(), {'rule-food', 'rule-rent', 'rule-savings'});
+    expect(ledger.rulesOf(2027).map((r) => r.id).toSet(), {
+      for (final id in ['rule-food', 'rule-rent', 'rule-savings']) copiedRuleId(id, 2027),
+    });
+    final rent = ledger.rules['rule-rent']!;
+    expect(rent.keywords, ['gérance', 'bail']);
+    expect((rent.targetCategoryId, rent.periodModel), ('cat-rent', PeriodModel.nextMonth));
+    expect(ledger.rules['rule-savings']!.targetAccountId, 'acc-savings');
+    expect(ledger.rules[copiedRuleId('rule-food', 2027)]!.targetCategoryId, copiedCategoryId('cat-food', 2027));
+
+    // The statement, its validated lines and its lines to validate.
+    final statement = ledger.statementsOf('acc-bank').single;
+    expect((statement.periodStart.encode(), statement.periodEnd.encode()), ('2026-01-01', '2026-01-31'));
+    final lines = ledger.linesOf(statement.id);
+    expect(lines, hasLength(27));
+    expect(lines.where((t) => t.isValidated), hasLength(8));
+    expect(ledger.linesToValidate, hasLength(19));
+    expect(ledger.linesToValidate.every((t) => ledger.proposals[t.id] == const NoRule()), isTrue);
+    final insurance = lines.singleWhere((t) => t.description == 'Assurance ménage');
+    expect((insurance.note, insurance.line!.categoryId), ('Prime annuelle', 'cat-insurance'));
+    expect((insurance.line!.periodStart.encode(), insurance.line!.periodEnd.encode()), ('2026-01-01', '2026-12-31'));
+    final groceries = lines.where((t) => t.rawText!.contains('Épicerie du Coin')).toList();
+    expect(groceries, hasLength(5));
+    expect(groceries.every((t) => t.isValidated && t.line!.categoryId == 'cat-food'), isTrue);
+    final rentLine = lines.singleWhere((t) => t.rawText!.contains('Gérance'));
+    expect((rentLine.line!.periodStart.encode(), rentLine.line!.periodEnd.encode()), ('2026-02-01', '2026-02-28'));
+    final saving = lines.singleWhere((t) => t.rawText!.contains('Compte épargne'));
+    expect(saving.counterpartAccountId, 'acc-savings');
+    expect(saving.lines, isEmpty);
+
+    // The manual expenses.
+    final cash = ledger.transactions['tx-cash']!;
+    expect(
+      (cash.amount, cash.line!.periodStart.encode(), cash.line!.periodEnd.encode()),
+      (-210000, '2026-09-01', '2027-08-31'),
+    );
+    expect(ledger.transactions['tx-2027']!.line!.categoryId, copiedCategoryId('cat-food', 2027));
+
+    // The new version writes after the latest entry of 0.4.1, and its rules
+    // apply to the lines left to validate.
+    final before = entries.last.hlc;
+    final hlc = await journal.write(
+      ledger.createRule(
+        'rule-bakery',
+        const RuleDraft(year: 2026, keywords: ['boulangerie'], targetCategoryId: 'cat-food'),
+      ),
+    );
+    expect(hlc! > before, isTrue);
+    final after = await repository.load();
+    expect(after.linesToValidate.where((t) => after.proposalOf(t)?.categoryId == 'cat-food'), hasLength(3));
+    await db.close();
+  });
 
   test('a database of version 0.3.0 opens with this version, data and server memory kept', () async {
     File(_fixture030).copySync('${dir.path}/$databaseFileName');

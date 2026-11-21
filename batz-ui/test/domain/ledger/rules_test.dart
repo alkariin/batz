@@ -6,6 +6,7 @@ import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/ledger_exception.dart';
 import 'package:batz/domain/ledger/proposal.dart';
 import 'package:batz/domain/ledger/rule.dart';
+import 'package:batz/domain/ledger/statement.dart';
 import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/domain/period_model.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -245,6 +246,104 @@ void main() {
   });
 
   group('validation', () {
+    group('the keyword proposed by « Créer une règle » (step 4.0)', () {
+      test('is the longest run of words of the description found in the bank text', () {
+        // A short label whose lines are not consecutive in the bank text: an
+        // IBAN line was left out between them.
+        const raw = "CRÉDIT\nDONNEUR D'ORDRE:\nEmployeur Exemple SA\nCH0000000000000000009\nSalaire janvier";
+        expect(suggestedKeyword('Employeur Exemple SA Salaire janvier', raw), 'Employeur Exemple SA');
+        expect(
+          suggestedKeyword('Épicerie du Coin Fictiville', 'ACHAT\nEpicerie  du coin\nFictiville'),
+          'Épicerie du Coin Fictiville',
+        );
+        // The user's own description: the line with the most letters, the
+        // type of operation left aside.
+        expect(suggestedKeyword('Courses', raw), 'Employeur Exemple SA');
+        expect(suggestedKeyword('', 'PRIX POUR\nTENUE DE COMPTE 12.2025'), 'TENUE DE COMPTE 12.2025');
+        // « du » alone would match most lines.
+        expect(
+          suggestedKeyword(
+            'Journal du dimanche',
+            'ACHAT/SERVICE DU 05.04.2026\nCARTE NO XXXX0000\nKiosque Fictif\nFictiville',
+          ),
+          'Kiosque Fictif',
+        );
+        // Never a regular expression by accident.
+        expect(suggestedKeyword('re:x', 'Paiement re:x\nre:x'), 'Paiement re:x');
+        expect(suggestedKeyword('Courses', '  \n '), isNull);
+      });
+
+      test('classifies at least the line it starts from, for every line of the test set', () async {
+        // February and March follow January; April holds labels whose lines
+        // are not consecutive in the bank text, and a description the user
+        // rewrote.
+        for (final name in ['2026-02', '2026-03']) {
+          final s = fixtureStatement(name);
+          await h.repository.write(
+            (await h.ledger()).importStatement('bank', s.statement, fingerprint: s.fingerprint).modification,
+          );
+        }
+        final march = fixtureStatement('2026-03').statement;
+        const lines = [
+          ("CRÉDIT\nDONNEUR D'ORDRE:\nEmployeur Exemple SA\nCH0000000000000000009\nSalaire avril", 500000),
+          ('ACHAT/SERVICE DU\n04.04.2026\nCommerce Inventé\nCARTE NO XXXX0000\nFictiville', -2350),
+          ('ACHAT/SERVICE DU 05.04.2026\nCARTE NO XXXX0000\nKiosque Fictif\nFictiville', -800),
+        ];
+        final april = ExtractedStatement(
+          format: 'postfinance',
+          iban: march.iban,
+          currency: 'CHF',
+          periodStart: d(2026, 4, 1),
+          periodEnd: d(2026, 4, 30),
+          openingBalance: march.closingBalance,
+          closingBalance: march.closingBalance + lines.fold(0, (sum, line) => sum + line.$2),
+          totalCredits: 500000,
+          totalDebits: 3150,
+          lines: [
+            for (final (i, (raw, amount)) in lines.indexed)
+              ExtractedLine(
+                date: d(2026, 4, 4 + i),
+                amount: amount,
+                rawText: raw,
+                label: [
+                  'Employeur Exemple SA Salaire avril',
+                  'Commerce Inventé Fictiville',
+                  'Kiosque Fictif Fictiville',
+                ][i],
+              ),
+          ],
+        );
+        final import = (await h.ledger()).importStatement('bank', april, fingerprint: 'f' * 64);
+        await h.repository.write(import.modification);
+        final kiosk = (await h.ledger()).linesOf(import.statementId).last;
+        await h.apply((l) => l.updateImportedDetails(kiosk.id, description: 'Journal du dimanche', note: ''));
+
+        final ledger = await h.ledger();
+        final all = ledger.linesToValidate;
+        expect(all, hasLength(27 + 21 + 12 + 3));
+        for (final t in all) {
+          final keyword = suggestedKeyword(t.description, t.rawText!);
+          expect(keyword, isNotNull, reason: t.rawText);
+          final draft = RuleDraft(year: 2026, keywords: [keyword!], targetCategoryId: 'food');
+          final probe = MappingRule(id: 'probe', year: 2026, keywords: [keyword], targetCategoryId: 'food');
+          expect(
+            outcomeOf(t.rawText!, [probe], (r) => ledger.ruleClassification(r, t.date)),
+            isA<Proposed>(),
+            reason: '« $keyword » in ${t.rawText}',
+          );
+          expect(ledger.linesClassifiedBy(draft), greaterThanOrEqualTo(1), reason: keyword);
+        }
+
+        // Written, the rule proposes its line.
+        final employer = (await h.ledger()).linesOf(import.statementId).first;
+        final keyword = suggestedKeyword(employer.description, employer.rawText!)!;
+        expect(keyword, 'Employeur Exemple SA');
+        await h.apply((l) => l.createRule('employer', rule([keyword], category: 'salary')));
+        final proposal = (await h.ledger()).proposals[employer.id];
+        expect(proposal, isA<Proposed>().having((p) => p.rule.id, 'rule', 'employer'));
+      });
+    });
+
     test('a line to complete is classified one by one, with a category and a period', () async {
       final line = (await linesWith('Gérance')).single;
       await h.apply(
