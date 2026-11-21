@@ -15,6 +15,7 @@ import (
 	"github.com/alkariin/batz/batz-web/internal/domain/device"
 	"github.com/alkariin/batz/batz-web/internal/domain/journal"
 	"github.com/alkariin/batz/batz-web/internal/infrastructure/persistence"
+	"github.com/alkariin/batz/batz-web/internal/version"
 )
 
 const (
@@ -53,7 +54,7 @@ func modification(millis int, origin string, n int) []journal.Entry {
 }
 
 func request(known, since journal.Known, entries ...journal.Entry) application.SyncRequest {
-	return application.SyncRequest{Protocol: journal.Protocol, AppVersion: "0.3.0", Known: known, Since: since, Entries: entries}
+	return application.SyncRequest{Protocol: journal.Protocol, AppVersion: version.MinAppVersion, Known: known, Since: since, Entries: entries}
 }
 
 // pull pages through everything a copy with known lacks.
@@ -180,7 +181,7 @@ func TestProtocolAndAppVersion(t *testing.T) {
 	req.Protocol = 2
 	_, err := s.Exchange(t.Context(), phone, req)
 	assert.ErrorIs(t, err, application.ErrProtocolUnsupported)
-	for _, v := range []string{"0.2.0", "0.0.9", "", "dev"} {
+	for _, v := range []string{"0.3.0", "0.2.0", "0.0.9", "", "dev"} {
 		req = request(nil, nil)
 		req.AppVersion = v
 		_, err = s.Exchange(t.Context(), phone, req)

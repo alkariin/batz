@@ -13,7 +13,8 @@ Every error has the same body:
 { "code": "PAIRING_CODE_EXPIRED", "message": "pairing code has expired" }
 ```
 
-Clients rely on `code`; `message` is for humans.
+Clients rely on `code` (and `check` for a refused statement); `message` is
+for humans.
 
 | Status | Code | When |
 |---|---|---|
@@ -31,6 +32,11 @@ Clients rely on `code`; `message` is for humans.
 | 413 | `SYNC_PAGE_TOO_LARGE` | More than 10 000 entries, or a body over 32 MiB. |
 | 400 | `SYNC_PAGE_INVALID` | A malformed entry, known state or `since`; entries not sorted, sent twice, or not after `since`. The whole page is refused. |
 | 409 | `SYNC_STATE_CHANGED` | The page continues from more than the server holds (`since`); start again from the server's state. |
+| 422 | `IMPORT_UNREADABLE` | The file is not a PDF pdftotext can read. |
+| 422 | `IMPORT_UNKNOWN_FORMAT` | The PDF is no statement in a format the server knows. |
+| 422 | `IMPORT_INCONSISTENT` | The statement fails a check, named in `check`: `layout`, `currency`, `period`, `runningBalance`, `totals`, `closingBalance`. |
+| 413 | `IMPORT_TOO_LARGE` | A statement file over 10 MiB. |
+| 404 | `IMPORT_PDF_NOT_FOUND` | The server holds no original file with that fingerprint (never sent, or the server was rebuilt). |
 | 404 | `NOT_FOUND` | No such route. |
 | 500 | `INTERNAL` | Unexpected failure, logged by the server. |
 
@@ -39,14 +45,16 @@ Clients rely on `code`; `message` is for humans.
 No authentication.
 
 ```json
-{ "status": "ok", "version": "v0.3.0", "minAppVersion": "0.3.0", "syncProtocol": 1 }
+{ "status": "ok", "version": "v0.4.0", "minAppVersion": "0.4.0", "syncProtocol": 1, "importFormats": ["postfinance"] }
 ```
 
 `version` is the server build (`dev` for a local build); `minAppVersion` is
 the oldest app version the server works with; `syncProtocol` is the version of
-the exchange protocol it speaks (absent before 0.3.0). The app refuses to
+the exchange protocol it speaks (absent before 0.3.0); `importFormats` are
+the statement formats it reads (absent before 0.4.0). The app refuses to
 synchronise when it is older than `minAppVersion`, or when the protocols
-differ, and says why.
+differ, and refuses to import when the account's format is not announced; it
+says why.
 
 ## `POST /api/v1/pairing`
 
@@ -108,7 +116,7 @@ Request:
 ```json
 {
   "protocol": 1,
-  "appVersion": "0.3.0",
+  "appVersion": "0.4.0",
   "known": { "3f2c1a9e-…": "001763647200000:0003:3f2c1a9e-…" },
   "since": { "3f2c1a9e-…": "001763640000000:0000:3f2c1a9e-…" },
   "entries": [
@@ -167,7 +175,67 @@ Response `200`:
 | `more` | True when the server may hold more entries the app lacks. |
 | `added` | How many entries of the request were new to the server. |
 
-## Later phases
+## `POST /api/v1/imports`
 
-`POST /api/v1/imports` and `GET /api/v1/imports/{id}/pdf` come with phase 3
-(specification, chapter 8).
+Header `Authorization: Bearer <device key>`. Sends a bank statement: the PDF
+file is the raw request body (`Content-Type: application/pdf`), 10 MiB at
+most. The flow, the checks and the format are described in
+[import.md](import.md).
+
+Response `200`:
+
+```json
+{
+  "fingerprint": "5f01af3b…",
+  "statement": {
+    "format": "postfinance",
+    "iban": "CH0090000000123456789",
+    "currency": "CHF",
+    "periodStart": "2026-01-01",
+    "periodEnd": "2026-01-31",
+    "openingBalance": 234567,
+    "closingBalance": 499022,
+    "totalCredits": 587199,
+    "totalDebits": 322744,
+    "lines": [
+      {
+        "date": "2026-01-05",
+        "amount": -4785,
+        "rawText": "ACHAT/SERVICE DU 04.01.2026\nCARTE NO XXXX0000\nÉpicerie du Coin\nFictiville",
+        "label": "Épicerie du Coin Fictiville",
+        "balance": 64782
+      }
+    ]
+  }
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `fingerprint` | SHA-256 of the file, lower-case hex: the server keeps the file under it. |
+| `iban` | The account's IBAN, without spaces. |
+| `periodStart`, `periodEnd` | The period of the statement. |
+| `openingBalance`, `closingBalance`, `totalCredits`, `totalDebits` | Integer cents; totals as printed, both positive. |
+| `lines[].date` | Booking date. |
+| `lines[].amount` | Signed integer cents: positive for a credit. |
+| `lines[].rawText` | The bank's text, lines separated by `\n`, page furniture removed. |
+| `lines[].label` | The short label: the text without its generic lines. |
+| `lines[].balance` | The balance printed after this line, when the statement prints one. |
+
+The server writes nothing to the journal: the app decides whether the
+statement follows the previous one and writes it. When the server did not
+hold the file, it first writes a dated copy of its database, then stores the
+file. The same file always gets the same answer, and no new copy.
+
+Refusals: `422` with `IMPORT_UNREADABLE`, `IMPORT_UNKNOWN_FORMAT` or
+`IMPORT_INCONSISTENT` (and `check`), `413 IMPORT_TOO_LARGE`:
+
+```json
+{ "code": "IMPORT_INCONSISTENT", "check": "totals", "message": "inconsistent statement (totals): printed totals: …" }
+```
+
+## `GET /api/v1/imports/{fingerprint}/pdf`
+
+Header `Authorization: Bearer <device key>`. The original file of a
+statement, as `application/pdf`; `404 IMPORT_PDF_NOT_FOUND` when the server
+does not hold it.

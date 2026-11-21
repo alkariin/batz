@@ -12,7 +12,7 @@ class FakeServer implements SyncTransport {
   final requests = <SyncRequest>[];
 
   /// What `/healthz` answers.
-  Health healthAnswer = Health(version: 'v0.3.0', minAppVersion: '0.1.0', syncProtocol: syncProtocol);
+  Health healthAnswer = Health(version: 'v0.4.0', minAppVersion: '0.1.0', syncProtocol: syncProtocol);
 
   /// Delays each answer, to observe an exchange in progress.
   Duration delay = Duration.zero;

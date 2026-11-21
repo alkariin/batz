@@ -960,3 +960,18 @@ classified by hand, and the rules screen; then the search and the status
 filter; then the tasks of competing rules and of an unusable rule.
 `test/domain/ledger/search_test.dart` covers each filter and the search
 fields.
+
+### 3.7 Version 0.4.0
+
+The app and the server move to 0.4.0 together. The server's minimum app
+version becomes 0.4.0: an app 0.3.0 would receive statements, imported lines
+and rules it does not know, keep them in its journal without showing them,
+and let its user enter by hand what the import already brought. The tests of
+the exchange send 0.4.0 (the server's minimum) and check that 0.3.0 is
+refused. The original scripts left the repository (`legacy/`), as the
+specification planned: the extraction no longer needs them, the check of the
+real statements compares with the CSV files they wrote, and they remain in
+the history (commit `806a457`). The import is described in
+`batz-web/docs/import.md`; the API, the architecture, the deployment (with
+the upgrade to 0.4.0 and the restoration of a copy of the database) and the
+README follow.

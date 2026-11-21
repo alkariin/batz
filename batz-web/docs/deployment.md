@@ -10,12 +10,15 @@ attached to each GitHub release.
 
 | Variable | Default (image) | Meaning |
 |---|---|---|
-| `BATZ_DATA_DIR` | `/data` | Database (paired devices and the reference copy of the journal) and TLS certificate. Back this up. |
+| `BATZ_DATA_DIR` | `/data` | Database (paired devices and the reference copy of the journal), TLS certificate, original statement files (`statements/`) and dated copies of the database (`backups/`). Back this up. |
 | `BATZ_PORT` | `8443` | HTTPS port. |
+| `BATZ_BACKUPS` | `12` | Dated copies of the database kept in `backups/`, one written before each new statement file (1 to 1000). |
 
 The image runs as uid 10001 without privileges; the data directory on the host
 must be writable by that uid. Its health check calls `/healthz` over HTTPS,
-pinned on the certificate in `/data`.
+pinned on the certificate in `/data`. The image carries `pdftotext`
+(Alpine's `poppler-utils`), which reads the statements without writing
+anything outside `/data`: the container stays read-only.
 
 ### Install or upgrade from a release file
 
@@ -26,14 +29,14 @@ Each release carries `batz-web-<version>.tar.gz`, a `docker save` of the image
 # On the NAS (Synology: docker lives in /usr/local/bin, which non-interactive
 # SSH sessions do not have on PATH)
 export PATH="$PATH:/usr/local/bin"
-gunzip -c batz-web-v0.3.0.tar.gz | docker load
+gunzip -c batz-web-v0.4.0.tar.gz | docker load
 mkdir -p /volume1/docker/batz/data
 sudo chown 10001:10001 /volume1/docker/batz/data
 docker rm -f batz-web 2>/dev/null
 docker run -d --name batz-web --restart unless-stopped \
   -p 8443:8443 -v /volume1/docker/batz/data:/data \
   --read-only --cap-drop ALL --security-opt no-new-privileges:true \
-  batz-web:v0.3.0
+  batz-web:v0.4.0
 docker inspect -f '{{.State.Health.Status}}' batz-web   # healthy after a few seconds
 ```
 
@@ -47,7 +50,7 @@ every paired app refuse the server until it is paired again.
 From the development machine, with SSH key access to the NAS:
 
 ```sh
-batz-web/scripts/deploy-nas.sh batz-web-v0.3.0.tar.gz user@192.168.1.95
+batz-web/scripts/deploy-nas.sh batz-web-v0.4.0.tar.gz user@192.168.1.95
 ```
 
 It streams the image to `docker load`, gives the data folder to uid 10001
@@ -60,6 +63,21 @@ upgrades the server and keeps its data and certificate.
 On Synology, shared folders carry ACLs that make new files readable by every
 NAS account, `tls/server.key` included, whatever the permissions the server
 sets. Keep the folder in a share that only administrators can open.
+
+### Upgrading to 0.4.0 (import of statements)
+
+Server 0.4.0 adds the import routes (`POST /api/v1/imports`,
+`GET /api/v1/imports/{fingerprint}/pdf`), `pdftotext` in the image, and two
+folders it creates in the data directory: `statements/` and `backups/`. The
+database schema does not change. It requires apps 0.4.0 or later, the first
+that know statements, imported lines and rules: an app 0.3.0 shows that it is
+too old for the server. Upgrade the server first, then the apps; nothing needs
+to be paired again. The apps rebuild their local tables from their journal at
+the first start (a few seconds), their data kept.
+
+An app 0.4.0 paired with a server 0.3.0 synchronises but refuses to import,
+saying the server is too old. See [import.md](import.md) for the flow and
+for restoring a copy of the database.
 
 ### Upgrading to 0.3.0 (synchronisation)
 

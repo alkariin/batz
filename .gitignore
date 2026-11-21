@@ -77,7 +77,7 @@ docker-compose.yml
 *.tar
 *.tar.gz
 
-# Python caches (legacy scripts)
+# Python caches
 __pycache__/
 
 # Claude Code

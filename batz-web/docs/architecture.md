@@ -9,7 +9,7 @@ what is built and why.
 | Part | Does | Does not |
 |---|---|---|
 | App (`batz-ui`) | Every calculation, on a full local copy of the data. | Depend on the server to work. |
-| Server (`batz-web`) | Pair devices; keep the reference copy of the change journal; later: extract PDF statements, store the original PDFs. | Interpret the journal or compute anything accounting-related. |
+| Server (`batz-web`) | Pair devices; keep the reference copy of the change journal; extract and check PDF statements, keep the original files. | Interpret the journal, decide what is imported, or compute anything accounting-related. |
 
 The server is on the home network only and runs at weekends; the app must
 never need it except to synchronise and import.
@@ -20,23 +20,30 @@ Go, Gin, SQLite (`modernc.org/sqlite`, pure Go, no cgo), one container.
 
 ```
 batz-web/src
-├── main.go                       commands: serve, pairing-code, healthcheck, version
+├── main.go                       commands: serve, pairing-code, healthcheck, extract, version
 └── internal
     ├── version                   build version, minimum app version
     ├── domain/device             devices, pairing codes, keys, errors
     ├── domain/journal            journal entries, known states, shape checks
-    ├── application               use cases (Devices, Sync) and their ports
+    ├── domain/statement          a statement as read, its consistency checks, refusal codes
+    ├── application               use cases (Devices, Sync, Imports) and their ports
     └── infrastructure
         ├── config                environment, read once at start-up
-        ├── persistence           SQLite stores (devices, journal) and embedded migrations
+        ├── extraction/postfinance  pdftotext and the reading of PostFinance statements
+        │   └── fake              generator of fictitious statements (test set in testdata/)
+        ├── persistence           SQLite stores (devices, journal), embedded migrations,
+        │                         original files, dated copies of the database
         ├── tlscert               self-signed certificate, pinning helpers
         └── web                   routes, authentication, error mapping
 ```
 
-- **Configuration**: `BATZ_DATA_DIR` (default `data`) and `BATZ_PORT`
-  (default `8443`), read once by `config.Load`.
-- **Data directory**: `batz.db` (SQLite, WAL) and `tls/server.crt` +
-  `tls/server.key`. It is the only state to back up.
+- **Configuration**: `BATZ_DATA_DIR` (default `data`), `BATZ_PORT`
+  (default `8443`) and `BATZ_BACKUPS` (default `12`), read once by
+  `config.Load`.
+- **Data directory**: `batz.db` (SQLite, WAL), `tls/server.crt` +
+  `tls/server.key`, `statements/<fingerprint>.pdf` (the original files) and
+  `backups/batz-<time>.db` (dated copies of the database). It is the only
+  state to back up.
 - **Migrations** are embedded in the binary (`go:embed`) and applied at start
   by golang-migrate. The specification placed them in `batz-web/db/migrations`;
   embedding them means a server image always carries exactly the schema of its
@@ -56,6 +63,11 @@ batz-web/src
   `journal` table, keyed like the app's and indexed by origin device and
   timestamp, and checks only their shape; each exchange is one transaction.
   It never resolves conflicts: the apps do.
+- **Import**: `POST /api/v1/imports` reads a PDF statement with `pdftotext`
+  (no shell, PDF on standard input, time-limited), checks its consistency and
+  answers with its lines; a file it did not hold is kept under its
+  fingerprint, after a dated copy of the database (`VACUUM INTO`, the latest
+  12 kept). It writes nothing to the journal. See [import.md](import.md).
 
 ## App
 
@@ -65,17 +77,23 @@ Flutter, Bloc (cubits), Dio, Drift.
 batz-ui/lib
 ├── domain        pure Dart, no Flutter
 │   ├── journal   hybrid logical clock, journal entries, resolution rule
-│   ├── ledger    accounts, category trees, transactions, their rules and totals
+│   ├── ledger    accounts, category trees, transactions, statements, mapping
+│   │             rules and their proposals, their rules and totals, search
 │   ├── allocation.dart, fraction.dart, calendar_date.dart   spreading over months
-│   └── ids.dart
+│   ├── period_model.dart   periods of the mapping rules
+│   └── ids.dart  random and computed identifiers
 ├── data
 │   ├── local     Drift database, journal, derived tables, opening and encryption
 │   ├── ledger    reads the ledger from the derived tables, writes to the journal
-│   ├── server    HTTPS client with certificate pinning, pairing repository
+│   ├── server    HTTPS client with certificate pinning, pairing repository,
+│   │             import answer
 │   ├── sync      exchange engine, wire format, memory of the server state
+│   ├── files.dart          picking and saving files (file_picker)
 │   └── secret_store.dart   system secret storage
-├── pages         shell, home (synchronisation, tasks), transactions, accounts,
-│                 categories, server settings, cubits (ledger, server, sync)
+├── pages         shell, home (synchronisation, tasks), transactions (search,
+│                 filters), import and statements, validation and rules,
+│                 accounts, categories, server settings, cubits (ledger,
+│                 server, sync, import)
 ├── components    shared widgets
 ├── helpers       Swiss formats, theme
 └── l10n          French texts (ARB) and generated localisations
@@ -139,8 +157,10 @@ writes of the others.
 |---|---|---|
 | `account` | `accounts` | name, type, importFormat, archived |
 | `category` | `categories` | year, name, parentId, nature (top-level groups), position |
-| `transaction` | `transactions` | accountId, date, amount, counterpartAccountId, description, note, status |
+| `transaction` | `transactions` | accountId, date, amount, counterpartAccountId, description, note, status (`toValidate`, `validated`), rawText, statementId, statementRank |
 | `transactionLine` | `transaction_lines` | transactionId, categoryId, amount, periodStart, periodEnd |
+| `statement` | `statements` | accountId, format, iban, periodStart, periodEnd, openingBalance, closingBalance, fingerprint |
+| `rule` | `rules` | year, keywords (JSON list), targetCategoryId or targetAccountId, periodModel, periodMonths |
 
 `LedgerRepository` reads every table, by identifier, into an immutable
 `Ledger` and leaves out records that are incomplete or hold a value the
@@ -167,6 +187,19 @@ business rules and returns the `Modification` to write, or throws a
 - **Allocation**: `allocate` spreads an amount over the months of a period;
   each month weighs its covered days over its days as an exact fraction, the
   shares are rounded to the cent and the last one takes the remainder.
+- **Statements**: `Ledger.importStatement` checks a statement read by the
+  server against the account's latest one and returns one modification with
+  the statement, its lines (to validate) and the tree copies; identifiers are
+  computed from the account, the fingerprint and the rank. Imported lines
+  keep the bank's amount, date and text; the latest statement can be
+  deleted with its lines.
+- **Rules and proposals**: the rules of a year match the raw text of a line
+  (every keyword, without case, accents or repeated spaces; `re:` for a
+  regular expression); the most keywords win, a tie of different results is
+  a conflict. The proposal of each line to validate is computed when the
+  ledger loads, never stored, and counted in the totals; validating writes
+  the classification. Rules follow the copy of a tree. See
+  [import.md](import.md).
 
 On Android the database is encrypted with SQLCipher (selected per platform
 through the `sqlite3` package hooks, see `docs/decisions.md`). Its key, 32
@@ -208,9 +241,13 @@ keeps the pin, so another machine at that address is refused.
 
 - Server: unit and HTTP tests per package, the exchange included (pages
   never cutting a modification, a page refused as a whole, the same page twice
-  without duplicate, `since`, versions, sizes); `test/e2e` builds the binary
-  and exercises pairing, refusals, revocation, restarts, certificate pinning
-  and an exchange between two simulated devices over real HTTPS.
+  without duplicate, `since`, versions, sizes), the extraction of every
+  fictitious statement against what its generator printed, each check, the
+  import route (refusals, the same file twice, 12 copies kept, the original
+  file, logs without statement text); `test/e2e` builds the binary and
+  exercises pairing, refusals, revocation, restarts, certificate pinning, an
+  exchange between two simulated devices, `extract` and an import over real
+  HTTPS.
 - App: the clock and the resolution rule; the journal against a naive
   reference model on shuffled histories from three devices; deletion,
   restarts and failed transactions; derived schema changes and the opening of
@@ -223,7 +260,12 @@ keeps the pin, so another machine at that address is refused.
   a real `batz-web` process: pairing, and the synchronisation of simulated
   devices (concurrent edits, deletions, cut exchanges, the first exchange of
   H1, revocation, a rebuilt server, and a convergence test with random
-  operations, clocks, exchange orders and cuts). The synchronisation screens
-  and their cubit are tested against a server in memory.
-  `benchmark/first_exchange_test.dart`, run by hand, measures a first exchange
-  of 20 000 entries.
+  operations, clocks, exchange orders and cuts), and the import of the
+  fictitious statements (balances, refusals, two devices, validation with the
+  server stopped, the original file). The synchronisation, import and
+  validation screens are tested against servers in memory; the import, the
+  rules, the periods and the search have their own domain tests, and
+  `test/data/write_performance_test.dart` bounds the writing of an import and
+  of a confirmation in bulk. `benchmark/first_exchange_test.dart` and
+  `benchmark/journal_write_test.dart`, run by hand, measure a first exchange
+  of 20 000 entries and the writing of 1 000 fields.
