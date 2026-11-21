@@ -8,6 +8,7 @@ import 'ledger_exception.dart';
 import 'proposal.dart';
 import 'redistribution.dart';
 import 'rule.dart';
+import 'share_classification.dart';
 import 'statement.dart';
 import 'transaction.dart';
 
@@ -30,6 +31,7 @@ class Ledger {
     Iterable<String> deletedStatementIds = const [],
     Iterable<MappingRule> rules = const [],
     Iterable<RedistributionRule> redistributions = const [],
+    Iterable<ShareClassification> shareClassifications = const [],
   }) : this._(
          accounts,
          CategoryForest.build(categories),
@@ -39,6 +41,7 @@ class Ledger {
          deletedStatementIds,
          rules,
          redistributions,
+         shareClassifications,
        );
 
   Ledger._(
@@ -50,13 +53,15 @@ class Ledger {
     Iterable<String> deletedStatementIds,
     Iterable<MappingRule> rules,
     Iterable<RedistributionRule> redistributions,
+    Iterable<ShareClassification> shareClassifications,
   ) : accounts = {for (final a in accounts) a.id: a},
       trees = forest.trees,
       transactions = _attach(transactions, lines),
       statements = {for (final s in statements) s.id: s},
       deletedStatementIds = Set.unmodifiable(deletedStatementIds),
       rules = {for (final r in rules) r.id: r},
-      redistributions = {for (final r in redistributions) r.id: r};
+      redistributions = {for (final r in redistributions) r.id: r},
+      shareClassifications = {for (final c in shareClassifications) (c.lineId, c.year): c};
 
   static Map<String, LedgerTransaction> _attach(
     Iterable<LedgerTransaction> transactions,
@@ -93,6 +98,11 @@ class Ledger {
   /// The redistribution rules of every year, by identifier (see
   /// redistribution.dart for their operations).
   final Map<String, RedistributionRule> redistributions;
+
+  /// The answers given for shares to classify, by line and year (decision
+  /// H5 of phase 4): their identifier is computed from both, one record per
+  /// pair.
+  final Map<(String, int), ShareClassification> shareClassifications;
 
   /// Every category of every year, by identifier.
   late final Map<String, Category> categories = {for (final tree in trees.values) ...tree.byId};

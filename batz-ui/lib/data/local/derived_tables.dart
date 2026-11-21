@@ -2,6 +2,7 @@ import '../../domain/ledger/account.dart';
 import '../../domain/ledger/category.dart';
 import '../../domain/ledger/redistribution.dart';
 import '../../domain/ledger/rule.dart';
+import '../../domain/ledger/share_classification.dart';
 import '../../domain/ledger/statement.dart';
 import '../../domain/ledger/transaction.dart';
 
@@ -109,6 +110,7 @@ final List<DerivedTable> appDerivedTables = [
   statementsTable,
   rulesTable,
   redistributionsTable,
+  shareClassificationsTable,
 ];
 
 final accountsTable = DerivedTable(
@@ -207,5 +209,16 @@ final redistributionsTable = DerivedTable(
     RedistributionFields.sourceCategoryId: const DerivedColumn.text('source_category_id'),
     RedistributionFields.targetCategoryId: const DerivedColumn.text('target_category_id'),
     RedistributionFields.basisPoints: const DerivedColumn.integer('basis_points'),
+  },
+);
+
+final shareClassificationsTable = DerivedTable(
+  entity: ShareClassificationFields.entity,
+  table: 'share_classifications',
+  columns: {
+    ShareClassificationFields.lineId: const DerivedColumn.text('line_id'),
+    ShareClassificationFields.year: const DerivedColumn.integer('year'),
+    ShareClassificationFields.categoryId: const DerivedColumn.text('category_id'),
+    ShareClassificationFields.originCategoryId: const DerivedColumn.text('origin_category_id'),
   },
 );

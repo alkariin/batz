@@ -80,6 +80,7 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.refundNotInflow => l.errorRefundNotInflow,
   LedgerError.refundIsTransfer => l.errorRefundIsTransfer,
   LedgerError.refundTargetNotExpense => l.errorRefundTargetNotExpense,
+  LedgerError.shareNatureMismatch => l.errorShareNatureMismatch,
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {

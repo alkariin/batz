@@ -289,6 +289,13 @@ void main() {
       expect(all(ViewKind.economic), all(ViewKind.cash), reason: 'seed $seed');
       expect(views.of(2026, ViewKind.economic)!.paidForOtherYears, isNot(0), reason: 'seed $seed');
       expect(ledger.refundsByExpenseLine, isNotEmpty, reason: 'seed $seed');
+      expect(ledger.shareClassifications, isNotEmpty, reason: 'seed $seed');
+      expect(
+        ledger.shareClassifications.keys.where((key) => views.answerOf(key.$1, key.$2) != null),
+        isNotEmpty,
+        reason: 'seed $seed: answers that hold',
+      );
+      expect(views.pendingShares, isNotEmpty, reason: 'seed $seed');
       expect(ledger.brokenRefunds, isNotEmpty, reason: 'seed $seed');
       for (final year in randomYears) {
         final view = views.of(year, ViewKind.economic)!;

@@ -14,6 +14,8 @@ import 'package:batz/domain/ledger/ledger_exception.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/refund.dart';
 import 'package:batz/domain/ledger/transaction.dart';
+import 'package:batz/domain/views/share_operations.dart';
+import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/ledger_fixture.dart' show seedLedger;
@@ -133,9 +135,11 @@ Modification? randomOperation(Ledger l, Random r, String id) {
 }
 
 /// The operations of phase 4: redistribution rules, refunds attached and
-/// detached.
+/// detached, answers to the shares to classify.
 Modification? _phase4Operation(Ledger l, Random r, String id, int year) {
-  if (r.nextBool()) return _refundOperation(l, r);
+  final roll = r.nextInt(3);
+  if (roll == 0) return _refundOperation(l, r);
+  if (roll == 1) return _answerOperation(l, r);
   final existing = l.redistributionsOf(year).where((rule) => l.redistributions.containsKey(rule.id)).toList();
   if (existing.isNotEmpty && r.nextInt(3) == 0) {
     final rule = _pick(r, existing);
@@ -161,6 +165,20 @@ Modification? _phase4Operation(Ledger l, Random r, String id, int year) {
       basisPoints: 1 + r.nextInt(6000),
     ),
   );
+}
+
+Modification? _answerOperation(Ledger l, Random r) {
+  final pending = l.views.pendingShares;
+  if (pending.isEmpty) return null;
+  final group = _pick(r, pending);
+  final tree = l.views.treeOf(group.year)!;
+  final candidates = [
+    for (final c in tree.assignable)
+      if (tree.natureOf(c.id) == group.nature) c,
+  ];
+  if (candidates.isEmpty) return null;
+  final lines = r.nextBool() ? group.shares.map((s) => s.lineId) : [_pick(r, group.shares).lineId];
+  return l.classifyShares(group.year, lines, _pick(r, candidates).id);
 }
 
 Modification? _refundOperation(Ledger l, Random r) {
@@ -262,7 +280,8 @@ void main() {
         'seed $seed: $applied operations ($refused refused), $exchanges exchanges ($cuts cut), '
         '${(reference['journal']! as List).length} journal entries, ${ledger.transactions.length} transactions, '
         '${ledger.categories.length} categories, ${ledger.forest.detached.length} detached, '
-        '${ledger.redistributions.length} redistribution rules, ${ledger.refundsByExpenseLine.length} expenses refunded',
+        '${ledger.redistributions.length} redistribution rules, ${ledger.refundsByExpenseLine.length} expenses refunded, '
+        '${ledger.shareClassifications.length} answers',
       );
       // About ten seconds alone, much more while the other test files run:
       // hundreds of calls with pages of a few entries.

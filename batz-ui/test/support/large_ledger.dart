@@ -5,6 +5,7 @@ import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/rule.dart';
+import 'package:batz/domain/ledger/share_classification.dart';
 import 'package:batz/domain/ledger/statement.dart';
 import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/domain/period_model.dart';
@@ -23,6 +24,8 @@ import 'package:batz/domain/period_model.dart';
 ///   validate; one purchase in 20 concerns twelve months.
 /// - 300 manual expenses on `cash`, one in 10 over twelve months, and 100
 ///   refunds attached to imported purchases.
+/// - In the last year, « Poste 7.4 » is named « Divers »: the shares of the
+///   year before that fall in it are to classify, half of them answered.
 ///
 /// The records are written as the operations of the app write them, field
 /// by field, without going through the checks of each operation: importing
@@ -37,6 +40,8 @@ class LargeLedger {
   static const shopsWithRule = 39;
   static const groups = 8;
   static const categoriesPerGroup = 5;
+
+  static const lastYear = firstYear + years - 1;
 
   static int get transactions => years * 12 * linesPerStatement + manualEntries + refunds;
 
@@ -101,7 +106,7 @@ class LargeLedger {
       for (final (id, name, parent, nature, position) in tree) {
         set(CategoryFields.entity, categoryIn(id, year), {
           CategoryFields.year: year,
-          CategoryFields.name: name,
+          CategoryFields.name: id == leaf(groups - 1, 4) && year == lastYear ? 'Divers' : name,
           CategoryFields.parentId: parent == null ? null : categoryIn(parent, year),
           CategoryFields.nature: nature?.name,
           CategoryFields.position: position,
@@ -172,6 +177,14 @@ class LargeLedger {
         final (periodStart, periodEnd) = rank % 20 == 5
             ? periodFor(PeriodModel.monthsAfter, date, months: 12)
             : (date, date);
+        if (category == leaf(groups - 1, 4) && periodEnd.year == lastYear && year < lastYear && rank % 40 == 5) {
+          set(ShareClassificationFields.entity, shareClassificationId('$id-line', lastYear), {
+            ShareClassificationFields.lineId: '$id-line',
+            ShareClassificationFields.year: lastYear,
+            ShareClassificationFields.categoryId: categoryIn(leaf(groups - 1, 4), lastYear),
+            ShareClassificationFields.originCategoryId: categoryIn(category, year),
+          });
+        }
         set(LineFields.entity, '$id-line', {
           LineFields.transactionId: id,
           LineFields.categoryId: categoryIn(category, year),

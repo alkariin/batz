@@ -322,6 +322,7 @@
   },  "errorRefundNotInflow": "Seule une entrée d'argent peut rembourser une dépense.",
   "errorRefundIsTransfer": "Un transfert ne peut pas rembourser une dépense.",
   "errorRefundTargetNotExpense": "Un remboursement se rattache à une dépense validée.",
+  "errorShareNatureMismatch": "Choisissez une catégorie de même nature que celle d'origine : une dépense reste une dépense.",
 
   "edit": "Modifier",
   "transactionsEmpty": "Aucune transaction.",

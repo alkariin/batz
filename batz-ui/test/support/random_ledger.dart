@@ -6,6 +6,7 @@ import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/rule.dart';
+import 'package:batz/domain/ledger/share_classification.dart';
 import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/domain/period_model.dart';
 
@@ -27,7 +28,9 @@ const randomYears = [2026, 2027, 2028, 2029];
 ///   and 25 % of « Salaire » to « Primes », copied in 2027 with 33.33 % of
 ///   « Assurance ménage » to « Sorties »; a rule between natures that
 ///   cannot apply;
-/// - refunds attached to an expense of either year, one link in five broken.
+/// - refunds attached to an expense of either year, one link in five broken;
+/// - answers for the shares of 2026 lines in 2027 and later years, some
+///   given for another category of origin.
 Ledger randomLedger(Random r, {int transactions = 300}) {
   final categories = <Category>[];
   void add(String id, int year, String name, String? parent, {CategoryNature? nature, int position = 0}) =>
@@ -211,6 +214,30 @@ Ledger randomLedger(Random r, {int transactions = 300}) {
       ),
     redistribution('household-leisure', 2027, 'household', copiedCategoryId('leisure', 2027), 3333),
   ];
+  // Answers: « Loisirs » to « Sorties », « Assurances » to « Assurance
+  // ménage », for half of the lines concerned; one in four was given for
+  // another category and no longer holds.
+  final answers = <ShareClassification>[];
+  for (final line in lines) {
+    final target = switch (line.categoryId) {
+      'leisure' => copiedCategoryId('leisure', 2027),
+      'insurance' => 'household',
+      _ => null,
+    };
+    if (target == null || r.nextBool()) continue;
+    for (final year in [2027, 2028, 2029]) {
+      answers.add(
+        ShareClassification(
+          id: shareClassificationId(line.id, year),
+          lineId: line.id,
+          year: year,
+          categoryId: year == 2027 ? target : copiedCategoryId(target, year),
+          originCategoryId: r.nextInt(4) == 0 ? 'food' : line.categoryId!,
+        ),
+      );
+    }
+  }
+
   return Ledger(
     accounts: accounts,
     categories: categories,
@@ -218,5 +245,6 @@ Ledger randomLedger(Random r, {int transactions = 300}) {
     lines: lines,
     rules: rules,
     redistributions: redistributions,
+    shareClassifications: answers,
   );
 }

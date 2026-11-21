@@ -7,6 +7,7 @@ import '../../domain/ledger/category.dart';
 import '../../domain/ledger/ledger.dart';
 import '../../domain/ledger/redistribution.dart';
 import '../../domain/ledger/rule.dart';
+import '../../domain/ledger/share_classification.dart';
 import '../../domain/ledger/statement.dart';
 import '../../domain/period_model.dart';
 import '../../domain/ledger/transaction.dart';
@@ -30,19 +31,48 @@ class LedgerRepository {
   /// tables in the same transaction.
   Future<void> write(Modification modification) => _journal.write(modification);
 
+  /// Reads every derived table. The queries are sent together: the database
+  /// runs in a background isolate, and the rows of one are read while the
+  /// next ones run (step 4.4).
   Future<Ledger> load() async {
+    final (accounts, categories, transactions, lines, statements, deleted, rules, redistributions, answers) = await (
+      _rows(accountsTable, _account),
+      _rows(categoriesTable, _category),
+      _rows(transactionsTable, _transaction),
+      _rows(transactionLinesTable, _line),
+      _rows(statementsTable, _statement),
+      _db.customSelect('SELECT id FROM statements WHERE deleted = 1').get(),
+      _rows(rulesTable, _rule),
+      _rows(redistributionsTable, _redistribution),
+      _rows(shareClassificationsTable, _shareClassification),
+    ).wait;
     return Ledger(
-      accounts: await _rows(accountsTable, _account),
-      categories: await _rows(categoriesTable, _category),
-      transactions: await _rows(transactionsTable, _transaction),
-      lines: await _rows(transactionLinesTable, _line),
-      statements: await _rows(statementsTable, _statement),
-      deletedStatementIds: [
-        for (final row in await _db.customSelect('SELECT id FROM statements WHERE deleted = 1').get())
-          row.read<String>('id'),
-      ],
-      rules: await _rows(rulesTable, _rule),
-      redistributions: await _rows(redistributionsTable, _redistribution),
+      accounts: accounts,
+      categories: categories,
+      transactions: transactions,
+      lines: lines,
+      statements: statements,
+      deletedStatementIds: [for (final row in deleted) row.read<String>('id')],
+      rules: rules,
+      redistributions: redistributions,
+      shareClassifications: answers,
+    );
+  }
+
+  /// An answer needs its line, its year, the category chosen and the
+  /// category it was given for.
+  static ShareClassification? _shareClassification(Map<String, Object?> row) {
+    final lineId = _string(row['line_id']);
+    final year = row['year'];
+    final category = _string(row['category_id']);
+    final origin = _string(row['origin_category_id']);
+    if (lineId == null || year is! int || category == null || origin == null) return null;
+    return ShareClassification(
+      id: row['id']! as String,
+      lineId: lineId,
+      year: year,
+      categoryId: category,
+      originCategoryId: origin,
     );
   }
 

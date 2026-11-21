@@ -1031,7 +1031,8 @@ categories, 200 mapping rules, 160 lines to validate. Reading the derived
 tables, building the ledger, the proposals of the lines to validate and the
 tasks takes 60 to 99 ms over five runs; the write before it 47 to 97 ms.
 Below the 300 ms of the plan: nothing to correct. The test fails when the
-best of five runs exceeds 300 ms (the suite runs files concurrently).
+best of five runs exceeds 300 ms (the suite runs files concurrently; ten
+runs since 4.4).
 
 ### 4.0 Database of version 0.4.1
 
@@ -1177,3 +1178,64 @@ when the best of five exceeds 100 ms.
 - The random ledger of the view tests holds attached refunds, one link in
   five broken; the convergence test attaches and detaches refunds; the
   performance data holds 100 attached refunds among the 10 000 transactions.
+
+### 4.4 Shares to classify
+
+**Decisions.**
+
+- New journal entity `shareClassification` (table `share_classifications`),
+  the « LineYearCategory » of chapter 6 of the specification: line, year,
+  category chosen and category of origin the answer was given for. Its
+  identifier is computed from the line and the year
+  (`shareClassificationId`), so that two devices answering the same question
+  write one record, whose fields follow the latest answer.
+- Each flow of the calculation carries the line whose answers it follows:
+  its own line; for a line to validate, `<transaction>-line`, the identifier
+  the validation will give it (a question can thus be answered before the
+  line is validated, and the answer holds after); for an attached refund,
+  the expense's line (its shares follow the expense's answers, H3).
+- In a year other than the one of its category, a share goes to the
+  category of the same name if it can hold transactions; otherwise to the
+  category of the answer, while the answer holds (the line still has the
+  category it was given for, and the category chosen can hold transactions
+  in the tree of the year, H5); otherwise to « À classer ». Nothing is
+  stored when the name matches: an answer is only read when needed, so a
+  rename that restores a name makes it unused, never wrong.
+- The questions waiting (`YearViews.pendingShares`) are the lines with an
+  amount in « À classer » of a year shown, in either view, grouped by
+  category of origin and year, with the amount of each line in each view
+  (the cash-flow amount only comes from a refund paid in another year than
+  its expense). They are computed in one pass over the amounts that change
+  year, with the placement of the views; the view tests check on random data
+  that they add up exactly to the « À classer » lines of every view.
+- Answering (`classifyShares`, one modification for a group or one line)
+  refuses a year before the first tree, a category that cannot hold
+  transactions, an unknown line and a category of the other nature: an
+  expense share stays an expense (H5 says where the answer goes, not that it
+  may change the nature; « À classer » already counts in the nature of the
+  origin). For a year whose tree is still the copy to come, the same
+  modification writes the tree.
+- A category chosen by an answer can be deleted like any other: the question
+  comes back (H5).
+
+**Measure** (`test/data/performance_test.dart`, same data and machine,
+answers and a renamed category in the last year added): the reload after a
+write, now with the shares to classify, the other tasks and the key figures
+of the year, takes 84 to 107 ms after the first run when the test runs
+alone; both views of the last year 8 to 20 ms. Two corrections were needed
+on the way. Computing the pending shares by placing every year in both views
+took the reload to 114–239 ms; one pass over the amounts that change year
+brought the pending shares from about 70 to 15–27 ms. Then the repository
+sends its nine queries together (`Record.wait`) instead of one after the
+other: the rows of one are read while the background isolate runs the next.
+
+Within the full suite, other files (servers, the convergence test) compete
+for the processor: the same reload took from 126 ms to 3.9 s, a run of the
+suite failed once with a best of five at 428 ms. The test therefore takes
+the best of ten runs, all printed; the limits stay 300 and 100 ms.
+
+**Evidence.** `test/domain/views/shares_test.dart`;
+`test/e2e/year_view_e2e_test.dart` sends redistribution rules, an attached
+refund and an answer from one device to another through a real server,
+checks the same views on both, and copies a tree on two devices offline;
+the convergence test answers shares at random on four devices.

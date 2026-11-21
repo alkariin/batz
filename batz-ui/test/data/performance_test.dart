@@ -5,7 +5,9 @@ import 'package:batz/data/ledger/ledger_repository.dart';
 import 'package:batz/data/local/database.dart';
 import 'package:batz/data/local/journal.dart';
 import 'package:batz/domain/ledger/ledger.dart';
+import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/refund.dart';
+import 'package:batz/domain/views/share_operations.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
@@ -18,9 +20,9 @@ import '../support/large_ledger.dart';
 /// year are computed in less than 100 ms. Measured on the development machine
 /// in docs/decisions.md (steps 4.0 and 4.1).
 ///
-/// The suite runs its test files concurrently: each figure is the best of
-/// five runs, so that another file busy at the same moment does not decide
-/// the outcome. Every run is printed.
+/// The suite runs its test files concurrently, servers included: each figure
+/// is the best of ten runs, so that other files busy at the same moment do
+/// not decide the outcome. Every run is printed.
 void main() {
   test('with 10 000 transactions over five years and 200 rules, the ledger reloads after a write in less than '
       '300 ms, and both views of a year are computed in less than 100 ms', () async {
@@ -44,9 +46,11 @@ void main() {
     expect(ledger.linesToValidate, hasLength(LargeLedger.linesPerStatement));
 
     // What every screen needs after a write: the database read, the ledger
-    // built, the proposals of the lines to validate, the tasks.
+    // built, the proposals of the lines to validate, the tasks (shares to
+    // classify included, which go through the views of every year) and the
+    // key figures of the home screen.
     final reloads = <int>[], writes = <int>[];
-    for (var run = 0; run < 5; run++) {
+    for (var run = 0; run < 10; run++) {
       final line = ledger.linesToValidate[run];
       final write = Stopwatch()..start();
       await repository.write(ledger.updateImportedDetails(line.id, description: 'Achat $run', note: 'note $run'));
@@ -56,18 +60,18 @@ void main() {
       _tasks(ledger);
       reloads.add(reload.elapsedMilliseconds);
     }
-    expect(ledger.transactions[ledger.linesToValidate[4].id]!.note, 'note 4');
+    expect(ledger.transactions[ledger.linesToValidate[9].id]!.note, 'note 9');
     // ignore: avoid_print
     print('write: $writes ms; reload: $reloads ms');
     expect(reloads.reduce(min), lessThan(300));
 
     // Both views of a year, on a ledger just loaded: nothing computed yet.
     final computations = <int>[];
-    for (var run = 0; run < 5; run++) {
+    for (var run = 0; run < 10; run++) {
       final fresh = await repository.load();
       final watch = Stopwatch()..start();
-      final cash = fresh.views.of(2028, ViewKind.cash)!;
-      final economic = fresh.views.of(2028, ViewKind.economic)!;
+      final cash = fresh.views.of(LargeLedger.lastYear, ViewKind.cash)!;
+      final economic = fresh.views.of(LargeLedger.lastYear, ViewKind.economic)!;
       computations.add(watch.elapsedMilliseconds);
       expect(cash.savings.total, economic.savings.total + economic.paidForOtherYears - economic.paidInOtherYears);
       expect(economic.paidInOtherYears, isNot(0));
@@ -79,12 +83,17 @@ void main() {
   }, timeout: const Timeout(Duration(minutes: 3)));
 }
 
-/// Reads what the home screen and the navigation show.
+/// Reads what the home screen and the navigation show: the tasks, the
+/// shares to classify among them, and the key figures of the year (H8).
 void _tasks(Ledger ledger) {
+  expect(ledger.views.of(LargeLedger.lastYear, ViewKind.economic)!.savings.total, isNot(0));
   expect(ledger.proposals, hasLength(LargeLedger.linesPerStatement));
   expect(ledger.issues, isEmpty);
   expect(ledger.unusableRules, isEmpty);
   expect(ledger.conflictingLines, 0);
   expect(ledger.refundsByExpenseLine, hasLength(LargeLedger.refunds));
   expect(ledger.brokenRefunds, isEmpty);
+  expect(ledger.inapplicableRedistributions, isEmpty);
+  expect(ledger.pendingShareCount, greaterThan(0));
+  expect(ledger.shareClassifications, isNotEmpty);
 }

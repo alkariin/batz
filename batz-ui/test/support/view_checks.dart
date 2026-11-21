@@ -1,6 +1,7 @@
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
+import 'package:batz/domain/views/share_operations.dart';
 import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -59,6 +60,20 @@ void checkViews(Ledger ledger, {required String reason}) {
         expect(amounts.months.fold(0, (a, b) => a + b), amounts.total, reason: why);
       }
     }
+    // The questions waiting hold exactly what « À classer » shows.
+    for (final nature in CategoryNature.values) {
+      final groups = views.pendingShares.where((g) => g.year == year && g.nature == nature);
+      expect(
+        groups.expand((g) => g.shares).fold(0, (sum, s) => sum + s.economic),
+        economic.toClassify[nature]!.total,
+        reason: '$reason, pending economic $year',
+      );
+      expect(
+        groups.expand((g) => g.shares).fold(0, (sum, s) => sum + s.cash),
+        cash.toClassify[nature]!.total,
+        reason: '$reason, pending cash $year',
+      );
+    }
     // Both views differ only by the period offsets.
     expect(
       cash.savings.total,
@@ -75,4 +90,5 @@ void checkViews(Ledger ledger, {required String reason}) {
     ].fold(0, (a, b) => a + b);
     expect(cash.income.total + cash.expenses.total + cash.unclassified.total, paid, reason: '$reason, cash $year');
   }
+  expect(ledger.pendingShareCount, views.pendingShares.fold(0, (sum, g) => sum + g.shares.length));
 }

@@ -60,6 +60,9 @@ enum LedgerError {
   refundNotInflow,
   refundIsTransfer,
   refundTargetNotExpense,
+
+  // Shares to classify (phase 4).
+  shareNatureMismatch,
 }
 
 /// A business rule refuses the operation; nothing was written.

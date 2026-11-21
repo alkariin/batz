@@ -540,6 +540,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errorRefundTargetNotExpense => 'Un remboursement se rattache à une dépense validée.';
 
   @override
+  String get errorShareNatureMismatch =>
+      'Choisissez une catégorie de même nature que celle d\'origine : une dépense reste une dépense.';
+
+  @override
   String get edit => 'Modifier';
 
   @override

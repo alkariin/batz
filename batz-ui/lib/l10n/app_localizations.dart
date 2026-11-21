@@ -960,6 +960,12 @@ abstract class AppLocalizations {
   /// **'Un remboursement se rattache à une dépense validée.'**
   String get errorRefundTargetNotExpense;
 
+  /// No description provided for @errorShareNatureMismatch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez une catégorie de même nature que celle d\'origine : une dépense reste une dépense.'**
+  String get errorShareNatureMismatch;
+
   /// No description provided for @edit.
   ///
   /// In fr, this message translates to:

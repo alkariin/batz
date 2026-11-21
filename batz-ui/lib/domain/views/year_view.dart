@@ -20,6 +20,7 @@ import '../calendar_date.dart';
 import '../ledger/category.dart';
 import '../ledger/ledger.dart';
 import '../ledger/redistribution.dart';
+import '../ledger/share_classification.dart';
 import '../ledger/transaction.dart';
 
 /// The two views of a year (specification, 4.2).
@@ -212,6 +213,43 @@ class YearView {
   Map<String, int> get totals => {for (final e in categories.entries) e.key: e.value.total};
 }
 
+/// A line whose shares in a year have no category there (decision H5).
+class PendingShare {
+  const PendingShare({required this.lineId, required this.transaction, required this.economic, required this.cash});
+
+  final String lineId;
+
+  /// The transaction of the line: for the shares of attached refunds, the
+  /// expense they follow.
+  final LedgerTransaction transaction;
+
+  /// What « À classer » holds of the line in the year, in the economic view
+  /// and in the cash-flow view (only refunds paid in another year than
+  /// their expense give an amount there).
+  final int economic;
+  final int cash;
+}
+
+/// The lines of one category of origin whose shares in one year are to
+/// classify: one answer serves them all, each can be answered alone.
+class PendingShareGroup {
+  const PendingShareGroup({
+    required this.origin,
+    required this.originYear,
+    required this.nature,
+    required this.year,
+    required this.shares,
+  });
+
+  final Category origin;
+  final int originYear;
+  final CategoryNature nature;
+
+  /// The year the shares fall in.
+  final int year;
+  final List<PendingShare> shares;
+}
+
 /// Where an amount goes in the view of a year.
 sealed class _Target {
   const _Target();
@@ -237,6 +275,7 @@ class _Unclassified extends _Target {
 class _Flow {
   _Flow({
     required this.transaction,
+    required this.lineId,
     required this.origin,
     required this.originYear,
     required this.nature,
@@ -246,6 +285,11 @@ class _Flow {
   });
 
   final LedgerTransaction transaction;
+
+  /// The line whose category, period and answers the amount follows: its
+  /// own, the one it will get once validated for a line to validate, or
+  /// the expense's for an attached refund.
+  final String lineId;
 
   /// The category of the line in the tree of its payment year; null when
   /// there is none (« Non classé »). For a refund attached to an expense,
@@ -354,6 +398,7 @@ class YearViews {
     final flows = <_Flow>[];
     void add(
       LedgerTransaction t,
+      String lineId,
       String? categoryId,
       int amount,
       CalendarDate start,
@@ -366,6 +411,7 @@ class YearViews {
       flows.add(
         _Flow(
           transaction: t,
+          lineId: lineId,
           origin: origin,
           originYear: year,
           nature: origin == null ? null : tree!.natureOf(origin.id),
@@ -382,12 +428,13 @@ class YearViews {
         // period (principle 3 of phase 3); without a proposal, unclassified.
         final proposal = ledger.proposalOf(t);
         if (proposal?.isTransfer ?? false) continue;
-        add(t, proposal?.categoryId, t.amount, proposal?.periodStart ?? t.date, proposal?.periodEnd ?? t.date);
+        final lineId = t.line?.id ?? Ledger.fallbackLineId(t.id);
+        add(t, lineId, proposal?.categoryId, t.amount, proposal?.periodStart ?? t.date, proposal?.periodEnd ?? t.date);
         continue;
       }
       if (t.isTransfer) continue;
       if (t.lines.isEmpty) {
-        add(t, null, t.amount, t.date, t.date);
+        add(t, Ledger.fallbackLineId(t.id), null, t.amount, t.date, t.date);
         continue;
       }
       for (final line in t.lines) {
@@ -395,10 +442,10 @@ class YearViews {
         // period (principle 5).
         if (ledger.refundedExpenseOf(t, line) case final expense?) {
           final paid = expense.line;
-          add(t, paid.categoryId, line.amount, paid.periodStart, paid.periodEnd, of: expense.transaction);
+          add(t, paid.id, paid.categoryId, line.amount, paid.periodStart, paid.periodEnd, of: expense.transaction);
           continue;
         }
-        add(t, line.categoryId, line.amount, line.periodStart, line.periodEnd);
+        add(t, line.id, line.categoryId, line.amount, line.periodStart, line.periodEnd);
       }
     }
     return flows;
@@ -408,7 +455,9 @@ class YearViews {
 
   /// The category of [year] that an amount of [flow] goes to (principle 3):
   /// its own category in the year of its payment; elsewhere the category of
-  /// the same name, if it can hold transactions; otherwise « À classer ».
+  /// the same name, if it can hold transactions; otherwise the category of
+  /// the answer given for its line and that year, while it holds
+  /// ([answerOf]); otherwise « À classer ».
   _Target _target(_Flow flow, int year, CategoryTree tree) {
     final origin = flow.origin!;
     if (year == flow.originYear) return _InCategory(origin.id);
@@ -417,7 +466,105 @@ class YearViews {
       return named != null && tree.canHoldTransactions(named.id) ? named.id : null;
     });
     if (match != null) return _InCategory(match);
+    final answer = _answer(flow.lineId, origin.id, year, tree);
+    if (answer != null) return _InCategory(answer.categoryId);
     return _ToClassify(flow.nature!);
+  }
+
+  ShareClassification? _answer(String lineId, String originId, int year, CategoryTree tree) {
+    final answer = ledger.shareClassifications[(lineId, year)];
+    if (answer == null || answer.originCategoryId != originId || !tree.canHoldTransactions(answer.categoryId)) {
+      return null;
+    }
+    return answer;
+  }
+
+  /// The answer given for the shares of [lineId] in [year], while it holds:
+  /// the line still has the category it was given for, and the category
+  /// chosen can hold transactions in the tree of the year (decision H5).
+  ShareClassification? answerOf(String lineId, int year) {
+    final tree = treeOf(year);
+    final origin = originOf(lineId);
+    if (tree == null || origin == null) return null;
+    return _answer(lineId, origin.id, year, tree);
+  }
+
+  /// The category of the line [lineId] that its shares in other years are
+  /// matched from, in the tree of its payment year; null when it has none.
+  Category? originOf(String lineId) => _origins[lineId];
+
+  late final Map<String, Category> _origins = {
+    for (final flow in _flows)
+      if (flow.origin != null) flow.lineId: flow.origin!,
+  };
+
+  /// The transaction whose line is [lineId], and the year of the tree of its
+  /// category.
+  LedgerTransaction? transactionOfLine(String lineId) => _lineTransactions[lineId];
+
+  late final Map<String, LedgerTransaction> _lineTransactions = {
+    for (final t in ledger.transactions.values) ...{
+      Ledger.fallbackLineId(t.id): t,
+      for (final line in t.lines) line.id: t,
+    },
+  };
+
+  /// The questions waiting for an answer (decision H5): every line with
+  /// amounts in « À classer » of a year shown, in either view, grouped by
+  /// category of origin and year, years then names in order.
+  late final List<PendingShareGroup> pendingShares = _pendingShares();
+
+  List<PendingShareGroup> _pendingShares() {
+    final first = firstYear;
+    if (first == null) return const [];
+    final groups = <(String, int), Map<String, (int, int)>>{};
+    final origins = <(String, int), (Category, int, CategoryNature)>{};
+    void add(_Flow flow, int year, int economic, int cash) {
+      final key = (flow.origin!.id, year);
+      origins[key] = (flow.origin!, flow.originYear, flow.nature!);
+      final shares = groups.putIfAbsent(key, () => {});
+      final (e, c) = shares[flow.lineId] ?? (0, 0);
+      shares[flow.lineId] = (e + economic, c + cash);
+    }
+
+    // Only the amounts that fall in another year than the one of their
+    // category can be « À classer »: one pass over the flows, the same
+    // placement as the views.
+    for (final flow in _flows) {
+      if (flow.origin == null) continue;
+      final own = flow.originYear;
+      if (flow.start.year == own && flow.end.year == own && flow.paid.year == own) continue;
+      final targets = <int, _Target>{};
+      _Target target(int year) => targets.putIfAbsent(year, () => _target(flow, year, treeOf(year)!));
+      for (final (year, _, cents) in flow.shares) {
+        if (year != own && year >= first && target(year) is _ToClassify) add(flow, year, cents, 0);
+      }
+      final paid = flow.paid.year;
+      if (paid != own && paid >= first && target(paid) is _ToClassify) add(flow, paid, 0, flow.amount);
+    }
+    final result = [
+      for (final MapEntry(key: key, value: shares) in groups.entries)
+        PendingShareGroup(
+          origin: origins[key]!.$1,
+          originYear: origins[key]!.$2,
+          nature: origins[key]!.$3,
+          year: key.$2,
+          shares:
+              [
+                for (final MapEntry(key: lineId, value: (economic, cash)) in shares.entries)
+                  PendingShare(lineId: lineId, transaction: transactionOfLine(lineId)!, economic: economic, cash: cash),
+              ]..sort((a, b) {
+                final byDate = a.transaction.date.compareTo(b.transaction.date);
+                return byDate != 0 ? byDate : a.lineId.compareTo(b.lineId);
+              }),
+        ),
+    ];
+    return result..sort((a, b) {
+      if (a.year != b.year) return a.year.compareTo(b.year);
+      if (a.originYear != b.originYear) return a.originYear.compareTo(b.originYear);
+      final byName = normalizeName(a.origin.name).compareTo(normalizeName(b.origin.name));
+      return byName != 0 ? byName : a.origin.id.compareTo(b.origin.id);
+    });
   }
 
   final _sameName = <(String, int), String?>{};
