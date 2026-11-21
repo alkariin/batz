@@ -707,13 +707,23 @@ its day (the statement prints a balance after it, equal to the running
 balance), and the original script dates line 50 on that same day, after the
 balance that closes it, which contradicts the statement; the amounts are the
 same. `scripts/check-real-statements.sh` compares strictly and names any
-differing line and field: it reports this one, and fails.
+differing line and field: it reported this one, and failed.
 
-**Evidence** (2026-11-21, development machine): the extraction accepts the
-three real statements present (62, 49 and 70 lines); dates and amounts are
-identical to the CSV of the original script for the two of 2025, and for the
-one of 2026 except that date, which `scripts/check-real-statements.sh`
-reports as a difference. On the
+With the user's agreement (2026-11-21), the reference was corrected rather
+than the comparison loosened or the extraction made to copy the defect: in
+the local copy of the original script (`personal/legacy/`, not tracked), a
+detached amount that carries a date now takes the line above as its label and
+its own date, as a detached amount without a date already did. Checked
+locally: the corrected script gives the CSV of both statements of 2025 byte
+for byte, and on the fictitious statements the expected dates and amounts;
+on June 2026 it changes only the date of line 50 (and the texts of lines 49
+and 50, the label moving back to its line). The CSV of June 2026 was written
+again by it; the one of the uncorrected script is kept in `personal/backup/`.
+
+**Evidence** (2026-11-21, development machine): `scripts/check-real-statements.sh`
+accepts the three real statements present (62, 49 and 70 lines), with dates
+and amounts identical to the CSV of the original script, corrected as above
+for June 2026. On the
 fictitious statements, the extraction gives exactly the expected JSON, labels
 and printed balances included.
 
