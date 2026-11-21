@@ -4,7 +4,8 @@
 #
 # Usage: scripts/check-personal-files.sh [repo-dir]
 #
-# 1. File names: bank statements and their exports, personal mapping configs,
+# 1. File names: bank statements and their exports, exports of the app
+#    (`batz-export-*.zip` and what they hold), personal mapping configs,
 #    signing keys and env files must never be committed. Fictitious
 #    statements used by tests are allowed under a `testdata/` or `fixtures/`
 #    directory.
@@ -18,6 +19,8 @@ set -euo pipefail
 repo="${1:-.}"
 
 forbidden='(^|/)priv[eé]? - |(^|/)prive - |(^|/)config-[0-9]{4}\.yaml|(^|/)specification\.txt$|\.(jks|keystore|p12|pfx|pem|key)$|(^|/)key\.properties$|(^|/)\.env(\..*)?$'
+# An export of the app, zipped or unzipped (its CSV files are refused below).
+forbidden+='|(^|/)batz-export-[^/]*(\.zip$|/)|(^|/)LISEZMOI\.txt$'
 # Statements and their exports outside test fixtures.
 data_files='\.(pdf|csv)$'
 fixtures='(^|/)(testdata|fixtures)/'

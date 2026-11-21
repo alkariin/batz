@@ -8,6 +8,9 @@ config-*.yaml
 config-*.yaml.*
 specification.txt
 /personal/
+# Exports of the app (CSV files in a ZIP): real data, never tracked
+batz-export-*.zip
+batz-export-*/
 
 # -----------------------------
 # Secrets

@@ -14,15 +14,19 @@ import 'package:batz/domain/ledger/proposal.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/refund.dart';
 import 'package:batz/domain/ledger/rule.dart';
+import 'package:batz/domain/modules/electricity.dart';
+import 'package:batz/domain/modules/salary.dart';
 import 'package:batz/domain/modules/settings.dart';
+import 'package:batz/domain/modules/taxes.dart';
+import 'package:batz/domain/modules/vacations.dart';
 import 'package:batz/domain/period_model.dart';
 import 'package:batz/domain/views/balances.dart';
 import 'package:batz/domain/views/share_operations.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Databases written by versions 0.1.0, 0.2.0, 0.3.0, 0.4.1, 0.5.0 and 0.6.0
-/// (see test/fixtures/README.md).
+/// Databases written by versions 0.1.0, 0.2.0, 0.3.0, 0.4.1, 0.5.0, 0.6.0
+/// and 0.7.0 (see test/fixtures/README.md).
 const _fixture = 'test/fixtures/v0.1.0/batz.db';
 const _fixtureDeviceId = 'a0000000-0000-4000-8000-000000000001';
 const _fixture020 = 'test/fixtures/v0.2.0/batz.db';
@@ -37,6 +41,8 @@ const _fixture050 = 'test/fixtures/v0.5.0/batz.db';
 const _fixture050DeviceId = 'a0000000-0000-4000-8000-000000000050';
 const _fixture060 = 'test/fixtures/v0.6.0/batz.db';
 const _fixture060DeviceId = 'a0000000-0000-4000-8000-000000000060';
+const _fixture070 = 'test/fixtures/v0.7.0/batz.db';
+const _fixture070DeviceId = 'a0000000-0000-4000-8000-000000000070';
 
 void main() {
   late Directory dir;
@@ -45,6 +51,65 @@ void main() {
     File(_fixture).copySync('${dir.path}/$databaseFileName');
   });
   tearDown(() => dir.deleteSync(recursive: true));
+
+  test('a database of version 0.7.0 opens with this version: an entry in every module kept, nothing rebuilt', () async {
+    File(_fixture070).copySync('${dir.path}/$databaseFileName');
+    final db = await openLocalDatabase(directory: dir, secrets: MemorySecretStore(), encrypt: false);
+    final journal = await Journal.open(db);
+    expect(journal.deviceId, _fixture070DeviceId);
+    expect(journal.derivedTablesRebuilt, isFalse, reason: 'this version adds no entity to the journal');
+    final entries = await journal.entries();
+    expect(entries, hasLength(177));
+
+    final repository = LedgerRepository(db, journal);
+    final ledger = await repository.load();
+    expect(ledger.sortedAccounts.map((a) => a.name), ['Compte privé', 'Espèces']);
+    expect(ledger.transactions, hasLength(5));
+
+    // Salary sheet: three deductions, no gap.
+    final sheet = ledger.salarySheet(2026)!;
+    expect((sheet.gross, sheet.net, sheet.gap), (9600000, 8505600, 0));
+    expect(sheet.deductions.map((d) => (d.id, d.label, d.amount)), [
+      ('ded-1', 'AVS', 508800),
+      ('ded-2', 'AC', 105600),
+      ('ded-3', 'LPP', 480000),
+    ]);
+
+    // Fiscal year: 2'000.00 + 7'440.00 + 232.50, the paid instalment.
+    final taxes = ledger.taxYear(2026);
+    expect((taxes.record!.taxableWealth, taxes.record!.marginalRate), (5000000, 2500));
+    expect(taxes.lines.map((l) => l.amount), [200000, 744000, 0, 23250, 0]);
+    expect((taxes.total, taxes.paid), (967250, 150000));
+
+    // The vacations module reads « Voyages »: the trip and the manual line.
+    expect(ledger.moduleCategoryName(ModuleKind.vacations), 'Voyages');
+    final trips = ledger.vacations.trips;
+    expect(trips.map((t) => (t.place, t.days, t.amount, t.date.encode(), t.isManual)), [
+      ('Gruyère', 2, 30000, '2026-09-12', true),
+      ('Lisbonne', 8, 125000, '2026-07-10', false),
+    ]);
+    expect(trips.last.pricePerDay, 15625);
+
+    // Electricity: 950 kWh over the first quarter.
+    final power = ledger.electricityYear(2026);
+    expect((power.price, power.wh, power.days, power.linesWithoutKwh), (24000, 950000, 90, 0));
+
+    // The subscription whose price changed in September.
+    final music = ledger.modules.subscriptions['sub-music']!;
+    expect((music.name, music.note), ('Musique', 'Formule famille'));
+    expect(music.tranches.map((t) => (t.amount, t.start.encode(), t.end?.encode())), [
+      (1295, '2026-01-01', '2026-08-31'),
+      (1495, '2026-09-01', null),
+    ]);
+
+    // The new version writes after the latest entry of 0.7.0.
+    final before = entries.last.hlc;
+    final hlc = await journal.write(ledger.setElectricity('line-t-power', 1000000));
+    expect(hlc! > before, isTrue);
+    final after = await repository.load();
+    expect(after.electricityYear(2026).wh, 1000000);
+    await db.close();
+  });
 
   test('a database of version 0.6.0 opens with this version: declared balances and debts, one of them split, '
       'kept', () async {

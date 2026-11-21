@@ -29,6 +29,10 @@ void main() {
     expect(compareVersions('1.0.0', '0.9.9'), 1);
     expect(compareVersions('0.1.0', 'v0.1.0-3-gabc1234'), 0);
     expect(compareVersions('0.1.0', 'dev'), isNull);
+    // A suffix does not count (phase 7): 0.8.0-alpha is 0.8.0.
+    expect(compareVersions('0.8.0-alpha', '0.8.0'), 0);
+    expect(compareVersions('0.8.0-alpha', '0.7.0'), 1);
+    expect(compareVersions('v0.8.0-alpha', '0.8.1'), -1);
   });
 
   test('appVersion matches pubspec.yaml', () {

@@ -2042,3 +2042,94 @@ refused, at the use case and over HTTP. An app 0.7.0 still works with the
 server 0.6.0 of the NAS until it is upgraded. The rules of the modules are
 described in `docs/modules.md`; the architecture, the API, the deployment
 (with the upgrade to 0.7.0) and the README follow.
+
+## 2026-11-21 — Phase 7 decisions taken during development
+
+Functional choices H1 to H8 are in `docs/plan/phase-7.md`. The decisions below
+were taken while implementing it.
+
+### 7.0 Writing the ZIP: `archive` 4.7.1
+
+**Decision.** `archive` 4.7.1 (MIT licence, Brendan Duncan; its one new
+dependency `posix` 6.5.4 is MIT too). The export builds an `Archive` of
+`ArchiveFile.bytes` entries in memory and writes it with
+`ZipEncoder().encodeBytes`, then hands the bytes to the save dialog: no
+file of the export is ever written elsewhere. Only `package:archive/archive.dart`
+is imported, never `archive_io.dart` (the file-system helpers).
+
+**Evidence** (read in the package at that version, `README.md` and
+`doc/platforms.md`, 2026-11-21): the package is pure Dart and runs on the
+Dart VM, Flutter on mobile and desktop included; zip entries compressed with
+deflate go through the zlib of `dart:io` there. Entries carry their own
+modification time (`lastModTime`, in seconds since 4.6.0), set when the
+entry is created: two exports of the same data give the same CSV files, not
+the same ZIP bytes. `ZipDecoder().decodeBytes(…, verify: true)` checks the
+CRC of every entry, which the tests use to read an export back.
+
+### 7.0 Unlocking the phone: `local_auth` 3.0.2
+
+**Decision.** `local_auth` 3.0.2 (BSD-3-Clause, the Flutter authors), with
+its Android implementation `local_auth_android` 2.3.0 (same licence; it
+brings `androidx.biometric` 1.1.0 and `androidx.fragment`). The app calls it
+on Android only; `local_auth_windows` 2.0.2 comes with it and is never
+called (no lock on desktops, decision H3); there is no Linux
+implementation, and none is needed.
+
+**What it asks of the Android app** (`local_auth_android` 2.3.0 `README.md`,
+section « Setup », and its sources, read 2026-11-21):
+
+- The activity must be a `FragmentActivity`: `MainActivity` extends
+  `FlutterFragmentActivity`. Otherwise `authenticate` fails with
+  `NOT_FRAGMENT_ACTIVITY`.
+- The permission `android.permission.USE_BIOMETRIC`. The plugin's own
+  manifest declares it and the build merges it; the app declares it too, as
+  the README asks, so that the main manifest says what the lock needs.
+- The `LaunchTheme` must have a `Theme.AppCompat` parent, « to prevent
+  crashes on Android 8 and below » (the app's minimum is Android 7, API 24,
+  the plugin's minimum too).
+- `isDeviceSupported()` is true when the device has a screen lock
+  (`KeyguardManager.isDeviceSecure`) or an enrolled biometric;
+  `authenticate(localizedReason:, biometricOnly: false)` lets the system
+  dialog fall back to the device's PIN, pattern or password (decision H3:
+  fingerprint, face or code). Failures are `LocalAuthException`s with a
+  `LocalAuthExceptionCode` (`userCanceled`, `systemCanceled`,
+  `noCredentialsSet`, `temporaryLockout`, `biometricLockout`, `timeout`, …);
+  a refused fingerprint is retried inside the system dialog and only its
+  cancellation returns.
+- `persistAcrossBackgrounding` stays false: the gate of the app decides
+  what happens when it leaves the screen (step 7.3).
+
+### 7.0 Database of version 0.7.0
+
+`batz-ui/test/fixtures/v0.7.0/batz.db` was written by version 0.7.0 (tag
+`v0.7.0`, commit `f6fb6ab`) through its own operations, with a fixed clock,
+in a scratch worktree: two accounts, the 2026 tree, five expenses and
+incomes, and an entry in every module (the vacations module set to
+« Voyages », a salary sheet with three deductions, a fiscal year of three
+lines, the sheet of a trip and a manual line, kWh on an invoice, a
+subscription of two tranches). `test/data/upgrade_test.dart` opens it with
+the current version, checks every module's results, and that the derived
+tables are not rebuilt (principle 7: no new entity), then writes after its
+latest entry.
+
+### 7.0 Versions with a suffix, build numbers and tags
+
+**Decisions.**
+
+- `scripts/check-release-tag.sh TAG` is the check of the release workflow:
+  the tag must be `v` followed by the version name of `pubspec.yaml`, suffix
+  included (`0.8.0-alpha+9` → `v0.8.0-alpha`; `v0.8.0` is refused). It can
+  be run by hand.
+- `scripts/check-build-number.sh` reads the build number of
+  `pubspec.yaml` at every tag `v*` and fails unless the current one is
+  greater than all of them, the tag of the current version name itself left
+  out (so it passes on the commit of a release). It fails too when there is
+  no tag to compare with: CI checks out with `fetch-depth: 0`. CI runs it on
+  every push, and the release workflow before building.
+- The app and the server ignore anything after the three numbers when they
+  compare versions (unchanged since phase 2): `0.8.0-alpha` is `0.8.0`.
+  Tests of both now say so.
+- An export is never tracked: `.gitignore` ignores `batz-export-*.zip` and
+  `batz-export-*/`, and `scripts/check-personal-files.sh` refuses those
+  names and a `LISEZMOI.txt` (the CSV files of an unzipped export were
+  already refused, as any CSV outside test fixtures).

@@ -25,6 +25,16 @@ jobs:
       - uses: actions/checkout@v7
       - run: scripts/check-personal-files.sh
 
+  build-number:
+    name: Build number above the published versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Every tag: the build number of each published version.
+          fetch-depth: 0
+      - run: scripts/check-build-number.sh
+
   server:
     name: Server (build, vet, tests, end-to-end)
     runs-on: ubuntu-latest

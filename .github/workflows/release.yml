@@ -1,6 +1,7 @@
 name: Release
 
-# On publishing a GitHub release (tag vX.Y.Z), builds and attaches:
+# On publishing a GitHub release (tag `v` + the app's version name, suffix
+# included, e.g. v0.8.0-alpha), builds and attaches:
 #   - the Android APK, signed with the release key (arm64),
 #   - the Ubuntu and Windows builds, as archives,
 #   - the server image, as a file to `docker load` on the NAS.
@@ -26,20 +27,20 @@ env:
 
 jobs:
   check-version:
-    name: Tag matches the app version
+    name: Tag and build number match the app version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ env.TAG || github.ref }}
+          # The build number is compared with the versions published before.
+          fetch-depth: 0
+      # `v` + the version name, suffix included: 0.8.0-alpha+9 is v0.8.0-alpha.
       - name: Compare
         if: env.TAG != ''
-        run: |
-          version=$(sed -n 's/^version: *\([0-9][0-9.]*\)+.*/\1/p' batz-ui/pubspec.yaml)
-          if [ "v$version" != "$TAG" ]; then
-            echo "::error::batz-ui/pubspec.yaml says $version, the release is $TAG"
-            exit 1
-          fi
+        run: scripts/check-release-tag.sh "$TAG"
+      - name: Build number above the previous versions
+        run: scripts/check-build-number.sh
 
   apk:
     name: Signed Android APK

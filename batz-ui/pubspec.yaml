@@ -10,6 +10,7 @@ environment:
   sdk: ^3.13.5
 
 dependencies:
+  archive: ^4.7.1
   crypto: ^3.0.8
   dio: ^5.11.1
   drift: ^2.35.4
@@ -22,6 +23,7 @@ dependencies:
     sdk: flutter
   flutter_secure_storage: ^11.2.0
   intl: any
+  local_auth: ^3.0.2
   path_provider: ^2.1.6
   sqlite3: ^3.9.1
 

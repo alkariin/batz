@@ -58,3 +58,15 @@
   50 % split into 40 and 60, the part of 60 checked, and one « je dois ».
   Used by `test/data/upgrade_test.dart`. Never regenerate it with a later
   version.
+- `v0.7.0/batz.db`: a desktop (unencrypted) database created by version 0.7.0
+  of the app (commit `f6fb6ab`, tag `v0.7.0`) through `openLocalDatabase`,
+  `Journal.open` and the operations of `Ledger`, with a fixed clock, in a
+  scratch worktree. Device identifier `a0000000-0000-4000-8000-000000000070`.
+  Its 177 journal entries hold two accounts, the 2026 tree with « Salaire »,
+  « Impôts », « Voyages » and « Électricité », five expenses and incomes, and
+  an entry in every module: the vacations module set to « Voyages », the
+  salary sheet of 2026 (96'000.00 gross, AVS, AC and LPP, 85'056.00 net), the
+  fiscal year 2026 (three lines), the sheet of the trip to Lisbon (flight and
+  hotel, 8 days) and a manual line, 950 kWh on the electricity invoice, and a
+  subscription of two tranches. Used by `test/data/upgrade_test.dart`. Never
+  regenerate it with a later version.
