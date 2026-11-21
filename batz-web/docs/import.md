@@ -212,4 +212,5 @@ undo an import on every device, delete the last statement in the app instead
 - `scripts/check-real-statements.sh` extracts the real statements kept at the
   root of the repository (never committed) and prints only, per file, the
   verdict and the number of lines, and whether the dates and amounts are those
-  of the CSV of the original script.
+  of the CSV of the original script; it fails on any difference, naming the
+  line and the field, never the values.

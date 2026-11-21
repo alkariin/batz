@@ -66,24 +66,16 @@ for pdf in "${statements[@]}"; do
         line+="; $(wc -l <"$work/extracted") lines extracted, $lines in the CSV of the original script"
         failed=1
       else
-        # Each difference must be the known defect of the original script:
-        # an amount that pdftotext put on its own line, with the date of a
-        # new day, gets the date of the movement before it there
-        # (docs/decisions.md, 3.1). Same amount, the original's date is the
-        # one of the line before, ours is later.
+        # Each differing line, and which of its date or amount differs,
+        # never the values.
         report=$(paste "$work/extracted" "$work/original" | awk -F'\t' '
-          { if ($1 != $3 || $2 != $4) {
-              if ($2 == $4 && NR > 1 && $3 == previous && $1 > $3) known = known (known ? ", " : "") NR
-              else { other = NR; exit }
-            }
-            previous = $1 }
-          END { if (other) print "other " other; else print "known " known }')
-        if [[ "$report" == known* ]]; then
-          line+="; dates and amounts identical to the original script ($lines lines), except the date of line(s) ${report#known } where the original script kept the date of the movement before (its known defect, docs/decisions.md)"
-        else
-          line+="; differs from the original script at line ${report#other }"
-          failed=1
-        fi
+          $1 != $3 || $2 != $4 {
+            what = ($1 != $3 && $2 != $4) ? "date and amount" : ($1 != $3 ? "date" : "amount")
+            out = out (out ? ", " : "") "line " NR " (" what ")"
+          }
+          END { print out }')
+        line+="; differs from the original script: $report"
+        failed=1
       fi
     else
       line+="; no CSV of the original script"

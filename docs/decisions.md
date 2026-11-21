@@ -697,20 +697,23 @@ waiting) and a new write after the old entries.
   prints only the outcome.
 
 **A defect of the original script.** On the real statement of June 2026, one
-date differs from the CSV of the original script: an amount that pdftotext
-put on a line of its own after the vertical footer, with the date of a new
-day on that line. The original script reads such a line as a movement whose
-text is the date and keeps the date of the movement before; the extraction
-reads the printed date. Checked locally without displaying the line: the
-extracted date is the one printed on that line, the original script's is the
-date of the line before, and the amount is the same. The check script
-accepts a difference only when it has exactly that signature (same amount,
-the original's date equal to the line before, the extracted date later) and
-names the line; any other difference fails it.
+date differs from the CSV of the original script (line 50): an amount that
+pdftotext put on a line of its own after the vertical footer, with the date of
+a new day on that line. The original script reads such a line as a movement
+whose text is the date and keeps the date of the movement before; the
+extraction reads the printed date. Checked locally, without displaying the
+line: the booking date printed on line 50 is the extracted one; line 49 ends
+its day (the statement prints a balance after it, equal to the running
+balance), and the original script dates line 50 on that same day, after the
+balance that closes it, which contradicts the statement; the amounts are the
+same. `scripts/check-real-statements.sh` compares strictly and names any
+differing line and field: it reports this one, and fails.
 
-**Evidence** (2026-11-21, development machine): `scripts/check-real-statements.sh`
-accepts the three real statements present (62, 49 and 70 lines), with dates
-and amounts identical to the original script except that one date. On the
+**Evidence** (2026-11-21, development machine): the extraction accepts the
+three real statements present (62, 49 and 70 lines); dates and amounts are
+identical to the CSV of the original script for the two of 2025, and for the
+one of 2026 except that date, which `scripts/check-real-statements.sh`
+reports as a difference. On the
 fictitious statements, the extraction gives exactly the expected JSON, labels
 and printed balances included.
 
