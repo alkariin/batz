@@ -47,9 +47,11 @@ class BatzApp extends StatelessWidget {
           listener: (context, _) => context.read<SyncCubit>().pairingChanged(),
           // The door stands in front of the navigator, so in front of every
           // screen and dialog (principle 5 of phase 7).
-          child: _material(
-            home: const AppShell(),
-            builder: (context, child) => LockGate(child: child!),
+          child: LockedBackGuard(
+            child: _material(
+              home: const AppShell(),
+              builder: (context, child) => LockGate(child: child!),
+            ),
           ),
         ),
       ),

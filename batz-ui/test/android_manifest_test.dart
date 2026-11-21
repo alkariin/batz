@@ -32,9 +32,10 @@ void main() {
     test('themes with an AppCompat parent, by day and by night', () {
       for (final folder in ['values', 'values-night']) {
         final styles = File('android/app/src/main/res/$folder/styles.xml').readAsStringSync();
-        final parents = RegExp(
-          r'<style name="(\w+)" parent="([^"]+)"',
-        ).allMatches(styles).map((m) => (m.group(1)!, m.group(2)!)).toList();
+        final parents = RegExp(r'<style name="(\w+)" parent="([^"]+)"')
+            .allMatches(styles)
+            .map((m) => (m.group(1)!, m.group(2)!))
+            .toList();
         expect(parents.map((p) => p.$1), ['LaunchTheme', 'NormalTheme'], reason: folder);
         for (final (name, parent) in parents) {
           expect(parent, startsWith('Theme.AppCompat.'), reason: '$name in $folder');

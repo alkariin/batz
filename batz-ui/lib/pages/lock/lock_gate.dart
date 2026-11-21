@@ -73,6 +73,45 @@ class _LockGateState extends State<LockGate> {
   }
 }
 
+/// While the app is locked, the « back » of Android closes nothing: without
+/// this, it would close the screen kept behind the lock, and what was being
+/// typed there (principle 6 of phase 7).
+///
+/// It must stand above the `MaterialApp`: the observers of the binding are
+/// asked in the order they were added, and the first that handles « back »
+/// stops it; the app's own, added later, would pop a route of the navigator.
+class LockedBackGuard extends StatefulWidget {
+  const LockedBackGuard({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<LockedBackGuard> createState() => _LockedBackGuardState();
+}
+
+class _LockedBackGuardState extends State<LockedBackGuard> with WidgetsBindingObserver {
+  late final LockCubit _cubit = context.read<LockCubit>();
+
+  @override
+  void initState() {
+    super.initState();
+    if (_cubit.enabled) WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Handled, by doing nothing, while the app is locked.
+  @override
+  Future<bool> didPopRoute() async => _cubit.state.locked;
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 class _LockScreen extends StatelessWidget {
   const _LockScreen({required this.state, required this.onUnlock});
 

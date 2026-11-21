@@ -146,6 +146,12 @@ void main() {
       isTrue,
     );
 
+    // The « back » of Android closes nothing behind the lock.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(_lockScreen, findsOneWidget);
+    expect(find.text('Épargne en cours de saisie', skipOffstage: false), findsOneWidget);
+
     // Leaving and coming back while locked changes nothing; the dialog is
     // still the same one.
     await _away(tester, clock, const Duration(minutes: 10));
@@ -156,6 +162,16 @@ void main() {
     expect(_lockScreen, findsNothing);
     expect(find.text('Nouveau compte'), findsOneWidget, reason: 'the same screen');
     expect(find.text('Épargne en cours de saisie'), findsOneWidget, reason: 'what was being typed');
+
+    // Unlocked, « back » closes the form as usual: the guard only holds
+    // while the app is locked.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Nouveau compte'), findsNothing);
+    await tester.tap(find.byTooltip('Nouveau compte'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('accountName')), 'Épargne en cours de saisie');
+    await tester.pump();
 
     // The clock of the phone goes back while the app is away: locked.
     await _away(tester, clock, const Duration(minutes: -30));
