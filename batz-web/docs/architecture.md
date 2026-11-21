@@ -82,8 +82,11 @@ batz-ui/lib
 │   │             attached to an expense, answers for shares, declared
 │   │             balances, debts, search
 │   ├── views     the annual view: cash-flow and economic views of a year,
-│   │             composition of an amount, shares to classify; the balances
-│   │             of the accounts, the wealth, its curve and its explanation
+│   │             composition of an amount, shares to classify, the lines
+│   │             the modules read; the balances of the accounts, the
+│   │             wealth, its curve and its explanation
+│   ├── modules   linked categories, salary sheet, flow diagram, taxes,
+│   │             trips, electricity, subscriptions
 │   ├── allocation.dart, fraction.dart, calendar_date.dart   spreading over months
 │   ├── period_model.dart   periods of the mapping rules
 │   └── ids.dart  random and computed identifiers
@@ -100,8 +103,10 @@ batz-ui/lib
 │                 (search, filters), import and statements, validation and
 │                 rules, year (views, composition), redistribution, refunds,
 │                 shares to classify, wealth (accounts, curve, table, the
-│                 screen of an account), debts, accounts, categories, server
-│                 settings, cubits (ledger, server, sync, import)
+│                 screen of an account), debts, modules (salary sheet, flow
+│                 diagram, taxes, vacations, electricity, subscriptions),
+│                 accounts, categories, server settings, cubits (ledger,
+│                 server, sync, import)
 ├── components    shared widgets
 ├── helpers       Swiss formats, theme
 └── l10n          French texts (ARB) and generated localisations
@@ -173,6 +178,12 @@ writes of the others.
 | `shareClassification` | `share_classifications` | lineId, year, categoryId, originCategoryId |
 | `balance` | `balances` | accountId, date, amount (identifier computed from the account and the date) |
 | `debt` | `debts` | direction, person, amount, basisPoints, eventDate, invoiceDate, requestDate, receivedDate, description, repaid, enteredOn, checkedOn |
+| `moduleSetting` | `module_settings` | module, categoryName (identifier computed from the module) |
+| `salarySheet`, `salaryDeduction` | `salary_sheets`, `salary_deductions` | year, gross, net; sheetId, label, amount, rank |
+| `taxYear`, `taxLine` | `tax_years`, `tax_lines` | year, taxableWealth, marginalRate; year, tax, base, baseRate, coefficient |
+| `tripSheet` | `trip_sheets` | lineId (absent for a manual line), place, days, date, amount |
+| `electricityReading` | `electricity_readings` | lineId, wh |
+| `subscription`, `subscriptionTranche` | `subscriptions`, `subscription_tranches` | name, note; subscriptionId, amount, frequency, start, end |
 
 `LedgerRepository` reads every table, by identifier, into an immutable
 `Ledger` and leaves out records that are incomplete or hold a value the
@@ -230,6 +241,12 @@ business rules and returns the `Modification` to write, or throws a
   curve and the table of a year, each line computed for itself; the views
   it reads count what is paid up to today. Nothing is stored but the
   balances and the debts. See [`docs/wealth.md`](../../docs/wealth.md).
+- **Modules**: each reads the lines the annual view counts
+  (`YearViews.linesIn`, `linesNamed`), as the view classifies and spreads
+  them, and never classifies again; only what the user enters is stored.
+  The trips, totals, ratios, the control of the taxes and the flow diagram
+  are computed when their screen opens. See
+  [`docs/modules.md`](../../docs/modules.md).
 
 On Android the database is encrypted with SQLCipher (selected per platform
 through the `sqlite3` package hooks, see `docs/decisions.md`). Its key, 32
@@ -313,7 +330,14 @@ keeps the pin, so another machine at that address is refused.
   computation of the views of a year and of the « Fortune » screen with
   10 000 transactions, 100 balances and 200 debts, alone on the machine
   (every test file holds a shared lock, the measurement takes it exclusive
-  for the whole test); databases written by versions 0.1.0 to 0.5.0 are
-  opened by `test/data/upgrade_test.dart`. `benchmark/first_exchange_test.dart` and
+  for the whole test); databases written by versions 0.1.0 to 0.6.0 are
+  opened by `test/data/upgrade_test.dart`. Each module has its tests: the
+  examples of the plan, properties on random data (the flow diagram
+  balanced, each line of the vacation category in one trip, the price of
+  the electricity against the economic view, the tax total against its
+  lines), and the check that no entry changes the views nor the wealth;
+  `test/e2e/modules_e2e_test.dart` sends them between devices, and the
+  convergence test includes their operations. The performance test also
+  bounds each module screen and the diagram. `benchmark/first_exchange_test.dart` and
   `benchmark/journal_write_test.dart`, run by hand, measure a first exchange
   of 20 000 entries and the writing of 1 000 fields.

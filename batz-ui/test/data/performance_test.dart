@@ -7,6 +7,12 @@ import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/refund.dart';
+import 'package:batz/domain/modules/electricity.dart';
+import 'package:batz/domain/modules/flow.dart';
+import 'package:batz/domain/modules/salary.dart';
+import 'package:batz/domain/modules/subscriptions.dart';
+import 'package:batz/domain/modules/taxes.dart';
+import 'package:batz/domain/modules/vacations.dart';
 import 'package:batz/domain/views/share_operations.dart';
 import 'package:batz/domain/views/wealth.dart';
 import 'package:batz/domain/views/year_view.dart';
@@ -17,12 +23,13 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/large_ledger.dart';
 import '../support/machine_lock.dart';
 
-/// Acceptance criteria of phases 4 and 5: with 10 000 transactions over five
-/// years, 12 accounts, 100 declared balances and 200 debts, the screens
-/// reload in less than 300 ms after a write, both views of a year are
-/// computed in less than 100 ms, and so is the « Fortune » screen. Measured
-/// on the development machine in docs/decisions.md (steps 4.0, 4.1 and
-/// 5.3).
+/// Acceptance criteria of phases 4, 5 and 6: with 10 000 transactions over
+/// five years, 12 accounts, 100 declared balances, 200 debts and the data of
+/// the modules, the screens reload in less than 300 ms after a write, both
+/// views of a year are computed in less than 100 ms, and so are the
+/// « Fortune » screen, each screen of a module and the flow diagram.
+/// Measured on the development machine in docs/decisions.md (steps 4.0, 4.1,
+/// 5.3 and 6.7).
 ///
 /// Every one of ten runs must stay below its limit; all are printed. The
 /// suite runs its test files concurrently: the whole test, its data written
@@ -31,9 +38,9 @@ import '../support/machine_lock.dart';
 /// processors and the memory of the machine (step 5.2 of phase 5: waiting
 /// for the lock, the data written before could be swapped out).
 void main() {
-  test('with 10 000 transactions over five years, 200 rules, 12 accounts, 100 balances and 200 debts, the ledger '
-      'reloads after a write in less than 300 ms, and both views of a year, like the « Fortune » screen, are '
-      'computed in less than 100 ms', () async {
+  test('with 10 000 transactions over five years, 200 rules, 12 accounts, 100 balances, 200 debts and the data of '
+      'the modules, the ledger reloads after a write in less than 300 ms, and both views of a year, the « Fortune » '
+      'screen, each screen of a module and the flow diagram are computed in less than 100 ms', () async {
     await MachineLock.exclusive(() async {
       final dir = Directory.systemTemp.createTempSync('batz-perf');
       addTearDown(() => dir.deleteSync(recursive: true));
@@ -49,7 +56,9 @@ void main() {
       // ignore: avoid_print
       print('data written in ${setup.elapsedMilliseconds} ms');
       expect(ledger.transactions, hasLength(LargeLedger.transactions));
-      expect(ledger.transactions, hasLength(10000));
+      expect(ledger.transactions.length, greaterThanOrEqualTo(10000));
+      expect(ledger.modules.subscriptions, hasLength(LargeLedger.subscriptions));
+      expect(ledger.modules.taxYears, hasLength(LargeLedger.years));
       expect(ledger.rules, hasLength(200));
       expect(ledger.trees.keys, hasLength(5));
       expect(ledger.linesToValidate, hasLength(LargeLedger.linesPerStatement));
@@ -112,9 +121,58 @@ void main() {
       // ignore: avoid_print
       print('« Fortune » screen: $screens ms');
 
+      // Each screen of a module and the diagram, on a ledger just loaded:
+      // the modules are computed when their screen opens (principle 8 of
+      // phase 6).
+      final modules = <String, void Function(Ledger ledger)>{
+        'salary': (l) {
+          expect(l.salarySheet(LargeLedger.lastYear)!.gap, 0);
+          expect(l.proposedDeductionLabels(LargeLedger.lastYear + 1), hasLength(3));
+        },
+        'taxes': (l) {
+          for (final year in l.taxYears) {
+            final result = l.taxYear(year);
+            expect((result.total, result.paid, result.shareOfGross), isNot((0, null, null)));
+          }
+        },
+        'vacations': (l) {
+          final vacations = l.vacations;
+          expect(vacations.lines, hasLength(LargeLedger.vacationLines));
+          for (final year in vacations.years) {
+            expect(vacations.totalOf(year), greaterThan(0));
+          }
+        },
+        'electricity': (l) {
+          final years = l.electricityYears(currentYear: _today.year);
+          expect(years, hasLength(LargeLedger.years));
+          for (final year in years) {
+            expect(l.electricityYear(year).pricePerKwh, isNotNull);
+          }
+        },
+        'subscriptions': (l) => expect(l.subscriptionsAt(_today).monthlyTotal, greaterThan(0)),
+        'diagram': (l) {
+          final diagram = flowDiagram(l, LargeLedger.lastYear, ViewKind.economic)!;
+          expect((diagram.fromGross, diagram.leftTotal), (true, diagram.rightTotal));
+        },
+      };
+      final moduleTimes = <String, List<int>>{};
+      for (final MapEntry(key: name, value: compute) in modules.entries) {
+        for (var run = 0; run < 10; run++) {
+          final fresh = await repository.load();
+          final watch = Stopwatch()..start();
+          compute(fresh);
+          (moduleTimes[name] ??= []).add(watch.elapsedMilliseconds);
+        }
+      }
+      // ignore: avoid_print
+      print('modules: $moduleTimes ms');
+
       expect(reloads, everyElement(lessThan(300)), reason: 'every reload after a write');
       expect(computations, everyElement(lessThan(100)), reason: 'both views of a year, every time');
       expect(screens, everyElement(lessThan(100)), reason: 'the « Fortune » screen, every time');
+      for (final MapEntry(key: name, value: times) in moduleTimes.entries) {
+        expect(times, everyElement(lessThan(100)), reason: 'the screen of $name, every time');
+      }
     });
   }, timeout: const Timeout(Duration(minutes: 3)));
 }

@@ -2006,3 +2006,39 @@ drives the screen: the totals, the order, a new price closing the previous
 tranche, an overlap refused, a new yearly subscription. Screenshots of the
 screens of vacations, electricity and subscriptions on a phone, with the
 real fonts, were checked by eye.
+
+### 6.7 Measure, synchronisation and version 0.7.0
+
+**Measure** (`test/data/performance_test.dart`, 2026-11-21, development
+machine). The data of phase 5 with a group « Modules » holding « Vacances »,
+« Électricité » and « Impôts », 300 vacation lines (one in four over a week,
+one in ten with a sheet), 60 monthly electricity invoices with their kWh, a
+salary sheet and a fiscal year for each of the five years, and 40
+subscriptions of 3 tranches (`test/support/large_ledger.dart`); 10 360
+transactions in all. Over two runs of the test (alone, then in the full
+suite), ten measures each: reload after a write 95 to 127 ms; on a ledger
+just loaded, the salary sheet 0 to 2 ms; the taxes, the five fiscal years
+with their control, 14 to 34 ms; the vacations 4 to 15 ms; the electricity,
+five years, 16 to 42 ms; the subscriptions 0 ms; the diagram of the last
+year 7 to 30 ms. Below the 300 and 100 ms of the plan;
+the test fails if any run exceeds them. The modules are not computed at the
+reload (principle 8).
+
+**Synchronisation.** `test/e2e/modules_e2e_test.dart` enters something in
+every module on one device, exchanges through a real server, and finds on
+the other the same records and the same results (salary sheet, fiscal
+year and its control, trips, electricity, subscriptions, diagram), then a
+deletion on the second reaching the first; the same salary sheet, fiscal
+year and kWh of a line entered on two devices offline give one record each.
+The convergence test sets linked categories, saves and deletes salary sheets
+and fiscal years, sheets of trips and manual lines, kWh, subscriptions and
+tranches on four devices.
+
+**Version.** The app and the server move to 0.7.0 (the app's build number to
+8). The server's minimum app version becomes 0.7.0: an app 0.6 would receive
+what is entered in the modules, keep it in its journal without showing it.
+The tests of the exchange send 0.7.0 and check that 0.6.0 and older are
+refused, at the use case and over HTTP. An app 0.7.0 still works with the
+server 0.6.0 of the NAS until it is upgraded. The rules of the modules are
+described in `docs/modules.md`; the architecture, the API, the deployment
+(with the upgrade to 0.7.0) and the README follow.

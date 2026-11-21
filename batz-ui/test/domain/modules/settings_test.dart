@@ -5,12 +5,15 @@ import 'package:batz/domain/ledger/ledger_exception.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/transaction.dart';
+import 'package:batz/domain/modules/electricity.dart';
 import 'package:batz/domain/modules/settings.dart';
+import 'package:batz/domain/modules/taxes.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/ledger_fixture.dart';
 import '../../support/ledger_harness.dart';
+import '../../support/module_checks.dart';
 import '../../support/random_ledger.dart';
 import '../../support/statements.dart';
 
@@ -165,6 +168,38 @@ void main() {
       ledger = await h.apply((l) => l.setModuleCategory(ModuleKind.taxes, 'Habitation'));
       expect(ledger.moduleCategory(ModuleKind.taxes, 2026)!.id, 'housing');
       expect(() => ledger.setModuleCategory(ModuleKind.taxes, ' '), throwsA(isA<LedgerException>()));
+    });
+
+    test('the modules follow the name: the control of the taxes and the electricity read the category named, a '
+        'group with what it holds; a name missing from a year leaves them empty, without error; a setting changes '
+        'neither the views nor the wealth', () async {
+      final expenses = defaultGroupId(2026, CategoryNature.expense);
+      await h.apply((l) => l.addCategory('duties', year: 2026, name: 'Obligations', parentId: expenses));
+      await h.apply((l) => l.addCategory('federal', year: 2026, name: 'Impôt fédéral', parentId: 'duties'));
+      await h.apply((l) => l.addCategory('cantonal', year: 2026, name: 'Impôt cantonal', parentId: 'duties'));
+      await h.apply((l) => l.recordEntry('f', 'lf', entry(category: 'federal', cents: 200000, date: d(2026, 3, 1))));
+      var ledger = await h.apply(
+        (l) => l.recordEntry('c', 'lc', entry(category: 'cantonal', cents: 700000, date: d(2026, 4, 1))),
+      );
+      expect((ledger.taxYear(2026).paid, ledger.electricityYear(2026).categoryFound), (null, false));
+
+      final today = d(2026, 11, 21);
+      final before = accountsAndViews(ledger, today);
+      ledger = await h.apply((l) => l.setModuleCategory(ModuleKind.taxes, 'obligations'));
+      expect(ledger.taxYear(2026).paid, 900000, reason: 'the group, with both taxes');
+      ledger = await h.apply((l) => l.setModuleCategory(ModuleKind.taxes, 'Impôt cantonal'));
+      expect(ledger.taxYear(2026).paid, 700000);
+      ledger = await h.apply((l) => l.setModuleCategory(ModuleKind.electricity, 'Impôt fédéral'));
+      expect(ledger.electricityYear(2026).price, 200000);
+      ledger = await h.apply((l) => l.renameCategory('federal', 'Courant'));
+      expect(ledger.electricityYear(2026).categoryFound, isFalse, reason: 'the name is no longer in the tree');
+      ledger = await h.apply((l) => l.setModuleCategory(ModuleKind.electricity, 'courant'));
+      expect(ledger.electricityYear(2026).price, 200000);
+      expect(ledger.electricityYear(2027).categoryFound, isTrue, reason: 'the copy to come has the name too');
+      expect(ledger.electricityYear(2025).categoryFound, isFalse);
+      // Only the rename touched the views; the settings changed nothing.
+      await h.apply((l) => l.renameCategory('federal', 'Impôt fédéral'));
+      expect(accountsAndViews(await h.ledger(), today), before);
     });
 
     test('two devices naming the category of a module write one setting', () async {

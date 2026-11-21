@@ -10,6 +10,11 @@ import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/share_classification.dart';
 import 'package:batz/domain/ledger/statement.dart';
 import 'package:batz/domain/ledger/transaction.dart';
+import 'package:batz/domain/modules/electricity.dart';
+import 'package:batz/domain/modules/salary.dart';
+import 'package:batz/domain/modules/subscriptions.dart';
+import 'package:batz/domain/modules/taxes.dart';
+import 'package:batz/domain/modules/vacations.dart';
 import 'package:batz/domain/period_model.dart';
 
 /// The data of a heavy user over five years (2026 to 2030), invented: what
@@ -31,6 +36,11 @@ import 'package:batz/domain/period_model.dart';
 /// - The wealth (step 5.3 of phase 5): 12 accounts, 100 balances declared
 ///   on ten of them, every six months from 31.12.2025, and 200 debts over
 ///   the five years, half of them repaid.
+/// - The modules (step 6.7 of phase 6): a group « Modules » with
+///   « Vacances », « Électricité » and « Impôts »; 300 vacation lines in
+///   cash, one in four over a week, one in ten with a sheet; 60 monthly
+///   electricity invoices with their kWh; a salary sheet and a fiscal year
+///   for each year; 40 subscriptions of 3 tranches.
 ///
 /// The records are written as the operations of the app write them, field
 /// by field, without going through the checks of each operation: importing
@@ -63,7 +73,16 @@ class LargeLedger {
 
   static const lastYear = firstYear + years - 1;
 
-  static int get transactions => years * 12 * linesPerStatement + manualEntries + refunds;
+  static const vacationLines = 300;
+  static const electricityInvoices = 60;
+  static const subscriptions = 40;
+
+  static int get transactions =>
+      years * 12 * linesPerStatement + manualEntries + refunds + vacationLines + electricityInvoices;
+
+  static const vacations = 'cat-vacations';
+  static const electricity = 'cat-power';
+  static const taxes = 'cat-taxes';
 
   /// The identifier in [year] of the category [id] of the first year.
   static String categoryIn(String id, int year) {
@@ -126,6 +145,10 @@ class LargeLedger {
         ('group-$g', 'Groupe $g', expenses, null, g),
         for (var c = 0; c < categoriesPerGroup; c++) (leaf(g, c), 'Poste $g.$c', 'group-$g', null, c),
       ],
+      ('group-modules', 'Modules', expenses, null, groups),
+      (vacations, 'Vacances', 'group-modules', null, 0),
+      (electricity, 'Électricité', 'group-modules', null, 1),
+      (taxes, 'Impôts', 'group-modules', null, 2),
     ];
     final rules = <(String, List<String>, String)>[
       ('rule-salary', ['Employeur Exemple'], salary),
@@ -316,6 +339,104 @@ class LargeLedger {
         DebtFields.enteredOn: event.encode(),
         DebtFields.checkedOn: repaid ? event.addDays(31).encode() : null,
       });
+    }
+
+    // The modules: vacation lines, electricity invoices and their kWh.
+    void entry(String id, CalendarDate date, int amount, String category, CalendarDate start, CalendarDate end) {
+      set(TransactionFields.entity, id, {
+        TransactionFields.accountId: 'cash',
+        TransactionFields.date: date.encode(),
+        TransactionFields.amount: amount,
+        TransactionFields.description: id,
+        TransactionFields.note: '',
+        TransactionFields.status: TransactionStatus.validated.name,
+        TransactionFields.counterpartAccountId: null,
+      });
+      set(LineFields.entity, '$id-line', {
+        LineFields.transactionId: id,
+        LineFields.categoryId: categoryIn(category, date.year),
+        LineFields.amount: amount,
+        LineFields.periodStart: start.encode(),
+        LineFields.periodEnd: end.encode(),
+      });
+    }
+
+    for (var i = 0; i < vacationLines; i++) {
+      final date = CalendarDate(firstYear + i % years, 1 + i ~/ years % 12, 1 + i % 28);
+      entry('trip-$i', date, -(2000 + i * 91 % 50000), vacations, date, i % 4 == 0 ? date.addDays(6) : date);
+      if (i % 10 == 0) {
+        set(TripSheetFields.entity, tripSheetId('trip-$i-line'), {
+          TripSheetFields.lineId: 'trip-$i-line',
+          TripSheetFields.place: 'Lieu $i',
+          TripSheetFields.days: 1 + i % 14,
+          TripSheetFields.date: null,
+          TripSheetFields.amount: null,
+          deletedField: false,
+        });
+      }
+    }
+    for (var i = 0; i < electricityInvoices; i++) {
+      final year = firstYear + i ~/ 12, month = i % 12 + 1;
+      final start = CalendarDate(year, month, 1),
+          end = CalendarDate(year, month, CalendarDate.daysInMonth(year, month));
+      entry('power-$i', end.addDays(15), -(5000 + i * 37 % 3000), electricity, start, end);
+      set(ElectricityReadingFields.entity, electricityReadingId('power-$i-line'), {
+        ElectricityReadingFields.lineId: 'power-$i-line',
+        ElectricityReadingFields.wh: 150000 + i * 1000,
+        deletedField: false,
+      });
+    }
+
+    // A salary sheet and a fiscal year per year.
+    for (var year = firstYear; year < firstYear + years; year++) {
+      set(SalarySheetFields.entity, salarySheetId(year), {
+        SalarySheetFields.year: year,
+        SalarySheetFields.gross: 9600000,
+        SalarySheetFields.net: 8385600,
+        deletedField: false,
+      });
+      for (final (rank, (label, amount)) in [('AVS', 508800), ('AC', 105600), ('LPP', 600000)].indexed) {
+        set(SalaryDeductionFields.entity, 'deduction-$year-$rank', {
+          SalaryDeductionFields.sheetId: salarySheetId(year),
+          SalaryDeductionFields.label: label,
+          SalaryDeductionFields.amount: amount,
+          SalaryDeductionFields.rank: rank,
+        });
+      }
+      set(TaxYearFields.entity, taxYearId(year), {
+        TaxYearFields.year: year,
+        TaxYearFields.taxableWealth: 20000000,
+        TaxYearFields.marginalRate: 3150,
+        deletedField: false,
+      });
+      for (final tax in TaxKind.values) {
+        set(TaxLineFields.entity, taxLineId(year, tax), {
+          TaxLineFields.year: year,
+          TaxLineFields.tax: tax.name,
+          TaxLineFields.base: tax.onWealth ? null : 7800000,
+          TaxLineFields.baseRate: 65000,
+          TaxLineFields.coefficient: 15500,
+          deletedField: false,
+        });
+      }
+    }
+
+    // Subscriptions of three tranches each.
+    for (var i = 0; i < subscriptions; i++) {
+      set(SubscriptionFields.entity, 'subscription-$i', {
+        SubscriptionFields.name: 'Abonnement $i',
+        SubscriptionFields.note: '',
+      });
+      for (var t = 0; t < 3; t++) {
+        final start = CalendarDate(firstYear + t, 1 + i % 12, 1);
+        set(TrancheFields.entity, 'tranche-$i-$t', {
+          TrancheFields.subscriptionId: 'subscription-$i',
+          TrancheFields.amount: 990 + i * 10 + t * 100,
+          TrancheFields.frequency: (i.isEven ? TrancheFrequency.monthly : TrancheFrequency.yearly).name,
+          TrancheFields.start: start.encode(),
+          TrancheFields.end: t == 2 ? null : CalendarDate(firstYear + t + 1, 1 + i % 12, 1).addDays(-1).encode(),
+        });
+      }
     }
 
     // Whole records in each modification, as the app writes them.

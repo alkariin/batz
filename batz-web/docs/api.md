@@ -45,7 +45,7 @@ for humans.
 No authentication.
 
 ```json
-{ "status": "ok", "version": "v0.6.0", "minAppVersion": "0.6.0", "syncProtocol": 1, "importFormats": ["postfinance"] }
+{ "status": "ok", "version": "v0.7.0", "minAppVersion": "0.7.0", "syncProtocol": 1, "importFormats": ["postfinance"] }
 ```
 
 `version` is the server build (`dev` for a local build); `minAppVersion` is
@@ -116,7 +116,7 @@ Request:
 ```json
 {
   "protocol": 1,
-  "appVersion": "0.6.0",
+  "appVersion": "0.7.0",
   "known": { "3f2c1a9e-…": "001763647200000:0003:3f2c1a9e-…" },
   "since": { "3f2c1a9e-…": "001763640000000:0000:3f2c1a9e-…" },
   "entries": [

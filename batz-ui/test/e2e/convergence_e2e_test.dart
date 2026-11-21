@@ -16,6 +16,12 @@ import 'package:batz/domain/ledger/ledger_exception.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/refund.dart';
 import 'package:batz/domain/ledger/transaction.dart';
+import 'package:batz/domain/modules/electricity.dart';
+import 'package:batz/domain/modules/salary.dart';
+import 'package:batz/domain/modules/settings.dart';
+import 'package:batz/domain/modules/subscriptions.dart';
+import 'package:batz/domain/modules/taxes.dart';
+import 'package:batz/domain/modules/vacations.dart';
 import 'package:batz/domain/views/share_operations.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -43,6 +49,8 @@ Modification? randomOperation(Ledger l, Random r, String id) {
   if (r.nextInt(100) < 12) return _phase4Operation(l, r, id, year);
   // The operations of phase 5, now and then.
   if (r.nextInt(100) < 10) return _phase5Operation(l, r, id);
+  // The operations of phase 6, now and then.
+  if (r.nextInt(100) < 10) return _phase6Operation(l, r, id);
 
   // Weighted: mostly entries and their corrections, like real use.
   final roll = r.nextInt(100);
@@ -240,6 +248,101 @@ Modification? _debtOperation(Ledger l, Random r, String id, CalendarDate today, 
   };
 }
 
+/// The operations of phase 6: the settings and the entries of the modules.
+Modification? _phase6Operation(Ledger l, Random r, String id) {
+  final year = 2025 + r.nextInt(3);
+  CalendarDate date() => CalendarDate(year, 1 + r.nextInt(12), 1 + r.nextInt(28));
+  switch (r.nextInt(6)) {
+    case 0:
+      return l.setModuleCategory(_pick(r, ModuleKind.values), _pick(r, _names));
+    case 1:
+      final sheet = l.salarySheet(year);
+      if (sheet != null && r.nextInt(4) == 0) return l.deleteSalarySheet(year);
+      return l.saveSalarySheet(
+        SalarySheetDraft(
+          year: year,
+          gross: r.nextInt(10000000),
+          net: r.nextInt(8000000),
+          deductions: [
+            for (final d in sheet?.deductions ?? const <SalaryDeduction>[])
+              if (r.nextInt(4) > 0) DeductionDraft(id: d.id, label: d.label, amount: r.nextInt(500000)),
+            if (r.nextBool()) DeductionDraft(label: _pick(r, ['AVS', 'AC', 'LPP']), amount: r.nextInt(500000)),
+          ],
+        ),
+        newId: () => 'ded-$id-${r.nextInt(1 << 30)}',
+      );
+    case 2:
+      if (l.taxYears.contains(year) && r.nextInt(4) == 0) return l.deleteTaxYear(year);
+      return l.saveTaxYear(
+        TaxYearDraft(
+          year: year,
+          taxableWealth: r.nextBool() ? r.nextInt(50000000) : null,
+          marginalRate: r.nextInt(12000),
+          lines: {
+            for (final tax in TaxKind.values)
+              if (r.nextBool())
+                tax: TaxLineDraft(
+                  base: r.nextInt(9000000),
+                  baseRate: r.nextInt(1100000),
+                  coefficient: r.nextInt(20000),
+                ),
+          },
+        ),
+      );
+    case 3:
+      final trips = l.vacations.trips;
+      final sheets = l.modules.tripSheets.keys.toList()..sort();
+      if (sheets.isNotEmpty && r.nextInt(4) == 0) return l.deleteTripSheet(_pick(r, sheets));
+      if (trips.isEmpty || r.nextInt(3) == 0) {
+        return l.saveManualTrip(
+          'trip-$id',
+          place: 'Lieu',
+          date: r.nextBool() ? date() : null,
+          amount: r.nextInt(100000),
+          days: r.nextInt(10),
+        );
+      }
+      return l.saveTrip(
+        _pick(r, trips),
+        place: _pick(r, ['Rome', 'Paris', '']),
+        days: r.nextInt(15),
+        amount: r.nextBool() ? r.nextInt(100000) : null,
+      );
+    case 4:
+      final lines = [
+        for (final line in l.views.lines)
+          if (line.origin != null) line.ownLineId,
+      ]..sort();
+      if (lines.isEmpty) return null;
+      final line = _pick(r, lines);
+      if (l.modules.electricityReadings.containsKey(line) && r.nextInt(3) == 0) return l.setElectricity(line, null);
+      return l.setElectricity(line, r.nextInt(3000000) - 100000);
+    default:
+      final subscriptions = l.modules.subscriptions.values.toList()..sort((a, b) => a.id.compareTo(b.id));
+      TrancheDraft tranche() => TrancheDraft(
+        amount: r.nextInt(5000),
+        frequency: _pick(r, TrancheFrequency.values),
+        start: date(),
+        end: r.nextBool() ? CalendarDate(2027, 12, 31) : null,
+      );
+      if (subscriptions.isEmpty || r.nextInt(3) == 0) {
+        return l.createSubscription(
+          'sub-$id',
+          'tr-$id',
+          name: _pick(r, ['Streaming', 'Journal', '']),
+          first: tranche(),
+        );
+      }
+      final subscription = _pick(r, subscriptions);
+      return switch (r.nextInt(4)) {
+        0 => l.addTranche(subscription.id, 'tr-$id', tranche()),
+        1 when subscription.tranches.isNotEmpty => l.updateTranche(_pick(r, subscription.tranches).id, tranche()),
+        2 when subscription.tranches.isNotEmpty => l.deleteTranche(_pick(r, subscription.tranches).id),
+        _ => l.deleteSubscription(subscription.id),
+      };
+  }
+}
+
 extension on AccountDraft {
   AccountDraft copyWithArchived(bool archived) =>
       AccountDraft(name: name, type: type, importFormat: importFormat, archived: archived);
@@ -328,7 +431,9 @@ void main() {
         '${ledger.categories.length} categories, ${ledger.forest.detached.length} detached, '
         '${ledger.redistributions.length} redistribution rules, ${ledger.refundsByExpenseLine.length} expenses refunded, '
         '${ledger.shareClassifications.length} answers, ${ledger.declaredBalances.length} balances, '
-        '${ledger.debts.length} debts',
+        '${ledger.debts.length} debts, ${ledger.modules.salarySheets.length} salary sheets, '
+        '${ledger.taxYears.length} fiscal years, ${ledger.modules.tripSheets.length} trip sheets, '
+        '${ledger.modules.electricityReadings.length} kWh, ${ledger.modules.subscriptions.length} subscriptions',
       );
       // About ten seconds alone, much more while the other test files run:
       // hundreds of calls with pages of a few entries.

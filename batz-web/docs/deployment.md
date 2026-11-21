@@ -29,14 +29,14 @@ Each release carries `batz-web-<version>.tar.gz`, a `docker save` of the image
 # On the NAS (Synology: docker lives in /usr/local/bin, which non-interactive
 # SSH sessions do not have on PATH)
 export PATH="$PATH:/usr/local/bin"
-gunzip -c batz-web-v0.6.0.tar.gz | docker load
+gunzip -c batz-web-v0.7.0.tar.gz | docker load
 mkdir -p /volume1/docker/batz/data
 sudo chown 10001:10001 /volume1/docker/batz/data
 docker rm -f batz-web 2>/dev/null
 docker run -d --name batz-web --restart unless-stopped \
   -p 8443:8443 -v /volume1/docker/batz/data:/data \
   --read-only --cap-drop ALL --security-opt no-new-privileges:true \
-  batz-web:v0.6.0
+  batz-web:v0.7.0
 docker inspect -f '{{.State.Health.Status}}' batz-web   # healthy after a few seconds
 ```
 
@@ -50,7 +50,7 @@ every paired app refuse the server until it is paired again.
 From the development machine, with SSH key access to the NAS:
 
 ```sh
-batz-web/scripts/deploy-nas.sh batz-web-v0.6.0.tar.gz user@192.168.1.95
+batz-web/scripts/deploy-nas.sh batz-web-v0.7.0.tar.gz user@192.168.1.95
 ```
 
 It streams the image to `docker load`, gives the data folder to uid 10001
@@ -63,6 +63,17 @@ upgrades the server and keeps its data and certificate.
 On Synology, shared folders carry ACLs that make new files readable by every
 NAS account, `tls/server.key` included, whatever the permissions the server
 sets. Keep the folder in a share that only administrators can open.
+
+### Upgrading to 0.7.0 (modules)
+
+Server 0.7.0 changes only its version: no route, no migration, no folder.
+It requires apps 0.7.0 or later, the first that know what is entered in the
+modules (salary sheets, fiscal years, trips, kWh, subscriptions): an app 0.6
+would keep them in its journal without showing them, so it shows that it is
+too old for the server. Apps 0.7.0 work with a server 0.6.0 meanwhile.
+Upgrade the server, then the apps; nothing needs to be paired again. The
+apps rebuild their local tables from their journal at the first start,
+their data kept.
 
 ### Upgrading to 0.6.0 (wealth)
 
