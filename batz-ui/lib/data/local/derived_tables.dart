@@ -10,6 +10,7 @@ import '../../domain/ledger/transaction.dart';
 import '../../domain/modules/electricity.dart';
 import '../../domain/modules/salary.dart';
 import '../../domain/modules/settings.dart';
+import '../../domain/modules/subscriptions.dart';
 import '../../domain/modules/taxes.dart';
 import '../../domain/modules/vacations.dart';
 
@@ -127,6 +128,8 @@ final List<DerivedTable> appDerivedTables = [
   taxLinesTable,
   tripSheetsTable,
   electricityReadingsTable,
+  subscriptionsTable,
+  tranchesTable,
 ];
 
 final accountsTable = DerivedTable(
@@ -338,5 +341,26 @@ final electricityReadingsTable = DerivedTable(
   columns: {
     ElectricityReadingFields.lineId: const DerivedColumn.text('line_id'),
     ElectricityReadingFields.wh: const DerivedColumn.integer('wh'),
+  },
+);
+
+final subscriptionsTable = DerivedTable(
+  entity: SubscriptionFields.entity,
+  table: 'subscriptions',
+  columns: {
+    SubscriptionFields.name: const DerivedColumn.text('name'),
+    SubscriptionFields.note: const DerivedColumn.text('note'),
+  },
+);
+
+final tranchesTable = DerivedTable(
+  entity: TrancheFields.entity,
+  table: 'subscription_tranches',
+  columns: {
+    TrancheFields.subscriptionId: const DerivedColumn.text('subscription_id'),
+    TrancheFields.amount: const DerivedColumn.integer('amount'),
+    TrancheFields.frequency: const DerivedColumn.text('frequency'),
+    TrancheFields.start: const DerivedColumn.text('start'),
+    TrancheFields.end: const DerivedColumn.text('end_date'),
   },
 );

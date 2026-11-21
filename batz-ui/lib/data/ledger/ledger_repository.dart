@@ -17,6 +17,7 @@ import '../../domain/modules/electricity.dart';
 import '../../domain/modules/module_records.dart';
 import '../../domain/modules/salary.dart';
 import '../../domain/modules/settings.dart';
+import '../../domain/modules/subscriptions.dart';
 import '../../domain/modules/taxes.dart';
 import '../../domain/modules/vacations.dart';
 import '../local/database.dart';
@@ -85,7 +86,7 @@ class LedgerRepository {
 
   /// What the user entered in the modules.
   Future<ModuleRecords> _modules() async {
-    final (settings, sheets, deductions, taxYears, taxLines, trips, readings) = await (
+    final (settings, sheets, deductions, taxYears, taxLines, trips, readings, subscriptions, tranches) = await (
       _rows(moduleSettingsTable, _moduleSetting),
       _rows(salarySheetsTable, _salarySheet),
       _rows(salaryDeductionsTable, _salaryDeduction),
@@ -93,6 +94,8 @@ class LedgerRepository {
       _rows(taxLinesTable, _taxLine),
       _rows(tripSheetsTable, _tripSheet),
       _rows(electricityReadingsTable, _electricityReading),
+      _rows(subscriptionsTable, _subscription),
+      _rows(tranchesTable, _tranche),
     ).wait;
     return ModuleRecords(
       settings: settings,
@@ -102,6 +105,37 @@ class LedgerRepository {
       taxLines: taxLines,
       tripSheets: trips,
       electricityReadings: readings,
+      subscriptions: subscriptions,
+      tranches: tranches,
+    );
+  }
+
+  /// A subscription needs a name.
+  static Subscription? _subscription(Map<String, Object?> row) {
+    final name = _string(row['name']);
+    if (name == null) return null;
+    return Subscription(
+      id: row['id']! as String,
+      name: name,
+      note: row['note'] is String ? row['note']! as String : '',
+    );
+  }
+
+  /// A tranche needs its subscription, an amount, a known frequency and a
+  /// start; its end is optional.
+  static Tranche? _tranche(Map<String, Object?> row) {
+    final subscriptionId = _string(row['subscription_id']);
+    final amount = row['amount'];
+    final frequency = _enum(TrancheFrequency.values, row['frequency']);
+    final start = _date(row['start']);
+    if (subscriptionId == null || amount is! int || frequency == null || start == null) return null;
+    return Tranche(
+      id: row['id']! as String,
+      subscriptionId: subscriptionId,
+      amount: amount,
+      frequency: frequency,
+      start: start,
+      end: _date(row['end_date']),
     );
   }
 

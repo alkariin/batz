@@ -107,6 +107,9 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.tripAmountRequired => l.errorTripAmountRequired,
   LedgerError.unknownElectricityReading => l.errorUnknownElectricityReading,
   LedgerError.electricityNegative => l.errorElectricityNegative,
+  LedgerError.unknownSubscription => l.errorUnknownSubscription,
+  LedgerError.trancheEndBeforeStart => l.errorTrancheEndBeforeStart,
+  LedgerError.trancheOverlap => l.errorTrancheOverlap,
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {

@@ -95,6 +95,9 @@ enum LedgerError {
   tripAmountRequired,
   unknownElectricityReading,
   electricityNegative,
+  unknownSubscription,
+  trancheEndBeforeStart,
+  trancheOverlap,
 }
 
 /// A business rule refuses the operation; nothing was written.

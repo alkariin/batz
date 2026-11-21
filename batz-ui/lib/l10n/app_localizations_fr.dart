@@ -2447,4 +2447,125 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get electricityOrphansHint => 'Leur transaction a quitté la catégorie ou n\'existe plus.';
+
+  @override
+  String get errorUnknownSubscription => 'Cet abonnement n\'existe plus.';
+
+  @override
+  String get errorTrancheEndBeforeStart => 'La fin d\'une tranche ne peut pas précéder son début.';
+
+  @override
+  String get errorTrancheOverlap => 'Cette tranche chevauche une autre tranche de l\'abonnement.';
+
+  @override
+  String get subscriptionsTitle => 'Abonnements';
+
+  @override
+  String get subscriptionsMenuHint => 'Coût par mois et par an des abonnements en cours.';
+
+  @override
+  String get subscriptionsNone => 'Aucun abonnement.';
+
+  @override
+  String get subscriptionsTotals => 'Abonnements en cours';
+
+  @override
+  String get subscriptionsPerMonth => 'Par mois';
+
+  @override
+  String get subscriptionsPerYear => 'Par an';
+
+  @override
+  String get subscriptionsCurrent => 'En cours';
+
+  @override
+  String get subscriptionsUpcoming => 'À venir';
+
+  @override
+  String get subscriptionsEnded => 'Terminés';
+
+  @override
+  String subscriptionsCosts(String month, String year) {
+    return '$month par mois · $year par an';
+  }
+
+  @override
+  String subscriptionsSince(String date) {
+    return 'depuis le $date';
+  }
+
+  @override
+  String subscriptionsFrom(String date) {
+    return 'dès le $date';
+  }
+
+  @override
+  String subscriptionsUntil(String date) {
+    return 'jusqu\'au $date';
+  }
+
+  @override
+  String get subscriptionsOverlap => 'Deux tranches se chevauchent : corrigez-en une.';
+
+  @override
+  String get subscriptionNew => 'Nouvel abonnement';
+
+  @override
+  String get subscriptionEdit => 'Abonnement';
+
+  @override
+  String get subscriptionName => 'Nom';
+
+  @override
+  String get subscriptionNote => 'Note';
+
+  @override
+  String get subscriptionTranches => 'Tranches';
+
+  @override
+  String get subscriptionAddTranche => 'Nouvelle tranche';
+
+  @override
+  String get subscriptionTrancheHint =>
+      'Un changement de prix ou une reprise est une nouvelle tranche : elle ferme la précédente la veille de son début.';
+
+  @override
+  String get subscriptionAmount => 'Montant';
+
+  @override
+  String get subscriptionMonthly => 'Mensuel';
+
+  @override
+  String get subscriptionYearly => 'Annuel';
+
+  @override
+  String get subscriptionStart => 'Début';
+
+  @override
+  String get subscriptionEnd => 'Fin (facultative)';
+
+  @override
+  String subscriptionTranche(String amount, String frequency, String period) {
+    return '$amount $frequency · $period';
+  }
+
+  @override
+  String get subscriptionPerMonthShort => 'par mois';
+
+  @override
+  String get subscriptionPerYearShort => 'par an';
+
+  @override
+  String subscriptionDeleteConfirm(String name) {
+    return 'Supprimer l\'abonnement « $name » ?';
+  }
+
+  @override
+  String get subscriptionDeleted => 'Abonnement supprimé.';
+
+  @override
+  String get subscriptionSaved => 'Abonnement enregistré.';
+
+  @override
+  String get subscriptionInvalid => 'Valeur invalide : vérifiez le montant et les dates.';
 }

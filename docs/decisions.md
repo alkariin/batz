@@ -1970,3 +1970,39 @@ each year against the economic view and the kWh spread against the kWh
 entered; two devices; views and wealth unchanged.
 `test/pages/modules/electricity_page_test.dart` enters the kWh of the
 example from the screen.
+
+### 6.6 Subscriptions
+
+**Decisions.**
+
+- New journal entities `subscription` (table `subscriptions`: name, note)
+  and `subscriptionTranche` (table `subscription_tranches`: subscription,
+  amount in cents, frequency `monthly` or `yearly`, start, end; the column
+  of the end is `end_date`, `END` being an SQL keyword). Both have random
+  identifiers (principle 5). A tranche whose subscription is missing is left
+  out when read. A subscription is created with its first tranche;
+  deleting it deletes its tranches.
+- Costs (H8): monthly = the amount, or the amount ÷ 12 rounded to the cent
+  for a yearly tranche; yearly = the amount × 12, or the amount. A
+  subscription is current when a tranche covers the day; to come when none
+  does and one starts later; ended otherwise. The totals add the costs shown
+  of the current ones.
+- Adding a tranche closes, the day before it starts, the latest tranche that
+  starts before it and has no end; an ended tranche is kept as it is (a
+  resumption after an end). The new tranche is then refused if it overlaps
+  another, as is a modified one (a modification closes nothing). Other
+  refusals: no name, an amount of zero or less, an end before the start.
+- Two tranches left overlapping by a merge: the subscription says so, and on
+  a day both cover, the one that started last applies.
+- « Abonnements » is an entry of « Plus » of its own, between the analyses
+  and the settings, as the specification lists them.
+
+**Evidence.** `test/domain/modules/subscriptions_test.dart`: the example
+(22.82 a month, 273.80 a year, the gym ended); a change of price, a
+resumption, a subscription to come; each refusal; two tranches left
+overlapping by a merge of two devices; modifications and deletions; views
+and wealth unchanged. `test/pages/modules/subscriptions_page_test.dart`
+drives the screen: the totals, the order, a new price closing the previous
+tranche, an overlap refused, a new yearly subscription. Screenshots of the
+screens of vacations, electricity and subscriptions on a phone, with the
+real fonts, were checked by eye.

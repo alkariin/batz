@@ -6,6 +6,7 @@ import '../accounts/accounts_page.dart';
 import '../categories/categories_page.dart';
 import '../modules/electricity_page.dart';
 import '../modules/salary_page.dart';
+import '../modules/subscriptions_page.dart';
 import '../modules/taxes_page.dart';
 import '../modules/vacations_page.dart';
 import '../redistribution/redistribution_page.dart';
@@ -13,7 +14,8 @@ import '../server/server_cubit.dart';
 import '../server/server_page.dart';
 import '../validation/rules_page.dart';
 
-/// « Plus »: the analyses (the modules of phase 6), then the settings.
+/// « Plus »: the analyses (the modules of phase 6), the subscriptions, then
+/// the settings (specification, 4.6).
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
 
@@ -56,6 +58,15 @@ class MorePage extends StatelessWidget {
             subtitle: Text(l.electricityMenuHint),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ElectricityPage())),
+          ),
+          const Divider(),
+          ListTile(
+            key: const Key('moreSubscriptions'),
+            leading: const Icon(Icons.autorenew),
+            title: Text(l.subscriptionsTitle),
+            subtitle: Text(l.subscriptionsMenuHint),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SubscriptionsPage())),
           ),
           const Divider(),
           _Section(l.moreSettings),

@@ -1,6 +1,7 @@
 import 'electricity.dart';
 import 'salary.dart';
 import 'settings.dart';
+import 'subscriptions.dart';
 import 'taxes.dart';
 import 'vacations.dart';
 
@@ -16,12 +17,27 @@ class ModuleRecords {
     Iterable<TaxLine> taxLines = const [],
     Iterable<TripSheet> tripSheets = const [],
     Iterable<ElectricityReading> electricityReadings = const [],
-  }) : tripSheets = {for (final t in tripSheets) t.id: t},
+    Iterable<Subscription> subscriptions = const [],
+    Iterable<Tranche> tranches = const [],
+  }) : subscriptions = _subscriptions(subscriptions, tranches),
+       tripSheets = {for (final t in tripSheets) t.id: t},
        electricityReadings = {for (final r in electricityReadings) r.lineId: r},
        settings = {for (final s in settings) s.module: s},
        salarySheets = _sheets(salarySheets, salaryDeductions),
        taxYears = {for (final t in taxYears) t.year: t},
        taxLines = _taxLines(taxLines);
+
+  /// The subscriptions by identifier, each with its tranches; a tranche
+  /// whose subscription is missing is left out.
+  static Map<String, Subscription> _subscriptions(Iterable<Subscription> subscriptions, Iterable<Tranche> tranches) {
+    final bySubscription = <String, List<Tranche>>{};
+    for (final t in tranches) {
+      (bySubscription[t.subscriptionId] ??= []).add(t);
+    }
+    return {
+      for (final s in subscriptions) s.id: s.withTranches([...s.tranches, ...?bySubscription[s.id]]),
+    };
+  }
 
   static Map<int, Map<TaxKind, TaxLine>> _taxLines(Iterable<TaxLine> lines) {
     final result = <int, Map<TaxKind, TaxLine>>{};
@@ -60,4 +76,7 @@ class ModuleRecords {
 
   /// The energy entered for the lines, by line.
   final Map<String, ElectricityReading> electricityReadings;
+
+  /// The subscriptions and their tranches, by identifier.
+  final Map<String, Subscription> subscriptions;
 }

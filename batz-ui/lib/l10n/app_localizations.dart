@@ -4073,6 +4073,222 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Leur transaction a quitté la catégorie ou n\'existe plus.'**
   String get electricityOrphansHint;
+
+  /// No description provided for @errorUnknownSubscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet abonnement n\'existe plus.'**
+  String get errorUnknownSubscription;
+
+  /// No description provided for @errorTrancheEndBeforeStart.
+  ///
+  /// In fr, this message translates to:
+  /// **'La fin d\'une tranche ne peut pas précéder son début.'**
+  String get errorTrancheEndBeforeStart;
+
+  /// No description provided for @errorTrancheOverlap.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette tranche chevauche une autre tranche de l\'abonnement.'**
+  String get errorTrancheOverlap;
+
+  /// No description provided for @subscriptionsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Abonnements'**
+  String get subscriptionsTitle;
+
+  /// No description provided for @subscriptionsMenuHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Coût par mois et par an des abonnements en cours.'**
+  String get subscriptionsMenuHint;
+
+  /// No description provided for @subscriptionsNone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun abonnement.'**
+  String get subscriptionsNone;
+
+  /// No description provided for @subscriptionsTotals.
+  ///
+  /// In fr, this message translates to:
+  /// **'Abonnements en cours'**
+  String get subscriptionsTotals;
+
+  /// No description provided for @subscriptionsPerMonth.
+  ///
+  /// In fr, this message translates to:
+  /// **'Par mois'**
+  String get subscriptionsPerMonth;
+
+  /// No description provided for @subscriptionsPerYear.
+  ///
+  /// In fr, this message translates to:
+  /// **'Par an'**
+  String get subscriptionsPerYear;
+
+  /// No description provided for @subscriptionsCurrent.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours'**
+  String get subscriptionsCurrent;
+
+  /// No description provided for @subscriptionsUpcoming.
+  ///
+  /// In fr, this message translates to:
+  /// **'À venir'**
+  String get subscriptionsUpcoming;
+
+  /// No description provided for @subscriptionsEnded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminés'**
+  String get subscriptionsEnded;
+
+  /// No description provided for @subscriptionsCosts.
+  ///
+  /// In fr, this message translates to:
+  /// **'{month} par mois · {year} par an'**
+  String subscriptionsCosts(String month, String year);
+
+  /// No description provided for @subscriptionsSince.
+  ///
+  /// In fr, this message translates to:
+  /// **'depuis le {date}'**
+  String subscriptionsSince(String date);
+
+  /// No description provided for @subscriptionsFrom.
+  ///
+  /// In fr, this message translates to:
+  /// **'dès le {date}'**
+  String subscriptionsFrom(String date);
+
+  /// No description provided for @subscriptionsUntil.
+  ///
+  /// In fr, this message translates to:
+  /// **'jusqu\'au {date}'**
+  String subscriptionsUntil(String date);
+
+  /// No description provided for @subscriptionsOverlap.
+  ///
+  /// In fr, this message translates to:
+  /// **'Deux tranches se chevauchent : corrigez-en une.'**
+  String get subscriptionsOverlap;
+
+  /// No description provided for @subscriptionNew.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvel abonnement'**
+  String get subscriptionNew;
+
+  /// No description provided for @subscriptionEdit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Abonnement'**
+  String get subscriptionEdit;
+
+  /// No description provided for @subscriptionName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get subscriptionName;
+
+  /// No description provided for @subscriptionNote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Note'**
+  String get subscriptionNote;
+
+  /// No description provided for @subscriptionTranches.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tranches'**
+  String get subscriptionTranches;
+
+  /// No description provided for @subscriptionAddTranche.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle tranche'**
+  String get subscriptionAddTranche;
+
+  /// No description provided for @subscriptionTrancheHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un changement de prix ou une reprise est une nouvelle tranche : elle ferme la précédente la veille de son début.'**
+  String get subscriptionTrancheHint;
+
+  /// No description provided for @subscriptionAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant'**
+  String get subscriptionAmount;
+
+  /// No description provided for @subscriptionMonthly.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mensuel'**
+  String get subscriptionMonthly;
+
+  /// No description provided for @subscriptionYearly.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuel'**
+  String get subscriptionYearly;
+
+  /// No description provided for @subscriptionStart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Début'**
+  String get subscriptionStart;
+
+  /// No description provided for @subscriptionEnd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fin (facultative)'**
+  String get subscriptionEnd;
+
+  /// No description provided for @subscriptionTranche.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} {frequency} · {period}'**
+  String subscriptionTranche(String amount, String frequency, String period);
+
+  /// No description provided for @subscriptionPerMonthShort.
+  ///
+  /// In fr, this message translates to:
+  /// **'par mois'**
+  String get subscriptionPerMonthShort;
+
+  /// No description provided for @subscriptionPerYearShort.
+  ///
+  /// In fr, this message translates to:
+  /// **'par an'**
+  String get subscriptionPerYearShort;
+
+  /// No description provided for @subscriptionDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer l\'abonnement « {name} » ?'**
+  String subscriptionDeleteConfirm(String name);
+
+  /// No description provided for @subscriptionDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Abonnement supprimé.'**
+  String get subscriptionDeleted;
+
+  /// No description provided for @subscriptionSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Abonnement enregistré.'**
+  String get subscriptionSaved;
+
+  /// No description provided for @subscriptionInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valeur invalide : vérifiez le montant et les dates.'**
+  String get subscriptionInvalid;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
