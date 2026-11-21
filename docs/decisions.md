@@ -2320,3 +2320,44 @@ the home screen; no lock on a computer. `test/data/device_lock_test.dart`
 (the permission, the activity, the themes, the recent apps). The release
 APK builds with them, and `aapt dump permissions` on it lists `INTERNET`,
 `USE_BIOMETRIC` and `USE_FINGERPRINT` (the last from `androidx.biometric`).
+
+### 7.4 The version shown and the icon of the app
+
+**Decisions.**
+
+- « Plus » ends with the version of the app (`batz 0.8.0-alpha`): the
+  constant `appVersion`, which a test keeps equal to the version name of
+  `pubspec.yaml`. After an update it says which version runs on the device.
+- The icon (H8) is one drawing, in `batz-ui/tool/app_icon.dart`: a white
+  « b » (a bar with round ends and a ring of the same thickness) on the
+  green of the app, described in the units of an Android adaptive icon
+  (a square of 108; the letter stays within 28 units of the middle, inside
+  the circle of 33 a launcher never cuts). `dart run tool/make_icons.dart`
+  writes every file from it, in pure Dart, with no package: the pixels are
+  computed (each the average of 8 × 8 points), the PNG, ICO and XML files
+  written by the tool itself.
+- Android: an adaptive icon for Android 8 and later (`mipmap-anydpi-v26`:
+  the letter as a vector drawable on the green as a colour, the same letter
+  as the single-colour layer of the icons Android 13 tints), and the five
+  PNG of Android 7. Windows: `app_icon.ico` with 256 pixels as a PNG and 48,
+  32, 24 and 16 as 32-bit bitmaps. Ubuntu: `batz.png` (256 pixels) beside
+  the executable, set as the icon of the window; and since a Wayland
+  session takes the icon from a desktop entry, the archive also carries
+  `install-desktop-entry.sh`, which writes `dev.batz.app.desktop` (the
+  application identifier) in the applications of the user, pointing at the
+  folder it is run from.
+- Outside the adaptive icon, the green is a square with round corners,
+  transparent around: the visible middle (72 of 108) of the same drawing.
+- The generated XML files are plain ASCII.
+
+**Evidence.** `test/app_icon_test.dart`: every icon file of the repository
+is the one the tool writes (pixels compared for the PNG, so that a
+different compression is not a difference; bytes for the bitmaps and the
+XML; it fails with the previous icon); the colours of chosen points (stem,
+bowl, hole, corner); the green equal to `accentColor`; the letter inside
+the safe circle; the three apps using the files.
+`test/pages/more_page_test.dart`: the version shown is the one of
+`pubspec.yaml`. The Ubuntu bundle built here holds `batz.png` and the
+script; the release APK built here holds the adaptive icon. The icon was
+looked at, at 256 and 48 pixels. On a phone and on Windows it is checked
+after installation.

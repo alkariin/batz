@@ -4421,6 +4421,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'batz s\'ouvre sans déverrouillage. Activez un verrouillage d\'écran dans les réglages d\'Android.'**
   String get taskNoScreenLockHint;
+
+  /// No description provided for @moreVersion.
+  ///
+  /// In fr, this message translates to:
+  /// **'batz {version}'**
+  String moreVersion(String version);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

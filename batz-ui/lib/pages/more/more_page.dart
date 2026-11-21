@@ -14,6 +14,7 @@ import '../redistribution/redistribution_page.dart';
 import '../server/server_cubit.dart';
 import '../server/server_page.dart';
 import '../validation/rules_page.dart';
+import '../../version.dart';
 
 /// « Plus »: the analyses (the modules of phase 6), the subscriptions, then
 /// the settings (specification, 4.6).
@@ -113,6 +114,16 @@ class MorePage extends StatelessWidget {
             ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ServerPage())),
+          ),
+          // The version installed on this device: what an update changes.
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              l.moreVersion(appVersion),
+              key: const Key('moreVersion'),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ),
         ],
       ),

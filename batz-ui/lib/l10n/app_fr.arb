@@ -1284,5 +1284,7 @@
   "lockFailed": "Le déverrouillage a échoué : {error}",
   "@lockFailed": {"placeholders": {"error": {"type": "String"}}},
   "taskNoScreenLock": "Ce téléphone n'a pas de verrouillage d'écran",
-  "taskNoScreenLockHint": "batz s'ouvre sans déverrouillage. Activez un verrouillage d'écran dans les réglages d'Android."
+  "taskNoScreenLockHint": "batz s'ouvre sans déverrouillage. Activez un verrouillage d'écran dans les réglages d'Android.",
+  "moreVersion": "batz {version}",
+  "@moreVersion": {"placeholders": {"version": {"type": "String"}}}
 }

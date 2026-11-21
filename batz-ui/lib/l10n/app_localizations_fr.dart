@@ -2651,4 +2651,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get taskNoScreenLockHint =>
       'batz s\'ouvre sans déverrouillage. Activez un verrouillage d\'écran dans les réglages d\'Android.';
+
+  @override
+  String moreVersion(String version) {
+    return 'batz $version';
+  }
 }
