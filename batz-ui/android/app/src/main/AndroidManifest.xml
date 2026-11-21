@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The app reaches the home server: needed by release builds too. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="batz"
         android:allowBackup="false"

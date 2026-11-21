@@ -4,7 +4,7 @@ publish_to: 'none'
 
 # 0.MINOR.PATCH until 1.0. The build number (+N) must increase on every
 # Android release, or the phone refuses the update.
-version: 0.4.0+4
+version: 0.4.1+5
 
 environment:
   sdk: ^3.13.5
