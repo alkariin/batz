@@ -2,9 +2,11 @@ name: batz
 description: "Personal accounting: where the money goes, what each year costs, how net worth evolves."
 publish_to: 'none'
 
-# 0.MINOR.PATCH until 1.0. The build number (+N) must increase on every
-# Android release, or the phone refuses the update.
-version: 0.7.0+8
+# 0.MINOR.PATCH-alpha until 1.0: the suffix is part of the version name and
+# of the release tag (v0.8.0-alpha), so that Obtainium reads the same version
+# in both. The build number (+N) must increase on every Android release, or
+# the phone refuses the update (scripts/check-build-number.sh).
+version: 0.8.0-alpha+9
 
 environment:
   sdk: ^3.13.5

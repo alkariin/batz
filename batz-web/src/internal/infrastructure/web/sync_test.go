@@ -132,6 +132,16 @@ func TestSyncChecksProtocolAndAppVersion(t *testing.T) {
 		assert.Equal(t, CodeAppVersionUnsupported, body["code"], old)
 		assert.Contains(t, body["message"], version.MinAppVersion)
 	}
+
+	// The server of phase 7 still accepts apps 0.7.0, and apps 0.8.0-alpha,
+	// whose suffix does not count.
+	assert.Equal(t, "0.7.0", version.MinAppVersion)
+	for _, accepted := range []string{"0.7.0", "0.8.0-alpha"} {
+		req = syncBody(nil)
+		req["appVersion"] = accepted
+		w, _ = f.do("POST", "/api/v1/sync", phone, req)
+		assert.Equal(t, http.StatusOK, w.Code, accepted)
+	}
 }
 
 func TestSyncSizeLimits(t *testing.T) {

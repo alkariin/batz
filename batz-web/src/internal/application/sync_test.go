@@ -187,10 +187,14 @@ func TestProtocolAndAppVersion(t *testing.T) {
 		_, err = s.Exchange(t.Context(), phone, req)
 		assert.ErrorIs(t, err, application.ErrAppTooOld, v)
 	}
-	req = request(nil, nil)
-	req.AppVersion = "0.7.0"
-	_, err = s.Exchange(t.Context(), phone, req)
-	assert.NoError(t, err)
+	// 0.7.0 is still accepted by the server of phase 7, which adds nothing
+	// to the journal; the suffix of 0.8.0-alpha does not count.
+	for _, v := range []string{"0.7.0", "0.8.0-alpha", "v0.8.0-alpha", "0.8.1-alpha", "1.0.0"} {
+		req = request(nil, nil)
+		req.AppVersion = v
+		_, err = s.Exchange(t.Context(), phone, req)
+		assert.NoError(t, err, v)
+	}
 }
 
 func TestAPageOverTheLimitIsRefused(t *testing.T) {

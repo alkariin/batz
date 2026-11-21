@@ -1,8 +1,9 @@
 # Deployment
 
 The server runs as one container on the home NAS (Synology, x86_64), reachable
-on the home network only. The apps are installed by hand from the files
-attached to each GitHub release.
+on the home network only. The apps are installed from the files attached to
+each GitHub release: by hand on the computers, by hand or through Obtainium
+on the phone.
 
 ## Server
 
@@ -29,14 +30,14 @@ Each release carries `batz-web-<version>.tar.gz`, a `docker save` of the image
 # On the NAS (Synology: docker lives in /usr/local/bin, which non-interactive
 # SSH sessions do not have on PATH)
 export PATH="$PATH:/usr/local/bin"
-gunzip -c batz-web-v0.7.0.tar.gz | docker load
+gunzip -c batz-web-v0.8.0-alpha.tar.gz | docker load
 mkdir -p /volume1/docker/batz/data
 sudo chown 10001:10001 /volume1/docker/batz/data
 docker rm -f batz-web 2>/dev/null
 docker run -d --name batz-web --restart unless-stopped \
   -p 8443:8443 -v /volume1/docker/batz/data:/data \
   --read-only --cap-drop ALL --security-opt no-new-privileges:true \
-  batz-web:v0.7.0
+  batz-web:v0.8.0-alpha
 docker inspect -f '{{.State.Health.Status}}' batz-web   # healthy after a few seconds
 ```
 
@@ -50,7 +51,7 @@ every paired app refuse the server until it is paired again.
 From the development machine, with SSH key access to the NAS:
 
 ```sh
-batz-web/scripts/deploy-nas.sh batz-web-v0.7.0.tar.gz user@192.168.1.95
+batz-web/scripts/deploy-nas.sh batz-web-v0.8.0-alpha.tar.gz user@192.168.1.95
 ```
 
 It streams the image to `docker load`, gives the data folder to uid 10001
@@ -63,6 +64,19 @@ upgrades the server and keeps its data and certificate.
 On Synology, shared folders carry ACLs that make new files readable by every
 NAS account, `tls/server.key` included, whatever the permissions the server
 sets. Keep the folder in a share that only administrators can open.
+
+### Upgrading to 0.8.0-alpha (export, lock)
+
+Server 0.8.0-alpha changes only its version: no route, no migration, no
+folder. Nothing new enters the journal (the export and the lock of the
+Android app belong to each device), so it still accepts apps 0.7.0, and apps
+0.8.0-alpha work with a server 0.7.0: upgrade the server and the apps in any
+order. Nothing needs to be paired again. The suffix does not count when
+versions are compared: `0.8.0-alpha` is `0.8.0`.
+
+After the upgrade, the Android app asks to unlock the phone when it opens
+(fingerprint, face or the code of the device): see
+[security](../../docs/security.md).
 
 ### Upgrading to 0.7.0 (modules)
 
@@ -154,9 +168,49 @@ device name, then compare the fingerprint shown with the printed one.
 
 | Platform | Release file | Install |
 |---|---|---|
-| Android | `batz-<version>-android-arm64.apk` | Open the APK on the phone (allow installs from that source). |
-| Ubuntu | `batz-<version>-linux-x64.tar.gz` | Extract anywhere and run `batz`. Needs `libgtk-3-0` and `libsecret-1-0`. |
+| Android | `batz-<version>-android-arm64.apk` | Through Obtainium (below), or open the APK on the phone (allow installs from that source). Android 7 or later, arm64. |
+| Ubuntu | `batz-<version>-linux-x64.tar.gz` | Extract anywhere and run `batz`. Needs `libgtk-3-0` and `libsecret-1-0`. `./install-desktop-entry.sh` adds batz, with its icon, to the applications of the desktop. |
 | Windows | `batz-<version>-windows-x64.zip` | Extract anywhere and run `batz.exe`. |
+
+### Android with Obtainium
+
+[Obtainium](https://github.com/ImranR98/Obtainium) installs an app from its releases
+and tells when a new one is published; batz is on no store.
+
+1. In Obtainium: « Add app », source URL `https://github.com/alkariin/batz`.
+2. Leave the options as they are. Each release carries one APK, and its tag
+   is the version of the app (`v0.8.0-alpha` for the version name
+   `0.8.0-alpha`), which is how Obtainium knows that the installed app is up
+   to date. The releases are ordinary ones, not marked as pre-releases, so
+   « Include prereleases » is not needed.
+3. « Install ». Android asks once to allow Obtainium to install apps.
+
+When a release is published, Obtainium offers the update; installing it
+replaces the app and keeps its data. An app installed by hand from an APK of
+a release can be added to Obtainium afterwards: it is the same app, signed
+with the same key.
+
+### Updating an app
+
+A new version installs over the previous one: the local database, the
+pairing with the server and the choices of the device are kept, on every
+platform.
+
+- **Android**: Obtainium, or open the new APK. Android refuses an APK
+  signed with another key or with a lower build number; the release workflow
+  checks both (`scripts/check-build-number.sh`, the certificate fingerprint).
+- **Ubuntu, Windows**: extract the new archive over the old folder, or
+  anywhere else: the data are not in the folder of the app. They are in
+  `~/.local/share/dev.batz.app/` on Ubuntu and in `%APPDATA%\batz\batz\` on
+  Windows. On Ubuntu, run `./install-desktop-entry.sh` again if the folder
+  moved.
+- An app older than the server asks for shows that it is too old and does
+  not synchronise until it is updated; its data stay.
+- Every earlier version of the local database is opened by the tests of each
+  release (`batz-ui/test/data/upgrade_test.dart`).
+
+Uninstalling the Android app deletes its local data: pair the phone again
+afterwards, and the first exchange brings everything back from the server.
 
 ### Android signing key
 
@@ -187,9 +241,13 @@ debug key and cannot upgrade a released install.
 ## Releasing
 
 1. Set `version:` in `batz-ui/pubspec.yaml` (and `appVersion` in
-   `batz-ui/lib/version.dart`; a test checks they agree).
-2. Publish a GitHub release tagged `v<version>`. The release workflow checks
-   the tag against the pubspec, then attaches the APK, the Ubuntu and Windows
-   archives and the server image file.
+   `batz-ui/lib/version.dart`; a test checks they agree), and raise its
+   build number (`+N`): `scripts/check-build-number.sh` fails when it is not
+   greater than the one of every published version.
+2. Publish a GitHub release tagged `v<version name>`, suffix included
+   (`0.8.0-alpha+9` → `v0.8.0-alpha`), as an ordinary release: Obtainium
+   skips pre-releases. The release workflow checks the tag
+   (`scripts/check-release-tag.sh`) and the build number, then attaches the
+   APK, the Ubuntu and Windows archives and the server image file.
 3. Run it by hand without a tag for a dry run: the files are kept as workflow
    artifacts for three days and no release is touched.

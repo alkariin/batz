@@ -19,7 +19,8 @@ var Version = "dev"
 // fiscal years, trips, kWh, subscriptions, settings); an older one would
 // keep them in its journal without showing them. The app compares it with
 // its own version and refuses to synchronise when it is older; the server
-// refuses its exchanges too.
+// refuses its exchanges too. Version 0.8.0-alpha keeps it: the export and
+// the lock of the Android app add nothing to the journal.
 const MinAppVersion = "0.7.0"
 
 var versionPattern = regexp.MustCompile(`^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?`)

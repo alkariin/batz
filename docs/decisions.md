@@ -2288,6 +2288,11 @@ performance test is only meaningful on a quiet machine, which it waits for.
   not painted, no hit test, no semantics) and out of focus, so the screen
   and what was being typed are found again (principles 5 and 6). The cubits
   above it are untouched: the synchronisation goes on while locked.
+- While the app is locked, the « back » of Android closes nothing
+  (`LockedBackGuard`): the navigator kept behind the lock would otherwise
+  pop its screen, and lose what was being typed. The guard is an observer of
+  the binding added above the `MaterialApp`, so that it is asked before the
+  navigator; unlocked, it lets « back » through.
 - A phone without screen lock (H4): the app opens, and a task of the home
   screen says so. At each return the device is asked again; as soon as it
   has a screen lock the app is behind it, whatever the time away.
@@ -2361,3 +2366,56 @@ the safe circle; the three apps using the files.
 script; the release APK built here holds the adaptive icon. The icon was
 looked at, at 256 and 48 pixels. On a phone and on Windows it is checked
 after installation.
+
+### 7.5 Documentation and version 0.8.0-alpha
+
+**Documentation.**
+
+- `README.md` is rewritten for someone who discovers the project or installs
+  an instance of their own (H7): what batz does, the installation of the
+  server and of the apps, the first steps, updating, the documents. It says
+  that the project is in alpha.
+- Its four pictures are made by `flutter test tool/screenshots_test.dart`
+  from invented data, at the size of a phone (400 × 860, two pixels per
+  point), with the fonts of the Flutter SDK and real shadows: « Année », the
+  flow diagram and « Fortune » of a year 2026 built through the operations
+  of the app (84'000.00 of income, 47'285.00 of expenses, three accounts
+  with their declared balances, a salary sheet), and the validation of the
+  fictitious January statement of the server's test set with six rules. The
+  tool is not part of `flutter test`, which runs `test/` only; the pictures
+  are in `docs/images/`.
+- `docs/export.md` (each file and its columns, the format, opening in
+  Excel), `docs/security.md` (what protects what, and what is not
+  protected), `batz-web/docs/deployment.md` (Android with Obtainium,
+  updating an app, where the data are, upgrading to 0.8.0-alpha, releasing
+  with a suffix), `batz-web/docs/architecture.md` (the export and the lock).
+
+**Version.**
+
+- The app is `0.8.0-alpha+9`: the suffix is part of the version name
+  (`appVersion`, the Android version name, what « Plus » shows) and of the
+  tag of the release, `v0.8.0-alpha` (H6). The server takes its version from
+  the tag when its image is built.
+- The server's minimum app version stays 0.7.0: this phase adds no entity,
+  no route and no migration. Its tests accept 0.7.0 and 0.8.0-alpha, at the
+  use case and over HTTP, and still refuse 0.6.0 and older. Apps
+  0.8.0-alpha work with the server 0.7.0 of the NAS, and apps 0.7.0 with a
+  server 0.8.0-alpha: no order of upgrade.
+- The release is an ordinary GitHub release, not a pre-release: Obtainium
+  skips pre-releases unless told otherwise.
+
+**Final checks** (2026-11-21, development machine, version 0.8.0-alpha).
+`dart format` changes nothing in `lib` and `test`; `flutter analyze` finds no
+issue; the 561 tests of the app pass, the export of the ledger of 10 000
+transactions measured at 306 to 369 ms over ten runs; `gofmt`, `go vet` and
+`go test -race -count=1 ./...` pass; `scripts/check-build-number.sh` (9
+after 8), `scripts/check-release-tag.sh` (`v0.8.0-alpha` accepted, `v0.8.0`
+refused) and `scripts/check-personal-files.sh` pass; the Ubuntu bundle, the
+release APK and the server image build.
+
+**Not verified here.** The Windows build with a version name that carries a
+suffix: only CI builds for Windows, after the push. The Ubuntu and Android
+builds accept it (step 7.0, and the builds of this step), and the Flutter
+tool writes the version of the Windows build from the same generated CMake
+configuration as the Ubuntu one (`flutter_tools`, `cmake.dart`: major,
+minor, patch and the numeric build number, here 0, 8, 0 and 9).

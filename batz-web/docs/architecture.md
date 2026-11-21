@@ -87,6 +87,8 @@ batz-ui/lib
 │   │             wealth, its curve and its explanation
 │   ├── modules   linked categories, salary sheet, flow diagram, taxes,
 │   │             trips, electricity, subscriptions
+│   ├── export    the files of an export, what goes where, the CSV format,
+│   │             the ZIP
 │   ├── allocation.dart, fraction.dart, calendar_date.dart   spreading over months
 │   ├── period_model.dart   periods of the mapping rules
 │   └── ids.dart  random and computed identifiers
@@ -98,6 +100,7 @@ batz-ui/lib
 │   │             import answer
 │   ├── sync      exchange engine, wire format, memory of the server state
 │   ├── files.dart          picking and saving files (file_picker)
+│   ├── device_lock.dart    the lock of the device (local_auth), Android only
 │   └── secret_store.dart   system secret storage
 ├── pages         shell, home (synchronisation, tasks, key figures), transactions
 │                 (search, filters), import and statements, validation and
@@ -105,8 +108,9 @@ batz-ui/lib
 │                 shares to classify, wealth (accounts, curve, table, the
 │                 screen of an account), debts, modules (salary sheet, flow
 │                 diagram, taxes, vacations, electricity, subscriptions),
-│                 accounts, categories, server settings, cubits (ledger,
-│                 server, sync, import)
+│                 accounts, categories, server settings, export, the
+│                 lock in front of every screen, cubits (ledger, server,
+│                 sync, import, lock)
 ├── components    shared widgets
 ├── helpers       Swiss formats, theme
 └── l10n          French texts (ARB) and generated localisations
@@ -247,6 +251,15 @@ business rules and returns the `Modification` to write, or throws a
   The trips, totals, ratios, the control of the taxes and the flow diagram
   are computed when their screen opens. See
   [`docs/modules.md`](../../docs/modules.md).
+- **Export**: `exportFiles(ledger)` gives seventeen CSV files from the ledger
+  the screens read, `buildExportArchive` the ZIP handed to the save dialog.
+  It writes nothing and needs no server; a table names the file and column
+  of every field of every entity, and a test fails when one is missing. See
+  [`docs/export.md`](../../docs/export.md).
+- **Lock** (Android): `LockGate` stands in front of the navigator and draws
+  none of the screens while `LockCubit` says the app is locked: at start, and
+  when it comes back after more than a minute away. The device is asked
+  through `DeviceLock`. See [`docs/security.md`](../../docs/security.md).
 
 On Android the database is encrypted with SQLCipher (selected per platform
 through the `sqlite3` package hooks, see `docs/decisions.md`). Its key, 32
@@ -330,7 +343,7 @@ keeps the pin, so another machine at that address is refused.
   computation of the views of a year and of the « Fortune » screen with
   10 000 transactions, 100 balances and 200 debts, alone on the machine
   (every test file holds a shared lock, the measurement takes it exclusive
-  for the whole test); databases written by versions 0.1.0 to 0.6.0 are
+  for the whole test); databases written by versions 0.1.0 to 0.7.0 are
   opened by `test/data/upgrade_test.dart`. Each module has its tests: the
   examples of the plan, properties on random data (the flow diagram
   balanced, each line of the vacation category in one trip, the price of
@@ -338,6 +351,13 @@ keeps the pin, so another machine at that address is refused.
   lines), and the check that no entry changes the views nor the wealth;
   `test/e2e/modules_e2e_test.dart` sends them between devices, and the
   convergence test includes their operations. The performance test also
-  bounds each module screen and the diagram. `benchmark/first_exchange_test.dart` and
+  bounds each module screen, the diagram and the export. The export has its
+  tests (`test/domain/export/`): an example ledger against its expected
+  files, the format read back by another reader, every record of random
+  ledgers found in its file, the completeness of the schema, and two
+  synchronised devices exporting the same files (`test/e2e/export_e2e_test.dart`).
+  The lock is tested with a simulated phone and clock (`test/pages/lock/`),
+  and `test/android_manifest_test.dart` checks what it asks of the Android
+  app. `benchmark/first_exchange_test.dart` and
   `benchmark/journal_write_test.dart`, run by hand, measure a first exchange
   of 20 000 entries and the writing of 1 000 fields.
