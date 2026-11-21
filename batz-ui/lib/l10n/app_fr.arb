@@ -1273,5 +1273,16 @@
   "@exportSaved": {"placeholders": {"files": {"type": "int"}, "transactions": {"type": "int"}}},
   "exportCancelled": "Export annulé : rien n'a été enregistré.",
   "exportFailed": "L'export a échoué : {error}",
-  "@exportFailed": {"placeholders": {"error": {"type": "String"}}}
+  "@exportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "lockTitle": "L'app est verrouillée.",
+  "lockUnlock": "Déverrouiller",
+  "lockRetry": "Réessayer",
+  "lockDialogTitle": "Déverrouiller batz",
+  "lockDialogReason": "Empreinte, visage ou code de l'appareil",
+  "lockCancelled": "Déverrouillage annulé.",
+  "lockLockedOut": "Trop d'essais : réessayez dans un moment.",
+  "lockFailed": "Le déverrouillage a échoué : {error}",
+  "@lockFailed": {"placeholders": {"error": {"type": "String"}}},
+  "taskNoScreenLock": "Ce téléphone n'a pas de verrouillage d'écran",
+  "taskNoScreenLockHint": "batz s'ouvre sans déverrouillage. Activez un verrouillage d'écran dans les réglages d'Android."
 }

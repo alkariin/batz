@@ -5,6 +5,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'helpers/theme.dart';
 import 'l10n/app_localizations.dart';
 import 'pages/ledger_cubit.dart';
+import 'pages/lock/lock_cubit.dart';
+import 'pages/lock/lock_gate.dart';
 import 'pages/server/server_cubit.dart';
 import 'pages/shell.dart';
 import 'pages/sync/sync_cubit.dart';
@@ -21,6 +23,7 @@ class BatzApp extends StatelessWidget {
       value: services,
       child: MultiBlocProvider(
         providers: [
+          BlocProvider(create: (_) => LockCubit(services.deviceLock, now: services.now)),
           BlocProvider(create: (_) => ServerCubit(services.server)..load()),
           BlocProvider(create: (_) => LedgerCubit(services.ledger)..load()),
           BlocProvider(
@@ -42,7 +45,12 @@ class BatzApp extends StatelessWidget {
         child: BlocListener<ServerCubit, ServerState>(
           listenWhen: (previous, current) => previous.pairing?.deviceId != current.pairing?.deviceId,
           listener: (context, _) => context.read<SyncCubit>().pairingChanged(),
-          child: _material(home: const AppShell()),
+          // The door stands in front of the navigator, so in front of every
+          // screen and dialog (principle 5 of phase 7).
+          child: _material(
+            home: const AppShell(),
+            builder: (context, child) => LockGate(child: child!),
+          ),
         ),
       ),
     );
@@ -86,8 +94,9 @@ class StartupErrorApp extends StatelessWidget {
   }
 }
 
-MaterialApp _material({required Widget home}) {
+MaterialApp _material({required Widget home, TransitionBuilder? builder}) {
   return MaterialApp(
+    builder: builder,
     onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
     debugShowCheckedModeBanner: false,
     theme: buildTheme(Brightness.light),

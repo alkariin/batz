@@ -4361,6 +4361,66 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'L\'export a échoué : {error}'**
   String exportFailed(String error);
+
+  /// No description provided for @lockTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'app est verrouillée.'**
+  String get lockTitle;
+
+  /// No description provided for @lockUnlock.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déverrouiller'**
+  String get lockUnlock;
+
+  /// No description provided for @lockRetry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer'**
+  String get lockRetry;
+
+  /// No description provided for @lockDialogTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déverrouiller batz'**
+  String get lockDialogTitle;
+
+  /// No description provided for @lockDialogReason.
+  ///
+  /// In fr, this message translates to:
+  /// **'Empreinte, visage ou code de l\'appareil'**
+  String get lockDialogReason;
+
+  /// No description provided for @lockCancelled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déverrouillage annulé.'**
+  String get lockCancelled;
+
+  /// No description provided for @lockLockedOut.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop d\'essais : réessayez dans un moment.'**
+  String get lockLockedOut;
+
+  /// No description provided for @lockFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le déverrouillage a échoué : {error}'**
+  String lockFailed(String error);
+
+  /// No description provided for @taskNoScreenLock.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce téléphone n\'a pas de verrouillage d\'écran'**
+  String get taskNoScreenLock;
+
+  /// No description provided for @taskNoScreenLockHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'batz s\'ouvre sans déverrouillage. Activez un verrouillage d\'écran dans les réglages d\'Android.'**
+  String get taskNoScreenLockHint;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import 'data/device_lock.dart';
 import 'data/files.dart';
 import 'data/ledger/ledger_repository.dart';
 import 'data/local/database.dart';
@@ -26,6 +27,8 @@ class AppServices {
     this.importTransport,
     FileAccess? files,
     this.today = CalendarDate.today,
+    this.deviceLock,
+    this.now = DateTime.now,
   }) : server = ServerRepository(secrets),
        files = files ?? SystemFileAccess(),
        ledger = LedgerRepository(database, journal),
@@ -44,7 +47,14 @@ class AppServices {
       encrypt: Platform.isAndroid,
     );
     final journal = await Journal.open(database);
-    return AppServices(database: database, journal: journal, secrets: secrets);
+    return AppServices(
+      database: database,
+      journal: journal,
+      secrets: secrets,
+      // The app is behind the lock of the device on Android only
+      // (specification, chapter 9).
+      deviceLock: Platform.isAndroid ? SystemDeviceLock() : null,
+    );
   }
 
   final LocalDatabase database;
@@ -70,4 +80,12 @@ class AppServices {
   /// to, debts are entered and checked, and the wealth is seen (phase 5).
   /// Tests set the day.
   final CalendarDate Function() today;
+
+  /// The lock of the device the app stands behind; null where there is
+  /// none to ask (Windows, Ubuntu, and the tests that do not set one).
+  final DeviceLock? deviceLock;
+
+  /// The clock of this device, read when the app leaves the screen and
+  /// when it comes back (decision H3 of phase 7). Tests set it.
+  final DateTime Function() now;
 }

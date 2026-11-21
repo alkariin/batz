@@ -2618,4 +2618,37 @@ class AppLocalizationsFr extends AppLocalizations {
   String exportFailed(String error) {
     return 'L\'export a échoué : $error';
   }
+
+  @override
+  String get lockTitle => 'L\'app est verrouillée.';
+
+  @override
+  String get lockUnlock => 'Déverrouiller';
+
+  @override
+  String get lockRetry => 'Réessayer';
+
+  @override
+  String get lockDialogTitle => 'Déverrouiller batz';
+
+  @override
+  String get lockDialogReason => 'Empreinte, visage ou code de l\'appareil';
+
+  @override
+  String get lockCancelled => 'Déverrouillage annulé.';
+
+  @override
+  String get lockLockedOut => 'Trop d\'essais : réessayez dans un moment.';
+
+  @override
+  String lockFailed(String error) {
+    return 'Le déverrouillage a échoué : $error';
+  }
+
+  @override
+  String get taskNoScreenLock => 'Ce téléphone n\'a pas de verrouillage d\'écran';
+
+  @override
+  String get taskNoScreenLockHint =>
+      'batz s\'ouvre sans déverrouillage. Activez un verrouillage d\'écran dans les réglages d\'Android.';
 }

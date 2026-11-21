@@ -1,3 +1,4 @@
+import 'package:batz/data/device_lock.dart';
 import 'package:batz/data/local/database.dart';
 import 'package:batz/data/local/journal.dart';
 import 'package:batz/data/files.dart';
@@ -15,6 +16,8 @@ Future<AppServices> testServices({
   ImportTransportFactory? importTransport,
   FileAccess? files,
   CalendarDate Function()? today,
+  DeviceLock? deviceLock,
+  DateTime Function()? now,
 }) async {
   final database = LocalDatabase(NativeDatabase.memory());
   return AppServices(
@@ -25,5 +28,7 @@ Future<AppServices> testServices({
     importTransport: importTransport,
     files: files,
     today: today ?? CalendarDate.today,
+    deviceLock: deviceLock,
+    now: now ?? DateTime.now,
   );
 }

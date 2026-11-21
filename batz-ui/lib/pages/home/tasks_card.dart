@@ -12,6 +12,7 @@ import '../../l10n/app_localizations.dart';
 import '../accounts/accounts_page.dart';
 import '../categories/categories_page.dart';
 import '../ledger_cubit.dart';
+import '../lock/lock_cubit.dart';
 import '../redistribution/redistribution_page.dart';
 import '../refunds/broken_refunds_page.dart';
 import '../shares/shares_page.dart';
@@ -33,6 +34,9 @@ class TasksCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final today = context.read<AppServices>().today();
+    // The device has no screen lock: the app opened without asking
+    // (decision H4 of phase 7), and says so while it lasts.
+    final noScreenLock = context.select<LockCubit, bool>((lock) => lock.state.noScreenLock);
     return BlocBuilder<LedgerCubit, LedgerState>(
       builder: (context, state) {
         final ledger = state.ledger;
@@ -51,6 +55,13 @@ class TasksCard extends StatelessWidget {
         final broken = ledger.brokenRefunds.length;
         final old = ledger.wealth(today).oldBalances;
         final tasks = [
+          if (noScreenLock)
+            ListTile(
+              key: const Key('taskNoScreenLock'),
+              leading: Icon(Icons.no_encryption_outlined, color: Theme.of(context).colorScheme.error),
+              title: Text(l.taskNoScreenLock),
+              subtitle: Text(l.taskNoScreenLockHint),
+            ),
           if (toValidate > 0)
             _tile(
               context,

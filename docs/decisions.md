@@ -2252,3 +2252,71 @@ below the 2 seconds of the plan; the reload after a write 87 to 116 ms. The
 test fails if any run exceeds its limit. A first measure taken while an
 Android build was still running gave three to five times as much: the
 performance test is only meaningful on a quiet machine, which it waits for.
+
+### 7.3 The lock of the Android app
+
+**Decisions.**
+
+- `DeviceLock` (`data/device_lock.dart`) is what the app asks of the device:
+  whether it has a screen lock, and to unlock. An attempt ends unlocked,
+  without screen lock, refused (cancelled by the user or by the system, a
+  timeout, too many attempts) or failed. `SystemDeviceLock` does it with
+  `local_auth`: `isDeviceSupported`, then `authenticate` with
+  `biometricOnly: false` (fingerprint, face or the code of the device, H3),
+  without the confirmation button after a recognised face, and with French
+  texts for the system dialog (`AndroidAuthMessages`, hence
+  `local_auth_android` named in `pubspec.yaml`: the Android half of the same
+  plugin, no further library). It never throws: a code of the plugin it does
+  not know, those added later included, and any other error is a failure
+  shown on the lock screen. `AppServices.open` creates it on Android only; on
+  Windows and Ubuntu the app has none, hence no lock.
+- `LockCubit` holds the rule (H3, H4). The app starts locked. When it leaves
+  the screen unlocked, the time is noted, once; when it comes back, it locks
+  if strictly more than 60 seconds passed, or if the clock went back. The
+  clock is the wall clock of the device (`AppServices.now`): a monotonic
+  clock stops while the phone sleeps. The decision is taken in the lifecycle
+  callback itself, before the first frame drawn after the return. A return
+  tells whether the system dialog is to be opened: when it locks, and when
+  the app was left locked without a dialog; never while a dialog is open
+  (the code of the device typed on another screen), so one dialog at a time.
+- « Leaving the screen » is the app hidden (its activity stopped), not a
+  loss of focus: the notification shade, the fingerprint sheet or a split
+  screen do not count. `AppLifecycleListener.onHide` and `onShow`.
+- `LockGate` stands in `MaterialApp.builder`, in front of the navigator:
+  every route and dialog is behind it. Before the first unlocking the
+  navigator is not built at all. A locked app keeps it `Offstage` (laid out,
+  not painted, no hit test, no semantics) and out of focus, so the screen
+  and what was being typed are found again (principles 5 and 6). The cubits
+  above it are untouched: the synchronisation goes on while locked.
+- A phone without screen lock (H4): the app opens, and a task of the home
+  screen says so. At each return the device is asked again; as soon as it
+  has a screen lock the app is behind it, whatever the time away.
+- Android: `MainActivity` is a `FlutterFragmentActivity`; the main manifest
+  declares `USE_BIOMETRIC`; the launch theme and the normal theme get
+  AppCompat parents (the README asks it of the launch theme; Flutter
+  replaces it by the normal theme once started, the one the dialog opens
+  under, so both); `setRecentsScreenshotEnabled(false)` from Android 13
+  (H5), and no `FLAG_SECURE`: screenshots stay possible.
+- The key of the database is unchanged: kept by the Android Keystore, not
+  bound to the unlocking. The lock is a door in front of the screens
+  (principle 5); `docs/security.md` says what it protects from.
+
+**Not verified here.** The development machine cannot run an Android
+emulator (no hardware virtualisation). The system dialog itself, the
+fingerprint, the code of the device and the list of recent apps are checked
+on a real phone after installation (plan, « À vérifier par l'utilisateur »).
+
+**Evidence.** `test/pages/lock/lock_cubit_test.dart` (the example of the
+plan line by line: 59, 60 and 61 seconds, the clock going back; the time
+noted once; cancelled, too many attempts, error; one dialog at a time; a
+return to a locked app; a phone without screen lock, then with one, then
+without again; a computer). `test/pages/lock/lock_gate_test.dart`, with a
+simulated phone and clock under the whole app: nothing of the app in the
+widget tree before the first unlocking; the lock screen, its messages and
+its buttons; a form half filled found again after a lock at 61 seconds and
+after the clock going back, its screens off stage meanwhile; the warning of
+the home screen; no lock on a computer. `test/data/device_lock_test.dart`
+(every code of the plugin to its outcome). `test/android_manifest_test.dart`
+(the permission, the activity, the themes, the recent apps). The release
+APK builds with them, and `aapt dump permissions` on it lists `INTERNET`,
+`USE_BIOMETRIC` and `USE_FINGERPRINT` (the last from `androidx.biometric`).
