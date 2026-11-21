@@ -10,6 +10,8 @@ import '../../l10n/app_localizations.dart';
 import '../../services.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
+import '../redistribution/redistribution_page.dart';
+import '../shares/shares_page.dart';
 import '../validation/validation_page.dart';
 import 'composition_page.dart';
 import 'year_texts.dart';
@@ -174,6 +176,11 @@ class _YearPageState extends State<YearPage> {
   void _open(BuildContext context, int year, _Line line, {int? month}) {
     final row = line.row;
     if (row == null) return;
+    // « À classer » leads to the questions of the year (H5).
+    if (row is ToClassifyRow) {
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => SharesPage(year: year)));
+      return;
+    }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) =>
@@ -241,6 +248,14 @@ class _YearPageState extends State<YearPage> {
               ),
               _Header(view: view),
               if (view.isPreview) _Notice(l.yearPreview('$year')),
+              if (view.inapplicable.isNotEmpty)
+                _Notice(
+                  l.yearInapplicable(view.inapplicable.length),
+                  key: const Key('yearInapplicable'),
+                  onTap: () =>
+                      Navigator.of(context)
+                          .push(MaterialPageRoute<void>(builder: (_) => RedistributionPage(initialYear: year))),
+                ),
               if (view.linesToValidate > 0)
                 _Notice(
                   l.yearToValidate(view.linesToValidate),

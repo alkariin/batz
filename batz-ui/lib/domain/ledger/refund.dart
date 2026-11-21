@@ -50,6 +50,20 @@ extension RefundOperations on Ledger {
     ]);
   }
 
+  /// Attaches the imported line [transactionId] to the expense line
+  /// [expenseLineId] and sets its description and note, in one
+  /// modification: the third choice of the validation screen (H4).
+  Modification validateAsRefund(
+    String transactionId,
+    String expenseLineId, {
+    required String description,
+    required String note,
+  }) => Modification([
+    ...attachRefund(transactionId, expenseLineId).changes,
+    FieldChange(TransactionFields.entity, transactionId, TransactionFields.description, description.trim()),
+    FieldChange(TransactionFields.entity, transactionId, TransactionFields.note, note.trim()),
+  ]);
+
   /// Detaches the refund [transactionId]: its line gets back its own
   /// category and its date.
   Modification detachRefund(String transactionId) {

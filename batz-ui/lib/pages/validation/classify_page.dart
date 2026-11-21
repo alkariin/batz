@@ -4,18 +4,25 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../components/date_field.dart';
 import '../../domain/ledger/ledger.dart';
 import '../../domain/ledger/proposal.dart';
+import '../../domain/ledger/refund.dart';
 import '../../domain/ledger/rule.dart';
 import '../../domain/ledger/transaction.dart';
 import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
+import '../refunds/refund_target_page.dart';
 import 'rule_form_page.dart';
 import 'validation_texts.dart';
 
-/// Classifies one imported line: a category of its year and a period, or a
-/// transfer with another account; its description and note. Validating it
-/// writes the classification (principle 4); for a proposed line it is the
+/// What an imported line is classified as: the three choices of the
+/// validation (decision H4 of phase 4).
+enum _Mode { category, transfer, refund }
+
+/// Classifies one imported line: a category of its year and a period, a
+/// transfer with another account, or, for money that came in, a refund
+/// attached to an expense; its description and note. Validating it writes
+/// the classification (principle 4); for a proposed line it is the
 /// correction of decision H4. « Créer une règle » starts from it.
 class ClassifyPage extends StatefulWidget {
   const ClassifyPage({super.key, required this.transactionId});
@@ -31,9 +38,10 @@ class _ClassifyPageState extends State<ClassifyPage> {
   final _end = TextEditingController();
   final _description = TextEditingController();
   final _note = TextEditingController();
-  var _transfer = false;
+  var _mode = _Mode.category;
   String? _categoryId;
   String? _accountId;
+  String? _expenseLineId;
   var _initialised = false;
 
   @override
@@ -62,7 +70,11 @@ class _ClassifyPageState extends State<ClassifyPage> {
                   periodEnd: t.line!.periodEnd,
                 ))
         : ledger.proposalOf(t);
-    _transfer = current?.isTransfer ?? false;
+    _mode = current?.isTransfer ?? false ? _Mode.transfer : _Mode.category;
+    if (t.isValidated && t.line?.refundedLineId != null) {
+      _mode = _Mode.refund;
+      _expenseLineId = t.line!.refundedLineId;
+    }
     _categoryId = current?.categoryId;
     _accountId = current?.counterpartAccountId;
     _start.text = DateField.text(current?.periodStart ?? t.date);
@@ -70,7 +82,7 @@ class _ClassifyPageState extends State<ClassifyPage> {
   }
 
   Classification? _classification(AppLocalizations l, LedgerTransaction t) {
-    if (_transfer) {
+    if (_mode == _Mode.transfer) {
       if (_accountId == null) {
         showMessage(context, l.classifyChooseAccount);
         return null;
@@ -87,6 +99,22 @@ class _ClassifyPageState extends State<ClassifyPage> {
 
   Future<void> _validate(LedgerTransaction t) async {
     final l = AppLocalizations.of(context);
+    if (_mode == _Mode.refund) {
+      final expense = _expenseLineId;
+      if (expense == null) {
+        showMessage(context, l.refundExpenseMissing);
+        return;
+      }
+      final saved = await applyToLedger(
+        context,
+        (ledger) => ledger.validateAsRefund(t.id, expense, description: _description.text, note: _note.text),
+      );
+      if (saved && mounted) {
+        showMessage(context, l.refundAttached);
+        Navigator.of(context).pop(true);
+      }
+      return;
+    }
     final classification = _classification(l, t);
     if (classification == null) return;
     final saved = await applyToLedger(
@@ -110,8 +138,9 @@ class _ClassifyPageState extends State<ClassifyPage> {
           initial: RuleDraft(
             year: t.date.year,
             keywords: [?keyword],
-            targetCategoryId: _transfer ? null : _categoryId,
-            targetAccountId: _transfer ? _accountId : null,
+            // Mapping rules never attach a refund (H4).
+            targetCategoryId: _mode == _Mode.category ? _categoryId : null,
+            targetAccountId: _mode == _Mode.transfer ? _accountId : null,
           ),
         ),
       ),
@@ -162,16 +191,37 @@ class _ClassifyPageState extends State<ClassifyPage> {
             Text(l.validationRule(keywordsText(rule)), style: theme.textTheme.bodySmall),
           ],
           const SizedBox(height: 16),
-          SegmentedButton<bool>(
+          SegmentedButton<_Mode>(
+            key: const Key('classifyMode'),
             segments: [
-              ButtonSegment(value: false, label: Text(l.classifyCategory)),
-              ButtonSegment(value: true, label: Text(l.classifyTransfer)),
+              ButtonSegment(value: _Mode.category, label: Text(l.classifyCategory)),
+              ButtonSegment(value: _Mode.transfer, label: Text(l.classifyTransfer)),
+              // Only money that came in refunds an expense (H4).
+              if (t.amount > 0) ButtonSegment(value: _Mode.refund, label: Text(l.classifyRefund)),
             ],
-            selected: {_transfer},
-            onSelectionChanged: (s) => setState(() => _transfer = s.first),
+            selected: {_mode},
+            onSelectionChanged: (s) => setState(() => _mode = s.first),
           ),
           const SizedBox(height: 16),
-          if (!_transfer) ...[
+          if (_mode == _Mode.refund) ...[
+            Text(l.refundExpense, style: theme.textTheme.labelMedium),
+            if (ledger.linesById[_expenseLineId] case final expense?)
+              expenseTile(context, ledger, expense.transaction, key: const Key('classifyExpense'))
+            else
+              ListTile(contentPadding: EdgeInsets.zero, title: Text(l.refundExpenseMissing)),
+            OutlinedButton.icon(
+              key: const Key('classifyPickExpense'),
+              icon: const Icon(Icons.search),
+              label: Text(l.refundPick),
+              onPressed: () async {
+                final lineId = await Navigator.of(context)
+                    .push(MaterialPageRoute<String>(builder: (_) => RefundTargetPage(excludeTransactionId: t.id)));
+                if (lineId != null && mounted) setState(() => _expenseLineId = lineId);
+              },
+            ),
+            const SizedBox(height: 8),
+            Text(l.refundHint, style: theme.textTheme.bodySmall),
+          ] else if (_mode == _Mode.category) ...[
             DropdownButtonFormField<String>(
               key: const Key('classifyCategory'),
               initialValue: categories.any((c) => c.id == _categoryId) ? _categoryId : null,

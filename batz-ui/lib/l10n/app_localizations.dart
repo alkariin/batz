@@ -2267,6 +2267,360 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Voir l\'année'**
   String get keyFiguresOpen;
+
+  /// No description provided for @redistributionMenu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Redistribution'**
+  String get redistributionMenu;
+
+  /// No description provided for @redistributionTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Redistribution {year}'**
+  String redistributionTitle(String year);
+
+  /// No description provided for @redistributionExplain.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque mois, le pourcentage du montant de la source passe dans la cible, sur une ligne distincte de chaque côté, dans les deux vues.'**
+  String get redistributionExplain;
+
+  /// No description provided for @redistributionEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune règle de redistribution cette année.'**
+  String get redistributionEmpty;
+
+  /// No description provided for @redistributionNoTree.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette année n\'a pas encore d\'arbre.'**
+  String get redistributionNoTree;
+
+  /// No description provided for @redistributionNew.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle règle'**
+  String get redistributionNew;
+
+  /// No description provided for @redistributionEdit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier la règle'**
+  String get redistributionEdit;
+
+  /// No description provided for @redistributionSource.
+  ///
+  /// In fr, this message translates to:
+  /// **'Source'**
+  String get redistributionSource;
+
+  /// No description provided for @redistributionTarget.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cible'**
+  String get redistributionTarget;
+
+  /// No description provided for @redistributionPercent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pourcentage'**
+  String get redistributionPercent;
+
+  /// No description provided for @redistributionPercentHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'De 0.01 à 100, deux décimales au plus.'**
+  String get redistributionPercentHint;
+
+  /// No description provided for @redistributionRule.
+  ///
+  /// In fr, this message translates to:
+  /// **'De {source} vers {target}'**
+  String redistributionRule(String source, String target);
+
+  /// No description provided for @redistributionSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Règle enregistrée.'**
+  String get redistributionSaved;
+
+  /// No description provided for @redistributionDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Règle supprimée.'**
+  String get redistributionDeleted;
+
+  /// No description provided for @redistributionDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer cette règle de redistribution ?'**
+  String get redistributionDeleteConfirm;
+
+  /// No description provided for @redistributionChooseSource.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez la source.'**
+  String get redistributionChooseSource;
+
+  /// No description provided for @redistributionChooseTarget.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez la cible.'**
+  String get redistributionChooseTarget;
+
+  /// No description provided for @redistributionProblemSourceMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne s\'applique pas : la source n\'est plus dans l\'arbre de l\'année.'**
+  String get redistributionProblemSourceMissing;
+
+  /// No description provided for @redistributionProblemTargetMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne s\'applique pas : la cible n\'est plus dans l\'arbre de l\'année.'**
+  String get redistributionProblemTargetMissing;
+
+  /// No description provided for @redistributionProblemSourceNotLeaf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne s\'applique pas : la source a des sous-catégories.'**
+  String get redistributionProblemSourceNotLeaf;
+
+  /// No description provided for @redistributionProblemTargetNotLeaf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne s\'applique pas : la cible a des sous-catégories.'**
+  String get redistributionProblemTargetNotLeaf;
+
+  /// No description provided for @redistributionProblemSameCategory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne s\'applique pas : la source et la cible sont la même catégorie.'**
+  String get redistributionProblemSameCategory;
+
+  /// No description provided for @redistributionProblemNatureMismatch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne s\'applique pas : la source et la cible ne sont pas de même nature.'**
+  String get redistributionProblemNatureMismatch;
+
+  /// No description provided for @redistributionProblemPercentInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne s\'applique pas : le pourcentage n\'est pas entre 0.01 et 100.'**
+  String get redistributionProblemPercentInvalid;
+
+  /// No description provided for @redistributionProblemOverHundred.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne s\'applique pas : les règles de cette source dépassent 100 %.'**
+  String get redistributionProblemOverHundred;
+
+  /// No description provided for @redistributionProblemChain.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne s\'applique pas : une cible est aussi la source d\'une règle.'**
+  String get redistributionProblemChain;
+
+  /// No description provided for @taskInapplicableRedistributions.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une règle de redistribution ne s\'applique pas} other{{count} règles de redistribution ne s\'appliquent pas}} en {year}'**
+  String taskInapplicableRedistributions(int count, String year);
+
+  /// No description provided for @taskInapplicableRedistributionsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Corrigez-les ou supprimez-les.'**
+  String get taskInapplicableRedistributionsHint;
+
+  /// No description provided for @taskShares.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une part à classer} other{{count} parts à classer}}'**
+  String taskShares(int count);
+
+  /// No description provided for @taskSharesHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Des montants reportés sur une autre année n\'y trouvent pas leur catégorie.'**
+  String get taskSharesHint;
+
+  /// No description provided for @taskBrokenRefunds.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Un remboursement a perdu sa dépense} other{{count} remboursements ont perdu leur dépense}}'**
+  String taskBrokenRefunds(int count);
+
+  /// No description provided for @taskBrokenRefundsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ils comptent dans leur propre catégorie : détachez-les ou rattachez-les à une autre dépense.'**
+  String get taskBrokenRefundsHint;
+
+  /// No description provided for @classifyRefund.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement'**
+  String get classifyRefund;
+
+  /// No description provided for @refundExpense.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépense remboursée'**
+  String get refundExpense;
+
+  /// No description provided for @refundPick.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir la dépense'**
+  String get refundPick;
+
+  /// No description provided for @refundSearch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Texte ou montant de la dépense'**
+  String get refundSearch;
+
+  /// No description provided for @refundNoExpense.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune dépense validée trouvée.'**
+  String get refundNoExpense;
+
+  /// No description provided for @refundExpenseMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez la dépense remboursée.'**
+  String get refundExpenseMissing;
+
+  /// No description provided for @refundHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le remboursement prend la catégorie et la période de sa dépense, qui affiche son coût net.'**
+  String get refundHint;
+
+  /// No description provided for @refundAttached.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement rattaché.'**
+  String get refundAttached;
+
+  /// No description provided for @refundDetach.
+  ///
+  /// In fr, this message translates to:
+  /// **'Détacher'**
+  String get refundDetach;
+
+  /// No description provided for @refundDetached.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement détaché.'**
+  String get refundDetached;
+
+  /// No description provided for @refundAttach.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rattacher à une dépense'**
+  String get refundAttach;
+
+  /// No description provided for @detailRefunds.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursements'**
+  String get detailRefunds;
+
+  /// No description provided for @detailNetCost.
+  ///
+  /// In fr, this message translates to:
+  /// **'Coût net'**
+  String get detailNetCost;
+
+  /// No description provided for @detailRefundOf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rembourse'**
+  String get detailRefundOf;
+
+  /// No description provided for @detailBrokenLink.
+  ///
+  /// In fr, this message translates to:
+  /// **'La dépense de ce remboursement n\'existe plus ou n\'est plus une dépense validée : il compte dans sa propre catégorie, à sa date.'**
+  String get detailBrokenLink;
+
+  /// No description provided for @entryRefund.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rembourse une dépense'**
+  String get entryRefund;
+
+  /// No description provided for @brokenRefundsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursements sans dépense'**
+  String get brokenRefundsTitle;
+
+  /// No description provided for @sharesTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parts à classer'**
+  String get sharesTitle;
+
+  /// No description provided for @sharesEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune part à classer.'**
+  String get sharesEmpty;
+
+  /// No description provided for @sharesGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'{origin} {originYear}, parts de {year}'**
+  String sharesGroup(String origin, String originYear, String year);
+
+  /// No description provided for @sharesExplain.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'arbre de {year} n\'a pas de catégorie « {name} » qui puisse recevoir ces montants. La réponse est mémorisée pour chaque ligne.'**
+  String sharesExplain(String year, String name);
+
+  /// No description provided for @sharesCategory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Catégorie en {year}'**
+  String sharesCategory(String year);
+
+  /// No description provided for @sharesClassifyGroup.
+  ///
+  /// In fr, this message translates to:
+  /// **'Classer le groupe'**
+  String get sharesClassifyGroup;
+
+  /// No description provided for @sharesClassified.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parts classées.'**
+  String get sharesClassified;
+
+  /// No description provided for @sharesChoose.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez une catégorie.'**
+  String get sharesChoose;
+
+  /// No description provided for @sharesLineCategory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour cette ligne seulement'**
+  String get sharesLineCategory;
+
+  /// No description provided for @yearInapplicable.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une règle de redistribution ne s\'applique pas} other{{count} règles de redistribution ne s\'appliquent pas}} cette année.'**
+  String yearInapplicable(int count);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -1353,4 +1353,229 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get keyFiguresOpen => 'Voir l\'année';
+
+  @override
+  String get redistributionMenu => 'Redistribution';
+
+  @override
+  String redistributionTitle(String year) {
+    return 'Redistribution $year';
+  }
+
+  @override
+  String get redistributionExplain =>
+      'Chaque mois, le pourcentage du montant de la source passe dans la cible, sur une ligne distincte de chaque côté, dans les deux vues.';
+
+  @override
+  String get redistributionEmpty => 'Aucune règle de redistribution cette année.';
+
+  @override
+  String get redistributionNoTree => 'Cette année n\'a pas encore d\'arbre.';
+
+  @override
+  String get redistributionNew => 'Nouvelle règle';
+
+  @override
+  String get redistributionEdit => 'Modifier la règle';
+
+  @override
+  String get redistributionSource => 'Source';
+
+  @override
+  String get redistributionTarget => 'Cible';
+
+  @override
+  String get redistributionPercent => 'Pourcentage';
+
+  @override
+  String get redistributionPercentHint => 'De 0.01 à 100, deux décimales au plus.';
+
+  @override
+  String redistributionRule(String source, String target) {
+    return 'De $source vers $target';
+  }
+
+  @override
+  String get redistributionSaved => 'Règle enregistrée.';
+
+  @override
+  String get redistributionDeleted => 'Règle supprimée.';
+
+  @override
+  String get redistributionDeleteConfirm => 'Supprimer cette règle de redistribution ?';
+
+  @override
+  String get redistributionChooseSource => 'Choisissez la source.';
+
+  @override
+  String get redistributionChooseTarget => 'Choisissez la cible.';
+
+  @override
+  String get redistributionProblemSourceMissing =>
+      'Ne s\'applique pas : la source n\'est plus dans l\'arbre de l\'année.';
+
+  @override
+  String get redistributionProblemTargetMissing =>
+      'Ne s\'applique pas : la cible n\'est plus dans l\'arbre de l\'année.';
+
+  @override
+  String get redistributionProblemSourceNotLeaf => 'Ne s\'applique pas : la source a des sous-catégories.';
+
+  @override
+  String get redistributionProblemTargetNotLeaf => 'Ne s\'applique pas : la cible a des sous-catégories.';
+
+  @override
+  String get redistributionProblemSameCategory => 'Ne s\'applique pas : la source et la cible sont la même catégorie.';
+
+  @override
+  String get redistributionProblemNatureMismatch =>
+      'Ne s\'applique pas : la source et la cible ne sont pas de même nature.';
+
+  @override
+  String get redistributionProblemPercentInvalid => 'Ne s\'applique pas : le pourcentage n\'est pas entre 0.01 et 100.';
+
+  @override
+  String get redistributionProblemOverHundred => 'Ne s\'applique pas : les règles de cette source dépassent 100 %.';
+
+  @override
+  String get redistributionProblemChain => 'Ne s\'applique pas : une cible est aussi la source d\'une règle.';
+
+  @override
+  String taskInapplicableRedistributions(int count, String year) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count règles de redistribution ne s\'appliquent pas',
+      one: 'Une règle de redistribution ne s\'applique pas',
+    );
+    return '$_temp0 en $year';
+  }
+
+  @override
+  String get taskInapplicableRedistributionsHint => 'Corrigez-les ou supprimez-les.';
+
+  @override
+  String taskShares(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parts à classer',
+      one: 'Une part à classer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get taskSharesHint => 'Des montants reportés sur une autre année n\'y trouvent pas leur catégorie.';
+
+  @override
+  String taskBrokenRefunds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count remboursements ont perdu leur dépense',
+      one: 'Un remboursement a perdu sa dépense',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get taskBrokenRefundsHint =>
+      'Ils comptent dans leur propre catégorie : détachez-les ou rattachez-les à une autre dépense.';
+
+  @override
+  String get classifyRefund => 'Remboursement';
+
+  @override
+  String get refundExpense => 'Dépense remboursée';
+
+  @override
+  String get refundPick => 'Choisir la dépense';
+
+  @override
+  String get refundSearch => 'Texte ou montant de la dépense';
+
+  @override
+  String get refundNoExpense => 'Aucune dépense validée trouvée.';
+
+  @override
+  String get refundExpenseMissing => 'Choisissez la dépense remboursée.';
+
+  @override
+  String get refundHint => 'Le remboursement prend la catégorie et la période de sa dépense, qui affiche son coût net.';
+
+  @override
+  String get refundAttached => 'Remboursement rattaché.';
+
+  @override
+  String get refundDetach => 'Détacher';
+
+  @override
+  String get refundDetached => 'Remboursement détaché.';
+
+  @override
+  String get refundAttach => 'Rattacher à une dépense';
+
+  @override
+  String get detailRefunds => 'Remboursements';
+
+  @override
+  String get detailNetCost => 'Coût net';
+
+  @override
+  String get detailRefundOf => 'Rembourse';
+
+  @override
+  String get detailBrokenLink =>
+      'La dépense de ce remboursement n\'existe plus ou n\'est plus une dépense validée : il compte dans sa propre catégorie, à sa date.';
+
+  @override
+  String get entryRefund => 'Rembourse une dépense';
+
+  @override
+  String get brokenRefundsTitle => 'Remboursements sans dépense';
+
+  @override
+  String get sharesTitle => 'Parts à classer';
+
+  @override
+  String get sharesEmpty => 'Aucune part à classer.';
+
+  @override
+  String sharesGroup(String origin, String originYear, String year) {
+    return '$origin $originYear, parts de $year';
+  }
+
+  @override
+  String sharesExplain(String year, String name) {
+    return 'L\'arbre de $year n\'a pas de catégorie « $name » qui puisse recevoir ces montants. La réponse est mémorisée pour chaque ligne.';
+  }
+
+  @override
+  String sharesCategory(String year) {
+    return 'Catégorie en $year';
+  }
+
+  @override
+  String get sharesClassifyGroup => 'Classer le groupe';
+
+  @override
+  String get sharesClassified => 'Parts classées.';
+
+  @override
+  String get sharesChoose => 'Choisissez une catégorie.';
+
+  @override
+  String get sharesLineCategory => 'Pour cette ligne seulement';
+
+  @override
+  String yearInapplicable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count règles de redistribution ne s\'appliquent pas',
+      one: 'Une règle de redistribution ne s\'applique pas',
+    );
+    return '$_temp0 cette année.';
+  }
 }

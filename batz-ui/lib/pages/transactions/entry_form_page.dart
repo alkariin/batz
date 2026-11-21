@@ -12,6 +12,7 @@ import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
+import '../refunds/refund_target_page.dart';
 
 /// Records an expense or an income, or modifies [transaction].
 class EntryFormPage extends StatefulWidget {
@@ -35,6 +36,11 @@ class _EntryFormPageState extends State<EntryFormPage> {
   late String? _accountId = _existing?.accountId;
   late String? _categoryId = _existing?.line?.categoryId;
   late Direction? _direction = _existing == null ? null : (_existing.amount < 0 ? Direction.outflow : Direction.inflow);
+
+  /// The expense line this entry refunds (decision H4), when attached.
+  late String? _refundedLineId = _existing?.line?.refundedLineId;
+  late bool _refund = _refundedLineId != null;
+
   late bool _customPeriod =
       _existing?.line != null &&
       (_existing!.line!.periodStart != _existing.date || _existing.line!.periodEnd != _existing.date);
@@ -84,8 +90,12 @@ class _EntryFormPageState extends State<EntryFormPage> {
     final l = AppLocalizations.of(context);
     final cents = parseAmount(_amount.text);
     final date = DateField.read(_date);
-    final start = _customPeriod ? DateField.read(_periodStart) : null;
-    final end = _customPeriod ? DateField.read(_periodEnd) : null;
+    final direction = date == null ? Direction.outflow : _effectiveDirection(ledger.treeOrPreview(date.year));
+    // Only money that comes in refunds an expense; its period is then its
+    // date, its category that of the expense.
+    final refund = _refund && direction == Direction.inflow;
+    final start = _customPeriod && !refund ? DateField.read(_periodStart) : null;
+    final end = _customPeriod && !refund ? DateField.read(_periodEnd) : null;
     final String? problem;
     if (cents == null || cents <= 0 || _amount.text.trim().startsWith('-')) {
       problem = l.errorAmountInvalid;
@@ -93,7 +103,9 @@ class _EntryFormPageState extends State<EntryFormPage> {
       problem = l.errorDateInvalid;
     } else if (_accountId == null) {
       problem = l.errorAccountMissing;
-    } else if (_categoryId == null) {
+    } else if (refund && _refundedLineId == null) {
+      problem = l.refundExpenseMissing;
+    } else if (!refund && _categoryId == null) {
       problem = l.errorCategoryMissing;
     } else {
       problem = null;
@@ -106,12 +118,13 @@ class _EntryFormPageState extends State<EntryFormPage> {
       accountId: _accountId!,
       date: date!,
       cents: cents!,
-      direction: _effectiveDirection(ledger.treeOrPreview(date.year)),
-      categoryId: _categoryId!,
+      direction: direction,
+      categoryId: _categoryId,
       description: _description.text,
       note: _note.text,
       periodStart: start,
       periodEnd: end,
+      refundedLineId: refund ? _refundedLineId : null,
     );
     final existing = _existing;
     final saved = await applyToLedger(
@@ -181,21 +194,49 @@ class _EntryFormPageState extends State<EntryFormPage> {
             items: [for (final a in accounts) DropdownMenuItem(value: a.id, child: Text(a.name))],
             onChanged: (id) => setState(() => _accountId = id),
           ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            key: ValueKey('category-$_year-$categoryId'),
-            initialValue: categoryId,
-            isExpanded: true,
-            decoration: InputDecoration(labelText: l.fieldCategory),
-            items: [
-              for (final c in categories)
-                DropdownMenuItem(
-                  value: c.id,
-                  child: Text('${c.name} · ${natureText(l, tree.natureOf(c.id))}', overflow: TextOverflow.ellipsis),
-                ),
+          if (direction == Direction.inflow) ...[
+            SwitchListTile(
+              key: const Key('entryRefund'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l.entryRefund),
+              subtitle: Text(l.refundHint),
+              value: _refund,
+              onChanged: (value) => setState(() => _refund = value),
+            ),
+            if (_refund) ...[
+              if (ledger.linesById[_refundedLineId] case final expense?)
+                expenseTile(context, ledger, expense.transaction, key: const Key('entryExpense'))
+              else
+                ListTile(contentPadding: EdgeInsets.zero, title: Text(l.refundExpenseMissing)),
+              OutlinedButton.icon(
+                key: const Key('entryPickExpense'),
+                icon: const Icon(Icons.search),
+                label: Text(l.refundPick),
+                onPressed: () async {
+                  final lineId = await Navigator.of(context).push(
+                    MaterialPageRoute<String>(builder: (_) => RefundTargetPage(excludeTransactionId: _existing?.id)),
+                  );
+                  if (lineId != null && mounted) setState(() => _refundedLineId = lineId);
+                },
+              ),
             ],
-            onChanged: (id) => setState(() => _categoryId = id),
-          ),
+          ],
+          const SizedBox(height: 12),
+          if (!(_refund && direction == Direction.inflow))
+            DropdownButtonFormField<String>(
+              key: ValueKey('category-$_year-$categoryId'),
+              initialValue: categoryId,
+              isExpanded: true,
+              decoration: InputDecoration(labelText: l.fieldCategory),
+              items: [
+                for (final c in categories)
+                  DropdownMenuItem(
+                    value: c.id,
+                    child: Text('${c.name} · ${natureText(l, tree.natureOf(c.id))}', overflow: TextOverflow.ellipsis),
+                  ),
+              ],
+              onChanged: (id) => setState(() => _categoryId = id),
+            ),
           const SizedBox(height: 12),
           TextField(
             key: const Key('description'),
@@ -211,25 +252,26 @@ class _EntryFormPageState extends State<EntryFormPage> {
             maxLines: null,
             decoration: InputDecoration(labelText: l.fieldNote),
           ),
-          SwitchListTile(
-            key: const Key('customPeriod'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(l.periodCustom),
-            subtitle: Text(l.periodCustomHint),
-            value: _customPeriod,
-            onChanged: (value) => setState(() {
-              _customPeriod = value;
-              if (value) {
-                // Starts from the payment date typed so far.
-                final date = DateField.read(_date);
-                if (date != null && _existing == null) {
-                  _periodStart.text = DateField.text(date);
-                  _periodEnd.text = DateField.text(date);
+          if (!(_refund && direction == Direction.inflow))
+            SwitchListTile(
+              key: const Key('customPeriod'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l.periodCustom),
+              subtitle: Text(l.periodCustomHint),
+              value: _customPeriod,
+              onChanged: (value) => setState(() {
+                _customPeriod = value;
+                if (value) {
+                  // Starts from the payment date typed so far.
+                  final date = DateField.read(_date);
+                  if (date != null && _existing == null) {
+                    _periodStart.text = DateField.text(date);
+                    _periodEnd.text = DateField.text(date);
+                  }
                 }
-              }
-            }),
-          ),
-          if (_customPeriod) ...[
+              }),
+            ),
+          if (_customPeriod && !(_refund && direction == Direction.inflow)) ...[
             DateField(fieldKey: const Key('periodStart'), controller: _periodStart, label: l.periodStart),
             const SizedBox(height: 12),
             DateField(fieldKey: const Key('periodEnd'), controller: _periodEnd, label: l.periodEnd),

@@ -1277,3 +1277,43 @@ their transactions and a detail, the next year with its preview, a group
 folded, the view kept on the device, twelve columns on a wide screen).
 Screenshots taken locally with the real fonts, phone and desktop sizes,
 were checked by eye; they are not kept.
+
+### 4.6 Screens for redistribution, refunds and shares to classify
+
+**Decisions.**
+
+- Plus › « Redistribution » lists the rules of a year (« De … vers … » and
+  the percentage); a rule that does not apply carries a warning and its
+  reason. The form offers the categories of the year that can hold
+  transactions, with their nature, and a percentage typed as `10`, `33.33`
+  or `0,5` (`parsePercent`, at most two decimals); every refusal of H2 is
+  shown with its reason. The home screen lists, per year, the rules that do
+  not apply, and the « Année » screen recalls them; both open this screen.
+- Attaching (H4): the validation screen offers a third choice,
+  « Remboursement », for money that came in; the expense is found by text
+  and amount among the validated expenses of every account and year
+  (`RefundTargetPage`, the transactions search), and « Valider » attaches
+  the line with its description and note in one modification
+  (`validateAsRefund`). The detail of a transaction that came in offers
+  « Rattacher à une dépense », or « Détacher » once attached. The manual
+  entry offers « Rembourse une dépense » for money that comes in: the
+  category and the period then give way to the expense.
+- The detail of an expense lists its refunds and its net cost; the detail
+  of a refund shows its expense, which it opens, or says that the link is
+  broken. Its months follow the period of the expense. The home screen
+  lists the refunds that lost their expense (`BrokenRefundsPage`).
+- « Parts à classer »: a task on the home screen, and the « À classer »
+  line of the « Année » screen, open the questions, one card per category of
+  origin and year: the lines with their amounts in each view, one category
+  for the whole group (« Classer le groupe »), and a menu on each line to
+  answer it alone. Only the categories of the year of the same nature are
+  offered.
+
+**Evidence.** `test/pages/year/phase4_flows_test.dart`: a credit of the
+fictitious statement attached at validation to a purchase, found by text,
+then the purchase showing the refund and its net cost, and the refund
+detached from its detail; a share answered from the « À classer » line,
+the task gone and the amount in its category; a redistribution rule
+created in Plus (two refusals first), its two lines in the year, month by
+month and in both views. Screenshots of each new screen, taken locally,
+were checked by eye.

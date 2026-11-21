@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../l10n/app_localizations.dart';
 import '../accounts/accounts_page.dart';
 import '../categories/categories_page.dart';
+import '../redistribution/redistribution_page.dart';
 import '../server/server_cubit.dart';
 import '../server/server_page.dart';
 import '../validation/rules_page.dart';
@@ -36,6 +37,14 @@ class MorePage extends StatelessWidget {
             title: Text(l.rulesMenu),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const RulesPage())),
+          ),
+          ListTile(
+            key: const Key('moreRedistribution'),
+            leading: const Icon(Icons.call_split),
+            title: Text(l.redistributionMenu),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () =>
+                Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const RedistributionPage())),
           ),
           ListTile(
             leading: const Icon(Icons.dns_outlined),

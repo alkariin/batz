@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/allocation.dart';
+import '../../domain/ledger/ledger.dart';
+import '../../domain/ledger/refund.dart';
+import '../../domain/ledger/transaction.dart';
 import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
+import '../refunds/refund_target_page.dart';
 import '../validation/classify_page.dart';
 import 'entry_form_page.dart';
 import 'transaction_texts.dart';
@@ -28,7 +32,12 @@ class TransactionDetailPage extends StatelessWidget {
     // Imported lines keep the bank's amount, date and text (4.3).
     final editable = !(ledger.accounts[t.accountId]?.isDetailed ?? false) && !t.isImported;
     final line = t.line;
-    final shares = line == null || t.isTransfer ? null : allocate(line.amount, line.periodStart, line.periodEnd);
+    // An attached refund follows the period of its expense (H3).
+    final expense = ledger.expenseOf(t);
+    final period = expense?.line ?? line;
+    final shares = line == null || t.isTransfer || period == null
+        ? null
+        : allocate(line.amount, period.periodStart, period.periodEnd);
     final theme = Theme.of(context);
 
     Widget row(String label, String value) => ListTile(dense: true, title: Text(label), subtitle: Text(value));
@@ -75,11 +84,12 @@ class TransactionDetailPage extends StatelessWidget {
           if (t.description.isNotEmpty) row(l.fieldDescription, t.description),
           if (t.note.isNotEmpty) row(l.fieldNote, t.note),
           if (t.rawText case final rawText?) row(l.fieldRawText, rawText),
-          if (line != null && !t.isTransfer)
+          if (period != null && !t.isTransfer)
             row(
               l.detailPeriod,
-              '${formatDate(line.periodStart.toDateTime())} – ${formatDate(line.periodEnd.toDateTime())}',
+              '${formatDate(period.periodStart.toDateTime())} – ${formatDate(period.periodEnd.toDateTime())}',
             ),
+          ..._refund(context, ledger, t),
           if (shares != null) ...[
             const Divider(),
             ListTile(title: Text(l.detailYearTotals, style: theme.textTheme.titleMedium)),
@@ -103,6 +113,95 @@ class TransactionDetailPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// The refunds of an expense and its net cost; the expense of a refund,
+  /// or its broken link; attaching and detaching (decisions H3 and H4).
+  List<Widget> _refund(BuildContext context, Ledger ledger, LedgerTransaction t) {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final line = t.line;
+    void open(String id) =>
+        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => TransactionDetailPage(transactionId: id)));
+    if (line != null && ledger.isExpenseLine(t, line)) {
+      final refunds = ledger.refundsOf(t);
+      if (refunds.isEmpty) return const [];
+      return [
+        const Divider(),
+        ListTile(title: Text(l.detailRefunds, style: theme.textTheme.titleMedium)),
+        for (final refund in refunds)
+          ListTile(
+            key: ValueKey('refund-${refund.id}'),
+            dense: true,
+            leading: const Icon(Icons.undo),
+            title: Text(titleText(l, ledger, refund)),
+            subtitle: Text(formatDate(refund.date.toDateTime())),
+            trailing: Text(formatAmount(refund.amount)),
+            onTap: () => open(refund.id),
+          ),
+        ListTile(
+          title: Text(l.detailNetCost),
+          trailing: Text(
+            formatAmount(ledger.netCostOf(t)),
+            key: const Key('netCost'),
+            style: theme.textTheme.titleMedium,
+          ),
+        ),
+      ];
+    }
+    if (t.amount <= 0 || (t.isValidated && t.isTransfer)) return const [];
+    final expense = ledger.expenseOf(t);
+    final attached = line?.refundedLineId != null;
+    return [
+      const Divider(),
+      if (expense != null) ...[
+        ListTile(title: Text(l.detailRefundOf, style: theme.textTheme.titleMedium)),
+        expenseTile(
+          context,
+          ledger,
+          expense.transaction,
+          key: const Key('refundedExpense'),
+          onTap: () => open(expense.transaction.id),
+        ),
+      ] else if (attached)
+        ListTile(
+          leading: Icon(Icons.link_off, color: theme.colorScheme.error),
+          title: Text(l.detailBrokenLink, style: TextStyle(color: theme.colorScheme.error)),
+        ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Wrap(
+          spacing: 8,
+          children: [
+            if (attached)
+              OutlinedButton.icon(
+                key: const Key('detachRefund'),
+                icon: const Icon(Icons.link_off),
+                label: Text(l.refundDetach),
+                onPressed: () async {
+                  if (await applyToLedger(context, (ledger) => ledger.detachRefund(t.id)) && context.mounted) {
+                    showMessage(context, l.refundDetached);
+                  }
+                },
+              ),
+            if (expense == null)
+              OutlinedButton.icon(
+                key: const Key('attachRefund'),
+                icon: const Icon(Icons.link),
+                label: Text(l.refundAttach),
+                onPressed: () async {
+                  final lineId = await Navigator.of(context)
+                      .push(MaterialPageRoute<String>(builder: (_) => RefundTargetPage(excludeTransactionId: t.id)));
+                  if (lineId == null || !context.mounted) return;
+                  if (await applyToLedger(context, (ledger) => ledger.attachRefund(t.id, lineId)) && context.mounted) {
+                    showMessage(context, l.refundAttached);
+                  }
+                },
+              ),
+          ],
+        ),
+      ),
+    ];
   }
 
   Future<void> _delete(BuildContext context) async {
