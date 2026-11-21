@@ -86,7 +86,7 @@ class SyncReport {
   final Duration clockOffset;
 }
 
-/// Exchanges the journal with the server (batz-web/docs/sync.md).
+/// Exchanges the journal with the server (docs/architecture.md, « Synchronisation »).
 ///
 /// One mechanism, with no cursor: each call carries this device's known
 /// state and a page of what the server lacks according to the server state

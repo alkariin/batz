@@ -5,7 +5,7 @@ import android.os.Bundle
 import io.flutter.embedding.android.FlutterFragmentActivity
 
 // A FragmentActivity: the unlock dialog of local_auth needs one
-// (docs/decisions.md, step 7.0).
+// (docs/decisions.md, « What `local_auth` asks of the Android app »).
 class MainActivity : FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

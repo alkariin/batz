@@ -17,7 +17,7 @@ Future<UnlockOutcome> _outcomeOf(LocalAuthExceptionCode code) =>
 void main() {
   // The app asks the lock of the device on Android only. The app-facing
   // `local_auth` would add `local_auth_windows` to the Windows build, which
-  // never calls it and whose compiler refuses it (docs/decisions.md, 7.5).
+  // never calls it and whose compiler refuses it (docs/decisions.md, « Android lock »).
   test('only the Android half of the lock plugin is built: nothing of it on Windows nor on Ubuntu', () {
     final lock = File('pubspec.lock').readAsStringSync();
     expect(lock, contains('local_auth_android:'));

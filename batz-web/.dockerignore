@@ -1,5 +1,4 @@
 data/
-docs/
 scripts/
 docker-compose*.yml
 **/*_test.go

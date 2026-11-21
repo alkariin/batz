@@ -68,7 +68,7 @@ class Health {
   final List<String>? importFormats;
 }
 
-/// What the import needs from the server (batz-web/docs/api.md).
+/// What the import needs from the server (docs/api.md).
 abstract interface class ImportTransport {
   Future<Health> health();
 
@@ -116,7 +116,7 @@ class ServerDevice {
   bool get revoked => revokedAt != null;
 }
 
-/// Thin HTTP client of the batz-web API (batz-web/docs/api.md).
+/// Thin HTTP client of the batz-web API (docs/api.md).
 class ServerClient implements SyncTransport, ImportTransport {
   /// [pin] is the certificate fingerprint to require; without it the first
   /// certificate seen is accepted and reported to [onCertificate].

@@ -110,7 +110,7 @@ Uint8List exportReadme(
     '« Nombre décimal » avec les paramètres régionaux « Anglais (États-Unis) ».',
     '',
     'La description complète de chaque fichier et de ses colonnes est dans',
-    'docs/export.md, dans le dépôt de batz.',
+    'docs/features.md (section « Export »), dans le dépôt de batz.',
   ];
   return Uint8List.fromList([0xEF, 0xBB, 0xBF, ...utf8.encode('${lines.join('\r\n')}\r\n')]);
 }

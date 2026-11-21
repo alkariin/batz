@@ -1,9 +1,15 @@
 # API
 
-HTTPS only, JSON bodies. Base URL: `https://<server>:8443`.
+The HTTP API of `batz-web`. HTTPS only, JSON bodies. Base URL:
+`https://<server>:8443`. How the apps use it is in
+[architecture](architecture.md).
 
 The certificate is self-signed: clients pin its SHA-256 fingerprint (upper
 case hex pairs separated by colons, as printed by `batz-web pairing-code`).
+
+Every route under `/api/v1` but the pairing is authenticated with the header
+`Authorization: Bearer <device key>`; a missing, unknown or revoked key is
+refused with `401`.
 
 ## Errors
 
@@ -18,7 +24,7 @@ for humans.
 
 | Status | Code | When |
 |---|---|---|
-| 400 | `BAD_REQUEST` | Malformed JSON, an unknown field in an exchange, or a body over 1 MiB (other routes than `/sync`). |
+| 400 | `BAD_REQUEST` | Malformed JSON, an unknown field in an exchange, or a body over 1 MiB (pairing and devices). |
 | 400 | `DEVICE_NAME_INVALID` | Device name empty or longer than 64 characters. |
 | 401 | `PAIRING_CODE_INVALID` | No such pairing code. |
 | 401 | `PAIRING_CODE_EXPIRED` | The code is older than its validity. |
@@ -48,13 +54,15 @@ No authentication.
 { "status": "ok", "version": "v0.8.0-alpha", "minAppVersion": "0.7.0", "syncProtocol": 1, "importFormats": ["postfinance"] }
 ```
 
-`version` is the server build (`dev` for a local build); `minAppVersion` is
-the oldest app version the server works with; `syncProtocol` is the version of
-the exchange protocol it speaks (absent before 0.3.0); `importFormats` are
-the statement formats it reads (absent before 0.4.0). The app refuses to
-synchronise when it is older than `minAppVersion`, or when the protocols
-differ, and refuses to import when the account's format is not announced; it
-says why.
+| Field | Meaning |
+|---|---|
+| `version` | The server build (`dev` for a local build). |
+| `minAppVersion` | The oldest app version the server works with. |
+| `syncProtocol` | The version of the exchange protocol it speaks (absent before 0.3.0). |
+| `importFormats` | The statement formats it reads (absent before 0.4.0). |
+
+The app checks them before synchronising and importing, and says why it
+refuses ([protocol](architecture.md#protocol)).
 
 ## `POST /api/v1/pairing`
 
@@ -79,8 +87,8 @@ The key is returned only here; the server keeps its hash.
 
 ## `GET /api/v1/devices`
 
-Header `Authorization: Bearer <device key>`. Every paired device, revoked
-ones included, oldest first; `current` marks the caller.
+Every paired device, revoked ones included, oldest first; `current` marks
+the caller.
 
 ```json
 {
@@ -99,17 +107,17 @@ ones included, oldest first; `current` marks the caller.
 
 ## `DELETE /api/v1/devices/{id}`
 
-Header `Authorization: Bearer <device key>`. Revokes the device: its key is
-refused from then on. Revoking the caller itself is how an app unpairs.
-Revoking an already revoked device keeps its first revocation date.
+Revokes the device: its key is refused from then on. Revoking the caller
+itself is how an app unpairs. Revoking an already revoked device keeps its
+first revocation date.
 
 Response `204`, or `404 DEVICE_NOT_FOUND`.
 
 ## `POST /api/v1/sync`
 
-Header `Authorization: Bearer <device key>`. One call of an exchange of the
-change journal; the app calls it in a loop until nothing is left to exchange.
-Principle, invariant and loop: [sync.md](sync.md).
+One call of an exchange of the change journal; the app calls it in a loop
+until nothing is left to exchange. Principle, invariant and loop:
+[Synchronisation](architecture.md#synchronisation).
 
 Request:
 
@@ -177,10 +185,9 @@ Response `200`:
 
 ## `POST /api/v1/imports`
 
-Header `Authorization: Bearer <device key>`. Sends a bank statement: the PDF
-file is the raw request body (`Content-Type: application/pdf`), 10 MiB at
-most. The flow, the checks and the format are described in
-[import.md](import.md).
+Sends a bank statement: the PDF file is the raw request body
+(`Content-Type: application/pdf`), 10 MiB at most. The flow, the checks and
+the format: [Import of statements](architecture.md#import-of-statements).
 
 Response `200`:
 
@@ -236,6 +243,5 @@ Refusals: `422` with `IMPORT_UNREADABLE`, `IMPORT_UNKNOWN_FORMAT` or
 
 ## `GET /api/v1/imports/{fingerprint}/pdf`
 
-Header `Authorization: Bearer <device key>`. The original file of a
-statement, as `application/pdf`; `404 IMPORT_PDF_NOT_FOUND` when the server
-does not hold it.
+The original file of a statement, as `application/pdf`;
+`404 IMPORT_PDF_NOT_FOUND` when the server does not hold it.

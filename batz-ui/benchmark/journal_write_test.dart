@@ -4,7 +4,7 @@
 //
 //   flutter test benchmark/journal_write_test.dart
 //
-// The result is recorded in docs/decisions.md (step 3.0).
+// The result is recorded in docs/decisions.md, « Reference measures ».
 import 'dart:io';
 
 import 'package:batz/data/local/database.dart';

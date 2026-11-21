@@ -53,7 +53,7 @@ abstract interface class DeviceLock {
 }
 
 /// [DeviceLock] through the Android implementation of `local_auth`
-/// (docs/decisions.md, steps 7.0 and 7.5): the biometric prompt of Android,
+/// (docs/decisions.md, « Android lock »): the biometric prompt of Android,
 /// which falls back to the PIN, pattern or password of the device. The
 /// plugin registers itself on Android; nothing of it exists on the other
 /// platforms, where the app never asks.

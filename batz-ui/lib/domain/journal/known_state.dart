@@ -5,7 +5,7 @@ import 'journal_entry.dart';
 /// entries a copy of the journal holds.
 ///
 /// Every copy (device or server) holds the entries of each origin from the
-/// first one, without a gap (batz-web/docs/sync.md). The known state is thus
+/// first one, without a gap (docs/architecture.md, « Synchronisation »). The known state is thus
 /// enough to tell what a copy lacks: the entries of each origin after its
 /// timestamp, and every entry of an origin it does not know.
 class KnownState {

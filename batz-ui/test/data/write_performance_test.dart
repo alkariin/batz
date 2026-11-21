@@ -44,7 +44,7 @@ ExtractedStatement _statement(int lines) => ExtractedStatement(
 void main() {
   // Acceptance criterion of phase 3: an import of 100 lines is written in
   // less than a second. Measured on the development machine in
-  // docs/decisions.md, as the next one.
+  // docs/decisions.md, « Reference measures », as the next one.
   test('the import of a statement of 100 lines is written in less than a second', () async {
     final dir = Directory.systemTemp.createTempSync('batz-perf');
     addTearDown(() => dir.deleteSync(recursive: true));

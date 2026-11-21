@@ -24,7 +24,7 @@ abstract interface class FileAccess {
   Future<bool> saveZip(String fileName, Uint8List bytes);
 }
 
-/// [FileAccess] through `file_picker` (docs/decisions.md, step 3.0): the
+/// [FileAccess] through `file_picker` (docs/decisions.md): the
 /// system document picker on Android, the XDG portal on Ubuntu, the native
 /// dialogs on Windows.
 class SystemFileAccess implements FileAccess {

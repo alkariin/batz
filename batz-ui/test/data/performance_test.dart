@@ -30,8 +30,8 @@ import '../support/machine_lock.dart';
 /// the modules, the screens reload in less than 300 ms after a write, both
 /// views of a year are computed in less than 100 ms, and so are the
 /// « Fortune » screen, each screen of a module and the flow diagram.
-/// Measured on the development machine in docs/decisions.md (steps 4.0, 4.1,
-/// 5.3 and 6.7).
+/// Measured on the development machine in docs/decisions.md, « Reference
+/// measures ».
 ///
 /// Every one of ten runs must stay below its limit; all are printed. The
 /// suite runs its test files concurrently: the whole test, its data written

@@ -1,6 +1,6 @@
 # Copy to docker-compose.yml (not tracked) and adapt.
 #
-# The image is loaded from a file, see docs/deployment.md:
+# The image is loaded from a file, see docs/deployment.md at the repository root:
 #   docker load -i batz-web-<version>.tar
 #
 # Pair a device:

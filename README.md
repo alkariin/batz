@@ -10,17 +10,10 @@ Android, Windows and Ubuntu; a small server on your home network reads the
 statements and keeps the reference copy of the data. Nothing leaves your
 home, and there is no account to create.
 
-**Status: alpha** (version 0.8.0-alpha). Everything the
-[specification](docs/specification.md) plans for version 1.0 is there; the
-version number will follow once it has been used for a while. The screens
-are in French; the bank statements read are those of PostFinance, in Swiss
-francs.
-
-| « Année » | « Fortune » | Flow diagram | Validation |
-|---|---|---|---|
-| ![The year: the category tree and its amounts](docs/images/annee.png) | ![The wealth: net worth and the balance of each account](docs/images/fortune.png) | ![The flow diagram of a year](docs/images/flux.png) | ![Lines of a statement to validate](docs/images/validation.png) |
-
-The pictures show invented data (`batz-ui/tool/screenshots_test.dart`).
+**Status: alpha** (version 0.8.0-alpha). Everything planned for version 1.0
+is there; the version number will follow once it has been used for a while.
+The screens are in French; the bank statements read are those of
+PostFinance, in Swiss francs.
 
 ## What it does
 
@@ -32,39 +25,36 @@ The pictures show invented data (`batz-ui/tool/screenshots_test.dart`).
 - **Two views of a year.** The cash-flow view shows what was paid in the
   year; the economic view shows what the year cost: a payment that concerns
   twelve months from September counts four months this year and eight the
-  next. A category tree per year, freely editable, month by month, with the
-  transactions behind every amount; redistribution rules; refunds attached
-  to their expense ([year view](docs/year-view.md)).
+  next. A category tree per year, month by month, with the transactions
+  behind every amount; redistribution rules; refunds attached to their
+  expense ([annual view](docs/features.md#annual-view)).
 - **Net wealth.** Declare the balance of an account once or twice a year;
   the gap with the expected balance is a value variation, never an expense.
-  The bank account follows its statements. Debts, a monthly curve, and for
-  each year a table that explains the change of the wealth to the cent
-  ([wealth](docs/wealth.md)).
-- **Modules.** The annual salary sheet, a flow diagram from the gross
-  salary to the taxes, the expenses and the savings, taxes by fiscal year
-  with a control against what was paid, trips grouped by their dates,
-  electricity per year with its kWh, subscriptions
-  ([modules](docs/modules.md)).
+  Debts, a monthly curve, and for each year a table that explains the change
+  of the wealth to the cent ([wealth](docs/features.md#wealth)).
+- **Modules.** The annual salary sheet, a flow diagram from the gross salary
+  to the taxes, the expenses and the savings, taxes by fiscal year, trips,
+  electricity with its kWh, subscriptions ([modules](docs/features.md#modules)).
 - **Synchronisation.** Every device holds all the data and works offline.
-  Modifications made on several devices combine field by field when they
-  meet through the server; a lost device is revoked, a lost server is
-  rebuilt from any device ([synchronisation](batz-web/docs/sync.md)).
+  Modifications made on several devices combine field by field through the
+  server; a lost device is revoked, a lost server is rebuilt from any device
+  ([synchronisation](docs/architecture.md#synchronisation)).
 - **Export.** Everything entered or imported, as a ZIP of CSV files a
-  spreadsheet opens, made on any device, offline ([export](docs/export.md)).
+  spreadsheet opens, made on any device, offline
+  ([export](docs/features.md#export)).
 - **Lock.** The Android app opens behind the lock of the phone; its local
-  database is encrypted ([security](docs/security.md)).
+  database is encrypted ([security](docs/architecture.md#security)).
 
 ## Install your own instance
 
 batz is not a service: each person runs their own server and apps, with
-their own data. You need a machine that runs Docker on your home network
-(a NAS is enough; it may be switched off most of the time) and the files of
-the [latest release](https://github.com/alkariin/batz/releases).
+their own data. You need a machine that runs Docker on your home network (a
+NAS is enough; it may be switched off most of the time) and the files of the
+[latest release](https://github.com/alkariin/batz/releases).
 
 1. **Server.** Load the image `batz-web-<version>.tar.gz` and start the
-   container: [deployment](batz-web/docs/deployment.md) gives the commands,
-   and a script for a Synology NAS. The server creates its HTTPS
-   certificate on its first start. Do not expose it to the Internet.
+   container ([deployment](docs/deployment.md)). The server creates its
+   HTTPS certificate on its first start. Do not expose it to the Internet.
 2. **Apps.** Android: add `https://github.com/alkariin/batz` to
    [Obtainium](https://github.com/ImranR98/Obtainium), or open the APK.
    Ubuntu and Windows: extract the archive and run `batz`.
@@ -73,6 +63,10 @@ the [latest release](https://github.com/alkariin/batz/releases).
    certificate. In the app: « Plus › Serveur », the address of the server,
    the code, a name for the device; compare the fingerprint shown with the
    printed one.
+
+A new version installs over the previous one and keeps its data; each
+release says whether the server or the apps go first. Every app holds a full
+copy of the data, so a lost server is rebuilt from any of them.
 
 ## First steps
 
@@ -90,41 +84,25 @@ the [latest release](https://github.com/alkariin/batz/releases).
 5. « Année » shows the year as it fills; « Plus › Analyses » holds the
    modules.
 
-## Updating
-
-A new version installs over the previous one and keeps its data: Obtainium
-offers it on the phone; on a computer, extract the new archive. The server
-is updated by loading the new image. Each release says whether the server
-or the apps must go first; from 0.7.0 to 0.8.0-alpha the order is free.
-[Deployment](batz-web/docs/deployment.md) has the details, and what to do
-when a device or the server is lost: every app holds a full copy of the
-data, so the server can always be rebuilt from one of them.
-
 ## Documentation
 
 | Document | Content |
 |---|---|
-| [docs/specification.md](docs/specification.md) | Functional and technical specification (French). |
-| [docs/year-view.md](docs/year-view.md) | How the annual view is computed, with examples. |
-| [docs/wealth.md](docs/wealth.md) | Balances, debts, the wealth and the table that explains it. |
-| [docs/modules.md](docs/modules.md) | Salary sheet, flow diagram, taxes, vacations, electricity, subscriptions. |
-| [docs/export.md](docs/export.md) | The export: each file and its columns, the format. |
-| [docs/security.md](docs/security.md) | What protects the data, and what does not. |
-| [docs/decisions.md](docs/decisions.md) | Technical decisions and their evidence. |
-| [docs/plan/](docs/plan/) | Phase plans and acceptance criteria (French). |
-| [batz-web/docs/](batz-web/docs/) | Server: [architecture](batz-web/docs/architecture.md), [API](batz-web/docs/api.md), [synchronisation](batz-web/docs/sync.md), [import of statements](batz-web/docs/import.md), [deployment](batz-web/docs/deployment.md). |
-
-| Folder | Content |
-|---|---|
-| `batz-ui/` | Flutter app (Android, Linux, Windows). |
-| `batz-web/` | Go server, one container, HTTPS only. |
-| `scripts/` | Repository checks: personal files and terms, real statements, release tag and build number. |
+| [features](docs/features.md) | The annual view, the wealth, the modules and the export: rules and examples. |
+| [architecture](docs/architecture.md) | App and server, local database and journal, synchronisation, import of statements, security, tests. |
+| [API](docs/api.md) | The HTTP API of the server. |
+| [deployment](docs/deployment.md) | Installing, upgrading and pairing; the Android signing key; releasing. |
+| [decisions](docs/decisions.md) | Technical decisions and their reasons. |
 
 ## Development
 
-Requirements: Go 1.27, Flutter 3.47, Docker; for the Ubuntu build `clang`,
-`cmake`, `ninja-build`, `pkg-config`, `libgtk-3-dev` and `libsecret-1-dev`;
-the Android SDK and a JDK 17 for the APK.
+`batz-ui/` is the Flutter app (Android, Linux, Windows), `batz-web/` the Go
+server (one container, HTTPS only).
+
+Requirements: Go 1.27, Flutter 3.47, Docker, and `pdftotext`
+(`poppler-utils`) on PATH for the extraction of statements; for the Ubuntu
+build `clang`, `cmake`, `ninja-build`, `pkg-config`, `libgtk-3-dev` and
+`libsecret-1-dev`; the Android SDK and a JDK 17 for the APK.
 
 ```sh
 # Server
@@ -139,34 +117,25 @@ go test ./internal/infrastructure/extraction/postfinance/fake -update   # rewrit
 # or BATZ_SERVER_BIN must point to a built batz-web)
 cd batz-ui
 flutter analyze && flutter test
+flutter test test/data/performance_test.dart      # alone: 10 000 transactions
 flutter test benchmark/first_exchange_test.dart   # by hand: a first exchange of 20 000 entries
 flutter test benchmark/journal_write_test.dart    # by hand: a modification of 1 000 fields
-flutter test test/data/performance_test.dart      # alone: reload, views, wealth, modules and export with 10 000 transactions
-flutter test tool/screenshots_test.dart           # by hand: the pictures of this page, from invented data
-dart run tool/make_icons.dart                     # by hand: every icon file, from one drawing
 flutter run -d linux
 ```
 
-The extraction of statements needs `pdftotext` (`poppler-utils`) on PATH.
+The texts of the app are French and live in `batz-ui/lib/l10n/app_fr.arb`;
+run `flutter gen-l10n` after editing it.
 
-CI (`.github/workflows/ci.yml`) runs all of this, plus the Windows, Ubuntu and
-Android builds, and a check of the server image that extracts the test set
-inside it (`batz-web/scripts/check-image-extraction.sh`), on every change.
-Releasing is described in [deployment](batz-web/docs/deployment.md).
+CI (`.github/workflows/ci.yml`) runs all of this on every change, plus the
+Windows, Ubuntu and Android builds and a check of the server image. The
+release workflow builds the files of each GitHub release
+([releasing](docs/deployment.md#releasing)).
 
 ## Personal data
 
-Bank statements, personal mapping configurations, exports and signing keys
-are never committed. `scripts/check-personal-files.sh` fails if git tracks
-such a file; CI runs it on every change. With a local `personal/terms.txt`
-(never committed: names, address, account and card numbers, one per line),
-it also fails if one of those terms appears in a tracked file, the text of
-PDF files included, or in a commit message.
-
-Real statements kept at the root of the repository serve only local checks:
-`scripts/check-real-statements.sh` extracts each and prints only its verdict
-and number of lines, and compares dates and amounts with the CSV of the
-original script when there is one. The test set is fictitious, written by a
+Bank statements, personal mapping configurations, exports of the app and
+signing keys are never committed: `.gitignore` keeps them out and CI fails if
+one is tracked. The statements used by the tests are fictitious, written by a
 generator (`batz-web/src/internal/infrastructure/extraction/postfinance/fake`).
 
 ## Licence

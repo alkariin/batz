@@ -10,7 +10,7 @@ name: Release
 #
 # Repository secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
 # ANDROID_KEY_ALIAS. Repository variable: ANDROID_CERT_SHA256, the SHA-256 of
-# the signing certificate, checked on every APK (batz-web/docs/deployment.md).
+# the signing certificate, checked on every APK (docs/deployment.md).
 on:
   release:
     types: [published]
@@ -35,12 +35,38 @@ jobs:
           ref: ${{ env.TAG || github.ref }}
           # The build number is compared with the versions published before.
           fetch-depth: 0
-      # `v` + the version name, suffix included: 0.8.0-alpha+9 is v0.8.0-alpha.
-      - name: Compare
+      # `v` + the version name, suffix included: 0.8.0-alpha+9 is v0.8.0-alpha,
+      # so that Obtainium reads the same version in the tag and in the app.
+      - name: Tag matches the version name
         if: env.TAG != ''
-        run: scripts/check-release-tag.sh "$TAG"
+        run: |
+          name=$(sed -n 's/^version: *\([^+ ]*\)+[0-9]* *$/\1/p' batz-ui/pubspec.yaml)
+          if [ "$TAG" != "v$name" ]; then
+            echo "::error::batz-ui/pubspec.yaml says $name, so the release must be v$name, not $TAG"
+            exit 1
+          fi
+      # Android refuses an update whose build number is not greater than the
+      # installed one. The tag of this version itself is left out, so the
+      # check also passes on the commit of a release.
       - name: Build number above the previous versions
-        run: scripts/check-build-number.sh
+        run: |
+          parse() { sed -n 's/^version: *\([^+ ]*\)+\([0-9][0-9]*\) *$/\1 \2/p'; }
+          read -r name build < <(parse < batz-ui/pubspec.yaml)
+          highest=0
+          latest=none
+          for tag in $(git tag -l 'v*'); do
+            [ "$tag" = "v$name" ] && continue
+            read -r _ tag_build < <(git show "$tag:batz-ui/pubspec.yaml" | parse)
+            if [ "$tag_build" -gt "$highest" ]; then
+              highest=$tag_build
+              latest=$tag
+            fi
+          done
+          if [ "$build" -le "$highest" ]; then
+            echo "::error::build number $build is not greater than $highest ($latest): raise it in batz-ui/pubspec.yaml"
+            exit 1
+          fi
+          echo "Build number $build of $name is above $highest ($latest)."
 
   apk:
     name: Signed Android APK

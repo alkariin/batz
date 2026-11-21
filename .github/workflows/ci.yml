@@ -23,17 +23,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - run: scripts/check-personal-files.sh
-
-  build-number:
-    name: Build number above the published versions
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          # Every tag: the build number of each published version.
-          fetch-depth: 0
-      - run: scripts/check-build-number.sh
+      # Bank statements and their exports, exports of the app, personal
+      # mapping configs, signing keys and env files. Fictitious statements
+      # are allowed under testdata/ or fixtures/.
+      - name: Check the tracked files
+        run: |
+          forbidden='(^|/)priv[eé]? - |(^|/)config-[0-9]{4}\.yaml|(^|/)specification\.txt$|\.(jks|keystore|p12|pfx|pem|key)$|(^|/)key\.properties$|(^|/)\.env(\..*)?$|(^|/)batz-export-[^/]*(\.zip$|/)|(^|/)LISEZMOI\.txt$'
+          found=$({
+            git ls-files | grep -Ei "$forbidden" | grep -v '\.env\.example$'
+            git ls-files | grep -Ei '\.(pdf|csv)$' | grep -Ev '(^|/)(testdata|fixtures)/'
+          } || true)
+          if [ -n "$found" ]; then
+            echo "::error::personal or secret files are tracked"
+            echo "$found"
+            exit 1
+          fi
+          echo "No personal or secret file among $(git ls-files | wc -l) tracked files."
 
   server:
     name: Server (build, vet, tests, end-to-end)
@@ -162,7 +167,28 @@ jobs:
           done
           docker inspect -f '{{.State.Health.Status}}' batz | grep -qx healthy
           curl -sSk https://127.0.0.1:8443/healthz | tee /dev/stderr | grep -q '"status":"ok"'
+      # Every fictitious statement, compared with its expected JSON. Exit
+      # code 2 is a statement the checks refuse, as some of them must be.
       - name: Extract the test set inside the image
-        run: batz-web/scripts/check-image-extraction.sh batz-web:ci
+        run: |
+          testdata="$PWD/batz-web/src/internal/infrastructure/extraction/postfinance/testdata"
+          failed=0
+          for pdf in "$testdata"/*.pdf; do
+            name=$(basename "$pdf" .pdf)
+            status=0
+            out=$(docker run --rm --read-only --cap-drop ALL --network none \
+              -v "$testdata:/testdata:ro" --entrypoint batz-web batz-web:ci \
+              extract "/testdata/$name.pdf" 2>/dev/null) || status=$?
+            if [ "$status" -ne 0 ] && [ "$status" -ne 2 ]; then
+              echo "$name: extraction failed (exit code $status)"
+              failed=1
+            elif [ "$out" = "$(cat "$testdata/$name.json")" ]; then
+              echo "$name: as expected"
+            else
+              echo "$name: differs from $name.json"
+              failed=1
+            fi
+          done
+          exit "$failed"
       - if: failure()
         run: docker logs batz

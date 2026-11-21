@@ -1,7 +1,7 @@
 import '../../domain/calendar_date.dart';
 import '../../domain/ledger/statement.dart';
 
-/// What the server answers to `POST /api/v1/imports` (batz-web/docs/api.md):
+/// What the server answers to `POST /api/v1/imports` (docs/api.md):
 /// the fingerprint of the file and the statement it read.
 class ImportResponse {
   ImportResponse({required this.fingerprint, required this.statement});

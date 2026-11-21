@@ -10,7 +10,7 @@
 /// period in the economic view. Everything else is common: the category
 /// chosen in the tree of the month's year, the sums of the groups, the
 /// totals. The two views can thus differ only by where the amounts fall.
-/// The rules are described in docs/year-view.md.
+/// The rules are described in docs/features.md, « Annual view ».
 library;
 
 import 'package:equatable/equatable.dart';

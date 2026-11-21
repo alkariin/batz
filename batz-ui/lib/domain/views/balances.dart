@@ -8,7 +8,7 @@
 /// it, up to that date included. The expected balance of a declared balance,
 /// and its value variation, are that same calculation from the point
 /// before. Every date is the end of its day. The rules are described in
-/// docs/wealth.md.
+/// docs/features.md, « Wealth ».
 library;
 
 import 'package:equatable/equatable.dart';

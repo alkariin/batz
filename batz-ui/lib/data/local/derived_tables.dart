@@ -16,7 +16,7 @@ import '../../domain/modules/vacations.dart';
 
 /// How journal entries of one entity are materialised into a table.
 ///
-/// Design rules (docs/decisions.md, phase 1):
+/// Design rules (docs/decisions.md, « Design rules of the derived tables »):
 ///
 /// - A derived table has no constraint: no uniqueness, no foreign key, no
 ///   NOT NULL on a field. With synchronisation, the fields of a record arrive

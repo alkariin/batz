@@ -3,7 +3,7 @@
 //
 //   flutter test benchmark/first_exchange_test.dart
 //
-// The result is recorded in docs/decisions.md.
+// The result is recorded in docs/decisions.md, « Reference measures ».
 import 'dart:io';
 
 import 'package:batz/data/local/database.dart';

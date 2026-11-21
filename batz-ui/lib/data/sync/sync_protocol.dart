@@ -2,7 +2,7 @@ import '../../domain/journal/hlc.dart';
 import '../../domain/journal/journal_entry.dart';
 import '../../domain/journal/known_state.dart';
 
-/// Version of the exchange protocol this app speaks (batz-web/docs/sync.md).
+/// Version of the exchange protocol this app speaks (docs/architecture.md, « Synchronisation »).
 const syncProtocol = 1;
 
 /// The server answered something this app cannot read, or broke the

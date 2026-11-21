@@ -8,7 +8,7 @@
 /// `balances.dart`), plus the debts that count that day. Every line of the
 /// table is computed for itself, the change of the wealth too (principle
 /// 3); the tests check on random data that they add up. The rules are
-/// described in docs/wealth.md.
+/// described in docs/features.md, « Wealth ».
 library;
 
 import 'package:equatable/equatable.dart';

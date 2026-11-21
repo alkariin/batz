@@ -3,7 +3,7 @@
 // The server stores entries as they come and never interprets them: conflicts
 // are resolved by the apps, field by field, the latest timestamp winning. It
 // only checks their shape, so that a malformed page is refused as a whole
-// (see docs/sync.md).
+// (see docs/architecture.md, « Synchronisation »).
 package journal
 
 import (

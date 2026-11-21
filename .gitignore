@@ -1,6 +1,6 @@
 # -----------------------------
 # Personal data: never commit
-# (checked by scripts/check-personal-files.sh in CI)
+# (checked in CI)
 # -----------------------------
 privé - *
 prive - *

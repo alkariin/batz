@@ -14,7 +14,7 @@ void main() {
     expect(manifest, contains('<uses-permission android:name="android.permission.INTERNET"/>'));
   });
 
-  // What the lock asks of the Android app (docs/decisions.md, step 7.0;
+  // What the lock asks of the Android app (docs/decisions.md, « Android lock »;
   // README of local_auth_android, « Setup »).
   group('the release build has what the lock needs', () {
     test('the permission to ask for a fingerprint, a face or the code of the device', () {
