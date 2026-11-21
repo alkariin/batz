@@ -100,7 +100,7 @@ batz-ui/lib
 │   │             import answer
 │   ├── sync      exchange engine, wire format, memory of the server state
 │   ├── files.dart          picking and saving files (file_picker)
-│   ├── device_lock.dart    the lock of the device (local_auth), Android only
+│   ├── device_lock.dart    the lock of the device (local_auth_android), Android only
 │   └── secret_store.dart   system secret storage
 ├── pages         shell, home (synchronisation, tasks, key figures), transactions
 │                 (search, filters), import and statements, validation and

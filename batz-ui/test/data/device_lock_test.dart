@@ -1,7 +1,9 @@
+import 'dart:io';
+
 import 'package:batz/data/device_lock.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:local_auth/local_auth.dart';
+import 'package:local_auth_platform_interface/local_auth_platform_interface.dart';
 
 const _texts = UnlockTexts(title: 'Déverrouiller batz', reason: 'Empreinte ou code', cancel: 'Annuler');
 
@@ -13,6 +15,27 @@ Future<UnlockOutcome> _outcomeOf(LocalAuthExceptionCode code) =>
     _lock(authenticate: (_) async => throw LocalAuthException(code: code)).unlock(_texts);
 
 void main() {
+  // The app asks the lock of the device on Android only. The app-facing
+  // `local_auth` would add `local_auth_windows` to the Windows build, which
+  // never calls it and whose compiler refuses it (docs/decisions.md, 7.5).
+  test('only the Android half of the lock plugin is built: nothing of it on Windows nor on Ubuntu', () {
+    final lock = File('pubspec.lock').readAsStringSync();
+    expect(lock, contains('local_auth_android:'));
+    expect(lock, contains('local_auth_platform_interface:'));
+    for (final other in ['local_auth:', 'local_auth_windows:', 'local_auth_darwin:']) {
+      expect(lock, isNot(contains('  $other')), reason: other);
+    }
+    for (final platform in ['windows', 'linux']) {
+      for (final file in ['generated_plugins.cmake', 'generated_plugin_registrant.cc']) {
+        expect(
+          File('$platform/flutter/$file').readAsStringSync(),
+          isNot(contains('local_auth')),
+          reason: '$platform/$file',
+        );
+      }
+    }
+  });
+
   test('a recognised fingerprint or code unlocks; the dialog receives the texts', () async {
     UnlockTexts? shown;
     final lock = _lock(

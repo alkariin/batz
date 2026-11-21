@@ -1,5 +1,5 @@
-import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart' show AndroidAuthMessages;
+import 'package:local_auth_platform_interface/local_auth_platform_interface.dart';
 
 /// What the system dialog says while it asks to unlock.
 class UnlockTexts {
@@ -52,30 +52,36 @@ abstract interface class DeviceLock {
   Future<UnlockOutcome> unlock(UnlockTexts texts);
 }
 
-/// [DeviceLock] through `local_auth` (docs/decisions.md, step 7.0): the
-/// biometric prompt of Android, which falls back to the PIN, pattern or
-/// password of the device.
+/// [DeviceLock] through the Android implementation of `local_auth`
+/// (docs/decisions.md, steps 7.0 and 7.5): the biometric prompt of Android,
+/// which falls back to the PIN, pattern or password of the device. The
+/// plugin registers itself on Android; nothing of it exists on the other
+/// platforms, where the app never asks.
 class SystemDeviceLock implements DeviceLock {
   /// [supported] and [authenticate] replace the plugin in tests.
   SystemDeviceLock({Future<bool> Function()? supported, Future<bool> Function(UnlockTexts texts)? authenticate})
-    : _supported = supported ?? _auth.isDeviceSupported,
+    : _supported = supported ?? _isSupported,
       _authenticate = authenticate ?? _systemDialog;
 
-  static final _auth = LocalAuthentication();
+  static Future<bool> _isSupported() => LocalAuthPlatform.instance.isDeviceSupported();
 
   final Future<bool> Function() _supported;
   final Future<bool> Function(UnlockTexts texts) _authenticate;
 
-  static Future<bool> _systemDialog(UnlockTexts texts) => _auth.authenticate(
+  static Future<bool> _systemDialog(UnlockTexts texts) => LocalAuthPlatform.instance.authenticate(
     localizedReason: texts.reason,
     authMessages: [AndroidAuthMessages(signInTitle: texts.title, signInHint: '', cancelButton: texts.cancel)],
-    // Fingerprint, face or the code of the device (decision H3).
-    biometricOnly: false,
-    // Opening the app is what the user just asked for: no confirmation
-    // button after a recognised face.
-    sensitiveTransaction: false,
-    // The gate of the app decides what happens when it leaves the screen.
-    persistAcrossBackgrounding: false,
+    options: const AuthenticationOptions(
+      // Fingerprint, face or the code of the device (decision H3).
+      biometricOnly: false,
+      // Opening the app is what the user just asked for: no confirmation
+      // button after a recognised face.
+      sensitiveTransaction: false,
+      // The gate of the app decides what happens when it leaves the screen.
+      stickyAuth: false,
+      // A legacy option, false since local_auth 3.
+      useErrorDialogs: false,
+    ),
   );
 
   @override

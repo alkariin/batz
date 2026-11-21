@@ -25,8 +25,11 @@ dependencies:
     sdk: flutter
   flutter_secure_storage: ^11.2.0
   intl: any
-  local_auth: ^3.0.2
+  # The lock of the Android app: the Android implementation of local_auth
+  # and its interface only. The app-facing package would bring
+  # local_auth_windows into the Windows build, which never uses it.
   local_auth_android: ^2.3.0
+  local_auth_platform_interface: ^1.1.0
   path_provider: ^2.1.6
   sqlite3: ^3.9.1
 

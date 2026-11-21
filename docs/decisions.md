@@ -2099,6 +2099,11 @@ section « Setup », and its sources, read 2026-11-21):
 - `persistAcrossBackgrounding` stays false: the gate of the app decides
   what happens when it leaves the screen (step 7.3).
 
+**Changed after the first CI run** (step 7.5): the app depends on
+`local_auth_android` and `local_auth_platform_interface` only, without the
+app-facing `local_auth`, so that `local_auth_windows` leaves the Windows
+build.
+
 ### 7.0 Database of version 0.7.0
 
 `batz-ui/test/fixtures/v0.7.0/batz.db` was written by version 0.7.0 (tag
@@ -2266,7 +2271,8 @@ performance test is only meaningful on a quiet machine, which it waits for.
   without the confirmation button after a recognised face, and with French
   texts for the system dialog (`AndroidAuthMessages`, hence
   `local_auth_android` named in `pubspec.yaml`: the Android half of the same
-  plugin, no further library). It never throws: a code of the plugin it does
+  plugin, no further library; since step 7.5 the app depends on that half
+  and on its interface only). It never throws: a code of the plugin it does
   not know, those added later included, and any other error is a failure
   shown on the lock screen. `AppServices.open` creates it on Android only; on
   Windows and Ubuntu the app has none, hence no lock.
@@ -2413,9 +2419,20 @@ after 8), `scripts/check-release-tag.sh` (`v0.8.0-alpha` accepted, `v0.8.0`
 refused) and `scripts/check-personal-files.sh` pass; the Ubuntu bundle, the
 release APK and the server image build.
 
-**Not verified here.** The Windows build with a version name that carries a
-suffix: only CI builds for Windows, after the push. The Ubuntu and Android
-builds accept it (step 7.0, and the builds of this step), and the Flutter
-tool writes the version of the Windows build from the same generated CMake
+**The Windows build and the lock plugin.** The first CI run after the push
+failed on the Windows build, and only there: `local_auth_windows` 2.0.2,
+which the app-facing `local_auth` brings into every Windows build, is
+compiled with `/await`, and the compiler of the CI machine (Visual Studio
+18, MSVC 14.52) refuses it (`STL1011`: `<experimental/coroutine>` is
+deprecated and « will be removed soon »). batz never asks the lock on
+Windows (H3), so the plugin had no reason to be in that build. The app now
+depends on `local_auth_android` 2.3.0 and `local_auth_platform_interface`
+1.1.0 only, and calls `LocalAuthPlatform.instance`, which the Android
+implementation registers itself as on Android: same dialog, same options,
+same error codes, and neither `local_auth_windows` nor `local_auth_darwin`
+anywhere. `test/data/device_lock_test.dart` checks that `pubspec.lock` and
+the generated plugin lists of Windows and Ubuntu hold nothing of the
+plugin. The version name with a suffix was not the cause: the Flutter tool
+writes the version of the Windows build from the same generated CMake
 configuration as the Ubuntu one (`flutter_tools`, `cmake.dart`: major,
 minor, patch and the numeric build number, here 0, 8, 0 and 9).
