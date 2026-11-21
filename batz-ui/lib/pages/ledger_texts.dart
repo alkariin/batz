@@ -101,6 +101,10 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.taxRateInvalid => l.errorTaxRateInvalid,
   LedgerError.taxCoefficientNegative => l.errorTaxCoefficientNegative,
   LedgerError.taxMarginalRateInvalid => l.errorTaxMarginalRateInvalid,
+  LedgerError.unknownTripSheet => l.errorUnknownTripSheet,
+  LedgerError.tripDaysInvalid => l.errorTripDaysInvalid,
+  LedgerError.tripDateRequired => l.errorTripDateRequired,
+  LedgerError.tripAmountRequired => l.errorTripAmountRequired,
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {

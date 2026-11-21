@@ -3761,6 +3761,192 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'–'**
   String get taxesNone;
+
+  /// No description provided for @errorUnknownTripSheet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette fiche de voyage n\'existe plus.'**
+  String get errorUnknownTripSheet;
+
+  /// No description provided for @errorTripDaysInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un voyage dure au moins un jour.'**
+  String get errorTripDaysInvalid;
+
+  /// No description provided for @errorTripDateRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une ligne manuelle a une date.'**
+  String get errorTripDateRequired;
+
+  /// No description provided for @errorTripAmountRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une ligne manuelle a un montant.'**
+  String get errorTripAmountRequired;
+
+  /// No description provided for @vacationsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vacances'**
+  String get vacationsTitle;
+
+  /// No description provided for @vacationsMenuHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les voyages, regroupés par leurs périodes.'**
+  String get vacationsMenuHint;
+
+  /// No description provided for @vacationsNone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun voyage : les transactions de la catégorie liée forment les voyages, selon leurs périodes.'**
+  String get vacationsNone;
+
+  /// No description provided for @vacationsYearTotal.
+  ///
+  /// In fr, this message translates to:
+  /// **'{year} · {amount}'**
+  String vacationsYearTotal(String year, String amount);
+
+  /// No description provided for @vacationsTripSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} · {days}'**
+  String vacationsTripSubtitle(String date, String days);
+
+  /// No description provided for @vacationsDays.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 jour} other{{count} jours}}'**
+  String vacationsDays(int count);
+
+  /// No description provided for @vacationsNoDays.
+  ///
+  /// In fr, this message translates to:
+  /// **'jours à saisir'**
+  String get vacationsNoDays;
+
+  /// No description provided for @vacationsPerDay.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} par jour'**
+  String vacationsPerDay(String amount);
+
+  /// No description provided for @vacationsNoPlace.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyage sans lieu'**
+  String get vacationsNoPlace;
+
+  /// No description provided for @vacationsManual.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ligne manuelle'**
+  String get vacationsManual;
+
+  /// No description provided for @vacationsNewManual.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle ligne manuelle'**
+  String get vacationsNewManual;
+
+  /// No description provided for @vacationsTrip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyage'**
+  String get vacationsTrip;
+
+  /// No description provided for @vacationsPlace.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu'**
+  String get vacationsPlace;
+
+  /// No description provided for @vacationsDaysField.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jours'**
+  String get vacationsDaysField;
+
+  /// No description provided for @vacationsDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date'**
+  String get vacationsDate;
+
+  /// No description provided for @vacationsAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant'**
+  String get vacationsAmount;
+
+  /// No description provided for @vacationsReplaceDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date remplacée'**
+  String get vacationsReplaceDate;
+
+  /// No description provided for @vacationsReplaceAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant remplacé'**
+  String get vacationsReplaceAmount;
+
+  /// No description provided for @vacationsAutomatic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Automatique : {value}'**
+  String vacationsAutomatic(String value);
+
+  /// No description provided for @vacationsRestore.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rétablir'**
+  String get vacationsRestore;
+
+  /// No description provided for @vacationsTransactions.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transactions du voyage'**
+  String get vacationsTransactions;
+
+  /// No description provided for @vacationsExtraSheets.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une autre fiche est accrochée à ce voyage : la plus ancienne s\'applique.} other{{count} autres fiches sont accrochées à ce voyage : la plus ancienne s\'applique.}}'**
+  String vacationsExtraSheets(int count);
+
+  /// No description provided for @vacationsOrphans.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fiches sans transaction'**
+  String get vacationsOrphans;
+
+  /// No description provided for @vacationsOrphansHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Leur transaction a quitté la catégorie ou n\'existe plus.'**
+  String get vacationsOrphansHint;
+
+  /// No description provided for @vacationsSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyage enregistré.'**
+  String get vacationsSaved;
+
+  /// No description provided for @vacationsDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fiche supprimée.'**
+  String get vacationsDeleted;
+
+  /// No description provided for @vacationsInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valeur invalide : vérifiez la date, le montant et les jours.'**
+  String get vacationsInvalid;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

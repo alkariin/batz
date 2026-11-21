@@ -1,6 +1,7 @@
 import 'salary.dart';
 import 'settings.dart';
 import 'taxes.dart';
+import 'vacations.dart';
 
 /// What the user entered in the modules (phase 6), as read from the derived
 /// tables: everything else a module shows is computed when its screen opens
@@ -12,7 +13,9 @@ class ModuleRecords {
     Iterable<SalaryDeduction> salaryDeductions = const [],
     Iterable<TaxYear> taxYears = const [],
     Iterable<TaxLine> taxLines = const [],
-  }) : settings = {for (final s in settings) s.module: s},
+    Iterable<TripSheet> tripSheets = const [],
+  }) : tripSheets = {for (final t in tripSheets) t.id: t},
+       settings = {for (final s in settings) s.module: s},
        salarySheets = _sheets(salarySheets, salaryDeductions),
        taxYears = {for (final t in taxYears) t.year: t},
        taxLines = _taxLines(taxLines);
@@ -48,4 +51,7 @@ class ModuleRecords {
   /// The fiscal years, by year, and their lines by year and tax.
   final Map<int, TaxYear> taxYears;
   final Map<int, Map<TaxKind, TaxLine>> taxLines;
+
+  /// The sheets of the trips and the manual lines, by identifier.
+  final Map<String, TripSheet> tripSheets;
 }

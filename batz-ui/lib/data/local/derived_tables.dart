@@ -10,6 +10,7 @@ import '../../domain/ledger/transaction.dart';
 import '../../domain/modules/salary.dart';
 import '../../domain/modules/settings.dart';
 import '../../domain/modules/taxes.dart';
+import '../../domain/modules/vacations.dart';
 
 /// How journal entries of one entity are materialised into a table.
 ///
@@ -123,6 +124,7 @@ final List<DerivedTable> appDerivedTables = [
   salaryDeductionsTable,
   taxYearsTable,
   taxLinesTable,
+  tripSheetsTable,
 ];
 
 final accountsTable = DerivedTable(
@@ -313,5 +315,17 @@ final taxLinesTable = DerivedTable(
     TaxLineFields.base: const DerivedColumn.integer('base'),
     TaxLineFields.baseRate: const DerivedColumn.integer('base_rate'),
     TaxLineFields.coefficient: const DerivedColumn.integer('coefficient'),
+  },
+);
+
+final tripSheetsTable = DerivedTable(
+  entity: TripSheetFields.entity,
+  table: 'trip_sheets',
+  columns: {
+    TripSheetFields.lineId: const DerivedColumn.text('line_id'),
+    TripSheetFields.place: const DerivedColumn.text('place'),
+    TripSheetFields.days: const DerivedColumn.integer('days'),
+    TripSheetFields.date: const DerivedColumn.text('date'),
+    TripSheetFields.amount: const DerivedColumn.integer('amount'),
   },
 );

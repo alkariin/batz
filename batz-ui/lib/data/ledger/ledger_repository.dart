@@ -17,6 +17,7 @@ import '../../domain/modules/module_records.dart';
 import '../../domain/modules/salary.dart';
 import '../../domain/modules/settings.dart';
 import '../../domain/modules/taxes.dart';
+import '../../domain/modules/vacations.dart';
 import '../local/database.dart';
 import '../local/derived_tables.dart';
 import '../local/journal.dart';
@@ -83,12 +84,13 @@ class LedgerRepository {
 
   /// What the user entered in the modules.
   Future<ModuleRecords> _modules() async {
-    final (settings, sheets, deductions, taxYears, taxLines) = await (
+    final (settings, sheets, deductions, taxYears, taxLines, trips) = await (
       _rows(moduleSettingsTable, _moduleSetting),
       _rows(salarySheetsTable, _salarySheet),
       _rows(salaryDeductionsTable, _salaryDeduction),
       _rows(taxYearsTable, _taxYear),
       _rows(taxLinesTable, _taxLine),
+      _rows(tripSheetsTable, _tripSheet),
     ).wait;
     return ModuleRecords(
       settings: settings,
@@ -96,6 +98,21 @@ class LedgerRepository {
       salaryDeductions: deductions,
       taxYears: taxYears,
       taxLines: taxLines,
+      tripSheets: trips,
+    );
+  }
+
+  /// The sheet of a trip is read whatever it holds; a manual line without
+  /// date or amount shows no trip.
+  static TripSheet? _tripSheet(Map<String, Object?> row) {
+    final (days, amount) = (row['days'], row['amount']);
+    return TripSheet(
+      id: row['id']! as String,
+      lineId: _string(row['line_id']),
+      place: row['place'] is String ? row['place']! as String : '',
+      days: days is int ? days : null,
+      date: _date(row['date']),
+      amount: amount is int ? amount : null,
     );
   }
 

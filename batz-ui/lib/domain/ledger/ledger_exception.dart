@@ -89,6 +89,10 @@ enum LedgerError {
   taxRateInvalid,
   taxCoefficientNegative,
   taxMarginalRateInvalid,
+  unknownTripSheet,
+  tripDaysInvalid,
+  tripDateRequired,
+  tripAmountRequired,
 }
 
 /// A business rule refuses the operation; nothing was written.

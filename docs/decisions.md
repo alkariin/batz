@@ -1891,3 +1891,46 @@ computation and the total against the sum of the lines; each refusal;
 modification and deletion; two devices; views and wealth unchanged.
 `test/pages/modules/taxes_page_test.dart` types the example in the screen.
 A screenshot on a phone, with the real fonts, was checked by eye.
+
+### 6.4 Vacations
+
+**Decisions.**
+
+- The lines of a trip are those `linesNamed` gives for the vacation category,
+  every year together: classified in the tree of their year (a line to
+  validate as proposed, an attached refund with the category and the period
+  of its expense). Sorted by the start of their period, a line joins the
+  current trip while it starts at most 15 days after the latest end so far;
+  this is the « de proche en proche » of H5 (two intervals overlap or touch:
+  0 days of gap).
+- New journal entity `tripSheet` (table `trip_sheets`): the line it is
+  attached to, place, days, and the date and amount (a cost, positive) that
+  replace the automatic ones. A sheet attached to a line has an identifier
+  computed from that line; a manual line has none, and a random identifier.
+  A line is identified by `ownLineId`: for a line to validate, the line it
+  will get once validated, so that a sheet survives the validation.
+- The sheet that applies to a trip is the one of its oldest line (the first
+  by start, payment date, line); the others are signalled on the trip and
+  can be deleted. A sheet whose line is in no trip (it left the category,
+  or is gone) is listed apart and can be deleted. Entering the place or the
+  days of a trip without sheet attaches one to its first line.
+- A replaced date or amount is kept as entered; the automatic value is shown
+  beside it, and « Rétablir » clears the replacement. The year of a trip is
+  the year of its date, replaced or not. A manual line needs its date and
+  its amount; one without them (only another version could write it) shows
+  no trip.
+- Price per day = amount ÷ days, rounded to the cent, halves away from
+  zero; none without days. Refused, with their reason: days below 1, a
+  manual line without date or amount.
+- The trips are computed when the screen first asks for them, once per
+  ledger (an `Expando`), never at the reload.
+
+**Evidence.** `test/domain/modules/vacations_test.dart`: the example (two
+trips, 1'825.00 and 130.36 a day; 300.00); the flight ticket with and without
+its period; 15 and 16 days; a transaction between two trips joins them, its
+period or its category changed parts them; replace and restore; two sheets
+on one trip, an orphan sheet; manual lines; on 40 random sets (groups and
+sub-categories, refunds, periods), each line in one trip only, the gaps
+inside and between trips, the automatic amounts adding up to the lines;
+views and wealth unchanged. `test/pages/modules/vacations_page_test.dart`
+drives the screen through the example, a replacement and a manual line.

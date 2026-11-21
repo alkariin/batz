@@ -6,6 +6,7 @@ import '../accounts/accounts_page.dart';
 import '../categories/categories_page.dart';
 import '../modules/salary_page.dart';
 import '../modules/taxes_page.dart';
+import '../modules/vacations_page.dart';
 import '../redistribution/redistribution_page.dart';
 import '../server/server_cubit.dart';
 import '../server/server_page.dart';
@@ -38,6 +39,14 @@ class MorePage extends StatelessWidget {
             subtitle: Text(l.taxesMenuHint),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TaxesPage())),
+          ),
+          ListTile(
+            key: const Key('moreVacations'),
+            leading: const Icon(Icons.luggage_outlined),
+            title: Text(l.vacationsTitle),
+            subtitle: Text(l.vacationsMenuHint),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const VacationsPage())),
           ),
           const Divider(),
           _Section(l.moreSettings),

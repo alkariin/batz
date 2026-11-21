@@ -2257,4 +2257,117 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get taxesNone => '–';
+
+  @override
+  String get errorUnknownTripSheet => 'Cette fiche de voyage n\'existe plus.';
+
+  @override
+  String get errorTripDaysInvalid => 'Un voyage dure au moins un jour.';
+
+  @override
+  String get errorTripDateRequired => 'Une ligne manuelle a une date.';
+
+  @override
+  String get errorTripAmountRequired => 'Une ligne manuelle a un montant.';
+
+  @override
+  String get vacationsTitle => 'Vacances';
+
+  @override
+  String get vacationsMenuHint => 'Les voyages, regroupés par leurs périodes.';
+
+  @override
+  String get vacationsNone =>
+      'Aucun voyage : les transactions de la catégorie liée forment les voyages, selon leurs périodes.';
+
+  @override
+  String vacationsYearTotal(String year, String amount) {
+    return '$year · $amount';
+  }
+
+  @override
+  String vacationsTripSubtitle(String date, String days) {
+    return '$date · $days';
+  }
+
+  @override
+  String vacationsDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count jours', one: '1 jour');
+    return '$_temp0';
+  }
+
+  @override
+  String get vacationsNoDays => 'jours à saisir';
+
+  @override
+  String vacationsPerDay(String amount) {
+    return '$amount par jour';
+  }
+
+  @override
+  String get vacationsNoPlace => 'Voyage sans lieu';
+
+  @override
+  String get vacationsManual => 'Ligne manuelle';
+
+  @override
+  String get vacationsNewManual => 'Nouvelle ligne manuelle';
+
+  @override
+  String get vacationsTrip => 'Voyage';
+
+  @override
+  String get vacationsPlace => 'Lieu';
+
+  @override
+  String get vacationsDaysField => 'Jours';
+
+  @override
+  String get vacationsDate => 'Date';
+
+  @override
+  String get vacationsAmount => 'Montant';
+
+  @override
+  String get vacationsReplaceDate => 'Date remplacée';
+
+  @override
+  String get vacationsReplaceAmount => 'Montant remplacé';
+
+  @override
+  String vacationsAutomatic(String value) {
+    return 'Automatique : $value';
+  }
+
+  @override
+  String get vacationsRestore => 'Rétablir';
+
+  @override
+  String get vacationsTransactions => 'Transactions du voyage';
+
+  @override
+  String vacationsExtraSheets(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count autres fiches sont accrochées à ce voyage : la plus ancienne s\'applique.',
+      one: 'Une autre fiche est accrochée à ce voyage : la plus ancienne s\'applique.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get vacationsOrphans => 'Fiches sans transaction';
+
+  @override
+  String get vacationsOrphansHint => 'Leur transaction a quitté la catégorie ou n\'existe plus.';
+
+  @override
+  String get vacationsSaved => 'Voyage enregistré.';
+
+  @override
+  String get vacationsDeleted => 'Fiche supprimée.';
+
+  @override
+  String get vacationsInvalid => 'Valeur invalide : vérifiez la date, le montant et les jours.';
 }
