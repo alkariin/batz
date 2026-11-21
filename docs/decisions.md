@@ -1134,3 +1134,46 @@ when the best of five exceeds 100 ms.
   checks of every view (group sums with the redistribution lines, zero sum,
   identity of the offsets) run on it. The convergence test creates, modifies
   and deletes redistribution rules on four devices.
+
+### 4.3 Refunds attached to an expense
+
+**Decisions.**
+
+- A line gains `refundedLineId` (column `refunded_line_id`): the line of
+  the expense it refunds. The journal keeps only that link (principle 5).
+- The link holds while the refund is validated money that came in (its line
+  positive), not a transfer, and leads to a validated expense: a line of
+  money that left, in an expense category of the tree of its payment year
+  (`Ledger.isExpenseLine`). It is followed one step only: a chain written by
+  two devices leads to a refund, never an expense, so it does not hold, and
+  nothing recurses.
+- While the link holds, the refund's flow takes the category, the period and
+  the year of the expense; the cash-flow view still places it at its own
+  payment date, mapped by name into the year of that date when it is
+  another one. `categoryOf` gives the expense's category (so the list, the
+  search and the type show « Remboursement » in it).
+- Attaching (`attachRefund`, in `domain/ledger/refund.dart`) refuses money
+  that left, a transfer and a target that is not a validated expense.
+  It writes the link, the refund's own category (the category of the same
+  name as the expense's in the tree of its payment year when it can hold
+  transactions, else the line's current category for a validated line, else
+  none), its payment date as period, and validates an imported line to
+  validate. A manual entry can be attached in the same modification
+  (`EntryDraft.refundedLineId`): it must come in, its category is then
+  optional and computed the same way. Detaching writes the link to null:
+  the own category and date apply again.
+- Classifying an imported line in a category writes the link to null when
+  the line has one, or when the line is new or brought back (a line deleted
+  with its statement must not bring an old link back). Confirming a proposal
+  therefore writes 8 fields per line instead of 7.
+- Deleting the expense, or the statement that holds it, breaks the link
+  without error: the refund counts with its own category and date, and
+  `brokenRefunds` lists it for the tasks until it is detached or attached
+  again.
+- The expense shows its refunds (`refundsOf`) and its net cost
+  (`netCostOf`: its amount plus its refunds). `refundTargets(text)` finds
+  the validated expenses by the words and amounts of the transactions
+  search.
+- The random ledger of the view tests holds attached refunds, one link in
+  five broken; the convergence test attaches and detaches refunds; the
+  performance data holds 100 attached refunds among the 10 000 transactions.

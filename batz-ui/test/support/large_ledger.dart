@@ -21,7 +21,8 @@ import 'package:batz/domain/period_model.dart';
 ///   salary and 159 purchases from 60 shops, 39 of which have a rule. Every
 ///   line is validated except those of the last statement, which are to
 ///   validate; one purchase in 20 concerns twelve months.
-/// - 400 manual expenses on `cash`, one in 10 over twelve months.
+/// - 300 manual expenses on `cash`, one in 10 over twelve months, and 100
+///   refunds attached to imported purchases.
 ///
 /// The records are written as the operations of the app write them, field
 /// by field, without going through the checks of each operation: importing
@@ -30,13 +31,14 @@ class LargeLedger {
   static const firstYear = 2026;
   static const years = 5;
   static const linesPerStatement = 160;
-  static const manualEntries = 400;
+  static const manualEntries = 300;
+  static const refunds = 100;
   static const shops = 60;
   static const shopsWithRule = 39;
   static const groups = 8;
   static const categoriesPerGroup = 5;
 
-  static int get transactions => years * 12 * linesPerStatement + manualEntries;
+  static int get transactions => years * 12 * linesPerStatement + manualEntries + refunds;
 
   /// The identifier in [year] of the category [id] of the first year.
   static String categoryIn(String id, int year) {
@@ -213,6 +215,30 @@ class LargeLedger {
         LineFields.amount: amount,
         LineFields.periodStart: periodStart.encode(),
         LineFields.periodEnd: periodEnd.encode(),
+      });
+    }
+
+    // Refunds attached to purchases of the statements already validated.
+    for (var i = 0; i < refunds; i++) {
+      final m = i % (months - 1), year = firstYear + m ~/ 12;
+      final purchase = importedTransactionId(statementId('bank', m.toRadixString(16).padLeft(64, '0')), 1 + i);
+      final date = CalendarDate(year, m % 12 + 1, 28);
+      set(TransactionFields.entity, 'refund-$i', {
+        TransactionFields.accountId: 'cash',
+        TransactionFields.date: date.encode(),
+        TransactionFields.amount: 500,
+        TransactionFields.description: 'Remboursement $i',
+        TransactionFields.note: '',
+        TransactionFields.status: TransactionStatus.validated.name,
+        TransactionFields.counterpartAccountId: null,
+      });
+      set(LineFields.entity, 'refund-$i-line', {
+        LineFields.transactionId: 'refund-$i',
+        LineFields.categoryId: categoryIn(leaf(groups - 1, 4), year),
+        LineFields.amount: 500,
+        LineFields.periodStart: date.encode(),
+        LineFields.periodEnd: date.encode(),
+        LineFields.refundedLineId: '$purchase-line',
       });
     }
 

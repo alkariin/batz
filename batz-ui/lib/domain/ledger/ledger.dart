@@ -511,10 +511,82 @@ class Ledger {
   /// its payment year.
   ///
   /// For a line to validate, the category the rules propose (principle 3).
+  /// For a refund attached to an expense, while the link holds, the category
+  /// of the expense, in the tree of the expense's year (principle 5 of
+  /// phase 4).
   Category? categoryOf(LedgerTransaction transaction) {
+    if (transaction.isValidated && transaction.line != null) {
+      if (refundedExpenseOf(transaction, transaction.line!) case final expense?) {
+        return categories[expense.line.categoryId];
+      }
+    }
     final id = transaction.isValidated ? transaction.line?.categoryId : proposalOf(transaction)?.categoryId;
     final category = categories[id];
     return category != null && category.year == transaction.date.year ? category : null;
+  }
+
+  // ----------------------------------------------------------------- refunds
+
+  /// Every line, by identifier, with its transaction.
+  late final Map<String, LineOf> linesById = {
+    for (final t in transactions.values)
+      for (final line in t.lines) line.id: (line: line, transaction: t),
+  };
+
+  /// Whether [line] of [transaction] is a validated expense: money that
+  /// left, in a category of expense of the tree of its payment year (decision
+  /// H4 of phase 4: what a refund can be attached to).
+  bool isExpenseLine(LedgerTransaction transaction, TransactionLine line) {
+    if (!transaction.isValidated || transaction.isTransfer || line.amount >= 0) return false;
+    final tree = trees[transaction.date.year];
+    final categoryId = line.categoryId;
+    return tree != null &&
+        categoryId != null &&
+        tree.byId.containsKey(categoryId) &&
+        tree.natureOf(categoryId) == CategoryNature.expense;
+  }
+
+  /// The expense line that [line] of [transaction] refunds, while the link
+  /// holds (principle 5 of phase 4): the refund is validated money that came
+  /// in, not a transfer, and its link leads to a validated expense. Null
+  /// otherwise: the line then counts with its own category and period. A
+  /// link is followed one step only: a chain made by two devices leads to a
+  /// refund, never an expense, and has no effect.
+  LineOf? refundedExpenseOf(LedgerTransaction transaction, TransactionLine line) {
+    final id = line.refundedLineId;
+    if (id == null || !transaction.isValidated || transaction.isTransfer || line.amount <= 0) return null;
+    final expense = linesById[id];
+    if (expense == null || !isExpenseLine(expense.transaction, expense.line)) return null;
+    return expense;
+  }
+
+  /// The refunds attached to each expense line whose link holds, by date.
+  late final Map<String, List<LedgerTransaction>> refundsByExpenseLine = () {
+    final result = <String, List<LedgerTransaction>>{};
+    for (final t in transactions.values) {
+      for (final line in t.lines) {
+        if (refundedExpenseOf(t, line) case final expense?) (result[expense.line.id] ??= []).add(t);
+      }
+    }
+    for (final list in result.values) {
+      list.sort((a, b) {
+        final byDate = a.date.compareTo(b.date);
+        return byDate != 0 ? byDate : a.id.compareTo(b.id);
+      });
+    }
+    return result;
+  }();
+
+  /// The category a refund attached to an expense of category
+  /// [expenseCategoryId] keeps as its own, in the tree of [year], its
+  /// payment year (step 4.3): the category of the same name, else
+  /// [current] when it can still hold it, else none.
+  String? ownRefundCategory(int year, String? expenseCategoryId, String? current) {
+    final tree = treeOrPreview(year);
+    final expenseCategory = categories[expenseCategoryId];
+    final named = expenseCategory == null ? null : tree.named(expenseCategory.name);
+    if (named != null && tree.canHoldTransactions(named.id)) return named.id;
+    return current != null && tree.canHoldTransactions(current) ? current : null;
   }
 
   /// Records a manual expense or income, [id] with its line [lineId]. It is
@@ -537,7 +609,7 @@ class Ledger {
     if (existing.isTransfer) throw const LedgerException(LedgerError.unknownTransaction);
     _checkManualAccount(draft.accountId, transfer: false, allowArchived: draft.accountId == existing.accountId);
     return Modification([
-      ..._entryChanges(id, existing.line?.id ?? fallbackLineId(id), draft),
+      ..._entryChanges(id, existing.line?.id ?? fallbackLineId(id), draft, existing: existing.line),
       ...treeChangesFor(draft.date.year),
     ]);
   }
@@ -545,13 +617,31 @@ class Ledger {
   /// The identifier of the line of a transaction that has lost its line.
   static String fallbackLineId(String transactionId) => '$transactionId-line';
 
-  List<FieldChange> _entryChanges(String id, String lineId, EntryDraft draft) {
+  List<FieldChange> _entryChanges(String id, String lineId, EntryDraft draft, {TransactionLine? existing}) {
     if (draft.cents <= 0) throw const LedgerException(LedgerError.amountRequired);
     final tree = treeOrPreview(draft.date.year);
-    if (!tree.canHoldTransactions(draft.categoryId)) throw const LedgerException(LedgerError.categoryNotAssignable);
-    final start = draft.periodStart ?? draft.date;
-    final end = draft.periodEnd ?? (draft.periodStart == null ? draft.date : start);
-    if (end.isBefore(start)) throw const LedgerException(LedgerError.periodInvalid);
+    final refunded = draft.refundedLineId;
+    final String? categoryId;
+    final CalendarDate start, end;
+    if (refunded == null) {
+      categoryId = draft.categoryId;
+      if (categoryId == null || !tree.canHoldTransactions(categoryId)) {
+        throw const LedgerException(LedgerError.categoryNotAssignable);
+      }
+      start = draft.periodStart ?? draft.date;
+      end = draft.periodEnd ?? (draft.periodStart == null ? draft.date : start);
+      if (end.isBefore(start)) throw const LedgerException(LedgerError.periodInvalid);
+    } else {
+      // A refund attached to an expense (decision H4 of phase 4): its own
+      // category and its date serve only if the link breaks.
+      if (draft.direction != Direction.inflow) throw const LedgerException(LedgerError.refundNotInflow);
+      final expense = linesById[refunded];
+      if (expense == null || expense.transaction.id == id || !isExpenseLine(expense.transaction, expense.line)) {
+        throw const LedgerException(LedgerError.refundTargetNotExpense);
+      }
+      categoryId = ownRefundCategory(draft.date.year, expense.line.categoryId, draft.categoryId);
+      start = end = draft.date;
+    }
     final amount = signedAmount(draft.cents, draft.direction);
     return [
       for (final field in {
@@ -564,10 +654,11 @@ class Ledger {
         FieldChange(TransactionFields.entity, id, field.key, field.value),
       for (final field in {
         LineFields.transactionId: id,
-        LineFields.categoryId: draft.categoryId,
+        LineFields.categoryId: categoryId,
         LineFields.amount: amount,
         LineFields.periodStart: start.encode(),
         LineFields.periodEnd: end.encode(),
+        if (refunded != null || existing?.refundedLineId != null) LineFields.refundedLineId: refunded,
       }.entries)
         FieldChange(LineFields.entity, lineId, field.key, field.value),
     ];
@@ -1055,8 +1146,11 @@ class Ledger {
       LineFields.amount: t.amount,
       LineFields.periodStart: start.encode(),
       LineFields.periodEnd: end.encode(),
-      // A line deleted with its statement, or by a transfer, comes back.
+      // A line deleted with its statement, or by a transfer, comes back; a
+      // category chosen detaches a refund (step 4.3), and a line brought
+      // back must not bring back an old link.
       if (t.line == null) deletedField: false,
+      if (t.line == null || t.line!.refundedLineId != null) LineFields.refundedLineId: null,
     }.entries) {
       changes.add(FieldChange(LineFields.entity, lineId, field.key, field.value));
     }
@@ -1125,3 +1219,6 @@ class TransactionQuery {
   final String? categoryName;
   final StatusFilter? status;
 }
+
+/// A line and its transaction.
+typedef LineOf = ({TransactionLine line, LedgerTransaction transaction});

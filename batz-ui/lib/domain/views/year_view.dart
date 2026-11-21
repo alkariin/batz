@@ -238,6 +238,7 @@ class _Flow {
   _Flow({
     required this.transaction,
     required this.origin,
+    required this.originYear,
     required this.nature,
     required this.amount,
     required this.start,
@@ -247,19 +248,24 @@ class _Flow {
   final LedgerTransaction transaction;
 
   /// The category of the line in the tree of its payment year; null when
-  /// there is none (« Non classé »).
+  /// there is none (« Non classé »). For a refund attached to an expense,
+  /// the category of the expense.
   final Category? origin;
+
+  /// The year whose tree holds [origin]: the payment year of the line, or
+  /// of the expense a refund is attached to.
+  final int originYear;
   final CategoryNature? nature;
   final int amount;
 
-  /// The period the amount concerns.
+  /// The period the amount concerns: for an attached refund, the period of
+  /// the expense.
   final CalendarDate start;
   final CalendarDate end;
 
+  /// The payment date: the cash-flow view places the amount there, an
+  /// attached refund included (decision H3).
   CalendarDate get paid => transaction.date;
-
-  /// The year whose tree holds [origin].
-  int get originYear => transaction.date.year;
 
   /// The shares of the economic view: (year, month, cents).
   late final List<(int, int, int)> shares = start.year == end.year && start.month == end.month
@@ -346,13 +352,22 @@ class YearViews {
 
   List<_Flow> _buildFlows() {
     final flows = <_Flow>[];
-    void add(LedgerTransaction t, String? categoryId, int amount, CalendarDate start, CalendarDate end) {
-      final tree = ledger.trees[t.date.year];
+    void add(
+      LedgerTransaction t,
+      String? categoryId,
+      int amount,
+      CalendarDate start,
+      CalendarDate end, {
+      LedgerTransaction? of,
+    }) {
+      final year = (of ?? t).date.year;
+      final tree = ledger.trees[year];
       final origin = categoryId == null ? null : tree?.byId[categoryId];
       flows.add(
         _Flow(
           transaction: t,
           origin: origin,
+          originYear: year,
           nature: origin == null ? null : tree!.natureOf(origin.id),
           amount: amount,
           start: start,
@@ -376,6 +391,13 @@ class YearViews {
         continue;
       }
       for (final line in t.lines) {
+        // A refund attached to a validated expense follows it: category and
+        // period (principle 5).
+        if (ledger.refundedExpenseOf(t, line) case final expense?) {
+          final paid = expense.line;
+          add(t, paid.categoryId, line.amount, paid.periodStart, paid.periodEnd, of: expense.transaction);
+          continue;
+        }
         add(t, line.categoryId, line.amount, line.periodStart, line.periodEnd);
       }
     }

@@ -164,6 +164,7 @@ final transactionLinesTable = DerivedTable(
     LineFields.amount: const DerivedColumn.integer('amount'),
     LineFields.periodStart: const DerivedColumn.text('period_start'),
     LineFields.periodEnd: const DerivedColumn.text('period_end'),
+    LineFields.refundedLineId: const DerivedColumn.text('refunded_line_id'),
   },
   indexes: [
     ['transaction_id'],

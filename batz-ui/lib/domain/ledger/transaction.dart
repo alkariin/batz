@@ -32,6 +32,10 @@ abstract final class LineFields {
   static const amount = 'amount';
   static const periodStart = 'periodStart';
   static const periodEnd = 'periodEnd';
+
+  /// The line of the expense a refund is attached to (specification,
+  /// chapter 6; principle 5 of phase 4).
+  static const refundedLineId = 'refundedLineId';
 }
 
 /// What the journal records of a transaction's validation (principle 3 of
@@ -63,19 +67,25 @@ class TransactionLine extends Equatable {
     required this.amount,
     required this.periodStart,
     required this.periodEnd,
+    this.refundedLineId,
   });
 
   final String id;
   final String transactionId;
 
-  /// Null while not classified.
+  /// Null while not classified. For a refund attached to an expense, its
+  /// own category: the one it gets back if the link breaks.
   final String? categoryId;
   final int amount;
   final CalendarDate periodStart;
   final CalendarDate periodEnd;
 
+  /// For a refund, the line of the expense it is attached to: while the link
+  /// holds, it takes the category and the period of that line.
+  final String? refundedLineId;
+
   @override
-  List<Object?> get props => [id, transactionId, categoryId, amount, periodStart, periodEnd];
+  List<Object?> get props => [id, transactionId, categoryId, amount, periodStart, periodEnd, refundedLineId];
 }
 
 class LedgerTransaction extends Equatable {
@@ -170,6 +180,7 @@ class EntryDraft {
     this.note = '',
     this.periodStart,
     this.periodEnd,
+    this.refundedLineId,
   });
 
   final String accountId;
@@ -178,13 +189,21 @@ class EntryDraft {
   /// The amount, without sign.
   final int cents;
   final Direction direction;
-  final String categoryId;
+
+  /// Required, except for a refund attached to an expense
+  /// ([refundedLineId]), whose own category is that of the expense when its
+  /// year has one of the same name.
+  final String? categoryId;
   final String description;
   final String note;
 
   /// The period the payment concerns; the payment date when null.
   final CalendarDate? periodStart;
   final CalendarDate? periodEnd;
+
+  /// The line of the expense this entry refunds (decision H4): it must be
+  /// money coming in; its period is then its payment date.
+  final String? refundedLineId;
 }
 
 /// What the user enters for a transfer between two accounts.

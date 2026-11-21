@@ -5,6 +5,7 @@ import 'package:batz/data/ledger/ledger_repository.dart';
 import 'package:batz/data/local/database.dart';
 import 'package:batz/data/local/journal.dart';
 import 'package:batz/domain/ledger/ledger.dart';
+import 'package:batz/domain/ledger/refund.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
@@ -84,4 +85,6 @@ void _tasks(Ledger ledger) {
   expect(ledger.issues, isEmpty);
   expect(ledger.unusableRules, isEmpty);
   expect(ledger.conflictingLines, 0);
+  expect(ledger.refundsByExpenseLine, hasLength(LargeLedger.refunds));
+  expect(ledger.brokenRefunds, isEmpty);
 }

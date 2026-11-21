@@ -942,6 +942,24 @@ abstract class AppLocalizations {
   /// **'Suppression refusée : {count, plural, =1{une règle de redistribution utilise} other{{count} règles de redistribution utilisent}} cette catégorie.'**
   String errorCategoryUsedByRedistributions(int count);
 
+  /// No description provided for @errorRefundNotInflow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Seule une entrée d\'argent peut rembourser une dépense.'**
+  String get errorRefundNotInflow;
+
+  /// No description provided for @errorRefundIsTransfer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un transfert ne peut pas rembourser une dépense.'**
+  String get errorRefundIsTransfer;
+
+  /// No description provided for @errorRefundTargetNotExpense.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un remboursement se rattache à une dépense validée.'**
+  String get errorRefundTargetNotExpense;
+
   /// No description provided for @edit.
   ///
   /// In fr, this message translates to:

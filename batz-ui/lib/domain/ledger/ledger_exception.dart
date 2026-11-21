@@ -55,6 +55,11 @@ enum LedgerError {
   redistributionSourceIsTarget,
   redistributionOverHundred,
   categoryUsedByRedistributions,
+
+  // Refunds attached to an expense (phase 4).
+  refundNotInflow,
+  refundIsTransfer,
+  refundTargetNotExpense,
 }
 
 /// A business rule refuses the operation; nothing was written.

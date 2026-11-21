@@ -190,6 +190,7 @@ class LedgerRepository {
       return null;
     }
     if (categoryId != null && categoryId is! String) return null;
+    final refunded = row['refunded_line_id'];
     return TransactionLine(
       id: row['id']! as String,
       transactionId: transactionId,
@@ -197,6 +198,7 @@ class LedgerRepository {
       amount: amount,
       periodStart: start,
       periodEnd: end,
+      refundedLineId: refunded is String ? refunded : null,
     );
   }
 

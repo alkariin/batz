@@ -531,6 +531,15 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get errorRefundNotInflow => 'Seule une entrée d\'argent peut rembourser une dépense.';
+
+  @override
+  String get errorRefundIsTransfer => 'Un transfert ne peut pas rembourser une dépense.';
+
+  @override
+  String get errorRefundTargetNotExpense => 'Un remboursement se rattache à une dépense validée.';
+
+  @override
   String get edit => 'Modifier';
 
   @override

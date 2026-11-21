@@ -12,6 +12,7 @@ import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/ledger_exception.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
+import 'package:batz/domain/ledger/refund.dart';
 import 'package:batz/domain/ledger/transaction.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -131,8 +132,10 @@ Modification? randomOperation(Ledger l, Random r, String id) {
   }
 }
 
-/// Redistribution rules: created, modified or deleted.
+/// The operations of phase 4: redistribution rules, refunds attached and
+/// detached.
 Modification? _phase4Operation(Ledger l, Random r, String id, int year) {
+  if (r.nextBool()) return _refundOperation(l, r);
   final existing = l.redistributionsOf(year).where((rule) => l.redistributions.containsKey(rule.id)).toList();
   if (existing.isNotEmpty && r.nextInt(3) == 0) {
     final rule = _pick(r, existing);
@@ -158,6 +161,19 @@ Modification? _phase4Operation(Ledger l, Random r, String id, int year) {
       basisPoints: 1 + r.nextInt(6000),
     ),
   );
+}
+
+Modification? _refundOperation(Ledger l, Random r) {
+  final inflows = l.transactions.values.where((t) => t.amount > 0 && !t.isTransfer).toList();
+  if (inflows.isEmpty) return null;
+  final refund = _pick(r, inflows);
+  if (refund.line?.refundedLineId != null && r.nextInt(3) == 0) return l.detachRefund(refund.id);
+  final expenses = [
+    for (final t in l.transactions.values)
+      if (t.line != null && l.isExpenseLine(t, t.line!)) t.line!.id,
+  ];
+  if (expenses.isEmpty) return null;
+  return l.attachRefund(refund.id, _pick(r, expenses));
 }
 
 extension on AccountDraft {
@@ -246,7 +262,7 @@ void main() {
         'seed $seed: $applied operations ($refused refused), $exchanges exchanges ($cuts cut), '
         '${(reference['journal']! as List).length} journal entries, ${ledger.transactions.length} transactions, '
         '${ledger.categories.length} categories, ${ledger.forest.detached.length} detached, '
-        '${ledger.redistributions.length} redistribution rules',
+        '${ledger.redistributions.length} redistribution rules, ${ledger.refundsByExpenseLine.length} expenses refunded',
       );
       // About ten seconds alone, much more while the other test files run:
       // hundreds of calls with pages of a few entries.

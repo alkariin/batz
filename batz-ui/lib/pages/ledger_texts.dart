@@ -77,6 +77,9 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.redistributionSourceIsTarget => l.errorRedistributionSourceIsTarget,
   LedgerError.redistributionOverHundred => l.errorRedistributionOverHundred(formatPercent(e.count)),
   LedgerError.categoryUsedByRedistributions => l.errorCategoryUsedByRedistributions(e.count),
+  LedgerError.refundNotInflow => l.errorRefundNotInflow,
+  LedgerError.refundIsTransfer => l.errorRefundIsTransfer,
+  LedgerError.refundTargetNotExpense => l.errorRefundTargetNotExpense,
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {

@@ -26,7 +26,8 @@ const randomYears = [2026, 2027, 2028, 2029];
 /// - redistribution rules: in 2026, 10 % of « Nourriture » to « Charges »
 ///   and 25 % of « Salaire » to « Primes », copied in 2027 with 33.33 % of
 ///   « Assurance ménage » to « Sorties »; a rule between natures that
-///   cannot apply.
+///   cannot apply;
+/// - refunds attached to an expense of either year, one link in five broken.
 Ledger randomLedger(Random r, {int transactions = 300}) {
   final categories = <Category>[];
   void add(String id, int year, String name, String? parent, {CategoryNature? nature, int position = 0}) =>
@@ -166,6 +167,31 @@ Ledger randomLedger(Random r, {int transactions = 300}) {
       ),
     );
   }
+  // Refunds: half of the money that came in to an expense category is
+  // attached to an expense of either year; one link in five leads nowhere.
+  bool isExpense(String? categoryId) {
+    final category = ledgerOfTrees.categories[categoryId];
+    return category != null && ledgerOfTrees.trees[category.year]!.natureOf(category.id) == CategoryNature.expense;
+  }
+
+  final expenseLines = [
+    for (final line in lines)
+      if (line.amount < 0 && isExpense(line.categoryId)) line.id,
+  ];
+  var attached = 0;
+  for (final (i, line) in lines.indexed) {
+    if (line.amount <= 0 || !isExpense(line.categoryId) || expenseLines.isEmpty || r.nextBool()) continue;
+    lines[i] = TransactionLine(
+      id: line.id,
+      transactionId: line.transactionId,
+      categoryId: line.categoryId,
+      amount: line.amount,
+      periodStart: line.periodStart,
+      periodEnd: line.periodEnd,
+      refundedLineId: attached++ % 5 == 0 ? 'missing' : expenseLines[r.nextInt(expenseLines.length)],
+    );
+  }
+
   RedistributionRule redistribution(String id, int year, String source, String target, int basisPoints) =>
       RedistributionRule(id: id, year: year, sourceId: source, targetId: target, basisPoints: basisPoints);
   final redistributions = [
