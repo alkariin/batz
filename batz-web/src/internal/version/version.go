@@ -14,13 +14,13 @@ import (
 // A plain `go build` keeps "dev".
 var Version = "dev"
 
-// MinAppVersion is the oldest app version this server works with: 0.4.0 is
-// the first that knows the statements, the imported lines and the rules of
-// the journal (an older one would leave them unapplied, so its user would
-// enter by hand what the import brings). The app compares it with its own
-// version and refuses to synchronise when it is older; the server refuses
-// its exchanges too.
-const MinAppVersion = "0.4.0"
+// MinAppVersion is the oldest app version this server works with: 0.5.0 is
+// the first that knows the redistribution rules, the refunds attached to an
+// expense and the answers for the shares to classify (an older one would
+// keep them unapplied and show other totals than the devices that apply
+// them). The app compares it with its own version and refuses to
+// synchronise when it is older; the server refuses its exchanges too.
+const MinAppVersion = "0.5.0"
 
 var versionPattern = regexp.MustCompile(`^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?`)
 

@@ -78,22 +78,27 @@ batz-ui/lib
 ├── domain        pure Dart, no Flutter
 │   ├── journal   hybrid logical clock, journal entries, resolution rule
 │   ├── ledger    accounts, category trees, transactions, statements, mapping
-│   │             rules and their proposals, their rules and totals, search
+│   │             rules and their proposals, redistribution rules, refunds
+│   │             attached to an expense, answers for shares, search
+│   ├── views     the annual view: cash-flow and economic views of a year,
+│   │             composition of an amount, shares to classify
 │   ├── allocation.dart, fraction.dart, calendar_date.dart   spreading over months
 │   ├── period_model.dart   periods of the mapping rules
 │   └── ids.dart  random and computed identifiers
 ├── data
-│   ├── local     Drift database, journal, derived tables, opening and encryption
+│   ├── local     Drift database, journal, derived tables, opening and encryption,
+│   │             preferences of the device
 │   ├── ledger    reads the ledger from the derived tables, writes to the journal
 │   ├── server    HTTPS client with certificate pinning, pairing repository,
 │   │             import answer
 │   ├── sync      exchange engine, wire format, memory of the server state
 │   ├── files.dart          picking and saving files (file_picker)
 │   └── secret_store.dart   system secret storage
-├── pages         shell, home (synchronisation, tasks), transactions (search,
-│                 filters), import and statements, validation and rules,
-│                 accounts, categories, server settings, cubits (ledger,
-│                 server, sync, import)
+├── pages         shell, home (synchronisation, tasks, key figures), transactions
+│                 (search, filters), import and statements, validation and
+│                 rules, year (views, composition), redistribution, refunds,
+│                 shares to classify, accounts, categories, server settings,
+│                 cubits (ledger, server, sync, import)
 ├── components    shared widgets
 ├── helpers       Swiss formats, theme
 └── l10n          French texts (ARB) and generated localisations
@@ -158,9 +163,11 @@ writes of the others.
 | `account` | `accounts` | name, type, importFormat, archived |
 | `category` | `categories` | year, name, parentId, nature (top-level groups), position |
 | `transaction` | `transactions` | accountId, date, amount, counterpartAccountId, description, note, status (`toValidate`, `validated`), rawText, statementId, statementRank |
-| `transactionLine` | `transaction_lines` | transactionId, categoryId, amount, periodStart, periodEnd |
+| `transactionLine` | `transaction_lines` | transactionId, categoryId, amount, periodStart, periodEnd, refundedLineId |
 | `statement` | `statements` | accountId, format, iban, periodStart, periodEnd, openingBalance, closingBalance, fingerprint |
 | `rule` | `rules` | year, keywords (JSON list), targetCategoryId or targetAccountId, periodModel, periodMonths |
+| `redistribution` | `redistributions` | year, sourceCategoryId, targetCategoryId, basisPoints (hundredths of a percent) |
+| `shareClassification` | `share_classifications` | lineId, year, categoryId, originCategoryId |
 
 `LedgerRepository` reads every table, by identifier, into an immutable
 `Ledger` and leaves out records that are incomplete or hold a value the
@@ -200,6 +207,15 @@ business rules and returns the `Modification` to write, or throws a
   ledger loads, never stored, and counted in the totals; validating writes
   the classification. Rules follow the copy of a tree. See
   [import.md](import.md).
+- **Annual view**: `ledger.views` computes, for a year and a view, the
+  amounts of every category month by month, from flows built once per
+  ledger: each line gives one amount at its payment date (cash flow) or one
+  per monthly share of its period (economic), placed in the category of the
+  same name of the month's year, an answer, or « À classer ». Redistribution
+  rules move a percentage between two categories month by month; a refund
+  attached to an expense follows its category and period; the period
+  offsets reconcile both views. Nothing is stored. See
+  [`docs/year-view.md`](../../docs/year-view.md).
 
 On Android the database is encrypted with SQLCipher (selected per platform
 through the `sqlite3` package hooks, see `docs/decisions.md`). Its key, 32
@@ -266,6 +282,16 @@ keeps the pin, so another machine at that address is refused.
   validation screens are tested against servers in memory; the import, the
   rules, the periods and the search have their own domain tests, and
   `test/data/write_performance_test.dart` bounds the writing of an import and
-  of a confirmation in bulk. `benchmark/first_exchange_test.dart` and
+  of a confirmation in bulk. The annual view has its own tests: the examples
+  of the specification, then properties checked on random ledgers (the
+  twelve months of every line, the cash-flow total, the identity of the
+  period offsets, the questions waiting equal to « À classer »),
+  redistribution, refunds and shares to classify; `test/e2e/year_view_e2e_test.dart`
+  sends the new records between devices through a real server, and the
+  convergence test includes their operations. `test/data/performance_test.dart`
+  bounds every reload after a write and every computation of the views of a
+  year with 10 000 transactions, alone on the machine (every test file holds
+  a shared lock, the measurement takes it exclusive); databases written by versions 0.1.0 to 0.4.1 are opened by
+  `test/data/upgrade_test.dart`. `benchmark/first_exchange_test.dart` and
   `benchmark/journal_write_test.dart`, run by hand, measure a first exchange
   of 20 000 entries and the writing of 1 000 fields.

@@ -1030,9 +1030,9 @@ statements of 160 lines and 400 manual expenses), five trees of 50
 categories, 200 mapping rules, 160 lines to validate. Reading the derived
 tables, building the ledger, the proposals of the lines to validate and the
 tasks takes 60 to 99 ms over five runs; the write before it 47 to 97 ms.
-Below the 300 ms of the plan: nothing to correct. The test fails when the
-best of five runs exceeds 300 ms (the suite runs files concurrently; ten
-runs since 4.4).
+Below the 300 ms of the plan: nothing to correct. Since 4.7, the test fails
+when any of ten runs exceeds 300 ms (see 4.7 for how it is kept apart from
+the other test files).
 
 ### 4.0 Database of version 0.4.1
 
@@ -1091,8 +1091,8 @@ a new rule proposes for the lines left to validate.
 
 **Measure** (`test/data/performance_test.dart`, same data and machine as the
 measure of 4.0): both views of a year, on a ledger just loaded, take 9 to
-55 ms over five runs (the first one includes the warm-up). The test fails
-when the best of five exceeds 100 ms.
+55 ms over five runs (the first one includes the warm-up). Since 4.7, the
+test fails when any of ten runs exceeds 100 ms.
 
 ### 4.2 Redistribution rules
 
@@ -1230,9 +1230,9 @@ sends its nine queries together (`Record.wait`) instead of one after the
 other: the rows of one are read while the background isolate runs the next.
 
 Within the full suite, other files (servers, the convergence test) compete
-for the processor: the same reload took from 126 ms to 3.9 s, a run of the
-suite failed once with a best of five at 428 ms. The test therefore takes
-the best of ten runs, all printed; the limits stay 300 and 100 ms.
+for the processor: the same reload took from 126 ms to 3.9 s, and a run of
+the suite failed once. How the measurement is kept apart from them is
+decided in 4.7.
 
 **Evidence.** `test/domain/views/shares_test.dart`;
 `test/e2e/year_view_e2e_test.dart` sends redistribution rules, an attached
@@ -1315,5 +1315,45 @@ then the purchase showing the refund and its net cost, and the refund
 detached from its detail; a share answered from the « À classer » line,
 the task gone and the amount in its category; a redistribution rule
 created in Plus (two refusals first), its two lines in the year, month by
-month and in both views. Screenshots of each new screen, taken locally,
-were checked by eye.
+month and in both views. `test/pages/home/tasks_test.dart`: after a merge,
+two redistribution rules above 100 % and a refund whose expense was deleted
+on another device are tasks; deleting one rule and detaching the refund
+clears them. Screenshots of each new screen, taken locally, were checked by
+eye.
+
+### 4.7 The performance test runs alone, every run checked
+
+**Decision.** Every test file of `test/` holds a lock shared while it runs
+(`test/flutter_test_config.dart`, `test/support/machine_lock.dart`: an
+advisory lock on a file of the temporary directory). The performance test
+writes its data under it, then takes it exclusive for its measurements: it
+waits until it is the only test file running, and the files that start
+meanwhile wait for it. Every one of its ten reloads must stay below 300 ms
+and every one of its ten computations of both views below 100 ms; nothing is
+skipped and every test of the suite runs.
+
+**Why.** The development machine has 8 processors; `flutter test` runs test
+files in concurrent processes, and the end-to-end files build batz-web and
+run its servers. Measured among them, the same reload took from about
+100 ms to 2.2 s, most runs above 300 ms; a first version of the test took
+the best of five, then of ten runs, which the limits of the plan do not
+allow. Holding the lock only while test servers run was not enough: the
+screens of the other files still took a reload to 443 ms once.
+
+**Evidence** (2026-11-21, development machine): the test alone, ten runs
+each time, gave reloads of 82 to 107 ms and views of 7 to 20 ms; three
+consecutive runs of the full suite gave reloads of 69 to 131 ms and views of
+7 to 27 ms, every run below its limit, the suite taking 64 to 69 s instead
+of about 63 s.
+
+### 4.7 Version 0.5.0
+
+The app and the server move to 0.5.0 together. The server's minimum app
+version becomes 0.5.0: an app 0.4 would receive redistribution rules,
+refund links and answers it does not know, keep them in its journal without
+applying them, and show other totals than the devices that do. The tests of
+the exchange send 0.5.0 and check that 0.4.0 and 0.4.1 are refused, at the
+use case and over HTTP. An app 0.5.0 still works with the server 0.4.0 of
+the NAS until it is upgraded. The rules of the annual view are described in
+`docs/year-view.md`; the architecture, the API, the deployment (with the
+upgrade to 0.5.0) and the README follow.

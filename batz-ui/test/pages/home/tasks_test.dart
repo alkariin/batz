@@ -3,7 +3,11 @@ import 'dart:async';
 import 'package:batz/domain/journal/hlc.dart';
 import 'package:batz/domain/journal/journal_entry.dart';
 import 'package:batz/domain/ledger/account.dart';
+import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/ledger/category.dart';
+import 'package:batz/domain/ledger/ledger.dart';
+import 'package:batz/domain/ledger/redistribution.dart';
+import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/pages/ledger_cubit.dart';
 import 'package:batz/pages/shell.dart';
 import 'package:flutter/material.dart';
@@ -92,5 +96,96 @@ void main() {
     await settle(tester);
     expect(find.textContaining('à replacer'), findsNothing);
     expect(find.text('2 comptes détaillés'), findsOneWidget);
+  });
+
+  testWidgets('after a merge, redistribution rules that no longer apply and a refund that lost its expense are tasks', (
+    tester,
+  ) async {
+    final services = await pumpApp(tester);
+    final year = CalendarDate.today().year;
+    final expenses = defaultGroupId(year, CategoryNature.expense);
+    await tester.runAsync(() async {
+      Future<void> write(Modification Function(Ledger l) build) async =>
+          services.ledger.write(build(await services.ledger.load()));
+      await write((l) => l.createAccount('cash', const AccountDraft(name: 'Espèces', type: AccountType.cash)));
+      await write((l) => l.createTree(year));
+      await write((l) => l.addCategory('food', year: year, name: 'Nourriture', parentId: expenses));
+      await write((l) => l.addCategory('cleaning', year: year, name: 'Entretien ménage', parentId: expenses));
+      await write((l) => l.addCategory('rent', year: year, name: 'Loyer', parentId: expenses));
+      final draft = EntryDraft(
+        accountId: 'cash',
+        date: CalendarDate(year, 3, 1),
+        cents: 10000,
+        direction: Direction.outflow,
+        categoryId: 'food',
+      );
+      await write((l) => l.recordEntry('e', 'el', draft));
+      await write(
+        (l) => l.recordEntry(
+          'r',
+          'rl',
+          EntryDraft(
+            accountId: 'cash',
+            date: CalendarDate(year, 4, 1),
+            cents: 3000,
+            direction: Direction.inflow,
+            categoryId: null,
+            refundedLineId: 'el',
+          ),
+        ),
+      );
+      await write(
+        (l) => l.createRedistribution(
+          'ten',
+          RedistributionDraft(year: year, sourceId: 'food', targetId: 'cleaning', basisPoints: 1000),
+        ),
+      );
+      // Another device, used separately: a rule of 95 % from the same
+      // source, and the expense deleted.
+      final t = DateTime.now().millisecondsSinceEpoch + 1000;
+      var n = 0;
+      JournalEntry e(String entity, String id, String field, Object? value) =>
+          JournalEntry(Hlc(t, n++, _other), FieldChange(entity, id, field, value));
+      await services.journal.merge([
+        e('redistribution', 'other', 'year', year),
+        e('redistribution', 'other', 'sourceCategoryId', 'food'),
+        e('redistribution', 'other', 'targetCategoryId', 'rent'),
+        e('redistribution', 'other', 'basisPoints', 9500),
+        e('transaction', 'e', '_deleted', true),
+        e('transactionLine', 'el', '_deleted', true),
+      ]);
+    });
+    unawaited(tester.element(find.byType(AppShell)).read<LedgerCubit>().load());
+    await settle(tester);
+
+    expect(find.text("2 règles de redistribution ne s'appliquent pas en $year"), findsOneWidget);
+    expect(find.text('Un remboursement a perdu sa dépense'), findsOneWidget);
+
+    await tester.tap(find.text("2 règles de redistribution ne s'appliquent pas en $year"));
+    await settle(tester);
+    expect(find.textContaining('les règles de cette source dépassent 100 %'), findsNWidgets(2));
+    await tester.tap(find.byKey(const ValueKey('redistribution-other')));
+    await settle(tester);
+    await tester.tap(find.byTooltip('Supprimer'));
+    await settle(tester);
+    await tester.tap(find.text('Supprimer').last);
+    await settle(tester);
+    expect(find.textContaining('dépassent 100 %'), findsNothing);
+    await tester.tap(find.byType(BackButton));
+    await settle(tester);
+    expect(find.textContaining('ne s\'appliquent pas'), findsNothing);
+
+    await tester.tap(find.text('Un remboursement a perdu sa dépense'));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('brokenRefund-r')));
+    await settle(tester);
+    expect(find.textContaining("n'existe plus ou n'est plus une dépense validée"), findsOneWidget);
+    await tester.tap(find.byKey(const Key('detachRefund')));
+    await settle(tester);
+    await tester.tap(find.byType(BackButton));
+    await settle(tester);
+    await tester.tap(find.byType(BackButton));
+    await settle(tester);
+    expect(find.text('Un remboursement a perdu sa dépense'), findsNothing);
   });
 }

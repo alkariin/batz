@@ -11,18 +11,20 @@ statements and keeps the reference copy of the change journal.
 | `batz-web/` | Go server, one container, HTTPS only. |
 | `docs/specification.md` | Functional and technical specification (French). |
 | `docs/decisions.md` | Technical decisions and their evidence. |
+| `docs/year-view.md` | How the annual view is computed, with examples. |
 | `docs/plan/` | Phase plans and acceptance criteria (French). |
 | `scripts/` | Repository checks: personal files and terms, real statements. |
 
-Server documentation: [architecture](batz-web/docs/architecture.md),
+The annual view and its rules: [year-view](docs/year-view.md). Server
+documentation: [architecture](batz-web/docs/architecture.md),
 [API](batz-web/docs/api.md), [synchronisation](batz-web/docs/sync.md),
 [import of statements](batz-web/docs/import.md),
 [deployment](batz-web/docs/deployment.md).
 
 ## Status
 
-Version 0.4.0, end of phase 3 (import and validation). The app works on its
-own, on each device, and synchronises with the server when it is reachable:
+Version 0.5.0, end of phase 4 (annual view). The app works on its own, on
+each device, and synchronises with the server when it is reachable:
 
 - accounts of the ten types of the specification, one of them detailed
   (import enabled), archiving;
@@ -42,7 +44,16 @@ own, on each device, and synchronises with the server when it is reachable:
   model) that propose a classification for each imported line; lines to
   complete one by one, proposals confirmed in bulk, offline;
 - the transactions list searched by text and filtered by account, period,
-  category and status.
+  category and status;
+- the « Année » screen: the tree of a year with its amounts month by month,
+  in the cash-flow view (what was paid in the year) or the economic view
+  (what the year cost), the period offsets between them, and the
+  transactions behind every amount; the key figures of the year on the home
+  screen;
+- redistribution rules that move a percentage of a category to another,
+  month by month; refunds attached to their expense, which shows its net
+  cost; the shares carried to a year without a category of the same name,
+  classified once and remembered ([year view](docs/year-view.md)).
 
 Phase 0 provided the foundations: app and server skeletons, local database
 driven by a change journal, device pairing over pinned HTTPS, CI and
@@ -69,6 +80,7 @@ cd batz-ui
 flutter analyze && flutter test
 flutter test benchmark/first_exchange_test.dart   # by hand: a first exchange of 20 000 entries
 flutter test benchmark/journal_write_test.dart    # by hand: a modification of 1 000 fields
+flutter test test/data/performance_test.dart      # alone: reload and views with 10 000 transactions
 flutter run -d linux
 ```
 
