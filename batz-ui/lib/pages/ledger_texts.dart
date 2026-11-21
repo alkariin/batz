@@ -105,6 +105,8 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.tripDaysInvalid => l.errorTripDaysInvalid,
   LedgerError.tripDateRequired => l.errorTripDateRequired,
   LedgerError.tripAmountRequired => l.errorTripAmountRequired,
+  LedgerError.unknownElectricityReading => l.errorUnknownElectricityReading,
+  LedgerError.electricityNegative => l.errorElectricityNegative,
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {

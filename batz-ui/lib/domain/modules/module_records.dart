@@ -1,3 +1,4 @@
+import 'electricity.dart';
 import 'salary.dart';
 import 'settings.dart';
 import 'taxes.dart';
@@ -14,7 +15,9 @@ class ModuleRecords {
     Iterable<TaxYear> taxYears = const [],
     Iterable<TaxLine> taxLines = const [],
     Iterable<TripSheet> tripSheets = const [],
+    Iterable<ElectricityReading> electricityReadings = const [],
   }) : tripSheets = {for (final t in tripSheets) t.id: t},
+       electricityReadings = {for (final r in electricityReadings) r.lineId: r},
        settings = {for (final s in settings) s.module: s},
        salarySheets = _sheets(salarySheets, salaryDeductions),
        taxYears = {for (final t in taxYears) t.year: t},
@@ -54,4 +57,7 @@ class ModuleRecords {
 
   /// The sheets of the trips and the manual lines, by identifier.
   final Map<String, TripSheet> tripSheets;
+
+  /// The energy entered for the lines, by line.
+  final Map<String, ElectricityReading> electricityReadings;
 }

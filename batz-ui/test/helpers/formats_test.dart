@@ -123,6 +123,15 @@ void main() {
       expect(parseScaled('79.5', 2), 7950);
       expect(parseScaled('-3', 2), isNull);
       expect(parseScaled('abc', 2), isNull);
+      expect(parseScaled("4'700", 3), 4700000, reason: 'kWh in Wh');
+    });
+
+    test('decimals with thousands separators', () {
+      expect(formatDecimal(4700000, 3, trim: true), "4'700");
+      expect(formatDecimal(1234567, 3, trim: true), "1'234.567");
+      expect(formatDecimal(2596, 4), '0.2596');
+      expect(formatDecimal(2500, 4), '0.2500');
+      expect(formatDecimal(1288, 2), '12.88');
     });
   });
 }

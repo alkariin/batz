@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../l10n/app_localizations.dart';
 import '../accounts/accounts_page.dart';
 import '../categories/categories_page.dart';
+import '../modules/electricity_page.dart';
 import '../modules/salary_page.dart';
 import '../modules/taxes_page.dart';
 import '../modules/vacations_page.dart';
@@ -47,6 +48,14 @@ class MorePage extends StatelessWidget {
             subtitle: Text(l.vacationsMenuHint),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const VacationsPage())),
+          ),
+          ListTile(
+            key: const Key('moreElectricity'),
+            leading: const Icon(Icons.bolt_outlined),
+            title: Text(l.electricityTitle),
+            subtitle: Text(l.electricityMenuHint),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ElectricityPage())),
           ),
           const Divider(),
           _Section(l.moreSettings),

@@ -1934,3 +1934,39 @@ sub-categories, refunds, periods), each line in one trip only, the gaps
 inside and between trips, the automatic amounts adding up to the lines;
 views and wealth unchanged. `test/pages/modules/vacations_page_test.dart`
 drives the screen through the example, a replacement and a manual line.
+
+### 6.5 Electricity
+
+**Decisions.**
+
+- New journal entity `electricityReading` (table `electricity_readings`): the
+  line (`ownLineId`) and its energy in Wh, with an identifier computed from
+  the line. Erasing the kWh of a line deletes the record; negative kWh are
+  refused.
+- For a year, the lines are those `linesIn` gives for the electricity
+  category of the year in the economic view, before redistribution (H1). The
+  price is minus their total. The energy of a line is spread over its months
+  with `allocate`, the function that spreads the amounts (the last month
+  takes the remainder), and the year receives the shares of its months: a
+  line counts in a year for all its months there, the category being found
+  by name once per year. The days are those of the year covered by the
+  period of at least one line, each day once.
+- Ratios with one rounding each, halves away from zero: price per day in
+  cents, per kWh in ten-thousandths of a franc, kWh per day in hundredths.
+  None when the divisor is zero. The screen counts the lines without kWh,
+  which overestimate the price per kWh.
+- kWh whose line no longer counts in the category of its year (it left it,
+  or is gone) are listed apart and can be erased.
+- `formatDecimal` shows kWh and ratios with thousands separators; kWh are
+  typed with three decimals at most (`parseScaled`), stored in Wh.
+
+**Evidence.** `test/domain/modules/electricity_test.dart`: the example year
+by year (2026: 1'220.00, 4'700 kWh, 365 days, 3.34, 0.2596, 12.88; 2027:
+100.00, 400 kWh, 31 days, 3.23, 0.2500, 12.90), the cash-flow view of 2026
+showing 1'020.00; an instalment and a final invoice over the same days; a
+line without kWh; kWh entered, modified, erased, refused, left on a line
+that left the category; a category missing; on 30 random sets, the price of
+each year against the economic view and the kWh spread against the kWh
+entered; two devices; views and wealth unchanged.
+`test/pages/modules/electricity_page_test.dart` enters the kWh of the
+example from the screen.

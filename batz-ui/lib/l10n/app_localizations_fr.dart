@@ -2370,4 +2370,81 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get vacationsInvalid => 'Valeur invalide : vérifiez la date, le montant et les jours.';
+
+  @override
+  String get errorUnknownElectricityReading => 'Cette ligne n\'a pas de kWh saisis.';
+
+  @override
+  String get errorElectricityNegative => 'Les kWh ne peuvent pas être négatifs.';
+
+  @override
+  String get electricityTitle => 'Électricité';
+
+  @override
+  String get electricityMenuHint => 'Prix, kWh et jours par année.';
+
+  @override
+  String get electricityNone => 'Aucune facture : les transactions de la catégorie liée apparaissent ici.';
+
+  @override
+  String get electricityPrice => 'Prix total';
+
+  @override
+  String get electricityKwh => 'kWh';
+
+  @override
+  String get electricityDays => 'Jours';
+
+  @override
+  String get electricityPerDay => 'CHF par jour';
+
+  @override
+  String get electricityPerKwh => 'CHF par kWh';
+
+  @override
+  String get electricityKwhPerDay => 'kWh par jour';
+
+  @override
+  String electricityMissing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lignes sans kWh : le prix par kWh est surestimé.',
+      one: 'Une ligne sans kWh : le prix par kWh est surestimé.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String electricityLines(String year) {
+    return 'Factures de $year';
+  }
+
+  @override
+  String electricityLine(String date, String start, String end, String days) {
+    return '$date · $start – $end · $days j';
+  }
+
+  @override
+  String electricityLineKwh(String kwh) {
+    return '$kwh kWh';
+  }
+
+  @override
+  String get electricityNoKwh => 'kWh à saisir';
+
+  @override
+  String get electricityEnter => 'kWh de la facture';
+
+  @override
+  String get electricityErase => 'Effacer';
+
+  @override
+  String get electricityInvalid => 'Nombre de kWh invalide.';
+
+  @override
+  String get electricityOrphans => 'kWh sans facture';
+
+  @override
+  String get electricityOrphansHint => 'Leur transaction a quitté la catégorie ou n\'existe plus.';
 }

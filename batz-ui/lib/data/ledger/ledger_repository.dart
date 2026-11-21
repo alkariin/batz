@@ -13,6 +13,7 @@ import '../../domain/ledger/share_classification.dart';
 import '../../domain/ledger/statement.dart';
 import '../../domain/period_model.dart';
 import '../../domain/ledger/transaction.dart';
+import '../../domain/modules/electricity.dart';
 import '../../domain/modules/module_records.dart';
 import '../../domain/modules/salary.dart';
 import '../../domain/modules/settings.dart';
@@ -84,13 +85,14 @@ class LedgerRepository {
 
   /// What the user entered in the modules.
   Future<ModuleRecords> _modules() async {
-    final (settings, sheets, deductions, taxYears, taxLines, trips) = await (
+    final (settings, sheets, deductions, taxYears, taxLines, trips, readings) = await (
       _rows(moduleSettingsTable, _moduleSetting),
       _rows(salarySheetsTable, _salarySheet),
       _rows(salaryDeductionsTable, _salaryDeduction),
       _rows(taxYearsTable, _taxYear),
       _rows(taxLinesTable, _taxLine),
       _rows(tripSheetsTable, _tripSheet),
+      _rows(electricityReadingsTable, _electricityReading),
     ).wait;
     return ModuleRecords(
       settings: settings,
@@ -99,7 +101,16 @@ class LedgerRepository {
       taxYears: taxYears,
       taxLines: taxLines,
       tripSheets: trips,
+      electricityReadings: readings,
     );
+  }
+
+  /// A reading needs its line and its energy.
+  static ElectricityReading? _electricityReading(Map<String, Object?> row) {
+    final lineId = _string(row['line_id']);
+    final wh = row['wh'];
+    if (lineId == null || wh is! int) return null;
+    return ElectricityReading(id: row['id']! as String, lineId: lineId, wh: wh);
   }
 
   /// The sheet of a trip is read whatever it holds; a manual line without

@@ -7,6 +7,7 @@ import '../../domain/ledger/rule.dart';
 import '../../domain/ledger/share_classification.dart';
 import '../../domain/ledger/statement.dart';
 import '../../domain/ledger/transaction.dart';
+import '../../domain/modules/electricity.dart';
 import '../../domain/modules/salary.dart';
 import '../../domain/modules/settings.dart';
 import '../../domain/modules/taxes.dart';
@@ -125,6 +126,7 @@ final List<DerivedTable> appDerivedTables = [
   taxYearsTable,
   taxLinesTable,
   tripSheetsTable,
+  electricityReadingsTable,
 ];
 
 final accountsTable = DerivedTable(
@@ -327,5 +329,14 @@ final tripSheetsTable = DerivedTable(
     TripSheetFields.days: const DerivedColumn.integer('days'),
     TripSheetFields.date: const DerivedColumn.text('date'),
     TripSheetFields.amount: const DerivedColumn.integer('amount'),
+  },
+);
+
+final electricityReadingsTable = DerivedTable(
+  entity: ElectricityReadingFields.entity,
+  table: 'electricity_readings',
+  columns: {
+    ElectricityReadingFields.lineId: const DerivedColumn.text('line_id'),
+    ElectricityReadingFields.wh: const DerivedColumn.integer('wh'),
   },
 );

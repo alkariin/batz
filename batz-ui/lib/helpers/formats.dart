@@ -110,3 +110,19 @@ int? parseScaled(String input, int decimals) {
   }
   return value + int.parse((match.group(2) ?? '0').padRight(decimals, '0'));
 }
+
+/// Formats [value], a number of 10^-[decimals], with thousands separators:
+/// `4'700` (4700000, 3, trimmed), `0.2596` (2596, 4), `12.88` (1288, 2).
+/// With [trim], decimals that are zero are left out.
+String formatDecimal(int value, int decimals, {bool trim = false}) {
+  final digits = value.abs().toString().padLeft(decimals + 1, '0');
+  final whole = digits.substring(0, digits.length - decimals);
+  var fraction = digits.substring(digits.length - decimals);
+  if (trim) fraction = fraction.replaceFirst(RegExp(r'0+$'), '');
+  final grouped = StringBuffer();
+  for (var i = 0; i < whole.length; i++) {
+    if (i > 0 && (whole.length - i) % 3 == 0) grouped.write(_thousandsSeparator);
+    grouped.write(whole[i]);
+  }
+  return '${value < 0 ? '-' : ''}$grouped${fraction.isEmpty ? '' : '.$fraction'}';
+}

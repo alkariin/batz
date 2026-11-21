@@ -93,6 +93,8 @@ enum LedgerError {
   tripDaysInvalid,
   tripDateRequired,
   tripAmountRequired,
+  unknownElectricityReading,
+  electricityNegative,
 }
 
 /// A business rule refuses the operation; nothing was written.

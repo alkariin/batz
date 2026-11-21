@@ -3947,6 +3947,132 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Valeur invalide : vérifiez la date, le montant et les jours.'**
   String get vacationsInvalid;
+
+  /// No description provided for @errorUnknownElectricityReading.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette ligne n\'a pas de kWh saisis.'**
+  String get errorUnknownElectricityReading;
+
+  /// No description provided for @errorElectricityNegative.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les kWh ne peuvent pas être négatifs.'**
+  String get errorElectricityNegative;
+
+  /// No description provided for @electricityTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Électricité'**
+  String get electricityTitle;
+
+  /// No description provided for @electricityMenuHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix, kWh et jours par année.'**
+  String get electricityMenuHint;
+
+  /// No description provided for @electricityNone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune facture : les transactions de la catégorie liée apparaissent ici.'**
+  String get electricityNone;
+
+  /// No description provided for @electricityPrice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix total'**
+  String get electricityPrice;
+
+  /// No description provided for @electricityKwh.
+  ///
+  /// In fr, this message translates to:
+  /// **'kWh'**
+  String get electricityKwh;
+
+  /// No description provided for @electricityDays.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jours'**
+  String get electricityDays;
+
+  /// No description provided for @electricityPerDay.
+  ///
+  /// In fr, this message translates to:
+  /// **'CHF par jour'**
+  String get electricityPerDay;
+
+  /// No description provided for @electricityPerKwh.
+  ///
+  /// In fr, this message translates to:
+  /// **'CHF par kWh'**
+  String get electricityPerKwh;
+
+  /// No description provided for @electricityKwhPerDay.
+  ///
+  /// In fr, this message translates to:
+  /// **'kWh par jour'**
+  String get electricityKwhPerDay;
+
+  /// No description provided for @electricityMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une ligne sans kWh : le prix par kWh est surestimé.} other{{count} lignes sans kWh : le prix par kWh est surestimé.}}'**
+  String electricityMissing(int count);
+
+  /// No description provided for @electricityLines.
+  ///
+  /// In fr, this message translates to:
+  /// **'Factures de {year}'**
+  String electricityLines(String year);
+
+  /// No description provided for @electricityLine.
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} · {start} – {end} · {days} j'**
+  String electricityLine(String date, String start, String end, String days);
+
+  /// No description provided for @electricityLineKwh.
+  ///
+  /// In fr, this message translates to:
+  /// **'{kwh} kWh'**
+  String electricityLineKwh(String kwh);
+
+  /// No description provided for @electricityNoKwh.
+  ///
+  /// In fr, this message translates to:
+  /// **'kWh à saisir'**
+  String get electricityNoKwh;
+
+  /// No description provided for @electricityEnter.
+  ///
+  /// In fr, this message translates to:
+  /// **'kWh de la facture'**
+  String get electricityEnter;
+
+  /// No description provided for @electricityErase.
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer'**
+  String get electricityErase;
+
+  /// No description provided for @electricityInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nombre de kWh invalide.'**
+  String get electricityInvalid;
+
+  /// No description provided for @electricityOrphans.
+  ///
+  /// In fr, this message translates to:
+  /// **'kWh sans facture'**
+  String get electricityOrphans;
+
+  /// No description provided for @electricityOrphansHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Leur transaction a quitté la catégorie ou n\'existe plus.'**
+  String get electricityOrphansHint;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
