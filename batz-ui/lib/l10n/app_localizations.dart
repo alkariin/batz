@@ -2651,6 +2651,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Compte archivé et non supprimé : {count, plural, =1{un solde déclaré l\'utilise} other{{count} soldes déclarés l\'utilisent}}. Il reste dans la fortune avec son dernier solde ; déclarez un solde de 0 pour l\'en sortir.'**
   String accountArchivedBalances(int count);
+
+  /// No description provided for @errorUnknownDebt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette dette n\'existe plus.'**
+  String get errorUnknownDebt;
+
+  /// No description provided for @errorDebtPersonRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez la personne.'**
+  String get errorDebtPersonRequired;
+
+  /// No description provided for @errorDebtPercentInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un pourcentage entre 0.01 et 100, avec deux décimales au plus.'**
+  String get errorDebtPercentInvalid;
+
+  /// No description provided for @errorDebtReceivedBeforeEvent.
+  ///
+  /// In fr, this message translates to:
+  /// **'La date de réception ne peut pas précéder la date de l\'événement.'**
+  String get errorDebtReceivedBeforeEvent;
+
+  /// No description provided for @errorDebtSplitOutOfTotal.
+  ///
+  /// In fr, this message translates to:
+  /// **'La première part doit être supérieure à zéro et inférieure au total de la dette.'**
+  String get errorDebtSplitOutOfTotal;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

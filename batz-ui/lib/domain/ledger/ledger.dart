@@ -4,6 +4,7 @@ import '../period_model.dart';
 import 'account.dart';
 import 'balance.dart';
 import 'category.dart';
+import 'debt.dart';
 import 'issues.dart';
 import 'ledger_exception.dart';
 import 'proposal.dart';
@@ -34,6 +35,7 @@ class Ledger {
     Iterable<RedistributionRule> redistributions = const [],
     Iterable<ShareClassification> shareClassifications = const [],
     Iterable<DeclaredBalance> balances = const [],
+    Iterable<Debt> debts = const [],
   }) : this._(
          accounts,
          CategoryForest.build(categories),
@@ -45,6 +47,7 @@ class Ledger {
          redistributions,
          shareClassifications,
          balances,
+         debts,
        );
 
   Ledger._(
@@ -58,6 +61,7 @@ class Ledger {
     Iterable<RedistributionRule> redistributions,
     Iterable<ShareClassification> shareClassifications,
     Iterable<DeclaredBalance> balances,
+    Iterable<Debt> debts,
   ) : accounts = {for (final a in accounts) a.id: a},
       trees = forest.trees,
       transactions = _attach(transactions, lines),
@@ -66,7 +70,8 @@ class Ledger {
       rules = {for (final r in rules) r.id: r},
       redistributions = {for (final r in redistributions) r.id: r},
       shareClassifications = {for (final c in shareClassifications) (c.lineId, c.year): c},
-      declaredBalances = {for (final b in balances) b.id: b};
+      declaredBalances = {for (final b in balances) b.id: b},
+      debts = {for (final d in debts) d.id: d};
 
   static Map<String, LedgerTransaction> _attach(
     Iterable<LedgerTransaction> transactions,
@@ -113,6 +118,9 @@ class Ledger {
   /// balance.dart for their operations, views/balances.dart for what they
   /// give).
   final Map<String, DeclaredBalance> declaredBalances;
+
+  /// The debts table, by identifier (see debt.dart for its operations).
+  final Map<String, Debt> debts;
 
   /// Every category of every year, by identifier.
   late final Map<String, Category> categories = {for (final tree in trees.values) ...tree.byId};

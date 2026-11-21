@@ -14,6 +14,11 @@ import 'dart:io';
 ///
 /// The lock is an advisory lock on a file of the temporary directory, owned
 /// by the process. Every change goes through one queue.
+///
+/// Once the lock is exclusive, the processes of the files that just released
+/// it may still be ending, and the runner may still be starting the next
+/// ones: on Linux, the measurement also waits until the processors are
+/// quiet (step 5.2 of phase 5).
 abstract final class MachineLock {
   static final _path = '${Directory.systemTemp.path}/batz-test-machine.lock';
   static RandomAccessFile? _shared;
@@ -59,6 +64,7 @@ abstract final class MachineLock {
     try {
       await file.lock(FileLock.blockingExclusive);
       try {
+        await _quiet();
         return await body();
       } finally {
         await file.unlock();
@@ -73,4 +79,30 @@ abstract final class MachineLock {
       }
     }
   });
+
+  /// Waits until two samples in a row, 200 ms each, show the processors busy
+  /// less than 10 % of the time, and at most 20 seconds. Only on Linux,
+  /// where `/proc/stat` gives the time spent by all processors.
+  static Future<void> _quiet() async {
+    final stat = File('/proc/stat');
+    if (!Platform.isLinux || !stat.existsSync()) return;
+    (int, int) sample() {
+      final fields = stat.readAsLinesSync().first.split(RegExp(r'\s+')).skip(1).take(8).map(int.parse).toList();
+      final idle = fields[3] + fields[4];
+      return (fields.fold(0, (a, b) => a + b), idle);
+    }
+
+    final watch = Stopwatch()..start();
+    var quiet = 0;
+    var (total, idle) = sample();
+    while (quiet < 2 && watch.elapsed < const Duration(seconds: 20)) {
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      final (nextTotal, nextIdle) = sample();
+      final busy = nextTotal == total ? 0.0 : 1 - (nextIdle - idle) / (nextTotal - total);
+      quiet = busy < 0.10 ? quiet + 1 : 0;
+      (total, idle) = (nextTotal, nextIdle);
+    }
+    // ignore: avoid_print
+    print('machine quiet after ${watch.elapsedMilliseconds} ms');
+  }
 }

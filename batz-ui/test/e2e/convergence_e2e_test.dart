@@ -10,6 +10,7 @@ import 'package:batz/domain/journal/journal_entry.dart';
 import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/balance.dart';
 import 'package:batz/domain/ledger/category.dart';
+import 'package:batz/domain/ledger/debt.dart';
 import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/ledger_exception.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
@@ -199,11 +200,13 @@ Modification? _refundOperation(Ledger l, Random r) {
 
 /// The operations of phase 5: declared balances, declared, modified and
 /// deleted, on any account (the detailed account, a debts account and a
-/// date to come are refused).
+/// date to come are refused); debts, created, modified, checked and
+/// unchecked, split and deleted.
 Modification? _phase5Operation(Ledger l, Random r, String id) {
   final today = CalendarDate(2026, 11, 20);
   CalendarDate date() => CalendarDate(2025 + r.nextInt(2), 1 + r.nextInt(12), 1 + r.nextInt(28));
   int amount() => r.nextInt(2000000) - 500000;
+  if (r.nextBool()) return _debtOperation(l, r, id, today, date);
   final declared = l.declaredBalances.values.toList()..sort((a, b) => a.id.compareTo(b.id));
   if (declared.isNotEmpty && r.nextInt(3) == 0) {
     final balance = _pick(r, declared);
@@ -212,6 +215,29 @@ Modification? _phase5Operation(Ledger l, Random r, String id) {
   }
   if (l.accounts.isEmpty) return null;
   return l.declareBalance(_pick(r, l.accounts.keys.toList()..sort()), date(), amount(), today: today);
+}
+
+Modification? _debtOperation(Ledger l, Random r, String id, CalendarDate today, CalendarDate Function() date) {
+  final debts = l.debts.keys.toList()..sort();
+  DebtDraft draft() => DebtDraft(
+    direction: _pick(r, DebtDirection.values),
+    person: _pick(r, ['Alex', 'Camille', 'Dominique', '']),
+    amount: r.nextInt(100000),
+    basisPoints: r.nextInt(4) == 0 ? 1 + r.nextInt(10000) : 10000,
+    eventDate: r.nextBool() ? date() : null,
+    receivedDate: r.nextInt(3) == 0 ? date() : null,
+    description: 'dette $id',
+    repaid: r.nextInt(4) == 0,
+  );
+  if (debts.isEmpty || r.nextInt(3) == 0) return l.createDebt('debt-$id', draft(), today: today);
+  final debt = _pick(r, debts);
+  return switch (r.nextInt(5)) {
+    0 => l.updateDebt(debt, draft(), today: today),
+    1 => l.checkDebt(debt, receivedDate: r.nextBool() ? date() : null, today: today),
+    2 => l.uncheckDebt(debt),
+    3 => l.splitDebt(debt, 'debt-$id', 1 + r.nextInt(l.debts[debt]!.total + 1)),
+    _ => l.deleteDebt(debt),
+  };
 }
 
 extension on AccountDraft {
@@ -301,7 +327,8 @@ void main() {
         '${(reference['journal']! as List).length} journal entries, ${ledger.transactions.length} transactions, '
         '${ledger.categories.length} categories, ${ledger.forest.detached.length} detached, '
         '${ledger.redistributions.length} redistribution rules, ${ledger.refundsByExpenseLine.length} expenses refunded, '
-        '${ledger.shareClassifications.length} answers, ${ledger.declaredBalances.length} balances',
+        '${ledger.shareClassifications.length} answers, ${ledger.declaredBalances.length} balances, '
+        '${ledger.debts.length} debts',
       );
       // About ten seconds alone, much more while the other test files run:
       // hundreds of calls with pages of a few entries.

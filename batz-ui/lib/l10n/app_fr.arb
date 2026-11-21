@@ -930,5 +930,10 @@
   "errorBalanceOnDebtsAccount": "Un compte « Dettes » n'a pas de solde propre : la fortune compte les dettes du tableau des dettes.",
   "errorBalanceInFuture": "Un solde ne se déclare pas pour une date future.",
   "accountArchivedBalances": "Compte archivé et non supprimé : {count, plural, =1{un solde déclaré l'utilise} other{{count} soldes déclarés l'utilisent}}. Il reste dans la fortune avec son dernier solde ; déclarez un solde de 0 pour l'en sortir.",
-  "@accountArchivedBalances": {"placeholders": {"count": {"type": "int"}}}
+  "@accountArchivedBalances": {"placeholders": {"count": {"type": "int"}}},
+  "errorUnknownDebt": "Cette dette n'existe plus.",
+  "errorDebtPersonRequired": "Indiquez la personne.",
+  "errorDebtPercentInvalid": "Indiquez un pourcentage entre 0.01 et 100, avec deux décimales au plus.",
+  "errorDebtReceivedBeforeEvent": "La date de réception ne peut pas précéder la date de l'événement.",
+  "errorDebtSplitOutOfTotal": "La première part doit être supérieure à zéro et inférieure au total de la dette."
 }

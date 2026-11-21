@@ -5,6 +5,7 @@ import '../../domain/journal/journal_entry.dart';
 import '../../domain/ledger/account.dart';
 import '../../domain/ledger/balance.dart';
 import '../../domain/ledger/category.dart';
+import '../../domain/ledger/debt.dart';
 import '../../domain/ledger/ledger.dart';
 import '../../domain/ledger/redistribution.dart';
 import '../../domain/ledger/rule.dart';
@@ -39,7 +40,7 @@ class LedgerRepository {
   Future<Ledger> load() async {
     final (
       (accounts, categories, transactions, lines, statements, deleted),
-      (rules, redistributions, answers, balances),
+      (rules, redistributions, answers, balances, debts),
     ) = await (
       (
         _rows(accountsTable, _account),
@@ -54,6 +55,7 @@ class LedgerRepository {
         _rows(redistributionsTable, _redistribution),
         _rows(shareClassificationsTable, _shareClassification),
         _rows(balancesTable, _balance),
+        _rows(debtsTable, _debt),
       ).wait,
     ).wait;
     return Ledger(
@@ -67,8 +69,39 @@ class LedgerRepository {
       redistributions: redistributions,
       shareClassifications: answers,
       balances: balances,
+      debts: debts,
     );
   }
+
+  /// A debt needs a known direction, a person, an amount, a percentage and
+  /// the day it was entered. A date that cannot be read is no date.
+  static Debt? _debt(Map<String, Object?> row) {
+    final direction = _enum(DebtDirection.values, row['direction']);
+    final person = _string(row['person']);
+    final amount = row['amount'];
+    final basisPoints = row['basis_points'];
+    final enteredOn = _date(row['entered_on']);
+    if (direction == null || person == null || amount is! int || basisPoints is! int || enteredOn == null) {
+      return null;
+    }
+    return Debt(
+      id: row['id']! as String,
+      direction: direction,
+      person: person,
+      amount: amount,
+      basisPoints: basisPoints,
+      eventDate: _date(row['event_date']),
+      invoiceDate: _date(row['invoice_date']),
+      requestDate: _date(row['request_date']),
+      receivedDate: _date(row['received_date']),
+      description: row['description'] is String ? row['description']! as String : '',
+      repaid: row['repaid'] == 1,
+      enteredOn: enteredOn,
+      checkedOn: _date(row['checked_on']),
+    );
+  }
+
+  static CalendarDate? _date(Object? value) => CalendarDate.tryParse(value is String ? value : null);
 
   /// A declared balance needs its account, a valid date and an amount.
   /// Whether it counts is decided by the domain (an unknown account, a debts

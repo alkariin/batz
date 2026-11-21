@@ -1,6 +1,7 @@
 import '../../domain/ledger/account.dart';
 import '../../domain/ledger/balance.dart';
 import '../../domain/ledger/category.dart';
+import '../../domain/ledger/debt.dart';
 import '../../domain/ledger/redistribution.dart';
 import '../../domain/ledger/rule.dart';
 import '../../domain/ledger/share_classification.dart';
@@ -113,6 +114,7 @@ final List<DerivedTable> appDerivedTables = [
   redistributionsTable,
   shareClassificationsTable,
   balancesTable,
+  debtsTable,
 ];
 
 final accountsTable = DerivedTable(
@@ -232,5 +234,24 @@ final balancesTable = DerivedTable(
     BalanceFields.accountId: const DerivedColumn.text('account_id'),
     BalanceFields.date: const DerivedColumn.text('date'),
     BalanceFields.amount: const DerivedColumn.integer('amount'),
+  },
+);
+
+final debtsTable = DerivedTable(
+  entity: DebtFields.entity,
+  table: 'debts',
+  columns: {
+    DebtFields.direction: const DerivedColumn.text('direction'),
+    DebtFields.person: const DerivedColumn.text('person'),
+    DebtFields.amount: const DerivedColumn.integer('amount'),
+    DebtFields.basisPoints: const DerivedColumn.integer('basis_points'),
+    DebtFields.eventDate: const DerivedColumn.text('event_date'),
+    DebtFields.invoiceDate: const DerivedColumn.text('invoice_date'),
+    DebtFields.requestDate: const DerivedColumn.text('request_date'),
+    DebtFields.receivedDate: const DerivedColumn.text('received_date'),
+    DebtFields.description: const DerivedColumn.text('description'),
+    DebtFields.repaid: const DerivedColumn.integer('repaid'),
+    DebtFields.enteredOn: const DerivedColumn.text('entered_on'),
+    DebtFields.checkedOn: const DerivedColumn.text('checked_on'),
   },
 );

@@ -1455,3 +1455,78 @@ two devices declaring the same day). `test/e2e/wealth_e2e_test.dart`
 exchanges balances through a real server, and the convergence test
 declares, modifies and deletes balances on four devices. The database of
 0.5.0 opens, its derived tables rebuilt, and takes a balance.
+
+### 5.2 Debts
+
+**Decisions.**
+
+- New journal entity `debt` (table `debts`), the « Debt » of chapter 6 of
+  the specification: direction (`owedToMe`, `iOwe`), person, amount in
+  cents, percentage in hundredths of a percent (`basisPoints`, as the
+  redistribution), the four dates of the specification, description and
+  « remboursé »; plus `enteredOn` and `checkedOn`, written by the app. A
+  debt is read when its direction is known and it has a person, an amount,
+  a percentage and its day of entry; a date that cannot be read counts as
+  missing. Operations and rules live in `domain/ledger/debt.dart`, as an
+  extension of the ledger.
+- Total: amount × percentage, rounded to the cent, halves away from zero
+  (`redistributedCents`, the same rounding as the redistribution).
+- A debt counts from its event date, or its day of entry, to the day before
+  its date of receipt, or before the day it was checked, while repaid; not
+  repaid, it counts from its start on, whatever its date of receipt. A debt
+  repaid with neither date (only another version could write one) counts on
+  no day. `openDebtsAt` gives the signed sum; `debtTotalsAt` the totals « on
+  me doit » and « je dois » of the debts that count that day, whose
+  difference is that sum.
+- Checking (`checkDebt`) takes the date of receipt the screen proposes
+  (today) or none, and records today as the day checked; unchecking clears
+  that day and keeps the date of receipt. A modification that does not
+  change the state keeps the day checked; one that checks or unchecks
+  records or clears it. The day of entry never changes.
+- Refusals, with their reason: an empty person, an amount of zero or less,
+  a percentage out of 0.01 to 100 %, a date of receipt before the event
+  (only when both are given), a first part of a split that is not strictly
+  between zero and the total, an unknown debt.
+- Splitting (H6) writes the first part on the debt and the rest on a new
+  one, both at 100 %, every other field copied, the days of entry and check
+  included: the two count on exactly the same days as the original.
+
+**Known limit.** The same debt split on two devices offline: the debt keeps
+the first part of the latest split, and both second parts are kept, each a
+new record; their totals then exceed the original. The user deletes the one
+too many. Computing the identifier of the second part from the first would
+have made two splits of different amounts write the same record, but a
+debt split again after being modified back would overwrite an earlier part;
+the plan accepts the limit. `test/domain/ledger/debts_test.dart` shows it.
+
+**Evidence.** `test/domain/ledger/debts_test.dart`: 200 at 50 % is 100 and
+the rounding of halves; each bound of dates; the example of the
+specification (the line « Dettes » is the sum of the debts not repaid that
+count, day by day); 10 random sets of 40 debts checked every day of 2026
+against decision H5 read literally; a split to the cent with every field
+kept; each refusal; the day checked kept or changed. The end-to-end test
+sends debts, a split and a check through a real server, and the convergence
+test creates, modifies, checks, unchecks, splits and deletes debts on four
+devices.
+
+### 5.2 The performance test runs alone from its first write
+
+**Decision.** The performance test now holds the machine lock exclusive for
+its whole body, data written included, and once the lock is exclusive it
+waits until the processors are quiet (two samples of 200 ms below 10 % busy,
+20 seconds at most, read from `/proc/stat` on Linux). The limits and the ten
+runs checked are unchanged.
+
+**Why.** After step 5.1, the first of the ten reloads took 473, 317 and 331
+ms in three runs of the full suite, the nine others 80 to 110 ms, and 100 to
+115 ms alone. Timed apart, the database read was the slow part (207 ms, then
+about 55 ms), and an idle pause before the measurement alone did not
+reproduce it. The development machine has 9 GB of memory, its swap 3.5 GB
+full out of 3.8: while the test waited for the lock, after writing its data,
+the other test files took the memory and its pages were swapped out. Written
+and measured alone, they stay in memory.
+
+**Evidence** (2026-11-21, development machine): three consecutive runs of
+the full suite, every test passing, gave reloads of 77 to 121 ms and both
+views of a year 7 to 28 ms; the machine was quiet 0.6 to 0.8 s after the lock
+was taken.

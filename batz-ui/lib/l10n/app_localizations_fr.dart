@@ -1603,4 +1603,20 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return 'Compte archivé et non supprimé : $_temp0. Il reste dans la fortune avec son dernier solde ; déclarez un solde de 0 pour l\'en sortir.';
   }
+
+  @override
+  String get errorUnknownDebt => 'Cette dette n\'existe plus.';
+
+  @override
+  String get errorDebtPersonRequired => 'Indiquez la personne.';
+
+  @override
+  String get errorDebtPercentInvalid => 'Indiquez un pourcentage entre 0.01 et 100, avec deux décimales au plus.';
+
+  @override
+  String get errorDebtReceivedBeforeEvent => 'La date de réception ne peut pas précéder la date de l\'événement.';
+
+  @override
+  String get errorDebtSplitOutOfTotal =>
+      'La première part doit être supérieure à zéro et inférieure au total de la dette.';
 }

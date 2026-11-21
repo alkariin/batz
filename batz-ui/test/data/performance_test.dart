@@ -21,33 +21,35 @@ import '../support/machine_lock.dart';
 /// in docs/decisions.md (steps 4.0 and 4.1).
 ///
 /// Every one of ten runs must stay below its limit; all are printed. The
-/// suite runs its test files concurrently: the measurements are made while
-/// no other test file runs ([MachineLock]), the servers of the end-to-end
-/// files and the screens of the others taking the processors of the machine.
+/// suite runs its test files concurrently: the whole test, its data written
+/// then measured, runs while no other test file runs ([MachineLock]), the
+/// servers of the end-to-end files and the screens of the others taking the
+/// processors and the memory of the machine (step 5.2 of phase 5: waiting
+/// for the lock, the data written before could be swapped out).
 void main() {
   test('with 10 000 transactions over five years and 200 rules, the ledger reloads after a write in less than '
       '300 ms, and both views of a year are computed in less than 100 ms', () async {
-    final dir = Directory.systemTemp.createTempSync('batz-perf');
-    addTearDown(() => dir.deleteSync(recursive: true));
-    // A device as in production: a database file in a background isolate.
-    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
-    final db = LocalDatabase(NativeDatabase.createInBackground(File('${dir.path}/batz.db')));
-    addTearDown(db.close);
-    final repository = LedgerRepository(db, await Journal.open(db));
-
-    final setup = Stopwatch()..start();
-    await LargeLedger.write(repository);
-    var ledger = await repository.load();
-    // ignore: avoid_print
-    print('data written in ${setup.elapsedMilliseconds} ms');
-    expect(ledger.transactions, hasLength(LargeLedger.transactions));
-    expect(ledger.transactions, hasLength(10000));
-    expect(ledger.rules, hasLength(200));
-    expect(ledger.trees.keys, hasLength(5));
-    expect(ledger.linesToValidate, hasLength(LargeLedger.linesPerStatement));
-    _tasks(ledger);
-
     await MachineLock.exclusive(() async {
+      final dir = Directory.systemTemp.createTempSync('batz-perf');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      // A device as in production: a database file in a background isolate.
+      driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+      final db = LocalDatabase(NativeDatabase.createInBackground(File('${dir.path}/batz.db')));
+      addTearDown(db.close);
+      final repository = LedgerRepository(db, await Journal.open(db));
+
+      final setup = Stopwatch()..start();
+      await LargeLedger.write(repository);
+      var ledger = await repository.load();
+      // ignore: avoid_print
+      print('data written in ${setup.elapsedMilliseconds} ms');
+      expect(ledger.transactions, hasLength(LargeLedger.transactions));
+      expect(ledger.transactions, hasLength(10000));
+      expect(ledger.rules, hasLength(200));
+      expect(ledger.trees.keys, hasLength(5));
+      expect(ledger.linesToValidate, hasLength(LargeLedger.linesPerStatement));
+      _tasks(ledger);
+
       // What every screen needs after a write: the database read, the ledger
       // built, the proposals of the lines to validate, the tasks (shares to
       // classify included, which go through the views of every year) and

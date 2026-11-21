@@ -69,6 +69,13 @@ enum LedgerError {
   balanceOnDetailedAccount,
   balanceOnDebtsAccount,
   balanceInFuture,
+
+  // Debts (phase 5).
+  unknownDebt,
+  debtPersonRequired,
+  debtPercentInvalid,
+  debtReceivedBeforeEvent,
+  debtSplitOutOfTotal,
 }
 
 /// A business rule refuses the operation; nothing was written.

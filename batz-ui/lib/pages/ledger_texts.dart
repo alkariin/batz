@@ -85,6 +85,11 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.balanceOnDetailedAccount => l.errorBalanceOnDetailedAccount,
   LedgerError.balanceOnDebtsAccount => l.errorBalanceOnDebtsAccount,
   LedgerError.balanceInFuture => l.errorBalanceInFuture,
+  LedgerError.unknownDebt => l.errorUnknownDebt,
+  LedgerError.debtPersonRequired => l.errorDebtPersonRequired,
+  LedgerError.debtPercentInvalid => l.errorDebtPercentInvalid,
+  LedgerError.debtReceivedBeforeEvent => l.errorDebtReceivedBeforeEvent,
+  LedgerError.debtSplitOutOfTotal => l.errorDebtSplitOutOfTotal,
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {
