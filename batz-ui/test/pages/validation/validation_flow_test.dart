@@ -165,9 +165,29 @@ void main() {
       final t = (await ledger(tester)).transactions[saving.id]!;
       expect((t.isValidated, t.counterpartAccountId, t.note), (true, 'savings', 'Épargne de janvier'));
 
-      // The rules of the year, in Plus.
+      // A validated line stays modifiable, from its detail (H4).
       await tester.tap(find.byType(BackButton).last);
       await settle(tester);
+      await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Transactions')));
+      await settle(tester);
+      await tester.enterText(find.byKey(const Key('transactionsSearch')), 'épargne de janvier');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(t.description));
+      await settle(tester);
+      expect(find.byKey(const Key('classifyImported')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('classifyImported')));
+      await settle(tester);
+      await tester.tap(find.text('Catégorie').first);
+      await tester.pumpAndSettle();
+      await pick(tester, const Key('classifyCategory'), 'Loyer');
+      await tester.tap(find.byKey(const Key('classifyValidate')));
+      await settle(tester);
+      final changed = (await ledger(tester)).transactions[saving.id]!;
+      expect((changed.isValidated, changed.counterpartAccountId, changed.line?.categoryId), (true, null, 'rent'));
+      await tester.tap(find.byType(BackButton).last);
+      await settle(tester);
+
+      // The rules of the year, in Plus.
       await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Plus')));
       await settle(tester);
       await tester.tap(find.text('Règles de classement'));

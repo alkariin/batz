@@ -6,6 +6,7 @@ import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
+import '../validation/classify_page.dart';
 import 'entry_form_page.dart';
 import 'transaction_texts.dart';
 import 'transfer_form_page.dart';
@@ -36,6 +37,17 @@ class TransactionDetailPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(l.detailTitle),
         actions: [
+          // An imported line is classified again, its description and note
+          // changed, from the classification screen (decision H4).
+          if (t.isImported)
+            IconButton(
+              key: const Key('classifyImported'),
+              tooltip: l.edit,
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () =>
+                  Navigator.of(context)
+                      .push(MaterialPageRoute<bool>(builder: (_) => ClassifyPage(transactionId: t.id))),
+            ),
           if (editable) ...[
             IconButton(
               tooltip: l.edit,
