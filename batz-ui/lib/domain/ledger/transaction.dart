@@ -13,6 +13,13 @@ abstract final class TransactionFields {
   static const description = 'description';
   static const note = 'note';
   static const status = 'status';
+
+  /// The bank's text of an imported line: immutable.
+  static const rawText = 'rawText';
+
+  /// The statement an imported line comes from, and its rank in it (from 0).
+  static const statementId = 'statementId';
+  static const statementRank = 'statementRank';
 }
 
 /// Journal entity and fields of a transaction line: its category and the
@@ -27,9 +34,11 @@ abstract final class LineFields {
   static const periodEnd = 'periodEnd';
 }
 
-/// Statuses of the specification; a manual entry is always validated. The
-/// other two come with import (phase 3).
-enum TransactionStatus { toComplete, proposed, validated }
+/// What the journal records of a transaction's validation (principle 3 of
+/// phase 3): an imported line is to validate until the user validates it; a
+/// manual entry is validated at once. « Proposée » and « à compléter » are
+/// not stored: they are deduced from the rules of the year.
+enum TransactionStatus { toValidate, validated }
 
 /// The type of a transaction, deduced, never stored (specification, 4.2).
 enum TransactionKind { expense, refund, income, transfer }
@@ -79,6 +88,9 @@ class LedgerTransaction extends Equatable {
     this.description = '',
     this.note = '',
     this.status = TransactionStatus.validated,
+    this.rawText,
+    this.statementId,
+    this.statementRank,
     this.lines = const [],
   });
 
@@ -96,9 +108,19 @@ class LedgerTransaction extends Equatable {
   final String description;
   final String note;
   final TransactionStatus status;
+
+  /// The bank's text, for an imported line.
+  final String? rawText;
+  final String? statementId;
+  final int? statementRank;
   final List<TransactionLine> lines;
 
   bool get isTransfer => counterpartAccountId != null;
+
+  /// A line of an imported statement.
+  bool get isImported => statementId != null;
+
+  bool get isValidated => status == TransactionStatus.validated;
 
   /// The line the app manages.
   TransactionLine? get line => lines.isEmpty ? null : lines.first;
@@ -112,11 +134,27 @@ class LedgerTransaction extends Equatable {
     description: description,
     note: note,
     status: status,
+    rawText: rawText,
+    statementId: statementId,
+    statementRank: statementRank,
     lines: lines,
   );
 
   @override
-  List<Object?> get props => [id, accountId, date, amount, counterpartAccountId, description, note, status, lines];
+  List<Object?> get props => [
+    id,
+    accountId,
+    date,
+    amount,
+    counterpartAccountId,
+    description,
+    note,
+    status,
+    rawText,
+    statementId,
+    statementRank,
+    lines,
+  ];
 }
 
 /// What the user enters for an expense or an income (decision H3): an

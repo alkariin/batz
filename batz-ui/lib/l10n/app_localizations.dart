@@ -781,6 +781,71 @@ abstract class AppLocalizations {
   /// **'Choisissez deux comptes différents.'**
   String get errorSameAccount;
 
+  /// No description provided for @errorAccountNotDetailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte n\'est pas détaillé : activez l\'import du compte pour y importer ses relevés.'**
+  String get errorAccountNotDetailed;
+
+  /// No description provided for @errorStatementOtherFormat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce relevé n\'est pas au format d\'import de ce compte.'**
+  String get errorStatementOtherFormat;
+
+  /// No description provided for @errorStatementAlreadyImported.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce relevé est déjà importé.'**
+  String get errorStatementAlreadyImported;
+
+  /// No description provided for @errorStatementOtherAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce relevé est celui d\'un autre compte : IBAN {found}, alors que les relevés précédents portent l\'IBAN {expected}.'**
+  String errorStatementOtherAccount(String found, String expected);
+
+  /// No description provided for @errorStatementNotContiguous.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce relevé ne suit pas le précédent : il commence le {foundStart} avec un solde de {foundOpening}, alors que le suivant doit commencer le {expectedStart} avec un solde de {expectedOpening}.'**
+  String errorStatementNotContiguous(
+    String foundStart,
+    String foundOpening,
+    String expectedStart,
+    String expectedOpening,
+  );
+
+  /// No description provided for @errorStatementSumMismatch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les lignes du relevé ne donnent pas l\'écart entre ses soldes initial et final.'**
+  String get errorStatementSumMismatch;
+
+  /// No description provided for @errorStatementTooLarge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce relevé compte trop de lignes pour être importé en une fois.'**
+  String get errorStatementTooLarge;
+
+  /// No description provided for @errorStatementNotLast.
+  ///
+  /// In fr, this message translates to:
+  /// **'Seul le dernier relevé du compte peut être supprimé.'**
+  String get errorStatementNotLast;
+
+  /// No description provided for @errorUnknownStatement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce relevé n\'existe plus.'**
+  String get errorUnknownStatement;
+
+  /// No description provided for @errorImportedTransaction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une ligne importée garde le montant, la date, le compte et le texte de la banque ; seules sa catégorie, sa période, sa description et sa note se modifient.'**
+  String get errorImportedTransaction;
+
   /// No description provided for @edit.
   ///
   /// In fr, this message translates to:
@@ -882,6 +947,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Note'**
   String get fieldNote;
+
+  /// No description provided for @fieldRawText.
+  ///
+  /// In fr, this message translates to:
+  /// **'Texte de la banque'**
+  String get fieldRawText;
 
   /// No description provided for @fieldFrom.
   ///

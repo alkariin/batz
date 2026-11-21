@@ -419,6 +419,48 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errorSameAccount => 'Choisissez deux comptes différents.';
 
   @override
+  String get errorAccountNotDetailed =>
+      'Ce compte n\'est pas détaillé : activez l\'import du compte pour y importer ses relevés.';
+
+  @override
+  String get errorStatementOtherFormat => 'Ce relevé n\'est pas au format d\'import de ce compte.';
+
+  @override
+  String get errorStatementAlreadyImported => 'Ce relevé est déjà importé.';
+
+  @override
+  String errorStatementOtherAccount(String found, String expected) {
+    return 'Ce relevé est celui d\'un autre compte : IBAN $found, alors que les relevés précédents portent l\'IBAN $expected.';
+  }
+
+  @override
+  String errorStatementNotContiguous(
+    String foundStart,
+    String foundOpening,
+    String expectedStart,
+    String expectedOpening,
+  ) {
+    return 'Ce relevé ne suit pas le précédent : il commence le $foundStart avec un solde de $foundOpening, alors que le suivant doit commencer le $expectedStart avec un solde de $expectedOpening.';
+  }
+
+  @override
+  String get errorStatementSumMismatch =>
+      'Les lignes du relevé ne donnent pas l\'écart entre ses soldes initial et final.';
+
+  @override
+  String get errorStatementTooLarge => 'Ce relevé compte trop de lignes pour être importé en une fois.';
+
+  @override
+  String get errorStatementNotLast => 'Seul le dernier relevé du compte peut être supprimé.';
+
+  @override
+  String get errorUnknownStatement => 'Ce relevé n\'existe plus.';
+
+  @override
+  String get errorImportedTransaction =>
+      'Une ligne importée garde le montant, la date, le compte et le texte de la banque ; seules sa catégorie, sa période, sa description et sa note se modifient.';
+
+  @override
   String get edit => 'Modifier';
 
   @override
@@ -468,6 +510,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get fieldNote => 'Note';
+
+  @override
+  String get fieldRawText => 'Texte de la banque';
 
   @override
   String get fieldFrom => 'Compte de départ';

@@ -32,6 +32,7 @@ void main() {
     final db = await openLocalDatabase(directory: dir, secrets: MemorySecretStore(), encrypt: false);
     final journal = await Journal.open(db);
     expect(journal.deviceId, _fixture030DeviceId);
+    expect(journal.derivedTablesRebuilt, isTrue, reason: 'the statements and the imported fields are new');
     final entries = await journal.entries();
     expect(entries, hasLength(76));
     expect((await journal.knownState()).origins, {_fixture030DeviceId, _fixture030Other});

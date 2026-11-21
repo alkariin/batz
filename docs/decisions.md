@@ -758,3 +758,51 @@ and printed balances included.
 **Evidence.** In the image started read-only with a data volume, an import
 answers with its 27 lines, `backups/` holds one copy and `statements/` the
 file under its fingerprint; the logs show only the fields above.
+
+### 3.3 Statements and imported lines in the app
+
+**Decisions.**
+
+- New journal entity `statement` (table `statements`): account, format,
+  IBAN, period, opening and closing balances, fingerprint of the file. The
+  number of lines is not stored: it is the number of transactions that name
+  the statement. Transactions gain `rawText`, `statementId` and
+  `statementRank`.
+- The journal stores two statuses only, `toValidate` and `validated`
+  (principle 3); `toComplete` and `proposed`, never written by an earlier
+  version, are gone from the enum.
+- Identifiers are computed (`derivedId`, the SHA-256 name-based UUID of the
+  tree copies, moved to `domain/ids.dart`): the statement from the account and
+  the fingerprint, each line from the statement and its rank. The line that
+  will hold the category of an imported transaction is `<transaction>-line`,
+  so that two devices validating the same line write the same record too.
+- `Ledger.importStatement` checks, in this order, and refuses with a
+  `StatementRefusedException` before anything is written: account not
+  detailed or of another format; statement already imported (its computed
+  identifier exists: decision H1); IBAN different from the account's latest
+  statement (both IBANs given); not following the latest statement (the day
+  after it and its closing balance expected, both pairs given); lines not
+  adding up to the difference of the balances; more changes than one
+  modification holds (about 1 200 lines). Then it writes the statement, its
+  lines (8 fields each: account, date, amount, raw text, description = short
+  label, status, statement, rank) and the copy of the tree of each year a
+  line opens, in one modification. `StatementImport.first` tells the app it is
+  the account's first statement (H7).
+- Deleting the latest statement (H8) deletes it, its lines and their
+  category lines. Imported again, its computed identifiers are the same:
+  `Ledger.deletedStatementIds` (statements whose `_deleted` is true) tells the
+  import to write `_deleted: false` and to reset what the user may have set
+  on its lines (note, counterpart account); a first import writes neither.
+- Nothing can change the amount, date, account or raw text of an imported
+  line: no operation writes them after the import. Manual operations are
+  refused on the detailed account (as in phase 1) and on any imported line,
+  even if import was disabled on its account since. Description and note
+  change through `updateImportedDetails`; category, transfer and period with
+  the validation of step 3.4.
+- Until step 3.4 computes proposals, an imported line without a category line
+  counts in the cash-flow totals as unclassified.
+
+**Measure** (`test/data/write_performance_test.dart`, part of the suite, on
+the development machine, database file in a background isolate): the import
+of a statement of 100 lines, 818 fields with the copy of a first tree, is
+written in 113 ms. The test fails beyond one second.

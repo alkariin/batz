@@ -5,6 +5,7 @@ import '../../domain/journal/journal_entry.dart';
 import '../../domain/ledger/account.dart';
 import '../../domain/ledger/category.dart';
 import '../../domain/ledger/ledger.dart';
+import '../../domain/ledger/statement.dart';
 import '../../domain/ledger/transaction.dart';
 import '../local/database.dart';
 import '../local/derived_tables.dart';
@@ -32,6 +33,11 @@ class LedgerRepository {
       categories: await _rows(categoriesTable, _category),
       transactions: await _rows(transactionsTable, _transaction),
       lines: await _rows(transactionLinesTable, _line),
+      statements: await _rows(statementsTable, _statement),
+      deletedStatementIds: [
+        for (final row in await _db.customSelect('SELECT id FROM statements WHERE deleted = 1').get())
+          row.read<String>('id'),
+      ],
     );
   }
 
@@ -96,6 +102,34 @@ class LedgerRepository {
       description: row['description'] is String ? row['description']! as String : '',
       note: row['note'] is String ? row['note']! as String : '',
       status: status,
+      rawText: row['raw_text'] is String ? row['raw_text']! as String : null,
+      statementId: row['statement_id'] is String ? row['statement_id']! as String : null,
+      statementRank: row['statement_rank'] is int ? row['statement_rank']! as int : null,
+    );
+  }
+
+  /// A statement needs its account, a known format, a valid period, both
+  /// balances and the fingerprint of its file.
+  static Statement? _statement(Map<String, Object?> row) {
+    final accountId = row['account_id'];
+    final format = _enum(ImportFormat.values, row['format']);
+    final start = CalendarDate.tryParse(row['period_start'] is String ? row['period_start']! as String : null);
+    final end = CalendarDate.tryParse(row['period_end'] is String ? row['period_end']! as String : null);
+    final opening = row['opening_balance'];
+    final closing = row['closing_balance'];
+    final fingerprint = _string(row['fingerprint']);
+    if (accountId is! String || format == null || start == null || end == null || end.isBefore(start)) return null;
+    if (opening is! int || closing is! int || fingerprint == null) return null;
+    return Statement(
+      id: row['id']! as String,
+      accountId: accountId,
+      format: format.name,
+      iban: row['iban'] is String ? row['iban']! as String : '',
+      periodStart: start,
+      periodEnd: end,
+      openingBalance: opening,
+      closingBalance: closing,
+      fingerprint: fingerprint,
     );
   }
 

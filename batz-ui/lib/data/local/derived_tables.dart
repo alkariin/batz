@@ -1,5 +1,6 @@
 import '../../domain/ledger/account.dart';
 import '../../domain/ledger/category.dart';
+import '../../domain/ledger/statement.dart';
 import '../../domain/ledger/transaction.dart';
 
 /// How journal entries of one entity are materialised into a table.
@@ -98,7 +99,13 @@ String derivedSchemaOf(List<DerivedTable> tables) {
 }
 
 /// The derived tables of the app.
-final List<DerivedTable> appDerivedTables = [accountsTable, categoriesTable, transactionsTable, transactionLinesTable];
+final List<DerivedTable> appDerivedTables = [
+  accountsTable,
+  categoriesTable,
+  transactionsTable,
+  transactionLinesTable,
+  statementsTable,
+];
 
 final accountsTable = DerivedTable(
   entity: AccountFields.entity,
@@ -134,9 +141,13 @@ final transactionsTable = DerivedTable(
     TransactionFields.description: const DerivedColumn.text('description'),
     TransactionFields.note: const DerivedColumn.text('note'),
     TransactionFields.status: const DerivedColumn.text('status'),
+    TransactionFields.rawText: const DerivedColumn.text('raw_text'),
+    TransactionFields.statementId: const DerivedColumn.text('statement_id'),
+    TransactionFields.statementRank: const DerivedColumn.integer('statement_rank'),
   },
   indexes: [
     ['date'],
+    ['statement_id'],
   ],
 );
 
@@ -153,4 +164,19 @@ final transactionLinesTable = DerivedTable(
   indexes: [
     ['transaction_id'],
   ],
+);
+
+final statementsTable = DerivedTable(
+  entity: StatementFields.entity,
+  table: 'statements',
+  columns: {
+    StatementFields.accountId: const DerivedColumn.text('account_id'),
+    StatementFields.format: const DerivedColumn.text('format'),
+    StatementFields.iban: const DerivedColumn.text('iban'),
+    StatementFields.periodStart: const DerivedColumn.text('period_start'),
+    StatementFields.periodEnd: const DerivedColumn.text('period_end'),
+    StatementFields.openingBalance: const DerivedColumn.integer('opening_balance'),
+    StatementFields.closingBalance: const DerivedColumn.integer('closing_balance'),
+    StatementFields.fingerprint: const DerivedColumn.text('fingerprint'),
+  },
 );

@@ -52,6 +52,9 @@ class CalendarDate implements Comparable<CalendarDate> {
   /// Midnight UTC of this day, for date pickers and formatting.
   DateTime toDateTime() => DateTime.utc(year, month, day);
 
+  /// The date [days] days later (earlier when negative).
+  CalendarDate addDays(int days) => CalendarDate.of(toDateTime().add(Duration(days: days)));
+
   bool isBefore(CalendarDate other) => compareTo(other) < 0;
   bool isAfter(CalendarDate other) => compareTo(other) > 0;
 

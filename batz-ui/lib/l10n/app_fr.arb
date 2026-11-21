@@ -247,6 +247,42 @@
   "errorCategoryNotAssignable": "Choisissez une catégorie sans sous-catégorie, dans l'arbre de l'année du paiement.",
   "errorPeriodInvalid": "La fin de la période précède son début.",
   "errorSameAccount": "Choisissez deux comptes différents.",
+  "errorAccountNotDetailed": "Ce compte n'est pas détaillé : activez l'import du compte pour y importer ses relevés.",
+  "errorStatementOtherFormat": "Ce relevé n'est pas au format d'import de ce compte.",
+  "errorStatementAlreadyImported": "Ce relevé est déjà importé.",
+  "errorStatementOtherAccount": "Ce relevé est celui d'un autre compte : IBAN {found}, alors que les relevés précédents portent l'IBAN {expected}.",
+  "@errorStatementOtherAccount": {
+    "placeholders": {
+      "found": {
+        "type": "String"
+      },
+      "expected": {
+        "type": "String"
+      }
+    }
+  },
+  "errorStatementNotContiguous": "Ce relevé ne suit pas le précédent : il commence le {foundStart} avec un solde de {foundOpening}, alors que le suivant doit commencer le {expectedStart} avec un solde de {expectedOpening}.",
+  "@errorStatementNotContiguous": {
+    "placeholders": {
+      "foundStart": {
+        "type": "String"
+      },
+      "foundOpening": {
+        "type": "String"
+      },
+      "expectedStart": {
+        "type": "String"
+      },
+      "expectedOpening": {
+        "type": "String"
+      }
+    }
+  },
+  "errorStatementSumMismatch": "Les lignes du relevé ne donnent pas l'écart entre ses soldes initial et final.",
+  "errorStatementTooLarge": "Ce relevé compte trop de lignes pour être importé en une fois.",
+  "errorStatementNotLast": "Seul le dernier relevé du compte peut être supprimé.",
+  "errorUnknownStatement": "Ce relevé n'existe plus.",
+  "errorImportedTransaction": "Une ligne importée garde le montant, la date, le compte et le texte de la banque ; seules sa catégorie, sa période, sa description et sa note se modifient.",
   "edit": "Modifier",
   "transactionsEmpty": "Aucune transaction.",
   "transactionsAllAccounts": "Tous les comptes",
@@ -264,6 +300,7 @@
   "fieldCategory": "Catégorie",
   "fieldDescription": "Description",
   "fieldNote": "Note",
+  "fieldRawText": "Texte de la banque",
   "fieldFrom": "Compte de départ",
   "fieldTo": "Compte d'arrivée",
   "pickDate": "Choisir la date",

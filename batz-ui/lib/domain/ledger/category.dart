@@ -1,7 +1,6 @@
-import 'dart:convert';
-
-import 'package:crypto/crypto.dart';
 import 'package:equatable/equatable.dart';
+
+import '../ids.dart';
 
 /// Nature of a top-level group (specification, 4.1); every category below it
 /// inherits it.
@@ -94,21 +93,11 @@ const defaultGroupNames = {CategoryNature.income: 'Revenus', CategoryNature.expe
 /// Identifier of the copy, in [year], of the category [sourceId] (design
 /// rule 4 of phase 1): computed, so that two devices copying the same tree
 /// offline write the same records instead of two trees.
-String copiedCategoryId(String sourceId, int year) => _derivedId('category-copy/$sourceId/$year');
+String copiedCategoryId(String sourceId, int year) => derivedId('category-copy/$sourceId/$year');
 
 /// Identifier of a default group of [year] (decision H4), computed for the
 /// same reason as [copiedCategoryId].
-String defaultGroupId(int year, CategoryNature nature) => _derivedId('category-default/$year/${nature.name}');
-
-/// A name-based UUID (version 5 layout) from a SHA-256 digest.
-String _derivedId(String name) {
-  final bytes = sha256.convert(utf8.encode('batz/$name')).bytes.sublist(0, 16);
-  bytes[6] = (bytes[6] & 0x0f) | 0x50;
-  bytes[8] = (bytes[8] & 0x3f) | 0x80;
-  final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-  return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-'
-      '${hex.substring(16, 20)}-${hex.substring(20)}';
-}
+String defaultGroupId(int year, CategoryNature nature) => derivedId('category-default/$year/${nature.name}');
 
 /// Why a category is detached from the tree of its year.
 enum DetachReason {

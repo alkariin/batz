@@ -6,6 +6,7 @@ import '../domain/ledger/account.dart';
 import '../domain/ledger/category.dart';
 import '../domain/ledger/ledger.dart';
 import '../domain/ledger/ledger_exception.dart';
+import '../helpers/formats.dart';
 import '../l10n/app_localizations.dart';
 import 'ledger_cubit.dart';
 
@@ -30,6 +31,36 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.categoryNotAssignable => l.errorCategoryNotAssignable,
   LedgerError.periodInvalid => l.errorPeriodInvalid,
   LedgerError.sameAccount => l.errorSameAccount,
+  LedgerError.accountNotDetailed => l.errorAccountNotDetailed,
+  LedgerError.statementOtherFormat => l.errorStatementOtherFormat,
+  LedgerError.statementAlreadyImported => l.errorStatementAlreadyImported,
+  LedgerError.statementOtherAccount => switch (e) {
+    StatementRefusedException(:final foundIban?, :final expectedIban?) => l.errorStatementOtherAccount(
+      foundIban,
+      expectedIban,
+    ),
+    _ => l.errorStatementOtherAccount('?', '?'),
+  },
+  LedgerError.statementNotContiguous => switch (e) {
+    StatementRefusedException(
+      :final foundStart?,
+      :final foundOpening?,
+      :final expectedStart?,
+      :final expectedOpening?,
+    ) =>
+      l.errorStatementNotContiguous(
+        formatDate(foundStart.toDateTime()),
+        formatAmount(foundOpening),
+        formatDate(expectedStart.toDateTime()),
+        formatAmount(expectedOpening),
+      ),
+    _ => l.errorStatementNotContiguous('?', '?', '?', '?'),
+  },
+  LedgerError.statementSumMismatch => l.errorStatementSumMismatch,
+  LedgerError.statementTooLarge => l.errorStatementTooLarge,
+  LedgerError.statementNotLast => l.errorStatementNotLast,
+  LedgerError.unknownStatement => l.errorUnknownStatement,
+  LedgerError.importedTransaction => l.errorImportedTransaction,
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {

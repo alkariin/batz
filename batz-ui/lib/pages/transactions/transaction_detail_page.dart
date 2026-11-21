@@ -24,7 +24,8 @@ class TransactionDetailPage extends StatelessWidget {
     final t = ledger.transactions[transactionId];
     if (t == null) return Scaffold(appBar: AppBar(title: Text(l.detailTitle)));
 
-    final editable = !(ledger.accounts[t.accountId]?.isDetailed ?? false);
+    // Imported lines keep the bank's amount, date and text (4.3).
+    final editable = !(ledger.accounts[t.accountId]?.isDetailed ?? false) && !t.isImported;
     final line = t.line;
     final shares = line == null || t.isTransfer ? null : allocate(line.amount, line.periodStart, line.periodEnd);
     final theme = Theme.of(context);
@@ -61,6 +62,7 @@ class TransactionDetailPage extends StatelessWidget {
           if (ledger.categoryOf(t) case final category?) row(l.fieldCategory, category.name),
           if (t.description.isNotEmpty) row(l.fieldDescription, t.description),
           if (t.note.isNotEmpty) row(l.fieldNote, t.note),
+          if (t.rawText case final rawText?) row(l.fieldRawText, rawText),
           if (line != null && !t.isTransfer)
             row(
               l.detailPeriod,

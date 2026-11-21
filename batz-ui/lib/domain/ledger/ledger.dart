@@ -3,6 +3,7 @@ import 'account.dart';
 import 'category.dart';
 import 'issues.dart';
 import 'ledger_exception.dart';
+import 'statement.dart';
 import 'transaction.dart';
 
 /// Everything the user has entered, as read from the derived tables at one
@@ -13,21 +14,29 @@ class Ledger {
   /// detached categories (see [CategoryForest.build]).
   /// [lines] are attached to their transaction; a line whose transaction is
   /// absent is left out.
+  /// [deletedStatementIds] are the statements deleted from the journal: one
+  /// imported again must bring its records back explicitly.
   Ledger({
     Iterable<Account> accounts = const [],
     Iterable<Category> categories = const [],
     Iterable<LedgerTransaction> transactions = const [],
     Iterable<TransactionLine> lines = const [],
-  }) : this._(accounts, CategoryForest.build(categories), transactions, lines);
+    Iterable<Statement> statements = const [],
+    Iterable<String> deletedStatementIds = const [],
+  }) : this._(accounts, CategoryForest.build(categories), transactions, lines, statements, deletedStatementIds);
 
   Ledger._(
     Iterable<Account> accounts,
     this.forest,
     Iterable<LedgerTransaction> transactions,
     Iterable<TransactionLine> lines,
+    Iterable<Statement> statements,
+    Iterable<String> deletedStatementIds,
   ) : accounts = {for (final a in accounts) a.id: a},
       trees = forest.trees,
-      transactions = _attach(transactions, lines);
+      transactions = _attach(transactions, lines),
+      statements = {for (final s in statements) s.id: s},
+      deletedStatementIds = Set.unmodifiable(deletedStatementIds);
 
   static Map<String, LedgerTransaction> _attach(
     Iterable<LedgerTransaction> transactions,
@@ -54,6 +63,9 @@ class Ledger {
   final CategoryForest forest;
 
   final Map<String, LedgerTransaction> transactions;
+
+  final Map<String, Statement> statements;
+  final Set<String> deletedStatementIds;
 
   /// Every category of every year, by identifier.
   late final Map<String, Category> categories = {for (final tree in trees.values) ...tree.byId};
@@ -490,6 +502,9 @@ class Ledger {
     if (accounts[transaction.accountId]?.isDetailed ?? false) {
       throw const LedgerException(LedgerError.detailedAccountManual);
     }
+    // Its amount, date, account and text come from the bank, even if import
+    // was disabled on the account since.
+    if (transaction.isImported) throw const LedgerException(LedgerError.importedTransaction);
     return transaction;
   }
 
@@ -504,6 +519,145 @@ class Ledger {
     if (!transfer && account.type == AccountType.debts) throw const LedgerException(LedgerError.debtsAccountManual);
   }
 
+  // -------------------------------------------------------------- statements
+
+  /// The statements of [accountId], by period.
+  List<Statement> statementsOf(String accountId) => [
+    for (final s in statements.values)
+      if (s.accountId == accountId) s,
+  ]..sort(_byPeriod);
+
+  static int _byPeriod(Statement a, Statement b) {
+    final byEnd = a.periodEnd.compareTo(b.periodEnd);
+    return byEnd != 0 ? byEnd : a.id.compareTo(b.id);
+  }
+
+  /// The latest statement of [accountId], the only one that can be deleted.
+  Statement? lastStatementOf(String accountId) {
+    final list = statementsOf(accountId);
+    return list.isEmpty ? null : list.last;
+  }
+
+  /// The lines of the statement [id], in their order.
+  List<LedgerTransaction> linesOf(String id) => [
+    for (final t in transactions.values)
+      if (t.statementId == id) t,
+  ]..sort((a, b) => (a.statementRank ?? 0).compareTo(b.statementRank ?? 0));
+
+  /// Imports [extracted], read by the server from the file of [fingerprint],
+  /// into the detailed account [accountId]: the statement and all its lines,
+  /// to validate, in one modification (principle 1 of phase 3), with the
+  /// copy of the category tree of each year a line opens. Identifiers are
+  /// computed from the account, the fingerprint and the rank of each line
+  /// (principle 2): two devices importing the same file write the same
+  /// records.
+  ///
+  /// Refused as a whole, nothing written, with a [StatementRefusedException]:
+  /// the account is not detailed or reads another format; the statement was
+  /// already imported (decision H1); its IBAN differs from the account's
+  /// earlier statements; it does not follow the latest one (the day after it
+  /// and its closing balance are expected); its lines do not add up to the
+  /// difference of its balances; it is too large for one modification.
+  StatementImport importStatement(String accountId, ExtractedStatement extracted, {required String fingerprint}) {
+    final account = accounts[accountId];
+    if (account == null) throw const LedgerException(LedgerError.unknownAccount);
+    if (!account.isDetailed) throw const StatementRefusedException(LedgerError.accountNotDetailed);
+    if (account.importFormat!.name != extracted.format) {
+      throw const StatementRefusedException(LedgerError.statementOtherFormat);
+    }
+    final id = statementId(accountId, fingerprint);
+    if (statements.containsKey(id)) throw const StatementRefusedException(LedgerError.statementAlreadyImported);
+    final last = lastStatementOf(accountId);
+    if (last != null && last.iban != extracted.iban) {
+      throw StatementRefusedException(
+        LedgerError.statementOtherAccount,
+        expectedIban: last.iban,
+        foundIban: extracted.iban,
+      );
+    }
+    if (last != null) {
+      final expectedStart = last.periodEnd.addDays(1);
+      if (extracted.periodStart != expectedStart || extracted.openingBalance != last.closingBalance) {
+        throw StatementRefusedException(
+          LedgerError.statementNotContiguous,
+          expectedStart: expectedStart,
+          foundStart: extracted.periodStart,
+          expectedOpening: last.closingBalance,
+          foundOpening: extracted.openingBalance,
+        );
+      }
+    }
+    final sum = extracted.lines.fold(0, (total, line) => total + line.amount);
+    if (sum != extracted.closingBalance - extracted.openingBalance) {
+      throw const StatementRefusedException(LedgerError.statementSumMismatch);
+    }
+
+    // Imported again after a deletion (H8): its records come back, reset.
+    final again = deletedStatementIds.contains(id);
+    final changes = <FieldChange>[
+      for (final field in {
+        StatementFields.accountId: accountId,
+        StatementFields.format: extracted.format,
+        StatementFields.iban: extracted.iban,
+        StatementFields.periodStart: extracted.periodStart.encode(),
+        StatementFields.periodEnd: extracted.periodEnd.encode(),
+        StatementFields.openingBalance: extracted.openingBalance,
+        StatementFields.closingBalance: extracted.closingBalance,
+        StatementFields.fingerprint: fingerprint,
+        if (again) deletedField: false,
+      }.entries)
+        FieldChange(StatementFields.entity, id, field.key, field.value),
+    ];
+    for (final (rank, line) in extracted.lines.indexed) {
+      final transactionId = importedTransactionId(id, rank);
+      for (final field in {
+        TransactionFields.accountId: accountId,
+        TransactionFields.date: line.date.encode(),
+        TransactionFields.amount: line.amount,
+        TransactionFields.rawText: line.rawText,
+        TransactionFields.description: line.label,
+        TransactionFields.status: TransactionStatus.toValidate.name,
+        TransactionFields.statementId: id,
+        TransactionFields.statementRank: rank,
+        if (again) ...{deletedField: false, TransactionFields.counterpartAccountId: null, TransactionFields.note: ''},
+      }.entries) {
+        changes.add(FieldChange(TransactionFields.entity, transactionId, field.key, field.value));
+      }
+    }
+    for (final year in {for (final line in extracted.lines) line.date.year}.toList()..sort()) {
+      changes.addAll(treeChangesFor(year));
+    }
+    if (changes.length > maxModificationChanges) throw const StatementRefusedException(LedgerError.statementTooLarge);
+    return StatementImport(modification: Modification(changes), statementId: id, first: last == null);
+  }
+
+  /// Deletes the statement [id] and all its lines (decision H8): only the
+  /// latest statement of its account, so that the others stay contiguous. It
+  /// can then be imported again.
+  Modification deleteLastStatement(String id) {
+    final statement = statements[id];
+    if (statement == null) throw const LedgerException(LedgerError.unknownStatement);
+    if (lastStatementOf(statement.accountId)?.id != id) throw const LedgerException(LedgerError.statementNotLast);
+    return Modification([
+      FieldChange(StatementFields.entity, id, deletedField, true),
+      for (final t in linesOf(id)) ...[
+        FieldChange(TransactionFields.entity, t.id, deletedField, true),
+        for (final line in t.lines) FieldChange(LineFields.entity, line.id, deletedField, true),
+      ],
+    ]);
+  }
+
+  /// Changes the description and the note of the imported line [id]: its
+  /// amount, date, account and text stay those of the bank (4.3).
+  Modification updateImportedDetails(String id, {required String description, required String note}) {
+    final transaction = transactions[id];
+    if (transaction == null || !transaction.isImported) throw const LedgerException(LedgerError.unknownTransaction);
+    return Modification.set(TransactionFields.entity, id, {
+      TransactionFields.description: description.trim(),
+      TransactionFields.note: note.trim(),
+    });
+  }
+
   // ------------------------------------------------------------------ totals
 
   /// Cash-flow totals of [year], by category: every line of the transactions
@@ -515,6 +669,11 @@ class Ledger {
     var unclassified = 0;
     for (final transaction in transactions.values) {
       if (transaction.date.year != year || transaction.isTransfer) continue;
+      if (transaction.lines.isEmpty) {
+        // An imported line not classified yet.
+        unclassified += transaction.amount;
+        continue;
+      }
       for (final line in transaction.lines) {
         final categoryId = line.categoryId;
         if (tree == null || categoryId == null || !tree.byId.containsKey(categoryId)) {
