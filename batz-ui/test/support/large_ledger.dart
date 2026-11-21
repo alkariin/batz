@@ -2,7 +2,9 @@ import 'package:batz/data/ledger/ledger_repository.dart';
 import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/journal/journal_entry.dart';
 import 'package:batz/domain/ledger/account.dart';
+import 'package:batz/domain/ledger/balance.dart';
 import 'package:batz/domain/ledger/category.dart';
+import 'package:batz/domain/ledger/debt.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/share_classification.dart';
@@ -26,6 +28,9 @@ import 'package:batz/domain/period_model.dart';
 ///   refunds attached to imported purchases.
 /// - In the last year, « Poste 7.4 » is named « Divers »: the shares of the
 ///   year before that fall in it are to classify, half of them answered.
+/// - The wealth (step 5.3 of phase 5): 12 accounts, 100 balances declared
+///   on ten of them, every six months from 31.12.2025, and 200 debts over
+///   the five years, half of them repaid.
 ///
 /// The records are written as the operations of the app write them, field
 /// by field, without going through the checks of each operation: importing
@@ -40,6 +45,21 @@ class LargeLedger {
   static const shopsWithRule = 39;
   static const groups = 8;
   static const categoriesPerGroup = 5;
+  static const debts = 200;
+
+  /// The accounts with declared balances, ten balances each.
+  static const declaredAccounts = [
+    'cash',
+    'savings',
+    'savings2',
+    'pillar3a',
+    'pillar3b',
+    'pillar2',
+    'investments',
+    'vehicle',
+    'deposit',
+    'other',
+  ];
 
   static const lastYear = firstYear + years - 1;
 
@@ -76,6 +96,15 @@ class LargeLedger {
       ('bank', 'PostFinance', AccountType.privateAccount, ImportFormat.postfinance),
       ('cash', 'Espèces', AccountType.cash, null),
       ('savings', 'Épargne', AccountType.savings, null),
+      ('savings2', 'Épargne vacances', AccountType.savings, null),
+      ('pillar3a', '3e pilier A', AccountType.pillar3, null),
+      ('pillar3b', '3e pilier B', AccountType.pillar3, null),
+      ('pillar2', '2e pilier', AccountType.pillar2, null),
+      ('investments', 'Titres', AccountType.investments, null),
+      ('vehicle', 'Voiture', AccountType.vehicle, null),
+      ('deposit', 'Garantie de loyer', AccountType.rentDeposit, null),
+      ('debts', 'Dettes', AccountType.debts, null),
+      ('other', 'Autre', AccountType.other, null),
     ]) {
       set(AccountFields.entity, id, {
         AccountFields.name: name,
@@ -252,6 +281,40 @@ class LargeLedger {
         LineFields.periodStart: date.encode(),
         LineFields.periodEnd: date.encode(),
         LineFields.refundedLineId: '$purchase-line',
+      });
+    }
+
+    // Balances declared every six months on ten accounts.
+    for (final (index, account) in declaredAccounts.indexed) {
+      for (var i = 0; i < 10; i++) {
+        final date = i.isEven ? CalendarDate(firstYear - 1 + i ~/ 2, 12, 31) : CalendarDate(firstYear + i ~/ 2, 6, 30);
+        set(BalanceFields.entity, balanceId(account, date), {
+          BalanceFields.accountId: account,
+          BalanceFields.date: date.encode(),
+          BalanceFields.amount: 100000 * (index + 1) + 1234 * i,
+          deletedField: false,
+        });
+      }
+    }
+
+    // Debts over the five years, half of them repaid.
+    for (var i = 0; i < debts; i++) {
+      final year = firstYear + i % years;
+      final event = CalendarDate(year, 1 + i % 12, 1 + i % 28);
+      final repaid = i.isEven;
+      set(DebtFields.entity, 'debt-$i', {
+        DebtFields.direction: (i % 3 == 0 ? DebtDirection.iOwe : DebtDirection.owedToMe).name,
+        DebtFields.person: 'Personne ${i % 20}',
+        DebtFields.amount: 1000 + i * 77 % 50000,
+        DebtFields.basisPoints: i % 4 == 0 ? 5000 : 10000,
+        DebtFields.eventDate: event.encode(),
+        DebtFields.invoiceDate: null,
+        DebtFields.requestDate: null,
+        DebtFields.receivedDate: repaid ? event.addDays(30).encode() : null,
+        DebtFields.description: 'Dette $i',
+        DebtFields.repaid: repaid,
+        DebtFields.enteredOn: event.encode(),
+        DebtFields.checkedOn: repaid ? event.addDays(31).encode() : null,
       });
     }
 

@@ -1530,3 +1530,72 @@ and measured alone, they stay in memory.
 the full suite, every test passing, gave reloads of 77 to 121 ms and both
 views of a year 7 to 28 ms; the machine was quiet 0.6 to 0.8 s after the lock
 was taken.
+
+### 5.3 The wealth and its explanation table
+
+**Decisions.**
+
+- The calculation lives in `domain/views/wealth.dart`: `ledger.wealth(today)`
+  (cached per ledger and day) gives the wealth at any date, the accounts at
+  a date, the monthly curve, the table of a year and the old balances. The
+  wealth at a date is the balance of every account that has one (it exists
+  and is not a debts account) plus `openDebtsAt`; the accounts, the curve
+  and the table all go through that one function.
+- Each line of the table is computed for itself: the two results and the
+  offsets from the annual views; value variations and accounts added from
+  the points of the year; the line of the debts from the open debts at both
+  ends and the movements of the year on the debts accounts; « Non classé »
+  from the cash-flow view; « Hors fortune » from the movements of the year
+  of the accounts without a balance before their day (a movement of the day
+  of the first balance is part of it) or that no longer exist; the change
+  of the wealth from the wealth at both ends. `explained`, their sum, is
+  used by the tests only; the screen never shows it.
+- The table of the current year stops today (H8). Its annual views come
+  from `YearViews(ledger, until: today)`: what is paid after today does not
+  count yet, neither in the results nor in the wealth. The same cut applies
+  to the tables of past years, where it only leaves out a payment dated
+  after today for a past period; then the economic result of the table
+  differs from the « Année » screen by that payment, until its day comes.
+- A year before the first category tree has no annual view: its three
+  results are zero and its « Non classé » holds every payment of the year
+  outside transfers, which only a merge can leave.
+- The wealth starts on its first day: the first balance of an account (the
+  opening of the first statement included) or the first day a debt counts.
+  The tables go from that year to the current one; the curve from that
+  month to the current one, whose value is today's.
+- The accounts of the wealth at a date are those that can have a balance of
+  their own, by name: with a balance, archived or not (H4); without one,
+  only those not archived (« sans solde, hors fortune »), the detailed
+  account before its first statement included. Each carries its last
+  declared balance and its last statement at that date, and whether its
+  balance is old.
+- Old balances (H7): an account not archived, neither detailed nor a debts
+  account, whose last declared balance is before the same day six months
+  earlier (the day clamped to the month: 31.8 gives 28.2). An account
+  without a declared balance is never one.
+
+**Evidence.** `test/domain/views/wealth_test.dart`: the example of the plan,
+entered through the operations of the app (the statement of 2026 imported
+then classified), gives each line and 12'359.00, and 15'000.00 of accounts
+added in 2025, the year without view; the same data seen on 31.7.2026 stop
+there; a pure loan leaves the wealth and the line of the debts at zero at
+each step; an advanced expense, then its refund, are explained at each step;
+on 25 random ledgers (`test/support/random_wealth.dart`: declared and
+undeclared accounts, an archived one, a deleted one, a detailed one with its
+first statement, balances on the day of a movement or after the day seen,
+balances left on a debts account and a deleted one, debts, transfers to
+« Dettes », proposed transfers, merge gaps), each seen on three days, every
+table adds up to the change of the wealth, economic result plus offsets
+make the cash-flow result, each line is not zero somewhere, and each month
+of the curve is the wealth computed at its date; old balances; no wealth
+without balances nor debts.
+
+**Measure** (`test/data/performance_test.dart`, 2026-11-21, development
+machine). The data of phase 4 with 12 accounts, 100 declared balances on ten
+of them and 200 debts (`test/support/large_ledger.dart`). Reload after a
+write, with the net wealth of the key figures and the old balances among
+the tasks: 86 to 129 ms over the ten runs of two runs of the test (alone
+and in the full suite). The « Fortune » screen on a ledger just loaded (the
+accounts at the day, 61 months of curve, the table of the last year, the
+balances and the views as of that day computed): 11 to 36 ms. Below the
+300 and 100 ms of the plan; the test fails if any run exceeds them.

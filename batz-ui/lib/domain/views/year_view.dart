@@ -322,9 +322,13 @@ class _Flow {
 
 /// The views of every year of a [Ledger], computed when first asked for.
 class YearViews {
-  YearViews(this.ledger);
+  /// With [until], only what was paid up to that day counts: the table that
+  /// explains the wealth of the current year stops there (decision H8 of
+  /// phase 5).
+  YearViews(this.ledger, {this.until});
 
   final Ledger ledger;
+  final CalendarDate? until;
 
   /// The first year that has a tree; earlier years are not shown (H6).
   late final int? firstYear = ledger.trees.isEmpty ? null : ledger.trees.keys.reduce((a, b) => a < b ? a : b);
@@ -424,6 +428,7 @@ class YearViews {
     }
 
     for (final t in ledger.transactions.values) {
+      if (until != null && t.date.isAfter(until!)) continue;
       if (!t.isValidated) {
         // A line to validate counts as its rules propose: category and
         // period (principle 3 of phase 3); without a proposal, unclassified.
