@@ -2068,4 +2068,65 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get salaryTwoEmployers => 'Avec deux employeurs, additionnez les montants des deux certificats.';
+
+  @override
+  String get flowButton => 'Flux';
+
+  @override
+  String flowTitle(String year) {
+    return 'Flux $year';
+  }
+
+  @override
+  String get flowGross => 'Salaire brut';
+
+  @override
+  String flowGroupWithout(String group, String categories) {
+    return '$group hors $categories';
+  }
+
+  @override
+  String get flowAnd => ' et ';
+
+  @override
+  String get flowFromWealth => 'Puisé dans la fortune';
+
+  @override
+  String flowFromGross(String year) {
+    return 'Le diagramme part du salaire brut de la fiche $year.';
+  }
+
+  @override
+  String flowFromNet(String year) {
+    return 'Le diagramme part du salaire net : pas de fiche salaire pour $year.';
+  }
+
+  @override
+  String flowNoSalary(String name, String year) {
+    return 'Pas de catégorie « $name » en $year : le diagramme part des groupes de revenus.';
+  }
+
+  @override
+  String flowGrossGap(String amount) {
+    return 'Écart avec le brut saisi : $amount (net reçu plus déductions, moins le brut de la fiche).';
+  }
+
+  @override
+  String flowUnclassified(String amount) {
+    return '« Non classé » ($amount) n\'entre pas dans le diagramme.';
+  }
+
+  @override
+  String get flowEmpty => 'Rien à montrer pour cette année.';
+
+  @override
+  String get flowLeft => 'D\'où vient l\'argent';
+
+  @override
+  String get flowRight => 'Où il va';
+
+  @override
+  String flowTotal(String amount) {
+    return 'Total : $amount';
+  }
 }

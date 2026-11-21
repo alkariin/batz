@@ -1807,3 +1807,46 @@ refusal; the labels proposed; two devices; views and wealth unchanged) and
 `test/pages/modules/salary_page_test.dart` (the example typed in the screen,
 the gap as it is typed, saved, modified, a refusal, deleted; the name of the
 category changed and missing from the tree).
+
+### 6.2 Flow diagram
+
+**Decisions.**
+
+- `flowDiagram` (`domain/modules/flow.dart`) reads the view of the year
+  shown, its amounts with redistribution. Each node has a signed amount,
+  as it adds to the result: positive on the left, negative on the right.
+  In order: the salary (or « Salaire brut » and each deduction), the taxes,
+  each top-level group in the order of the tree (whole, or without the
+  designated categories it holds), « À classer » of each nature; then
+  « Épargne » on the right, or « Puisé dans la fortune » on the left, from
+  the savings of the view. A node of zero is left out.
+- A designated category weighs what it adds to its top-level group: its
+  amount plus its redistribution lines. Its group is shown for the rest,
+  « Groupe hors Catégorie » (« hors A et B » when both are in it). A
+  designated category that is itself a top-level group replaces it; when
+  one designated category holds the other, the outer one only counts.
+- The diagram starts from the gross when the sheet of the year exists and
+  the salary category is found: « Salaire brut » is the net received plus
+  the deductions, and the gap with the gross entered is signalled.
+- The bands match both columns stacked in their order: each part of the
+  left stack flows to the part of the right stack at the same height. The
+  gross thus splits first into the deductions, then into the taxes and the
+  expenses.
+- The screen (`FlowPage`), opened by « Flux » on « Année » with its year and
+  its view, keeps the toggle. It draws the bars and the bands (a colour per
+  destination), names each node with its amount beside its bar (moved down
+  when labels would overlap), then lists the nodes of each side and their
+  total. The drawing keeps at most 900 logical pixels wide. It recalls when
+  « Non classé » is left out, and why it starts from the gross or the net.
+
+**Evidence.** `test/domain/modules/flow_test.dart`: the example with the
+sheet (96'144.00 each side, every node, the gross splitting into the
+deductions) and without (84'000.00); 83'000.00 received (95'144.00, a gap of
+-856.00); expenses above income; a group of expenses in gain and a negative
+income; the salary and taxes categories missing; on 15 random ledgers, with
+and without sheets, every year and view: both sides equal, the bands carry
+each node, the nodes give back income, expenses and savings.
+`test/pages/modules/flow_page_test.dart`: from « Année » on a phone in both
+views, and on a desktop in the dark theme without sheet. Screenshots taken
+locally with the real fonts, phone and desktop, light and dark, were checked
+by eye; they are not kept.

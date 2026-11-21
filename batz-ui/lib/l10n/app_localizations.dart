@@ -3443,6 +3443,96 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Avec deux employeurs, additionnez les montants des deux certificats.'**
   String get salaryTwoEmployers;
+
+  /// No description provided for @flowButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Flux'**
+  String get flowButton;
+
+  /// No description provided for @flowTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Flux {year}'**
+  String flowTitle(String year);
+
+  /// No description provided for @flowGross.
+  ///
+  /// In fr, this message translates to:
+  /// **'Salaire brut'**
+  String get flowGross;
+
+  /// No description provided for @flowGroupWithout.
+  ///
+  /// In fr, this message translates to:
+  /// **'{group} hors {categories}'**
+  String flowGroupWithout(String group, String categories);
+
+  /// No description provided for @flowAnd.
+  ///
+  /// In fr, this message translates to:
+  /// **' et '**
+  String get flowAnd;
+
+  /// No description provided for @flowFromWealth.
+  ///
+  /// In fr, this message translates to:
+  /// **'Puisé dans la fortune'**
+  String get flowFromWealth;
+
+  /// No description provided for @flowFromGross.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le diagramme part du salaire brut de la fiche {year}.'**
+  String flowFromGross(String year);
+
+  /// No description provided for @flowFromNet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le diagramme part du salaire net : pas de fiche salaire pour {year}.'**
+  String flowFromNet(String year);
+
+  /// No description provided for @flowNoSalary.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de catégorie « {name} » en {year} : le diagramme part des groupes de revenus.'**
+  String flowNoSalary(String name, String year);
+
+  /// No description provided for @flowGrossGap.
+  ///
+  /// In fr, this message translates to:
+  /// **'Écart avec le brut saisi : {amount} (net reçu plus déductions, moins le brut de la fiche).'**
+  String flowGrossGap(String amount);
+
+  /// No description provided for @flowUnclassified.
+  ///
+  /// In fr, this message translates to:
+  /// **'« Non classé » ({amount}) n\'entre pas dans le diagramme.'**
+  String flowUnclassified(String amount);
+
+  /// No description provided for @flowEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien à montrer pour cette année.'**
+  String get flowEmpty;
+
+  /// No description provided for @flowLeft.
+  ///
+  /// In fr, this message translates to:
+  /// **'D\'où vient l\'argent'**
+  String get flowLeft;
+
+  /// No description provided for @flowRight.
+  ///
+  /// In fr, this message translates to:
+  /// **'Où il va'**
+  String get flowRight;
+
+  /// No description provided for @flowTotal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total : {amount}'**
+  String flowTotal(String amount);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

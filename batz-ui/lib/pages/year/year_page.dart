@@ -10,6 +10,7 @@ import '../../l10n/app_localizations.dart';
 import '../../services.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
+import '../modules/flow_page.dart';
 import '../redistribution/redistribution_page.dart';
 import '../shares/shares_page.dart';
 import '../validation/validation_page.dart';
@@ -242,6 +243,16 @@ class _YearPageState extends State<YearPage> {
                       ],
                       selected: {_kind},
                       onSelectionChanged: (s) => _setKind(s.single),
+                    ),
+                    OutlinedButton.icon(
+                      key: const Key('yearFlow'),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => FlowPage(year: year, initialKind: _kind),
+                        ),
+                      ),
+                      icon: const Icon(Icons.account_tree_outlined),
+                      label: Text(l.flowButton),
                     ),
                   ],
                 ),
