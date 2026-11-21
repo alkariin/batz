@@ -5,6 +5,8 @@ import 'package:batz/data/local/database.dart';
 import 'package:batz/data/local/journal.dart';
 import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/ledger/account.dart';
+import 'package:batz/domain/ledger/category.dart';
+import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/statement.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
@@ -42,7 +44,7 @@ ExtractedStatement _statement(int lines) => ExtractedStatement(
 void main() {
   // Acceptance criterion of phase 3: an import of 100 lines is written in
   // less than a second. Measured on the development machine in
-  // docs/decisions.md.
+  // docs/decisions.md, as the next one.
   test('the import of a statement of 100 lines is written in less than a second', () async {
     final dir = Directory.systemTemp.createTempSync('batz-perf');
     addTearDown(() => dir.deleteSync(recursive: true));
@@ -65,6 +67,52 @@ void main() {
     print('import of 100 lines (${import.modification.changes.length} fields): $elapsed ms');
     expect(elapsed, lessThan(1000));
     expect((await repository.load()).linesOf(import.statementId), hasLength(100));
+    await db.close();
+  });
+
+  // Acceptance criterion of phase 3: the confirmation of 500 proposals is
+  // written in less than a second.
+  test('the confirmation of 500 proposals is written in less than a second', () async {
+    final dir = Directory.systemTemp.createTempSync('batz-perf');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final (db, repository) = await _device(dir);
+    await repository.write(
+      (await repository.load()).createAccount(
+        'bank',
+        const AccountDraft(
+          name: 'PostFinance',
+          type: AccountType.privateAccount,
+          importFormat: ImportFormat.postfinance,
+        ),
+      ),
+    );
+    final import = (await repository.load()).importStatement('bank', _statement(500), fingerprint: 'b' * 64);
+    await repository.write(import.modification);
+    var ledger = await repository.load();
+    await repository.write(
+      ledger.addCategory(
+        'food',
+        year: 2026,
+        name: 'Nourriture',
+        parentId: defaultGroupId(2026, CategoryNature.expense),
+      ),
+    );
+    await repository.write(
+      (await repository.load()).createRule(
+        'rule',
+        const RuleDraft(year: 2026, keywords: ['commerce', 'fictiville'], targetCategoryId: 'food'),
+      ),
+    );
+    ledger = await repository.load();
+    final modifications = ledger.confirmProposals([for (final t in ledger.linesToValidate) t.id]);
+    expect(modifications, hasLength(1));
+    final watch = Stopwatch()..start();
+    await repository.write(modifications.single);
+    final elapsed = watch.elapsedMilliseconds;
+    // ignore: avoid_print
+    print('confirmation of 500 proposals (${modifications.single.changes.length} fields): $elapsed ms');
+    expect(elapsed, lessThan(1000));
+    expect((await repository.load()).linesToValidate, isEmpty);
     await db.close();
   });
 }

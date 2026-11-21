@@ -57,6 +57,19 @@ String normalizeName(String name) {
   return buffer.toString();
 }
 
+/// [text] with its accented Latin letters replaced by their base letter,
+/// in lower case; every other character is kept as it is, case included.
+/// Regular expressions of rules go through it: lower-casing a whole
+/// expression would turn `\S` into `\s`.
+String stripAccents(String text) {
+  final buffer = StringBuffer();
+  for (final rune in text.runes) {
+    final char = String.fromCharCode(rune);
+    buffer.write(_unaccented[char.toLowerCase()] ?? char);
+  }
+  return buffer.toString();
+}
+
 final Map<String, String> _unaccented = () {
   const groups = {
     'a': 'àáâãäåāăą',

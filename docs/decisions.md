@@ -806,3 +806,68 @@ file under its fingerprint; the logs show only the fields above.
 the development machine, database file in a background isolate): the import
 of a statement of 100 lines, 818 fields with the copy of a first tree, is
 written in 113 ms. The test fails beyond one second.
+
+### 3.4 Mapping rules and proposals
+
+**Decisions.**
+
+- New journal entity `rule` (table `rules`): year, keywords, target category
+  or target account (exactly one), period model and number of months. The
+  keywords are one field holding a JSON list of strings, since the journal
+  holds scalars: a modification of the keywords replaces the list as a whole.
+- Matching: the raw text and the keywords are compared lower-cased, without
+  accents and with every run of spaces or line breaks as one space, so a
+  keyword can span two lines of the bank's text. A keyword written `re:…` is
+  a regular expression, as in the original script; it is matched without
+  case against the same normalised text, its accented letters replaced by
+  their base letter but its case kept (lower-casing it would turn `\S` into
+  `\s`). An invalid expression is refused when the rule is written
+  (`isValidKeyword` lets the screen check each keyword); a rule received with
+  one never matches. The same keyword twice counts once.
+- Outcome of a line to validate (`outcomeOf`): among the rules of its payment
+  year that match, those with the most keywords win. One result among them
+  (same target, same period model and number of months, decision H5) gives a
+  proposal, named after the first winning rule by identifier; different
+  results give a conflict listing the rules. A winning rule whose target can
+  no longer be used (category deleted, detached, a group or out of the year's
+  tree; account gone, archived or detailed) proposes nothing and the line is
+  to complete: an unusable rule still takes part in the priority rather than
+  letting a weaker rule propose something its author did not choose. Such
+  rules are listed by `Ledger.unusableRules` for the tasks of step 3.6.
+- Proposals are computed when the ledger is loaded, for the lines to
+  validate only, and never stored (principle 3): creating, modifying or
+  deleting a rule writes only the rule. The cash-flow totals count a proposed
+  line in its category, a proposed transfer nowhere, and a line without a
+  proposal as unclassified; the list shows a proposed line with its proposed
+  category and type.
+- Periods (H6, `domain/period_model.dart`): month arithmetic clamps to the
+  end of the month, as in `java.time`. N months after a payment end the day
+  before the same day N months later, clamped: from 31 January, one month
+  ends on 27 February. N months before start on the same day N months
+  earlier, clamped: before 31 May, three months start on 28 February. The
+  table of H6 holds exactly; 12 months from any day weigh exactly 12 months
+  in the allocation, leap years included. Months go from 1 to 120.
+- Validation writes the result (principle 4): `classify` writes the
+  category, the amount and the period on the line `<transaction>-line` (with
+  `_deleted: false` when the transaction has no line, which brings back a
+  line deleted with its statement or by a transfer) and the validated status;
+  or the counterpart account, deleting the line. Correcting a proposal is
+  classifying it (H4). An imported transfer keeps the statement's sign:
+  negative, the money goes to the counterpart; positive, it comes from it.
+  `confirmProposals` writes the proposals of the given lines that have one,
+  in one modification (7 fields per line), or in several of whole lines if
+  they would exceed 10 000 changes.
+- Rules follow the copy of the tree: the copy of year Y writes the rules of
+  the source year with identifiers computed from the source rule and Y
+  (`copiedRuleId`), a category target replaced by the copy of that category.
+  The preview of a tree (`treeOrPreview`) keeps only the categories.
+- A category targeted by a rule cannot be deleted (`categoryUsedByRules`,
+  with the number of rules).
+- `linesClassifiedBy` counts the lines to validate a rule being written would
+  propose, alone or with rules of the same result: the « Créer une règle »
+  screen shows it.
+
+**Measure** (`test/data/write_performance_test.dart`, part of the suite,
+development machine, database file in a background isolate): the
+confirmation of 500 proposals, 3 500 fields in one modification, is written in
+120 ms; the import of 100 lines in 105 ms. The test fails beyond one second.

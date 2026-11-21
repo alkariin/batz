@@ -5,7 +5,9 @@ import '../../domain/journal/journal_entry.dart';
 import '../../domain/ledger/account.dart';
 import '../../domain/ledger/category.dart';
 import '../../domain/ledger/ledger.dart';
+import '../../domain/ledger/rule.dart';
 import '../../domain/ledger/statement.dart';
+import '../../domain/period_model.dart';
 import '../../domain/ledger/transaction.dart';
 import '../local/database.dart';
 import '../local/derived_tables.dart';
@@ -38,6 +40,31 @@ class LedgerRepository {
         for (final row in await _db.customSelect('SELECT id FROM statements WHERE deleted = 1').get())
           row.read<String>('id'),
       ],
+      rules: await _rows(rulesTable, _rule),
+    );
+  }
+
+  /// A rule needs a year, a list of keywords and one target. An unknown
+  /// period model (written by a newer version) makes it unreadable.
+  static MappingRule? _rule(Map<String, Object?> row) {
+    final year = row['year'];
+    final keywords = decodeKeywords(row['keywords']);
+    final category = row['target_category_id'];
+    final account = row['target_account_id'];
+    final model = row['period_model'];
+    final parsedModel = _enum(PeriodModel.values, model);
+    final months = row['period_months'];
+    if (year is! int || keywords == null || keywords.isEmpty) return null;
+    if ((category is String) == (account is String)) return null;
+    if (model != null && parsedModel == null) return null;
+    return MappingRule(
+      id: row['id']! as String,
+      year: year,
+      keywords: keywords,
+      targetCategoryId: category as String?,
+      targetAccountId: account as String?,
+      periodModel: parsedModel,
+      periodMonths: months is int ? months : null,
     );
   }
 

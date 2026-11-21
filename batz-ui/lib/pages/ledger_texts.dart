@@ -61,6 +61,12 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.statementNotLast => l.errorStatementNotLast,
   LedgerError.unknownStatement => l.errorUnknownStatement,
   LedgerError.importedTransaction => l.errorImportedTransaction,
+  LedgerError.unknownRule => l.errorUnknownRule,
+  LedgerError.ruleKeywordsRequired => l.errorRuleKeywordsRequired,
+  LedgerError.ruleKeywordInvalid => l.errorRuleKeywordInvalid,
+  LedgerError.ruleTargetRequired => l.errorRuleTargetRequired,
+  LedgerError.rulePeriodInvalid => l.errorRulePeriodInvalid,
+  LedgerError.categoryUsedByRules => l.errorCategoryUsedByRules(e.count),
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {

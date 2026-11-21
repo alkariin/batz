@@ -461,6 +461,32 @@ class AppLocalizationsFr extends AppLocalizations {
       'Une ligne importée garde le montant, la date, le compte et le texte de la banque ; seules sa catégorie, sa période, sa description et sa note se modifient.';
 
   @override
+  String get errorUnknownRule => 'Cette règle n\'existe plus.';
+
+  @override
+  String get errorRuleKeywordsRequired => 'Indiquez au moins un mot-clé.';
+
+  @override
+  String get errorRuleKeywordInvalid => 'Expression régulière invalide : corrigez le mot-clé qui commence par « re: ».';
+
+  @override
+  String get errorRuleTargetRequired => 'Choisissez une catégorie ou un compte de transfert.';
+
+  @override
+  String get errorRulePeriodInvalid => 'Indiquez un nombre de mois entre 1 et 120.';
+
+  @override
+  String errorCategoryUsedByRules(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count règles visent',
+      one: 'une règle vise',
+    );
+    return 'Suppression refusée : $_temp0 cette catégorie.';
+  }
+
+  @override
   String get edit => 'Modifier';
 
   @override

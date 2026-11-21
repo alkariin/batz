@@ -1,5 +1,6 @@
 import '../../domain/ledger/account.dart';
 import '../../domain/ledger/category.dart';
+import '../../domain/ledger/rule.dart';
 import '../../domain/ledger/statement.dart';
 import '../../domain/ledger/transaction.dart';
 
@@ -105,6 +106,7 @@ final List<DerivedTable> appDerivedTables = [
   transactionsTable,
   transactionLinesTable,
   statementsTable,
+  rulesTable,
 ];
 
 final accountsTable = DerivedTable(
@@ -178,5 +180,18 @@ final statementsTable = DerivedTable(
     StatementFields.openingBalance: const DerivedColumn.integer('opening_balance'),
     StatementFields.closingBalance: const DerivedColumn.integer('closing_balance'),
     StatementFields.fingerprint: const DerivedColumn.text('fingerprint'),
+  },
+);
+
+final rulesTable = DerivedTable(
+  entity: RuleFields.entity,
+  table: 'rules',
+  columns: {
+    RuleFields.year: const DerivedColumn.integer('year'),
+    RuleFields.keywords: const DerivedColumn.text('keywords'),
+    RuleFields.targetCategoryId: const DerivedColumn.text('target_category_id'),
+    RuleFields.targetAccountId: const DerivedColumn.text('target_account_id'),
+    RuleFields.periodModel: const DerivedColumn.text('period_model'),
+    RuleFields.periodMonths: const DerivedColumn.integer('period_months'),
   },
 );

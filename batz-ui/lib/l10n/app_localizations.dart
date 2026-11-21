@@ -846,6 +846,42 @@ abstract class AppLocalizations {
   /// **'Une ligne importée garde le montant, la date, le compte et le texte de la banque ; seules sa catégorie, sa période, sa description et sa note se modifient.'**
   String get errorImportedTransaction;
 
+  /// No description provided for @errorUnknownRule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette règle n\'existe plus.'**
+  String get errorUnknownRule;
+
+  /// No description provided for @errorRuleKeywordsRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez au moins un mot-clé.'**
+  String get errorRuleKeywordsRequired;
+
+  /// No description provided for @errorRuleKeywordInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Expression régulière invalide : corrigez le mot-clé qui commence par « re: ».'**
+  String get errorRuleKeywordInvalid;
+
+  /// No description provided for @errorRuleTargetRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez une catégorie ou un compte de transfert.'**
+  String get errorRuleTargetRequired;
+
+  /// No description provided for @errorRulePeriodInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un nombre de mois entre 1 et 120.'**
+  String get errorRulePeriodInvalid;
+
+  /// No description provided for @errorCategoryUsedByRules.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suppression refusée : {count, plural, =1{une règle vise} other{{count} règles visent}} cette catégorie.'**
+  String errorCategoryUsedByRules(int count);
+
   /// No description provided for @edit.
   ///
   /// In fr, this message translates to:

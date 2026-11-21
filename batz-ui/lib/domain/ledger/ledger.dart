@@ -1,8 +1,12 @@
+import '../calendar_date.dart';
 import '../journal/journal_entry.dart';
+import '../period_model.dart';
 import 'account.dart';
 import 'category.dart';
 import 'issues.dart';
 import 'ledger_exception.dart';
+import 'proposal.dart';
+import 'rule.dart';
 import 'statement.dart';
 import 'transaction.dart';
 
@@ -23,7 +27,8 @@ class Ledger {
     Iterable<TransactionLine> lines = const [],
     Iterable<Statement> statements = const [],
     Iterable<String> deletedStatementIds = const [],
-  }) : this._(accounts, CategoryForest.build(categories), transactions, lines, statements, deletedStatementIds);
+    Iterable<MappingRule> rules = const [],
+  }) : this._(accounts, CategoryForest.build(categories), transactions, lines, statements, deletedStatementIds, rules);
 
   Ledger._(
     Iterable<Account> accounts,
@@ -32,11 +37,13 @@ class Ledger {
     Iterable<TransactionLine> lines,
     Iterable<Statement> statements,
     Iterable<String> deletedStatementIds,
+    Iterable<MappingRule> rules,
   ) : accounts = {for (final a in accounts) a.id: a},
       trees = forest.trees,
       transactions = _attach(transactions, lines),
       statements = {for (final s in statements) s.id: s},
-      deletedStatementIds = Set.unmodifiable(deletedStatementIds);
+      deletedStatementIds = Set.unmodifiable(deletedStatementIds),
+      rules = {for (final r in rules) r.id: r};
 
   static Map<String, LedgerTransaction> _attach(
     Iterable<LedgerTransaction> transactions,
@@ -66,6 +73,9 @@ class Ledger {
 
   final Map<String, Statement> statements;
   final Set<String> deletedStatementIds;
+
+  /// The mapping rules of every year, by identifier.
+  final Map<String, MappingRule> rules;
 
   /// Every category of every year, by identifier.
   late final Map<String, Category> categories = {for (final tree in trees.values) ...tree.byId};
@@ -170,6 +180,7 @@ class Ledger {
     if (existing != null) return existing;
     final fields = <String, Map<String, Object?>>{};
     for (final change in _treeChanges(year)) {
+      if (change.entity != CategoryFields.entity) continue;
       (fields[change.recordId] ??= {})[change.field] = change.value;
     }
     return CategoryTree.of(year, [
@@ -185,9 +196,10 @@ class Ledger {
     ]);
   }
 
-  /// Creates the tree of [year]: a copy of the tree of [sourceYearFor], or,
-  /// without one, the two empty groups « Revenus » and « Dépenses »
-  /// (decisions H4 and H6). Copies get computed identifiers (design rule 4).
+  /// Creates the tree of [year]: a copy of the tree of [sourceYearFor] and of
+  /// its mapping rules, or, without one, the two empty groups « Revenus » and
+  /// « Dépenses » (decisions H4 and H6). Copies get computed identifiers
+  /// (design rule 4); a copied rule targets the copy of its category.
   Modification createTree(int year) {
     if (trees.containsKey(year)) throw const LedgerException(LedgerError.treeExists);
     return Modification(_treeChanges(year));
@@ -225,6 +237,20 @@ class Ledger {
         CategoryFields.nature: category.isTopLevel ? category.nature!.name : null,
         CategoryFields.position: category.position,
       });
+    }
+    for (final rule in rulesOf(source)) {
+      for (final field in {
+        RuleFields.year: year,
+        RuleFields.keywords: encodeKeywords(rule.keywords),
+        RuleFields.targetCategoryId: rule.targetCategoryId == null
+            ? null
+            : copiedCategoryId(rule.targetCategoryId!, year),
+        RuleFields.targetAccountId: rule.targetAccountId,
+        RuleFields.periodModel: rule.periodModel?.name,
+        RuleFields.periodMonths: rule.periodMonths,
+      }.entries) {
+        changes.add(FieldChange(RuleFields.entity, copiedRuleId(rule.id, year), field.key, field.value));
+      }
     }
     return changes;
   }
@@ -321,6 +347,8 @@ class Ledger {
     if (trees[category.year]!.hasChildren(id)) throw const LedgerException(LedgerError.categoryHasChildren);
     final used = transactionsUsingCategory(id);
     if (used > 0) throw LedgerException(LedgerError.categoryInUse, count: used);
+    final targeting = rules.values.where((r) => r.targetCategoryId == id).length;
+    if (targeting > 0) throw LedgerException(LedgerError.categoryUsedByRules, count: targeting);
     return Modification.delete(CategoryFields.entity, id);
   }
 
@@ -369,7 +397,12 @@ class Ledger {
   /// The type of [transaction], deduced from its counterpart, the nature of
   /// its category and its sign; null while it is not classified.
   TransactionKind? kindOf(LedgerTransaction transaction) {
-    if (transaction.isTransfer) return TransactionKind.transfer;
+    if (!transaction.isValidated) {
+      final classification = proposalOf(transaction);
+      if (classification?.isTransfer ?? false) return TransactionKind.transfer;
+    } else if (transaction.isTransfer) {
+      return TransactionKind.transfer;
+    }
     final category = categoryOf(transaction);
     if (category == null) return null;
     return switch (trees[category.year]!.natureOf(category.id)) {
@@ -380,8 +413,11 @@ class Ledger {
 
   /// The category of the line of [transaction], if it is one of the tree of
   /// its payment year.
+  ///
+  /// For a line to validate, the category the rules propose (principle 3).
   Category? categoryOf(LedgerTransaction transaction) {
-    final category = categories[transaction.line?.categoryId];
+    final id = transaction.isValidated ? transaction.line?.categoryId : proposalOf(transaction)?.categoryId;
+    final category = categories[id];
     return category != null && category.year == transaction.date.year ? category : null;
   }
 
@@ -658,6 +694,259 @@ class Ledger {
     });
   }
 
+  // ------------------------------------------------------------------- rules
+
+  /// The mapping rules of [year], by first keyword.
+  List<MappingRule> rulesOf(int year) =>
+      [
+        for (final r in rules.values)
+          if (r.year == year) r,
+      ]..sort((a, b) {
+        final byKeyword = normalizeText(a.keywords.join(' ')).compareTo(normalizeText(b.keywords.join(' ')));
+        return byKeyword != 0 ? byKeyword : a.id.compareTo(b.id);
+      });
+
+  /// What [rule] classifies a payment of [payment] as, or null when its
+  /// target can no longer be used: a category that is deleted, detached, a
+  /// group or not of its year's tree; an account that is gone, archived or
+  /// detailed.
+  Classification? ruleClassification(MappingRule rule, CalendarDate payment) {
+    if (rule.targetAccountId case final accountId?) {
+      final account = accounts[accountId];
+      if (account == null || account.archived || account.isDetailed) return null;
+      return Classification.transfer(accountId);
+    }
+    final categoryId = rule.targetCategoryId;
+    final tree = trees[rule.year];
+    if (categoryId == null || tree == null || !tree.canHoldTransactions(categoryId)) return null;
+    if ((rule.periodModel?.takesMonths ?? false) &&
+        (rule.periodMonths == null || rule.periodMonths! < 1 || rule.periodMonths! > maxPeriodMonths)) {
+      return null;
+    }
+    final (start, end) = periodFor(rule.periodModel, payment, months: rule.periodMonths);
+    return Classification.category(categoryId, periodStart: start, periodEnd: end);
+  }
+
+  /// Rules whose target can no longer be used: they propose nothing and are
+  /// listed in the tasks.
+  late final List<MappingRule> unusableRules = [
+    for (final year in {for (final r in rules.values) r.year}.toList()..sort())
+      for (final rule in rulesOf(year))
+        if (ruleClassification(rule, CalendarDate(rule.year, 6, 15)) == null) rule,
+  ];
+
+  /// What the rules say of each line to validate, recomputed at each load
+  /// from its raw text and the rules of its payment year (principle 3).
+  late final Map<String, RuleOutcome> proposals = () {
+    final byYear = <int, List<MappingRule>>{};
+    for (final rule in rules.values) {
+      (byYear[rule.year] ??= []).add(rule);
+    }
+    return {
+      for (final t in transactions.values)
+        if (!t.isValidated)
+          t.id: outcomeOf(t.rawText ?? '', byYear[t.date.year] ?? const [], (r) => ruleClassification(r, t.date)),
+    };
+  }();
+
+  /// The classification the rules propose for [transaction], if any.
+  Classification? proposalOf(LedgerTransaction transaction) => switch (proposals[transaction.id]) {
+    Proposed(:final classification) => classification,
+    _ => null,
+  };
+
+  /// Where [transaction] stands in the validation.
+  ValidationState validationStateOf(LedgerTransaction transaction) {
+    if (transaction.isValidated) return ValidationState.validated;
+    return proposals[transaction.id] is Proposed ? ValidationState.proposed : ValidationState.toComplete;
+  }
+
+  /// The lines to validate, by date then rank.
+  List<LedgerTransaction> get linesToValidate => [
+    for (final t in transactions.values)
+      if (!t.isValidated) t,
+  ]..sort(_byDateAndRank);
+
+  static int _byDateAndRank(LedgerTransaction a, LedgerTransaction b) {
+    final byDate = a.date.compareTo(b.date);
+    if (byDate != 0) return byDate;
+    final byStatement = (a.statementId ?? '').compareTo(b.statementId ?? '');
+    if (byStatement != 0) return byStatement;
+    return (a.statementRank ?? 0).compareTo(b.statementRank ?? 0);
+  }
+
+  /// Creates the rule [id] of [RuleDraft.year]. Refused without a tree for
+  /// the year, without a keyword, with an invalid regular expression, without
+  /// a usable target, or with a number of months out of range.
+  Modification createRule(String id, RuleDraft draft) => Modification.set(RuleFields.entity, id, _ruleFields(draft));
+
+  /// Modifies the rule [id]: only the rule is written, the lines to validate
+  /// follow at the next load and validated lines never change.
+  Modification updateRule(String id, RuleDraft draft) {
+    final rule = rules[id];
+    if (rule == null) throw const LedgerException(LedgerError.unknownRule);
+    if (draft.year != rule.year) throw const LedgerException(LedgerError.unknownRule);
+    return Modification.set(RuleFields.entity, id, _ruleFields(draft, existing: rule));
+  }
+
+  Modification deleteRule(String id) {
+    if (!rules.containsKey(id)) throw const LedgerException(LedgerError.unknownRule);
+    return Modification.delete(RuleFields.entity, id);
+  }
+
+  Map<String, Object?> _ruleFields(RuleDraft draft, {MappingRule? existing}) {
+    final tree = trees[draft.year];
+    if (tree == null) throw const LedgerException(LedgerError.noTree);
+    final keywords = [
+      for (final k in draft.keywords)
+        if (k.trim().isNotEmpty) k.trim(),
+    ];
+    if (keywords.isEmpty) throw const LedgerException(LedgerError.ruleKeywordsRequired);
+    for (final keyword in keywords) {
+      if (!isValidKeyword(keyword)) throw const LedgerException(LedgerError.ruleKeywordInvalid);
+    }
+    final category = draft.targetCategoryId, accountId = draft.targetAccountId;
+    if ((category == null) == (accountId == null)) throw const LedgerException(LedgerError.ruleTargetRequired);
+    if (category != null && !tree.canHoldTransactions(category)) {
+      throw const LedgerException(LedgerError.categoryNotAssignable);
+    }
+    if (accountId != null) {
+      final account = accounts[accountId];
+      final unchanged = accountId == existing?.targetAccountId;
+      if (account == null) throw const LedgerException(LedgerError.unknownAccount);
+      if (account.archived && !unchanged) throw const LedgerException(LedgerError.archivedAccount);
+      if (account.isDetailed) throw const LedgerException(LedgerError.detailedAccountManual);
+    }
+    final model = accountId == null ? draft.periodModel : null;
+    final months = model?.takesMonths ?? false ? draft.periodMonths : null;
+    if ((model?.takesMonths ?? false) && (months == null || months < 1 || months > maxPeriodMonths)) {
+      throw const LedgerException(LedgerError.rulePeriodInvalid);
+    }
+    return {
+      RuleFields.year: draft.year,
+      RuleFields.keywords: encodeKeywords(keywords),
+      RuleFields.targetCategoryId: category,
+      RuleFields.targetAccountId: accountId,
+      RuleFields.periodModel: model?.name,
+      RuleFields.periodMonths: months,
+    };
+  }
+
+  /// How many lines to validate of [RuleDraft.year] the rule would classify
+  /// once created (or once [replacing] is modified so): those it would
+  /// propose, alone or with rules of the same result.
+  int linesClassifiedBy(RuleDraft draft, {String? replacing}) {
+    final List<String> keywords = [
+      for (final k in draft.keywords)
+        if (k.trim().isNotEmpty && isValidKeyword(k)) k.trim(),
+    ];
+    if (keywords.isEmpty) return 0;
+    final candidate = MappingRule(
+      id: replacing ?? '~draft',
+      year: draft.year,
+      keywords: keywords,
+      targetCategoryId: draft.targetCategoryId,
+      targetAccountId: draft.targetAccountId,
+      periodModel: draft.targetAccountId == null ? draft.periodModel : null,
+      periodMonths: draft.targetAccountId == null ? draft.periodMonths : null,
+    );
+    final others = [
+      for (final r in rulesOf(draft.year))
+        if (r.id != replacing) r,
+      candidate,
+    ];
+    var count = 0;
+    for (final t in transactions.values) {
+      if (t.isValidated || t.date.year != draft.year) continue;
+      final text = normalizeText(t.rawText ?? '');
+      if (!candidate.matches(text)) continue;
+      final outcome = outcomeOf(t.rawText ?? '', others, (r) => ruleClassification(r, t.date));
+      if (outcome is Proposed && outcome.rule.result == candidate.result) count++;
+    }
+    return count;
+  }
+
+  // -------------------------------------------------------------- validation
+
+  /// Classifies the imported line [id] (principle 4): writes its category and
+  /// period, or its counterpart account, and validates it. Correcting a
+  /// proposal is classifying it (decision H4); a validated line stays
+  /// modifiable the same way.
+  Modification classify(String id, Classification classification) {
+    final transaction = transactions[id];
+    if (transaction == null || !transaction.isImported) throw const LedgerException(LedgerError.unknownTransaction);
+    return Modification(_classificationChanges(transaction, classification));
+  }
+
+  /// Confirms the proposals of the lines [ids] that have one (the others are
+  /// left out): one modification, unless the lines are too many for one, in
+  /// which case each modification holds whole lines.
+  List<Modification> confirmProposals(Iterable<String> ids) {
+    final groups = <List<FieldChange>>[];
+    for (final id in ids) {
+      final transaction = transactions[id];
+      final outcome = proposals[id];
+      if (transaction == null || transaction.isValidated || outcome is! Proposed) continue;
+      groups.add(_classificationChanges(transaction, outcome.classification));
+    }
+    final modifications = <Modification>[];
+    var current = <FieldChange>[];
+    for (final group in groups) {
+      if (current.length + group.length > maxModificationChanges) {
+        modifications.add(Modification(current));
+        current = [];
+      }
+      current.addAll(group);
+    }
+    if (current.isNotEmpty) modifications.add(Modification(current));
+    return modifications;
+  }
+
+  List<FieldChange> _classificationChanges(LedgerTransaction t, Classification c) {
+    final changes = [
+      FieldChange(TransactionFields.entity, t.id, TransactionFields.status, TransactionStatus.validated.name),
+    ];
+    if (c.counterpartAccountId case final accountId?) {
+      final account = accounts[accountId];
+      if (account == null) throw const LedgerException(LedgerError.unknownAccount);
+      if (accountId == t.accountId) throw const LedgerException(LedgerError.sameAccount);
+      if (account.archived && accountId != t.counterpartAccountId) {
+        throw const LedgerException(LedgerError.archivedAccount);
+      }
+      if (account.isDetailed) throw const LedgerException(LedgerError.detailedAccountManual);
+      // The amount keeps the statement's sign: negative, the money goes to
+      // the counterpart; positive, it comes from it. A transfer has no line.
+      changes.add(FieldChange(TransactionFields.entity, t.id, TransactionFields.counterpartAccountId, accountId));
+      for (final line in t.lines) {
+        changes.add(FieldChange(LineFields.entity, line.id, deletedField, true));
+      }
+      return changes;
+    }
+    final categoryId = c.categoryId!;
+    final tree = trees[t.date.year];
+    if (tree == null || !tree.canHoldTransactions(categoryId)) {
+      throw const LedgerException(LedgerError.categoryNotAssignable);
+    }
+    final start = c.periodStart ?? t.date, end = c.periodEnd ?? t.date;
+    if (end.isBefore(start)) throw const LedgerException(LedgerError.periodInvalid);
+    if (t.counterpartAccountId != null) {
+      changes.add(FieldChange(TransactionFields.entity, t.id, TransactionFields.counterpartAccountId, null));
+    }
+    final lineId = t.line?.id ?? fallbackLineId(t.id);
+    for (final field in {
+      LineFields.transactionId: t.id,
+      LineFields.categoryId: categoryId,
+      LineFields.amount: t.amount,
+      LineFields.periodStart: start.encode(),
+      LineFields.periodEnd: end.encode(),
+      // A line deleted with its statement, or by a transfer, comes back.
+      if (t.line == null) deletedField: false,
+    }.entries) {
+      changes.add(FieldChange(LineFields.entity, lineId, field.key, field.value));
+    }
+    return changes;
+  }
+
   // ------------------------------------------------------------------ totals
 
   /// Cash-flow totals of [year], by category: every line of the transactions
@@ -668,9 +957,24 @@ class Ledger {
     final byCategory = <String, int>{};
     var unclassified = 0;
     for (final transaction in transactions.values) {
-      if (transaction.date.year != year || transaction.isTransfer) continue;
+      if (transaction.date.year != year) continue;
+      if (!transaction.isValidated) {
+        // A line to validate counts as the rules propose (principle 3 of
+        // phase 3); without a proposal, as unclassified.
+        final classification = proposalOf(transaction);
+        if (classification?.isTransfer ?? false) continue;
+        final categoryId = classification?.categoryId;
+        if (tree == null || categoryId == null || !tree.byId.containsKey(categoryId)) {
+          unclassified += transaction.amount;
+          continue;
+        }
+        for (String? id = categoryId; id != null; id = tree.byId[id]!.parentId) {
+          byCategory[id] = (byCategory[id] ?? 0) + transaction.amount;
+        }
+        continue;
+      }
+      if (transaction.isTransfer) continue;
       if (transaction.lines.isEmpty) {
-        // An imported line not classified yet.
         unclassified += transaction.amount;
         continue;
       }
@@ -726,4 +1030,19 @@ class AccountRemoval {
   final int transactionCount;
 
   bool get archives => transactionCount > 0;
+}
+
+/// Where a line stands in the validation; only « validated » is stored, the
+/// other two are deduced from the rules (principle 3 of phase 3).
+enum ValidationState { toComplete, proposed, validated }
+
+/// Whether [keyword] can be a keyword of a rule: a regular expression
+/// (`re:…`) must be valid.
+bool isValidKeyword(String keyword) {
+  try {
+    Keyword(keyword);
+    return true;
+  } on FormatException {
+    return false;
+  }
 }

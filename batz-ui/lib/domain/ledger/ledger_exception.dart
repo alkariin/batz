@@ -35,6 +35,14 @@ enum LedgerError {
   statementNotLast,
   unknownStatement,
   importedTransaction,
+
+  // Mapping rules (phase 3).
+  unknownRule,
+  ruleKeywordsRequired,
+  ruleKeywordInvalid,
+  ruleTargetRequired,
+  rulePeriodInvalid,
+  categoryUsedByRules,
 }
 
 /// A business rule refuses the operation; nothing was written.
