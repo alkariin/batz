@@ -924,5 +924,11 @@
   "sharesChoose": "Choisissez une catégorie.",
   "sharesLineCategory": "Pour cette ligne seulement",
   "yearInapplicable": "{count, plural, =1{Une règle de redistribution ne s'applique pas} other{{count} règles de redistribution ne s'appliquent pas}} cette année.",
-  "@yearInapplicable": {"placeholders": {"count": {"type": "int"}}}
+  "@yearInapplicable": {"placeholders": {"count": {"type": "int"}}},
+  "errorUnknownBalance": "Ce solde n'existe plus.",
+  "errorBalanceOnDetailedAccount": "Le solde du compte détaillé vient de ses relevés : il ne se déclare pas.",
+  "errorBalanceOnDebtsAccount": "Un compte « Dettes » n'a pas de solde propre : la fortune compte les dettes du tableau des dettes.",
+  "errorBalanceInFuture": "Un solde ne se déclare pas pour une date future.",
+  "accountArchivedBalances": "Compte archivé et non supprimé : {count, plural, =1{un solde déclaré l'utilise} other{{count} soldes déclarés l'utilisent}}. Il reste dans la fortune avec son dernier solde ; déclarez un solde de 0 pour l'en sortir.",
+  "@accountArchivedBalances": {"placeholders": {"count": {"type": "int"}}}
 }

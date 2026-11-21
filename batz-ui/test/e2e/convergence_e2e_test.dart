@@ -1,6 +1,6 @@
-// Convergence: devices apply random operations of the app, with skewed
-// clocks, and exchange through a real batz-web in a random order, sometimes
-// cut in the middle. Once everything is exchanged, every table is identical
+// Convergence: devices apply random operations of the app, those of phase 5
+// included, with skewed clocks, and exchange through a real batz-web in a
+// random order, sometimes cut in the middle. Once everything is exchanged, every table is identical
 // on every device.
 import 'dart:math';
 
@@ -8,6 +8,7 @@ import 'package:batz/data/server/server_client.dart';
 import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/journal/journal_entry.dart';
 import 'package:batz/domain/ledger/account.dart';
+import 'package:batz/domain/ledger/balance.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/ledger_exception.dart';
@@ -39,6 +40,8 @@ Modification? randomOperation(Ledger l, Random r, String id) {
 
   // The operations of phase 4, now and then.
   if (r.nextInt(100) < 12) return _phase4Operation(l, r, id, year);
+  // The operations of phase 5, now and then.
+  if (r.nextInt(100) < 10) return _phase5Operation(l, r, id);
 
   // Weighted: mostly entries and their corrections, like real use.
   final roll = r.nextInt(100);
@@ -194,6 +197,23 @@ Modification? _refundOperation(Ledger l, Random r) {
   return l.attachRefund(refund.id, _pick(r, expenses));
 }
 
+/// The operations of phase 5: declared balances, declared, modified and
+/// deleted, on any account (the detailed account, a debts account and a
+/// date to come are refused).
+Modification? _phase5Operation(Ledger l, Random r, String id) {
+  final today = CalendarDate(2026, 11, 20);
+  CalendarDate date() => CalendarDate(2025 + r.nextInt(2), 1 + r.nextInt(12), 1 + r.nextInt(28));
+  int amount() => r.nextInt(2000000) - 500000;
+  final declared = l.declaredBalances.values.toList()..sort((a, b) => a.id.compareTo(b.id));
+  if (declared.isNotEmpty && r.nextInt(3) == 0) {
+    final balance = _pick(r, declared);
+    if (r.nextBool()) return l.deleteBalance(balance.id);
+    return l.updateBalance(balance.id, r.nextBool() ? balance.date : date(), amount(), today: today);
+  }
+  if (l.accounts.isEmpty) return null;
+  return l.declareBalance(_pick(r, l.accounts.keys.toList()..sort()), date(), amount(), today: today);
+}
+
 extension on AccountDraft {
   AccountDraft copyWithArchived(bool archived) =>
       AccountDraft(name: name, type: type, importFormat: importFormat, archived: archived);
@@ -281,7 +301,7 @@ void main() {
         '${(reference['journal']! as List).length} journal entries, ${ledger.transactions.length} transactions, '
         '${ledger.categories.length} categories, ${ledger.forest.detached.length} detached, '
         '${ledger.redistributions.length} redistribution rules, ${ledger.refundsByExpenseLine.length} expenses refunded, '
-        '${ledger.shareClassifications.length} answers',
+        '${ledger.shareClassifications.length} answers, ${ledger.declaredBalances.length} balances',
       );
       // About ten seconds alone, much more while the other test files run:
       // hundreds of calls with pages of a few entries.

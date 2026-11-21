@@ -3,6 +3,7 @@ import 'dart:async';
 import '../../domain/calendar_date.dart';
 import '../../domain/journal/journal_entry.dart';
 import '../../domain/ledger/account.dart';
+import '../../domain/ledger/balance.dart';
 import '../../domain/ledger/category.dart';
 import '../../domain/ledger/ledger.dart';
 import '../../domain/ledger/redistribution.dart';
@@ -33,18 +34,27 @@ class LedgerRepository {
 
   /// Reads every derived table. The queries are sent together: the database
   /// runs in a background isolate, and the rows of one are read while the
-  /// next ones run (step 4.4).
+  /// next ones run (step 4.4). They go in two groups awaited together, a
+  /// record waiting for nine futures at most.
   Future<Ledger> load() async {
-    final (accounts, categories, transactions, lines, statements, deleted, rules, redistributions, answers) = await (
-      _rows(accountsTable, _account),
-      _rows(categoriesTable, _category),
-      _rows(transactionsTable, _transaction),
-      _rows(transactionLinesTable, _line),
-      _rows(statementsTable, _statement),
-      _db.customSelect('SELECT id FROM statements WHERE deleted = 1').get(),
-      _rows(rulesTable, _rule),
-      _rows(redistributionsTable, _redistribution),
-      _rows(shareClassificationsTable, _shareClassification),
+    final (
+      (accounts, categories, transactions, lines, statements, deleted),
+      (rules, redistributions, answers, balances),
+    ) = await (
+      (
+        _rows(accountsTable, _account),
+        _rows(categoriesTable, _category),
+        _rows(transactionsTable, _transaction),
+        _rows(transactionLinesTable, _line),
+        _rows(statementsTable, _statement),
+        _db.customSelect('SELECT id FROM statements WHERE deleted = 1').get(),
+      ).wait,
+      (
+        _rows(rulesTable, _rule),
+        _rows(redistributionsTable, _redistribution),
+        _rows(shareClassificationsTable, _shareClassification),
+        _rows(balancesTable, _balance),
+      ).wait,
     ).wait;
     return Ledger(
       accounts: accounts,
@@ -56,7 +66,19 @@ class LedgerRepository {
       rules: rules,
       redistributions: redistributions,
       shareClassifications: answers,
+      balances: balances,
     );
+  }
+
+  /// A declared balance needs its account, a valid date and an amount.
+  /// Whether it counts is decided by the domain (an unknown account, a debts
+  /// account: principle 6 of phase 5).
+  static DeclaredBalance? _balance(Map<String, Object?> row) {
+    final accountId = _string(row['account_id']);
+    final date = CalendarDate.tryParse(row['date'] is String ? row['date']! as String : null);
+    final amount = row['amount'];
+    if (accountId == null || date == null || amount is! int) return null;
+    return DeclaredBalance(id: row['id']! as String, accountId: accountId, date: date, amount: amount);
   }
 
   /// An answer needs its line, its year, the category chosen and the

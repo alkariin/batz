@@ -81,6 +81,10 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.refundIsTransfer => l.errorRefundIsTransfer,
   LedgerError.refundTargetNotExpense => l.errorRefundTargetNotExpense,
   LedgerError.shareNatureMismatch => l.errorShareNatureMismatch,
+  LedgerError.unknownBalance => l.errorUnknownBalance,
+  LedgerError.balanceOnDetailedAccount => l.errorBalanceOnDetailedAccount,
+  LedgerError.balanceOnDebtsAccount => l.errorBalanceOnDebtsAccount,
+  LedgerError.balanceInFuture => l.errorBalanceInFuture,
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {

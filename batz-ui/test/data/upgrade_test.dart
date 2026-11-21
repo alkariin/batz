@@ -5,13 +5,16 @@ import 'package:batz/data/local/journal.dart';
 import 'package:batz/data/local/open_database.dart';
 import 'package:batz/data/secret_store.dart';
 import 'package:batz/data/sync/sync_store.dart';
+import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/ledger/account.dart';
+import 'package:batz/domain/ledger/balance.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/proposal.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/refund.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/period_model.dart';
+import 'package:batz/domain/views/balances.dart';
 import 'package:batz/domain/views/share_operations.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -45,7 +48,7 @@ void main() {
     final db = await openLocalDatabase(directory: dir, secrets: MemorySecretStore(), encrypt: false);
     final journal = await Journal.open(db);
     expect(journal.deviceId, _fixture050DeviceId);
-    expect(journal.derivedTablesRebuilt, isFalse, reason: 'the derived tables of 0.5.0 are unchanged');
+    expect(journal.derivedTablesRebuilt, isTrue, reason: 'the declared balances are new');
     final entries = await journal.entries();
     expect(entries, hasLength(139));
 
@@ -77,11 +80,18 @@ void main() {
     expect(ledger.views.of(2027, ViewKind.economic)!.totalOf(food2027), -60000);
     expect(ledger.transactions['tx-saving']!.counterpartAccountId, 'acc-savings');
 
-    // The new version writes after the latest entry of 0.5.0.
+    // The new version writes after the latest entry of 0.5.0: a balance
+    // declared on the savings, which received the transfer.
     final before = entries.last.hlc;
     final hlc = await journal.write(ledger.detachRefund('tx-back'));
     expect(hlc! > before, isTrue);
-    expect((await repository.load()).refundsOf(visit), isEmpty);
+    await journal.write(
+      ledger.declareBalance('acc-savings', CalendarDate(2026, 7, 31), 25000, today: CalendarDate(2026, 11, 21)),
+    );
+    final after = await repository.load();
+    expect(after.refundsOf(visit), isEmpty);
+    final savings = after.balances.of('acc-savings');
+    expect((savings.balanceAt(CalendarDate(2026, 7, 31)), savings.movements.single.amount), (25000, 20000));
     await db.close();
   });
 

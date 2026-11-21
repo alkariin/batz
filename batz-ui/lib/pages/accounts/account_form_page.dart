@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/ids.dart';
 import '../../domain/ledger/account.dart';
+import '../../domain/ledger/ledger.dart';
 import '../../domain/ledger/ledger_exception.dart';
 import '../../l10n/app_localizations.dart';
 import '../import/statements_page.dart';
@@ -64,7 +65,11 @@ class _AccountFormPageState extends State<AccountFormPage> {
       final removal = cubit.state.ledger.removeAccount(account.id);
       await cubit.write(removal.modification);
       if (!mounted) return;
-      showMessage(context, removal.archives ? l.accountArchivedInstead(removal.transactionCount) : l.accountDeleted);
+      showMessage(context, switch (removal) {
+        AccountRemoval(transactionCount: final count) when count > 0 => l.accountArchivedInstead(count),
+        AccountRemoval(balanceCount: final count) when count > 0 => l.accountArchivedBalances(count),
+        _ => l.accountDeleted,
+      });
       Navigator.of(context).pop();
     } on LedgerException catch (e) {
       if (mounted) showMessage(context, ledgerErrorText(l, e));

@@ -2,6 +2,7 @@ import '../calendar_date.dart';
 import '../journal/journal_entry.dart';
 import '../period_model.dart';
 import 'account.dart';
+import 'balance.dart';
 import 'category.dart';
 import 'issues.dart';
 import 'ledger_exception.dart';
@@ -32,6 +33,7 @@ class Ledger {
     Iterable<MappingRule> rules = const [],
     Iterable<RedistributionRule> redistributions = const [],
     Iterable<ShareClassification> shareClassifications = const [],
+    Iterable<DeclaredBalance> balances = const [],
   }) : this._(
          accounts,
          CategoryForest.build(categories),
@@ -42,6 +44,7 @@ class Ledger {
          rules,
          redistributions,
          shareClassifications,
+         balances,
        );
 
   Ledger._(
@@ -54,6 +57,7 @@ class Ledger {
     Iterable<MappingRule> rules,
     Iterable<RedistributionRule> redistributions,
     Iterable<ShareClassification> shareClassifications,
+    Iterable<DeclaredBalance> balances,
   ) : accounts = {for (final a in accounts) a.id: a},
       trees = forest.trees,
       transactions = _attach(transactions, lines),
@@ -61,7 +65,8 @@ class Ledger {
       deletedStatementIds = Set.unmodifiable(deletedStatementIds),
       rules = {for (final r in rules) r.id: r},
       redistributions = {for (final r in redistributions) r.id: r},
-      shareClassifications = {for (final c in shareClassifications) (c.lineId, c.year): c};
+      shareClassifications = {for (final c in shareClassifications) (c.lineId, c.year): c},
+      declaredBalances = {for (final b in balances) b.id: b};
 
   static Map<String, LedgerTransaction> _attach(
     Iterable<LedgerTransaction> transactions,
@@ -103,6 +108,11 @@ class Ledger {
   /// H5 of phase 4): their identifier is computed from both, one record per
   /// pair.
   final Map<(String, int), ShareClassification> shareClassifications;
+
+  /// The balances declared on every account, by identifier (see
+  /// balance.dart for their operations, views/balances.dart for what they
+  /// give).
+  final Map<String, DeclaredBalance> declaredBalances;
 
   /// Every category of every year, by identifier.
   late final Map<String, Category> categories = {for (final tree in trees.values) ...tree.byId};
@@ -160,13 +170,20 @@ class Ledger {
   }
 
   /// Removes the account [id] (decision H5 of phase 1): deleted if no
-  /// transaction uses it, archived otherwise.
+  /// transaction and no declared balance use it, archived otherwise
+  /// (decision H4 of phase 5). An archived account stays in the wealth
+  /// with its last balance.
   AccountRemoval removeAccount(String id) {
     final account = accounts[id];
     if (account == null) throw const LedgerException(LedgerError.unknownAccount);
     final used = transactionsUsingAccount(id);
-    if (used == 0) return AccountRemoval(Modification.delete(AccountFields.entity, id), 0);
-    return AccountRemoval(Modification.set(AccountFields.entity, id, {AccountFields.archived: true}), used);
+    final balances = declaredBalances.values.where((b) => b.accountId == id).length;
+    if (used == 0 && balances == 0) return AccountRemoval(Modification.delete(AccountFields.entity, id), 0);
+    return AccountRemoval(
+      Modification.set(AccountFields.entity, id, {AccountFields.archived: true}),
+      used,
+      balanceCount: balances,
+    );
   }
 
   /// The number of transactions on [accountId] or with it as counterpart.
@@ -1186,15 +1203,16 @@ class Ledger {
 
 /// The outcome of [Ledger.removeAccount].
 class AccountRemoval {
-  const AccountRemoval(this.modification, this.transactionCount);
+  const AccountRemoval(this.modification, this.transactionCount, {this.balanceCount = 0});
 
   final Modification modification;
 
-  /// Transactions that use the account; when there are any, the account is
-  /// archived instead of deleted.
+  /// Transactions and declared balances that use the account; when there
+  /// are any, the account is archived instead of deleted.
   final int transactionCount;
+  final int balanceCount;
 
-  bool get archives => transactionCount > 0;
+  bool get archives => transactionCount > 0 || balanceCount > 0;
 }
 
 /// Where a line stands in the validation; only « validated » is stored, the

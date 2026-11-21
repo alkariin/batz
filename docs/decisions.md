@@ -1399,3 +1399,59 @@ expense over three months, a payment over two years whose share of 2027 is
 answered, and a transfer. `test/data/upgrade_test.dart` opens it with the
 current version, checks each of these records and the views they give, then
 writes after its latest entry.
+
+### 5.1 Declared balances
+
+**Decisions.**
+
+- New journal entity `balance` (table `balances`): account, date and
+  amount, read only when all three are valid. Its identifier is computed
+  from the account and the date (`balanceId`): declaring twice the same day,
+  on one device or two, writes one record whose amount follows the latest
+  declaration. A declaration also writes `_deleted: false`, so that a balance
+  deleted that day comes back. Modifying the date of a balance deletes it
+  and declares the one of the new day in the same modification.
+- Refusals, with their reason: an unknown account, the detailed account
+  (its statements give the balance), a debts account (no balance of its
+  own, H5), a date after today. Today is passed in by the screen, so that
+  the rules are tested without a clock. An archived account accepts a
+  balance: declaring 0 takes it out of the wealth (H4). A balance left on
+  an account that became detailed can be deleted, not modified.
+- The calculation lives in `domain/views/balances.dart`, next to the
+  annual view, and reads the ledger: `ledger.balances` (cached with an
+  `Expando` like the views) gives, per account, its points, its movements
+  and the balance at any date. One function computes a balance from a point
+  (the point plus the movements dated after its day, up to the date
+  included); the balance at a date and the balance expected at a declared
+  balance both go through it (principle 2). Movements are summed by date
+  with running totals, found by binary search.
+- Points: the declared balances, and for an account with statements, the
+  opening balance of the first one (by start date) on the day before it
+  starts, whether the account is still detailed or not. On the same day the
+  statement's point comes first: a balance declared that day (only a merge
+  can leave one) is then a point of its own, with its variation from the
+  bank's balance. A debts account has no point, and an account that no
+  longer exists neither: their declared balances are kept apart as ignored,
+  and their movements stay listed (the wealth will count them elsewhere).
+- Movements: a transaction's amount on its account, its opposite on the
+  counterpart of a transfer, validated or proposed; a line to validate is a
+  transfer only when its rules propose one, as in the annual view, whatever
+  its stored counterpart.
+- An account with declared balances is archived rather than deleted (H4);
+  `AccountRemoval` counts them apart, and the message says that the account
+  stays in the wealth with its last balance.
+- The repository sends its ten queries in two groups awaited together:
+  Dart's `wait` on a record takes nine futures at most.
+
+**Evidence.** `test/domain/views/balances_test.dart` (the example of the
+plan: 10'500 from 15.3 to 29.6 and 300 of variation on 30.6; the views
+unchanged by declarations, also on random data; a movement on the day of a
+balance; an account without balance; a negative balance; a proposed
+transfer; the detailed account from its first statement's opening to its
+closing balance; a balance left on an account that became detailed; each
+refusal; replacing, moving, deleting and declaring again; archiving; an
+account deleted on another device and balances left on a debts account;
+two devices declaring the same day). `test/e2e/wealth_e2e_test.dart`
+exchanges balances through a real server, and the convergence test
+declares, modifies and deletes balances on four devices. The database of
+0.5.0 opens, its derived tables rebuilt, and takes a balance.

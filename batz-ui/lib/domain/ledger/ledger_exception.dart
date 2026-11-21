@@ -63,6 +63,12 @@ enum LedgerError {
 
   // Shares to classify (phase 4).
   shareNatureMismatch,
+
+  // Declared balances (phase 5).
+  unknownBalance,
+  balanceOnDetailedAccount,
+  balanceOnDebtsAccount,
+  balanceInFuture,
 }
 
 /// A business rule refuses the operation; nothing was written.

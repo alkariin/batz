@@ -2621,6 +2621,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{count, plural, =1{Une règle de redistribution ne s\'applique pas} other{{count} règles de redistribution ne s\'appliquent pas}} cette année.'**
   String yearInapplicable(int count);
+
+  /// No description provided for @errorUnknownBalance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce solde n\'existe plus.'**
+  String get errorUnknownBalance;
+
+  /// No description provided for @errorBalanceOnDetailedAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le solde du compte détaillé vient de ses relevés : il ne se déclare pas.'**
+  String get errorBalanceOnDetailedAccount;
+
+  /// No description provided for @errorBalanceOnDebtsAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un compte « Dettes » n\'a pas de solde propre : la fortune compte les dettes du tableau des dettes.'**
+  String get errorBalanceOnDebtsAccount;
+
+  /// No description provided for @errorBalanceInFuture.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un solde ne se déclare pas pour une date future.'**
+  String get errorBalanceInFuture;
+
+  /// No description provided for @accountArchivedBalances.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte archivé et non supprimé : {count, plural, =1{un solde déclaré l\'utilise} other{{count} soldes déclarés l\'utilisent}}. Il reste dans la fortune avec son dernier solde ; déclarez un solde de 0 pour l\'en sortir.'**
+  String accountArchivedBalances(int count);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

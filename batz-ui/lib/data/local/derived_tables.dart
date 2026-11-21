@@ -1,4 +1,5 @@
 import '../../domain/ledger/account.dart';
+import '../../domain/ledger/balance.dart';
 import '../../domain/ledger/category.dart';
 import '../../domain/ledger/redistribution.dart';
 import '../../domain/ledger/rule.dart';
@@ -111,6 +112,7 @@ final List<DerivedTable> appDerivedTables = [
   rulesTable,
   redistributionsTable,
   shareClassificationsTable,
+  balancesTable,
 ];
 
 final accountsTable = DerivedTable(
@@ -220,5 +222,15 @@ final shareClassificationsTable = DerivedTable(
     ShareClassificationFields.year: const DerivedColumn.integer('year'),
     ShareClassificationFields.categoryId: const DerivedColumn.text('category_id'),
     ShareClassificationFields.originCategoryId: const DerivedColumn.text('origin_category_id'),
+  },
+);
+
+final balancesTable = DerivedTable(
+  entity: BalanceFields.entity,
+  table: 'balances',
+  columns: {
+    BalanceFields.accountId: const DerivedColumn.text('account_id'),
+    BalanceFields.date: const DerivedColumn.text('date'),
+    BalanceFields.amount: const DerivedColumn.integer('amount'),
   },
 );

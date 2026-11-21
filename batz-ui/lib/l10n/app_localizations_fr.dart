@@ -1578,4 +1578,29 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0 cette année.';
   }
+
+  @override
+  String get errorUnknownBalance => 'Ce solde n\'existe plus.';
+
+  @override
+  String get errorBalanceOnDetailedAccount =>
+      'Le solde du compte détaillé vient de ses relevés : il ne se déclare pas.';
+
+  @override
+  String get errorBalanceOnDebtsAccount =>
+      'Un compte « Dettes » n\'a pas de solde propre : la fortune compte les dettes du tableau des dettes.';
+
+  @override
+  String get errorBalanceInFuture => 'Un solde ne se déclare pas pour une date future.';
+
+  @override
+  String accountArchivedBalances(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count soldes déclarés l\'utilisent',
+      one: 'un solde déclaré l\'utilise',
+    );
+    return 'Compte archivé et non supprimé : $_temp0. Il reste dans la fortune avec son dernier solde ; déclarez un solde de 0 pour l\'en sortir.';
+  }
 }
