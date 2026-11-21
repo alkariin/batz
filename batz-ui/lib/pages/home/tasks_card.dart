@@ -5,6 +5,9 @@ import '../../domain/ledger/issues.dart';
 import '../../domain/ledger/redistribution.dart';
 import '../../domain/ledger/refund.dart';
 import '../../domain/views/share_operations.dart';
+import '../../domain/views/wealth.dart';
+import '../../components/date_field.dart';
+import '../../services.dart';
 import '../../l10n/app_localizations.dart';
 import '../accounts/accounts_page.dart';
 import '../categories/categories_page.dart';
@@ -14,11 +17,13 @@ import '../refunds/broken_refunds_page.dart';
 import '../shares/shares_page.dart';
 import '../validation/rules_page.dart';
 import '../validation/validation_page.dart';
+import '../wealth/account_page.dart';
 
 /// The tasks of the home screen (specification, 4.6): the lines to
 /// validate, the lines whose rules compete, the rules that propose nothing
 /// any more, the shares to classify, the redistribution rules that do not
-/// apply, the refunds that lost their expense (principle 6 of phase 4), and
+/// apply, the refunds that lost their expense (principle 6 of phase 4), the
+/// balances declared more than six months ago (decision H7 of phase 5), and
 /// the inconsistencies a merge can leave (decision H4 of phase 2), each
 /// leading to the screen that deals with it.
 class TasksCard extends StatelessWidget {
@@ -27,6 +32,7 @@ class TasksCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final today = context.read<AppServices>().today();
     return BlocBuilder<LedgerCubit, LedgerState>(
       builder: (context, state) {
         final ledger = state.ledger;
@@ -43,6 +49,7 @@ class TasksCard extends StatelessWidget {
         }
         final shares = ledger.pendingShareCount;
         final broken = ledger.brokenRefunds.length;
+        final old = ledger.wealth(today).oldBalances;
         final tasks = [
           if (toValidate > 0)
             _tile(
@@ -99,6 +106,15 @@ class TasksCard extends StatelessWidget {
               const BrokenRefundsPage(),
               warning: true,
               key: const Key('taskBrokenRefunds'),
+            ),
+          for (final balance in old)
+            _tile(
+              context,
+              Icons.update,
+              l.taskOldBalance(balance.account.name),
+              l.taskOldBalanceHint(DateField.text(balance.lastDeclared.date)),
+              AccountPage(accountId: balance.account.id),
+              key: ValueKey('taskOldBalance-${balance.account.id}'),
             ),
           for (final issue in issues) _task(context, l, issue),
         ];

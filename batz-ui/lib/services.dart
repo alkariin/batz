@@ -12,6 +12,7 @@ import 'data/secret_store.dart';
 import 'data/server/server_repository.dart';
 import 'data/sync/sync_engine.dart';
 import 'data/sync/sync_store.dart';
+import 'domain/calendar_date.dart';
 import 'pages/import/import_cubit.dart';
 import 'pages/sync/sync_cubit.dart';
 
@@ -24,6 +25,7 @@ class AppServices {
     this.syncTransport,
     this.importTransport,
     FileAccess? files,
+    this.today = CalendarDate.today,
   }) : server = ServerRepository(secrets),
        files = files ?? SystemFileAccess(),
        ledger = LedgerRepository(database, journal),
@@ -63,4 +65,9 @@ class AppServices {
 
   /// The system dialogs that pick and save files.
   final FileAccess files;
+
+  /// Today on this device's calendar: the day balances may be declared up
+  /// to, debts are entered and checked, and the wealth is seen (phase 5).
+  /// Tests set the day.
+  final CalendarDate Function() today;
 }

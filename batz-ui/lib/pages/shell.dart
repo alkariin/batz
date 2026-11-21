@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../components/empty_page.dart';
 import '../l10n/app_localizations.dart';
 import 'home/home_page.dart';
 import 'ledger_cubit.dart';
 import 'more/more_page.dart';
 import 'sync/sync_cubit.dart';
 import 'transactions/transactions_page.dart';
+import 'wealth/wealth_page.dart';
 import 'year/year_page.dart';
 
 /// Lets a page of the shell show another section (the key figures of the
@@ -99,8 +99,8 @@ class _AppShellState extends State<AppShell> {
         Section.home => const HomePage(),
         Section.transactions => const TransactionsPage(),
         Section.year => const YearPage(),
+        Section.wealth => const WealthPage(),
         Section.more => const MorePage(),
-        _ => EmptyPage(title: _destinations[_selected]!.label(l)),
       },
     );
     return ShellScope(select: (section) => _select(section.index), child: _layout(l, page, toValidate));

@@ -1599,3 +1599,60 @@ and in the full suite). The « Fortune » screen on a ledger just loaded (the
 accounts at the day, 61 months of curve, the table of the last year, the
 balances and the views as of that day computed): 11 to 36 ms. Below the
 300 and 100 ms of the plan; the test fails if any run exceeds them.
+
+### 5.4 The « Fortune » screen and the screen of an account
+
+**Decisions.**
+
+- `AppServices.today` gives the day of the device's calendar (by default
+  `CalendarDate.today`); the screens of phase 5 read it (the wealth, an
+  account, the tasks, the key figures, the debts), and the interface tests
+  set it. The rules of the domain take it as a parameter.
+- « Fortune » takes the fourth entry of the navigation. From the top: the
+  net wealth of the day and its change since 31 December of the year before;
+  the accounts by type, each type with its total, each account with its
+  balance and the date it comes from (the end of its last statement for an
+  account that has statements, otherwise its last balance) and « ancien »
+  when its last declared balance is more than six months old; the line
+  « Dettes »; the accounts without balance, not archived; the curve; the
+  table. On a wide screen the cards keep a readable width.
+- The curve is drawn by the app (`WealthCurve`, a `CustomPainter`): a line
+  through the end of each month, the zero line, a dot per month up to three
+  years. Touching or dragging along it selects the nearest month, whose
+  month and amount show above it; the current month is shown first.
+- The table offers the years of the wealth, the current one first. Each
+  line shows its amount, signed after the results. Value variations,
+  accounts added and « Hors fortune » unfold account by account, the line of
+  the debts into the open debts at both ends and the movements of the debts
+  accounts. The two results open the « Année » screen of that year (pushed,
+  so that the year is kept), « Non classé » the validation. « Hors fortune »
+  shows only when it is not zero (H3). A year without annual view says so.
+- The screen of an account (`AccountPage`), opened from « Fortune », from
+  the task of an old balance or from the form of the account (« Soldes et
+  mouvements »): the balance of the day and its date; the movements since
+  the last balance; the history, latest first, each balance with the one
+  expected, its value variation and the movements since the balance before,
+  which unfold and open their transaction. « Déclarer un solde » asks for an
+  amount (a negative one is allowed: a loan) and a date, today by default;
+  a declared balance of the history is modified or deleted the same way.
+  Once saved, the value variation of the balance is shown (or, for the
+  first one, the amount it brings into the wealth). The detailed account
+  and a debts account have no button and say why. Balances that do not
+  count (on a debts account, after a merge) are listed and can be deleted.
+- Home screen: one task per account whose balance is old, which opens the
+  account; the key figures show the net wealth of the day, which opens
+  « Fortune », as soon as the wealth holds something.
+- `EmptyPage`, the placeholder of the sections, is gone: the five sections
+  all have their screen.
+
+**Evidence.** `test/pages/wealth/wealth_page_test.dart`: the example of the
+plan on the « Fortune » screen (accounts, debts, the curve read at both
+ends, every line of the table of 2026, lines unfolded, « Non classé » to the
+validation and the result to « Année »), the table of 2025 on a wide screen;
+a balance declared from the account screen shows its variation of 300.00,
+one in the future is refused with its reason, then modified and deleted;
+an old balance is a task that leads to its account and disappears once a
+balance is declared, the limit of six months to the day included; the net
+wealth among the key figures opens « Fortune ». Screenshots of the new
+screens, taken locally with the real fonts at phone and desktop sizes, were
+checked by eye; they are not kept.

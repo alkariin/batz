@@ -2,6 +2,7 @@ import 'package:batz/data/local/database.dart';
 import 'package:batz/data/local/journal.dart';
 import 'package:batz/data/files.dart';
 import 'package:batz/data/secret_store.dart';
+import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/pages/import/import_cubit.dart';
 import 'package:batz/pages/sync/sync_cubit.dart';
 import 'package:batz/services.dart';
@@ -13,6 +14,7 @@ Future<AppServices> testServices({
   TransportFactory? syncTransport,
   ImportTransportFactory? importTransport,
   FileAccess? files,
+  CalendarDate Function()? today,
 }) async {
   final database = LocalDatabase(NativeDatabase.memory());
   return AppServices(
@@ -22,5 +24,6 @@ Future<AppServices> testServices({
     syncTransport: syncTransport,
     importTransport: importTransport,
     files: files,
+    today: today ?? CalendarDate.today,
   );
 }

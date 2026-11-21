@@ -5,9 +5,6 @@ import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/balance.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/debt.dart';
-import 'package:batz/domain/ledger/ledger.dart';
-import 'package:batz/domain/ledger/proposal.dart';
-import 'package:batz/domain/ledger/statement.dart';
 import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/domain/views/balances.dart';
 import 'package:batz/domain/views/wealth.dart';
@@ -17,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../support/ledger_fixture.dart';
 import '../../support/ledger_harness.dart';
 import '../../support/random_wealth.dart';
+import '../../support/reference_example.dart';
 
 /// Every line of [table], as the screen shows them.
 Map<String, int> lines(WealthExplanation table) => {
@@ -64,82 +62,6 @@ void checkWealth(Wealth wealth, {required String reason}) {
   }
 }
 
-/// The example of the plan, entered through the operations of the app:
-/// the private account is detailed, its statement of 2026 imported then
-/// classified.
-Future<Ledger> referenceExample(LedgerHarness h, {required CalendarDate today}) async {
-  await h.apply(
-    (l) => l.createAccount(
-      'private',
-      const AccountDraft(
-        name: 'Compte privé',
-        type: AccountType.privateAccount,
-        importFormat: ImportFormat.postfinance,
-      ),
-    ),
-  );
-  await h.apply((l) => l.createAccount('savings', const AccountDraft(name: 'Épargne', type: AccountType.savings)));
-  await h.apply((l) => l.createAccount('pillar', const AccountDraft(name: '3e pilier', type: AccountType.pillar3)));
-  await h.apply((l) => l.createTree(2026));
-  final income = defaultGroupId(2026, CategoryNature.income), expenses = defaultGroupId(2026, CategoryNature.expense);
-  await h.apply((l) => l.addCategory('salary', year: 2026, name: 'Salaire', parentId: income));
-  await h.apply((l) => l.addCategory('rent', year: 2026, name: 'Loyer', parentId: expenses));
-  await h.apply((l) => l.addCategory('food', year: 2026, name: 'Nourriture', parentId: expenses));
-  await h.apply((l) => l.addCategory('restaurant', year: 2026, name: 'Restaurant', parentId: expenses));
-
-  ExtractedLine line(CalendarDate date, int amount, String text) =>
-      ExtractedLine(date: date, amount: amount, rawText: text, label: text);
-  final lines = [
-    line(d(2026, 1, 15), -705600, 'Versement 3e pilier'),
-    line(d(2026, 1, 25), 6000000, 'Salaire annuel'),
-    line(d(2026, 2, 1), -600000, 'Virement épargne'),
-    line(d(2026, 3, 14), -20000, 'Restaurant pour deux'),
-    line(d(2026, 6, 30), -4570000, 'Courses de l\'année'),
-    line(d(2026, 9, 1), -210000, 'Loyer douze mois'),
-    line(d(2026, 11, 2), -3500, 'Ligne inconnue'),
-  ];
-  final statement = ExtractedStatement(
-    format: 'postfinance',
-    iban: 'CH0000000000000000000',
-    currency: 'CHF',
-    periodStart: d(2026, 1, 1),
-    periodEnd: d(2026, 12, 31),
-    openingBalance: 500000,
-    closingBalance: 390900,
-    totalCredits: 6000000,
-    totalDebits: 6109100,
-    lines: lines,
-  );
-  final import = (await h.ledger()).importStatement('private', statement, fingerprint: 'f' * 64);
-  await h.repository.write(import.modification);
-  String id(int rank) => importedTransactionId(import.statementId, rank);
-  Classification category(String id, CalendarDate date, {CalendarDate? end}) =>
-      Classification.category(id, periodStart: date, periodEnd: end ?? date);
-  await h.apply((l) => l.classify(id(0), const Classification.transfer('pillar')));
-  await h.apply((l) => l.classify(id(1), category('salary', d(2026, 1, 25))));
-  await h.apply((l) => l.classify(id(2), const Classification.transfer('savings')));
-  await h.apply((l) => l.classify(id(3), category('restaurant', d(2026, 3, 14))));
-  await h.apply((l) => l.classify(id(4), category('food', d(2026, 6, 30))));
-  await h.apply((l) => l.classify(id(5), category('rent', d(2026, 9, 1), end: d(2027, 8, 31))));
-
-  await h.apply((l) => l.declareBalance('savings', d(2025, 12, 31), 1000000, today: today));
-  await h.apply((l) => l.declareBalance('savings', d(2026, 12, 31), 1625000, today: today));
-  await h.apply((l) => l.declareBalance('pillar', d(2026, 6, 30), 710000, today: today));
-  return h.apply(
-    (l) => l.createDebt(
-      'meal',
-      DebtDraft(
-        direction: DebtDirection.owedToMe,
-        person: 'Alex Modèle',
-        amount: 20000,
-        basisPoints: 5000,
-        eventDate: d(2026, 3, 14),
-      ),
-      today: d(2026, 3, 15),
-    ),
-  );
-}
-
 void main() {
   late LedgerHarness h;
   setUp(() async => h = await LedgerHarness.open());
@@ -147,7 +69,7 @@ void main() {
 
   test('the example of the plan gives each line of the table, and 12\'359.00 of change of the wealth', () async {
     final today = d(2027, 1, 15);
-    final ledger = await referenceExample(h, today: today);
+    final ledger = await referenceExample(h.apply, today: today);
     final wealth = ledger.wealth(today);
     expect(ledger.linesToValidate.single.amount, -3500);
 
@@ -206,7 +128,7 @@ void main() {
 
   test('the table of the current year stops today: what is paid later does not count yet (H8)', () async {
     final today = d(2026, 7, 31);
-    final ledger = await referenceExample(h, today: d(2027, 1, 15));
+    final ledger = await referenceExample(h.apply, today: d(2027, 1, 15));
     final wealth = ledger.wealth(today);
     final table = wealth.explain(2026);
     expect(table.end, today);

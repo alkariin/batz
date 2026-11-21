@@ -127,12 +127,6 @@ abstract class AppLocalizations {
   /// **'Plus'**
   String get navMore;
 
-  /// Placeholder shown on pages that have no content yet.
-  ///
-  /// In fr, this message translates to:
-  /// **'Rien ici pour l\'instant.'**
-  String get emptyPage;
-
   /// No description provided for @startupErrorTitle.
   ///
   /// In fr, this message translates to:
@@ -2681,6 +2675,354 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'La première part doit être supérieure à zéro et inférieure au total de la dette.'**
   String get errorDebtSplitOutOfTotal;
+
+  /// No description provided for @wealthNone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun solde déclaré ni aucune dette : déclarez le solde d\'un compte pour suivre votre fortune.'**
+  String get wealthNone;
+
+  /// No description provided for @wealthNet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fortune nette'**
+  String get wealthNet;
+
+  /// No description provided for @wealthSince.
+  ///
+  /// In fr, this message translates to:
+  /// **'Depuis le {date}'**
+  String wealthSince(String date);
+
+  /// No description provided for @wealthAt.
+  ///
+  /// In fr, this message translates to:
+  /// **'au {date}'**
+  String wealthAt(String date);
+
+  /// No description provided for @wealthBalanceDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde du {date}'**
+  String wealthBalanceDate(String date);
+
+  /// No description provided for @wealthStatementDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Relevé au {date}'**
+  String wealthStatementDate(String date);
+
+  /// No description provided for @wealthOld.
+  ///
+  /// In fr, this message translates to:
+  /// **'ancien'**
+  String get wealthOld;
+
+  /// No description provided for @wealthWithoutBalance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans solde, hors fortune'**
+  String get wealthWithoutBalance;
+
+  /// No description provided for @wealthWithoutBalanceSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comptes sans solde'**
+  String get wealthWithoutBalanceSection;
+
+  /// No description provided for @wealthDebts.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dettes'**
+  String get wealthDebts;
+
+  /// No description provided for @wealthDebtsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dettes ouvertes : ce qu\'on me doit moins ce que je dois.'**
+  String get wealthDebtsHint;
+
+  /// No description provided for @wealthCurve.
+  ///
+  /// In fr, this message translates to:
+  /// **'Évolution'**
+  String get wealthCurve;
+
+  /// No description provided for @wealthCurveHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fortune à la fin de chaque mois. Touchez la courbe pour lire un mois.'**
+  String get wealthCurveHint;
+
+  /// No description provided for @wealthCurvePoint.
+  ///
+  /// In fr, this message translates to:
+  /// **'{month} : {amount}'**
+  String wealthCurvePoint(String month, String amount);
+
+  /// No description provided for @wealthExplain.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pourquoi la fortune a varié'**
+  String get wealthExplain;
+
+  /// No description provided for @wealthExplainPeriod.
+  ///
+  /// In fr, this message translates to:
+  /// **'Du {start} au {end}'**
+  String wealthExplainPeriod(String start, String end);
+
+  /// No description provided for @wealthNoTree.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas d\'arbre de catégories cette année : seuls les soldes et les dettes y figurent.'**
+  String get wealthNoTree;
+
+  /// No description provided for @explainEconomic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résultat économique'**
+  String get explainEconomic;
+
+  /// No description provided for @explainOffsets.
+  ///
+  /// In fr, this message translates to:
+  /// **'+ Décalages de période'**
+  String get explainOffsets;
+
+  /// No description provided for @explainCash.
+  ///
+  /// In fr, this message translates to:
+  /// **'= Résultat de trésorerie'**
+  String get explainCash;
+
+  /// No description provided for @explainVariations.
+  ///
+  /// In fr, this message translates to:
+  /// **'+ Variations de valeur'**
+  String get explainVariations;
+
+  /// No description provided for @explainAdded.
+  ///
+  /// In fr, this message translates to:
+  /// **'+ Comptes ajoutés'**
+  String get explainAdded;
+
+  /// No description provided for @explainDebts.
+  ///
+  /// In fr, this message translates to:
+  /// **'+ Variation des dettes ouvertes'**
+  String get explainDebts;
+
+  /// No description provided for @explainDebtsDetail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dettes ouvertes au début {start}, à la fin {end} ; mouvements des comptes « Dettes » {movements}'**
+  String explainDebtsDetail(String start, String end, String movements);
+
+  /// No description provided for @explainUnclassified.
+  ///
+  /// In fr, this message translates to:
+  /// **'+ Non classé'**
+  String get explainUnclassified;
+
+  /// No description provided for @explainOutside.
+  ///
+  /// In fr, this message translates to:
+  /// **'+ Hors fortune'**
+  String get explainOutside;
+
+  /// No description provided for @explainOutsideHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mouvements de comptes qui n\'avaient pas encore de solde, ou qui n\'existent plus.'**
+  String get explainOutsideHint;
+
+  /// No description provided for @explainChange.
+  ///
+  /// In fr, this message translates to:
+  /// **'= Variation de la fortune'**
+  String get explainChange;
+
+  /// No description provided for @explainDeletedAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte supprimé'**
+  String get explainDeletedAccount;
+
+  /// No description provided for @accountBalanceNow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde'**
+  String get accountBalanceNow;
+
+  /// No description provided for @accountDeclare.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déclarer un solde'**
+  String get accountDeclare;
+
+  /// No description provided for @accountDeclareAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde (négatif pour un prêt)'**
+  String get accountDeclareAmount;
+
+  /// No description provided for @accountDeclareDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date du solde'**
+  String get accountDeclareDate;
+
+  /// No description provided for @accountBalanceEdit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le solde'**
+  String get accountBalanceEdit;
+
+  /// No description provided for @accountBalanceDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer le solde du {date} ?'**
+  String accountBalanceDeleteConfirm(String date);
+
+  /// No description provided for @accountBalanceDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde supprimé.'**
+  String get accountBalanceDeleted;
+
+  /// No description provided for @accountBalanceInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez un montant et une date valides.'**
+  String get accountBalanceInvalid;
+
+  /// No description provided for @accountVariationResult.
+  ///
+  /// In fr, this message translates to:
+  /// **'Variation de valeur : {amount}'**
+  String accountVariationResult(String amount);
+
+  /// No description provided for @accountEntersWealth.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le compte entre dans la fortune avec {amount}.'**
+  String accountEntersWealth(String amount);
+
+  /// No description provided for @accountHistory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique des soldes'**
+  String get accountHistory;
+
+  /// No description provided for @accountExpected.
+  ///
+  /// In fr, this message translates to:
+  /// **'Attendu {amount}'**
+  String accountExpected(String amount);
+
+  /// No description provided for @accountVariation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Variation {amount}'**
+  String accountVariation(String amount);
+
+  /// No description provided for @accountFirstBalance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Premier solde : le compte entre dans la fortune.'**
+  String get accountFirstBalance;
+
+  /// No description provided for @accountStatementPoint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde initial du premier relevé'**
+  String get accountStatementPoint;
+
+  /// No description provided for @accountMovementsCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucun mouvement} =1{Un mouvement} other{{count} mouvements}}'**
+  String accountMovementsCount(int count);
+
+  /// No description provided for @accountMovementsSince.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mouvements depuis le dernier solde'**
+  String get accountMovementsSince;
+
+  /// No description provided for @accountMovementsBefore.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mouvements avant le premier solde, compris dans celui-ci'**
+  String get accountMovementsBefore;
+
+  /// No description provided for @accountDetailedHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte détaillé : son solde vient de ses relevés, il ne se déclare pas.'**
+  String get accountDetailedHint;
+
+  /// No description provided for @accountDebtsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un compte « Dettes » n\'a pas de solde propre : la fortune compte le tableau des dettes.'**
+  String get accountDebtsHint;
+
+  /// No description provided for @accountNoBalance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans solde déclaré, ce compte est hors de la fortune.'**
+  String get accountNoBalance;
+
+  /// No description provided for @accountIgnoredBalances.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soldes ignorés'**
+  String get accountIgnoredBalances;
+
+  /// No description provided for @accountOpenBalances.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soldes et mouvements'**
+  String get accountOpenBalances;
+
+  /// No description provided for @accountOldBalance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernier solde déclaré il y a plus de 6 mois.'**
+  String get accountOldBalance;
+
+  /// No description provided for @accountEditAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le compte'**
+  String get accountEditAccount;
+
+  /// No description provided for @taskOldBalance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde de « {name} » à mettre à jour'**
+  String taskOldBalance(String name);
+
+  /// No description provided for @taskOldBalanceHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernier solde déclaré le {date}, il y a plus de 6 mois.'**
+  String taskOldBalanceHint(String date);
+
+  /// No description provided for @keyFiguresWealth.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fortune nette'**
+  String get keyFiguresWealth;
+
+  /// No description provided for @keyFiguresWealthOpen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir la fortune'**
+  String get keyFiguresWealthOpen;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -9,6 +9,7 @@ import '../../l10n/app_localizations.dart';
 import '../import/statements_page.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
+import '../wealth/account_page.dart';
 
 /// Creates an account, or modifies, archives or removes [account].
 class AccountFormPage extends StatefulWidget {
@@ -123,6 +124,17 @@ class _AccountFormPageState extends State<AccountFormPage> {
               title: Text(l.accountArchived),
               value: _archived,
               onChanged: (value) => setState(() => _archived = value),
+            ),
+          if (account != null)
+            ListTile(
+              key: const Key('accountBalances'),
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.account_balance_outlined),
+              title: Text(l.accountOpenBalances),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () =>
+                  Navigator.of(context)
+                      .push(MaterialPageRoute<void>(builder: (_) => AccountPage(accountId: account.id))),
             ),
           if (account != null && account.isDetailed)
             ListTile(

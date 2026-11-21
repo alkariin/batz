@@ -37,7 +37,10 @@ void main() {
     await tester.tap(find.descendant(of: bar, matching: find.text('Fortune')));
     await tester.pumpAndSettle();
     expect(find.widgetWithText(AppBar, 'Fortune'), findsOneWidget);
-    expect(find.text("Rien ici pour l'instant."), findsOneWidget);
+    expect(
+      find.text("Aucun solde déclaré ni aucune dette : déclarez le solde d'un compte pour suivre votre fortune."),
+      findsOneWidget,
+    );
   });
 
   testWidgets('wide screen: five entries in a side rail', (tester) async {

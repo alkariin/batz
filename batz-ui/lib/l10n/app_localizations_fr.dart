@@ -28,9 +28,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navMore => 'Plus';
 
   @override
-  String get emptyPage => 'Rien ici pour l\'instant.';
-
-  @override
   String get startupErrorTitle => 'batz ne peut pas démarrer';
 
   @override
@@ -1619,4 +1616,217 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorDebtSplitOutOfTotal =>
       'La première part doit être supérieure à zéro et inférieure au total de la dette.';
+
+  @override
+  String get wealthNone =>
+      'Aucun solde déclaré ni aucune dette : déclarez le solde d\'un compte pour suivre votre fortune.';
+
+  @override
+  String get wealthNet => 'Fortune nette';
+
+  @override
+  String wealthSince(String date) {
+    return 'Depuis le $date';
+  }
+
+  @override
+  String wealthAt(String date) {
+    return 'au $date';
+  }
+
+  @override
+  String wealthBalanceDate(String date) {
+    return 'Solde du $date';
+  }
+
+  @override
+  String wealthStatementDate(String date) {
+    return 'Relevé au $date';
+  }
+
+  @override
+  String get wealthOld => 'ancien';
+
+  @override
+  String get wealthWithoutBalance => 'Sans solde, hors fortune';
+
+  @override
+  String get wealthWithoutBalanceSection => 'Comptes sans solde';
+
+  @override
+  String get wealthDebts => 'Dettes';
+
+  @override
+  String get wealthDebtsHint => 'Dettes ouvertes : ce qu\'on me doit moins ce que je dois.';
+
+  @override
+  String get wealthCurve => 'Évolution';
+
+  @override
+  String get wealthCurveHint => 'Fortune à la fin de chaque mois. Touchez la courbe pour lire un mois.';
+
+  @override
+  String wealthCurvePoint(String month, String amount) {
+    return '$month : $amount';
+  }
+
+  @override
+  String get wealthExplain => 'Pourquoi la fortune a varié';
+
+  @override
+  String wealthExplainPeriod(String start, String end) {
+    return 'Du $start au $end';
+  }
+
+  @override
+  String get wealthNoTree => 'Pas d\'arbre de catégories cette année : seuls les soldes et les dettes y figurent.';
+
+  @override
+  String get explainEconomic => 'Résultat économique';
+
+  @override
+  String get explainOffsets => '+ Décalages de période';
+
+  @override
+  String get explainCash => '= Résultat de trésorerie';
+
+  @override
+  String get explainVariations => '+ Variations de valeur';
+
+  @override
+  String get explainAdded => '+ Comptes ajoutés';
+
+  @override
+  String get explainDebts => '+ Variation des dettes ouvertes';
+
+  @override
+  String explainDebtsDetail(String start, String end, String movements) {
+    return 'Dettes ouvertes au début $start, à la fin $end ; mouvements des comptes « Dettes » $movements';
+  }
+
+  @override
+  String get explainUnclassified => '+ Non classé';
+
+  @override
+  String get explainOutside => '+ Hors fortune';
+
+  @override
+  String get explainOutsideHint => 'Mouvements de comptes qui n\'avaient pas encore de solde, ou qui n\'existent plus.';
+
+  @override
+  String get explainChange => '= Variation de la fortune';
+
+  @override
+  String get explainDeletedAccount => 'Compte supprimé';
+
+  @override
+  String get accountBalanceNow => 'Solde';
+
+  @override
+  String get accountDeclare => 'Déclarer un solde';
+
+  @override
+  String get accountDeclareAmount => 'Solde (négatif pour un prêt)';
+
+  @override
+  String get accountDeclareDate => 'Date du solde';
+
+  @override
+  String get accountBalanceEdit => 'Modifier le solde';
+
+  @override
+  String accountBalanceDeleteConfirm(String date) {
+    return 'Supprimer le solde du $date ?';
+  }
+
+  @override
+  String get accountBalanceDeleted => 'Solde supprimé.';
+
+  @override
+  String get accountBalanceInvalid => 'Saisissez un montant et une date valides.';
+
+  @override
+  String accountVariationResult(String amount) {
+    return 'Variation de valeur : $amount';
+  }
+
+  @override
+  String accountEntersWealth(String amount) {
+    return 'Le compte entre dans la fortune avec $amount.';
+  }
+
+  @override
+  String get accountHistory => 'Historique des soldes';
+
+  @override
+  String accountExpected(String amount) {
+    return 'Attendu $amount';
+  }
+
+  @override
+  String accountVariation(String amount) {
+    return 'Variation $amount';
+  }
+
+  @override
+  String get accountFirstBalance => 'Premier solde : le compte entre dans la fortune.';
+
+  @override
+  String get accountStatementPoint => 'Solde initial du premier relevé';
+
+  @override
+  String accountMovementsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mouvements',
+      one: 'Un mouvement',
+      zero: 'Aucun mouvement',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get accountMovementsSince => 'Mouvements depuis le dernier solde';
+
+  @override
+  String get accountMovementsBefore => 'Mouvements avant le premier solde, compris dans celui-ci';
+
+  @override
+  String get accountDetailedHint => 'Compte détaillé : son solde vient de ses relevés, il ne se déclare pas.';
+
+  @override
+  String get accountDebtsHint =>
+      'Un compte « Dettes » n\'a pas de solde propre : la fortune compte le tableau des dettes.';
+
+  @override
+  String get accountNoBalance => 'Sans solde déclaré, ce compte est hors de la fortune.';
+
+  @override
+  String get accountIgnoredBalances => 'Soldes ignorés';
+
+  @override
+  String get accountOpenBalances => 'Soldes et mouvements';
+
+  @override
+  String get accountOldBalance => 'Dernier solde déclaré il y a plus de 6 mois.';
+
+  @override
+  String get accountEditAccount => 'Modifier le compte';
+
+  @override
+  String taskOldBalance(String name) {
+    return 'Solde de « $name » à mettre à jour';
+  }
+
+  @override
+  String taskOldBalanceHint(String date) {
+    return 'Dernier solde déclaré le $date, il y a plus de 6 mois.';
+  }
+
+  @override
+  String get keyFiguresWealth => 'Fortune nette';
+
+  @override
+  String get keyFiguresWealthOpen => 'Voir la fortune';
 }
