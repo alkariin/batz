@@ -1702,3 +1702,15 @@ temporary directory, and never deleted it. After the runs of phases 2 to 5,
 and a run of the suite stopped, unable to write. They were deleted by
 hand, with 232 data directories of test servers. Since then, a full run
 leaves nothing in `/tmp` but the file of the machine lock.
+
+### 5.6 Version 0.6.0
+
+The app and the server move to 0.6.0 (the app's build number to 7). The
+server's minimum app version becomes 0.6.0: an app 0.5 would receive
+declared balances and debts it does not know, keep them in its journal
+without showing them, and its user would see no wealth. The tests of the
+exchange send 0.6.0 and check that 0.5.0 and older are refused, at the use
+case and over HTTP. An app 0.6.0 still works with the server 0.5.0 of the
+NAS until it is upgraded. The rules of the wealth are described in
+`docs/wealth.md`; the architecture, the API, the deployment (with the
+upgrade to 0.6.0) and the README follow.

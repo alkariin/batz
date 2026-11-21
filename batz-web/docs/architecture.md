@@ -79,9 +79,11 @@ batz-ui/lib
 │   ├── journal   hybrid logical clock, journal entries, resolution rule
 │   ├── ledger    accounts, category trees, transactions, statements, mapping
 │   │             rules and their proposals, redistribution rules, refunds
-│   │             attached to an expense, answers for shares, search
+│   │             attached to an expense, answers for shares, declared
+│   │             balances, debts, search
 │   ├── views     the annual view: cash-flow and economic views of a year,
-│   │             composition of an amount, shares to classify
+│   │             composition of an amount, shares to classify; the balances
+│   │             of the accounts, the wealth, its curve and its explanation
 │   ├── allocation.dart, fraction.dart, calendar_date.dart   spreading over months
 │   ├── period_model.dart   periods of the mapping rules
 │   └── ids.dart  random and computed identifiers
@@ -97,8 +99,9 @@ batz-ui/lib
 ├── pages         shell, home (synchronisation, tasks, key figures), transactions
 │                 (search, filters), import and statements, validation and
 │                 rules, year (views, composition), redistribution, refunds,
-│                 shares to classify, accounts, categories, server settings,
-│                 cubits (ledger, server, sync, import)
+│                 shares to classify, wealth (accounts, curve, table, the
+│                 screen of an account), debts, accounts, categories, server
+│                 settings, cubits (ledger, server, sync, import)
 ├── components    shared widgets
 ├── helpers       Swiss formats, theme
 └── l10n          French texts (ARB) and generated localisations
@@ -168,6 +171,8 @@ writes of the others.
 | `rule` | `rules` | year, keywords (JSON list), targetCategoryId or targetAccountId, periodModel, periodMonths |
 | `redistribution` | `redistributions` | year, sourceCategoryId, targetCategoryId, basisPoints (hundredths of a percent) |
 | `shareClassification` | `share_classifications` | lineId, year, categoryId, originCategoryId |
+| `balance` | `balances` | accountId, date, amount (identifier computed from the account and the date) |
+| `debt` | `debts` | direction, person, amount, basisPoints, eventDate, invoiceDate, requestDate, receivedDate, description, repaid, enteredOn, checkedOn |
 
 `LedgerRepository` reads every table, by identifier, into an immutable
 `Ledger` and leaves out records that are incomplete or hold a value the
@@ -216,6 +221,15 @@ business rules and returns the `Modification` to write, or throws a
   attached to an expense follows its category and period; the period
   offsets reconcile both views. Nothing is stored. See
   [`docs/year-view.md`](../../docs/year-view.md).
+- **Wealth**: `ledger.balances` gives, per account, its points (declared
+  balances, the opening of its first statement) and its movements (both
+  sides of a transfer, proposed ones included), and one function for the
+  balance at any date, from which the expected balance and the value
+  variation of each declaration follow. `ledger.wealth(today)` adds the
+  debts that count each day and gives the wealth at a date, the monthly
+  curve and the table of a year, each line computed for itself; the views
+  it reads count what is paid up to today. Nothing is stored but the
+  balances and the debts. See [`docs/wealth.md`](../../docs/wealth.md).
 
 On Android the database is encrypted with SQLCipher (selected per platform
 through the `sqlite3` package hooks, see `docs/decisions.md`). Its key, 32
@@ -288,10 +302,18 @@ keeps the pin, so another machine at that address is refused.
   period offsets, the questions waiting equal to « À classer »),
   redistribution, refunds and shares to classify; `test/e2e/year_view_e2e_test.dart`
   sends the new records between devices through a real server, and the
-  convergence test includes their operations. `test/data/performance_test.dart`
-  bounds every reload after a write and every computation of the views of a
-  year with 10 000 transactions, alone on the machine (every test file holds
-  a shared lock, the measurement takes it exclusive); databases written by versions 0.1.0 to 0.4.1 are opened by
-  `test/data/upgrade_test.dart`. `benchmark/first_exchange_test.dart` and
+  convergence test includes their operations. The wealth has its own tests:
+  the examples of the plan (the table of reference line by line, a pure
+  loan, an advanced expense), the balances and the debts rule by rule, and on
+  random ledgers each table adding up to the change of the wealth and each
+  month of the curve equal to the wealth at its date;
+  `test/e2e/wealth_e2e_test.dart` sends balances and debts between devices,
+  and the convergence test declares balances and handles debts.
+  `test/data/performance_test.dart` bounds every reload after a write, every
+  computation of the views of a year and of the « Fortune » screen with
+  10 000 transactions, 100 balances and 200 debts, alone on the machine
+  (every test file holds a shared lock, the measurement takes it exclusive
+  for the whole test); databases written by versions 0.1.0 to 0.5.0 are
+  opened by `test/data/upgrade_test.dart`. `benchmark/first_exchange_test.dart` and
   `benchmark/journal_write_test.dart`, run by hand, measure a first exchange
   of 20 000 entries and the writing of 1 000 fields.

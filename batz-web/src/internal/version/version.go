@@ -14,13 +14,12 @@ import (
 // A plain `go build` keeps "dev".
 var Version = "dev"
 
-// MinAppVersion is the oldest app version this server works with: 0.5.0 is
-// the first that knows the redistribution rules, the refunds attached to an
-// expense and the answers for the shares to classify (an older one would
-// keep them unapplied and show other totals than the devices that apply
-// them). The app compares it with its own version and refuses to
+// MinAppVersion is the oldest app version this server works with: 0.6.0 is
+// the first that knows the declared balances and the debts (an older one
+// would keep them in its journal without showing them, and its user would
+// see no wealth). The app compares it with its own version and refuses to
 // synchronise when it is older; the server refuses its exchanges too.
-const MinAppVersion = "0.5.0"
+const MinAppVersion = "0.6.0"
 
 var versionPattern = regexp.MustCompile(`^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?`)
 

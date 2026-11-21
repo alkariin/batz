@@ -12,10 +12,12 @@ statements and keeps the reference copy of the change journal.
 | `docs/specification.md` | Functional and technical specification (French). |
 | `docs/decisions.md` | Technical decisions and their evidence. |
 | `docs/year-view.md` | How the annual view is computed, with examples. |
+| `docs/wealth.md` | Balances, debts, the wealth and the table that explains it. |
 | `docs/plan/` | Phase plans and acceptance criteria (French). |
 | `scripts/` | Repository checks: personal files and terms, real statements. |
 
-The annual view and its rules: [year-view](docs/year-view.md). Server
+The annual view and its rules: [year-view](docs/year-view.md); the wealth
+and its rules: [wealth](docs/wealth.md). Server
 documentation: [architecture](batz-web/docs/architecture.md),
 [API](batz-web/docs/api.md), [synchronisation](batz-web/docs/sync.md),
 [import of statements](batz-web/docs/import.md),
@@ -23,8 +25,8 @@ documentation: [architecture](batz-web/docs/architecture.md),
 
 ## Status
 
-Version 0.5.0, end of phase 4 (annual view). The app works on its own, on
-each device, and synchronises with the server when it is reachable:
+Version 0.6.0, end of phase 5 (wealth) and of the MVP. The app works on its
+own, on each device, and synchronises with the server when it is reachable:
 
 - accounts of the ten types of the specification, one of them detailed
   (import enabled), archiving;
@@ -53,7 +55,14 @@ each device, and synchronises with the server when it is reachable:
 - redistribution rules that move a percentage of a category to another,
   month by month; refunds attached to their expense, which shows its net
   cost; the shares carried to a year without a category of the same name,
-  classified once and remembered ([year view](docs/year-view.md)).
+  classified once and remembered ([year view](docs/year-view.md));
+- the « Fortune » screen: balances declared once or twice a year on each
+  account, the detailed account following its statements; the value
+  variation of each declaration, never an income nor an expense; the debts
+  table (on me doit, je dois, split, checked); the net wealth of the day,
+  its monthly curve, and for each year a table that explains its change to
+  the cent; a reminder of the balances older than six months
+  ([wealth](docs/wealth.md)).
 
 Phase 0 provided the foundations: app and server skeletons, local database
 driven by a change journal, device pairing over pinned HTTPS, CI and
@@ -80,7 +89,7 @@ cd batz-ui
 flutter analyze && flutter test
 flutter test benchmark/first_exchange_test.dart   # by hand: a first exchange of 20 000 entries
 flutter test benchmark/journal_write_test.dart    # by hand: a modification of 1 000 fields
-flutter test test/data/performance_test.dart      # alone: reload and views with 10 000 transactions
+flutter test test/data/performance_test.dart      # alone: reload, views and wealth with 10 000 transactions
 flutter run -d linux
 ```
 
