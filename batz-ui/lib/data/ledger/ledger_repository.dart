@@ -14,6 +14,7 @@ import '../../domain/ledger/statement.dart';
 import '../../domain/period_model.dart';
 import '../../domain/ledger/transaction.dart';
 import '../../domain/modules/module_records.dart';
+import '../../domain/modules/salary.dart';
 import '../../domain/modules/settings.dart';
 import '../local/database.dart';
 import '../local/derived_tables.dart';
@@ -81,8 +82,34 @@ class LedgerRepository {
 
   /// What the user entered in the modules.
   Future<ModuleRecords> _modules() async {
-    final settings = await _rows(moduleSettingsTable, _moduleSetting);
-    return ModuleRecords(settings: settings);
+    final (settings, sheets, deductions) = await (
+      _rows(moduleSettingsTable, _moduleSetting),
+      _rows(salarySheetsTable, _salarySheet),
+      _rows(salaryDeductionsTable, _salaryDeduction),
+    ).wait;
+    return ModuleRecords(settings: settings, salarySheets: sheets, salaryDeductions: deductions);
+  }
+
+  /// A salary sheet needs its year, its gross and its net.
+  static SalarySheet? _salarySheet(Map<String, Object?> row) {
+    final (year, gross, net) = (row['year'], row['gross'], row['net']);
+    if (year is! int || gross is! int || net is! int) return null;
+    return SalarySheet(id: row['id']! as String, year: year, gross: gross, net: net);
+  }
+
+  /// A deduction needs its sheet, a label, an amount and a rank.
+  static SalaryDeduction? _salaryDeduction(Map<String, Object?> row) {
+    final sheetId = _string(row['sheet_id']);
+    final label = _string(row['label']);
+    final (amount, rank) = (row['amount'], row['rank']);
+    if (sheetId == null || label == null || amount is! int) return null;
+    return SalaryDeduction(
+      id: row['id']! as String,
+      sheetId: sheetId,
+      label: label,
+      amount: amount,
+      rank: rank is int ? rank : 0,
+    );
   }
 
   /// A setting needs a known module and a name.

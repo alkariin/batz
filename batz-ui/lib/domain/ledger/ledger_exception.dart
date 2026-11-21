@@ -79,6 +79,11 @@ enum LedgerError {
 
   // Modules (phase 6).
   moduleCategoryRequired,
+  unknownSalarySheet,
+  salaryGrossRequired,
+  salaryNetNegative,
+  salaryDeductionLabelRequired,
+  salaryDeductionNegative,
 }
 
 /// A business rule refuses the operation; nothing was written.

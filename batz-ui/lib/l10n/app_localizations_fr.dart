@@ -1957,4 +1957,115 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorModuleCategoryRequired => 'Indiquez le nom de la catégorie.';
+
+  @override
+  String get errorUnknownSalarySheet => 'Cette fiche salaire n\'existe plus.';
+
+  @override
+  String get errorSalaryGrossRequired => 'Saisissez un salaire brut supérieur à zéro.';
+
+  @override
+  String get errorSalaryNetNegative => 'Le salaire net ne peut pas être négatif.';
+
+  @override
+  String get errorSalaryDeductionLabelRequired => 'Chaque déduction a un libellé.';
+
+  @override
+  String get errorSalaryDeductionNegative => 'Une déduction ne peut pas être négative.';
+
+  @override
+  String get moreAnalyses => 'Analyses';
+
+  @override
+  String get moreSettings => 'Réglages';
+
+  @override
+  String moduleCategory(String name) {
+    return 'Catégorie liée : « $name »';
+  }
+
+  @override
+  String moduleCategoryFound(String year) {
+    return 'Trouvée dans l\'arbre de $year.';
+  }
+
+  @override
+  String moduleCategoryMissing(String year) {
+    return 'Aucune catégorie de ce nom dans l\'arbre de $year.';
+  }
+
+  @override
+  String get moduleCategoryTitle => 'Catégorie liée';
+
+  @override
+  String get moduleCategoryHint =>
+      'Le même nom pour toutes les années, sans tenir compte des majuscules ni des accents. Un groupe compte avec tout ce qu\'il contient.';
+
+  @override
+  String get moduleCategoryName => 'Nom de la catégorie';
+
+  @override
+  String get salaryTitle => 'Fiche salaire';
+
+  @override
+  String get salaryMenuHint => 'Brut, déductions et net de chaque année.';
+
+  @override
+  String get salaryYear => 'Année';
+
+  @override
+  String get salaryGross => 'Salaire brut';
+
+  @override
+  String get salaryNet => 'Salaire net';
+
+  @override
+  String get salaryDeductions => 'Déductions';
+
+  @override
+  String get salaryDeductionLabel => 'Libellé';
+
+  @override
+  String get salaryDeductionAmount => 'Montant';
+
+  @override
+  String get salaryDeductionAdd => 'Ajouter une déduction';
+
+  @override
+  String get salaryDeductionRemove => 'Retirer';
+
+  @override
+  String salaryDeductionsTotal(String amount) {
+    return 'Total des déductions : $amount';
+  }
+
+  @override
+  String salaryGap(String amount) {
+    return 'Écart : $amount (brut moins déductions moins net)';
+  }
+
+  @override
+  String get salaryBalanced => 'Le brut moins les déductions donne le net.';
+
+  @override
+  String salaryNew(String year) {
+    return 'Pas encore de fiche pour $year : les libellés proposés sont ceux de la fiche précédente.';
+  }
+
+  @override
+  String get salarySaved => 'Fiche salaire enregistrée.';
+
+  @override
+  String salaryDeleteConfirm(String year) {
+    return 'Supprimer la fiche salaire de $year ?';
+  }
+
+  @override
+  String get salaryDeleted => 'Fiche salaire supprimée.';
+
+  @override
+  String get salaryInvalidAmount => 'Montant invalide.';
+
+  @override
+  String get salaryTwoEmployers => 'Avec deux employeurs, additionnez les montants des deux certificats.';
 }

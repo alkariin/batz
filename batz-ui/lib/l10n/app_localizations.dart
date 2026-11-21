@@ -3251,6 +3251,198 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Indiquez le nom de la catégorie.'**
   String get errorModuleCategoryRequired;
+
+  /// No description provided for @errorUnknownSalarySheet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette fiche salaire n\'existe plus.'**
+  String get errorUnknownSalarySheet;
+
+  /// No description provided for @errorSalaryGrossRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez un salaire brut supérieur à zéro.'**
+  String get errorSalaryGrossRequired;
+
+  /// No description provided for @errorSalaryNetNegative.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le salaire net ne peut pas être négatif.'**
+  String get errorSalaryNetNegative;
+
+  /// No description provided for @errorSalaryDeductionLabelRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque déduction a un libellé.'**
+  String get errorSalaryDeductionLabelRequired;
+
+  /// No description provided for @errorSalaryDeductionNegative.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une déduction ne peut pas être négative.'**
+  String get errorSalaryDeductionNegative;
+
+  /// No description provided for @moreAnalyses.
+  ///
+  /// In fr, this message translates to:
+  /// **'Analyses'**
+  String get moreAnalyses;
+
+  /// No description provided for @moreSettings.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réglages'**
+  String get moreSettings;
+
+  /// No description provided for @moduleCategory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Catégorie liée : « {name} »'**
+  String moduleCategory(String name);
+
+  /// No description provided for @moduleCategoryFound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trouvée dans l\'arbre de {year}.'**
+  String moduleCategoryFound(String year);
+
+  /// No description provided for @moduleCategoryMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune catégorie de ce nom dans l\'arbre de {year}.'**
+  String moduleCategoryMissing(String year);
+
+  /// No description provided for @moduleCategoryTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Catégorie liée'**
+  String get moduleCategoryTitle;
+
+  /// No description provided for @moduleCategoryHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le même nom pour toutes les années, sans tenir compte des majuscules ni des accents. Un groupe compte avec tout ce qu\'il contient.'**
+  String get moduleCategoryHint;
+
+  /// No description provided for @moduleCategoryName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de la catégorie'**
+  String get moduleCategoryName;
+
+  /// No description provided for @salaryTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fiche salaire'**
+  String get salaryTitle;
+
+  /// No description provided for @salaryMenuHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Brut, déductions et net de chaque année.'**
+  String get salaryMenuHint;
+
+  /// No description provided for @salaryYear.
+  ///
+  /// In fr, this message translates to:
+  /// **'Année'**
+  String get salaryYear;
+
+  /// No description provided for @salaryGross.
+  ///
+  /// In fr, this message translates to:
+  /// **'Salaire brut'**
+  String get salaryGross;
+
+  /// No description provided for @salaryNet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Salaire net'**
+  String get salaryNet;
+
+  /// No description provided for @salaryDeductions.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déductions'**
+  String get salaryDeductions;
+
+  /// No description provided for @salaryDeductionLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Libellé'**
+  String get salaryDeductionLabel;
+
+  /// No description provided for @salaryDeductionAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant'**
+  String get salaryDeductionAmount;
+
+  /// No description provided for @salaryDeductionAdd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une déduction'**
+  String get salaryDeductionAdd;
+
+  /// No description provided for @salaryDeductionRemove.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer'**
+  String get salaryDeductionRemove;
+
+  /// No description provided for @salaryDeductionsTotal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total des déductions : {amount}'**
+  String salaryDeductionsTotal(String amount);
+
+  /// No description provided for @salaryGap.
+  ///
+  /// In fr, this message translates to:
+  /// **'Écart : {amount} (brut moins déductions moins net)'**
+  String salaryGap(String amount);
+
+  /// No description provided for @salaryBalanced.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le brut moins les déductions donne le net.'**
+  String get salaryBalanced;
+
+  /// No description provided for @salaryNew.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore de fiche pour {year} : les libellés proposés sont ceux de la fiche précédente.'**
+  String salaryNew(String year);
+
+  /// No description provided for @salarySaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fiche salaire enregistrée.'**
+  String get salarySaved;
+
+  /// No description provided for @salaryDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la fiche salaire de {year} ?'**
+  String salaryDeleteConfirm(String year);
+
+  /// No description provided for @salaryDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fiche salaire supprimée.'**
+  String get salaryDeleted;
+
+  /// No description provided for @salaryInvalidAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant invalide.'**
+  String get salaryInvalidAmount;
+
+  /// No description provided for @salaryTwoEmployers.
+  ///
+  /// In fr, this message translates to:
+  /// **'Avec deux employeurs, additionnez les montants des deux certificats.'**
+  String get salaryTwoEmployers;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

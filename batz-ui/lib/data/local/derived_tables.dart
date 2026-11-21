@@ -7,6 +7,7 @@ import '../../domain/ledger/rule.dart';
 import '../../domain/ledger/share_classification.dart';
 import '../../domain/ledger/statement.dart';
 import '../../domain/ledger/transaction.dart';
+import '../../domain/modules/salary.dart';
 import '../../domain/modules/settings.dart';
 
 /// How journal entries of one entity are materialised into a table.
@@ -117,6 +118,8 @@ final List<DerivedTable> appDerivedTables = [
   balancesTable,
   debtsTable,
   moduleSettingsTable,
+  salarySheetsTable,
+  salaryDeductionsTable,
 ];
 
 final accountsTable = DerivedTable(
@@ -264,5 +267,26 @@ final moduleSettingsTable = DerivedTable(
   columns: {
     ModuleSettingFields.module: const DerivedColumn.text('module'),
     ModuleSettingFields.categoryName: const DerivedColumn.text('category_name'),
+  },
+);
+
+final salarySheetsTable = DerivedTable(
+  entity: SalarySheetFields.entity,
+  table: 'salary_sheets',
+  columns: {
+    SalarySheetFields.year: const DerivedColumn.integer('year'),
+    SalarySheetFields.gross: const DerivedColumn.integer('gross'),
+    SalarySheetFields.net: const DerivedColumn.integer('net'),
+  },
+);
+
+final salaryDeductionsTable = DerivedTable(
+  entity: SalaryDeductionFields.entity,
+  table: 'salary_deductions',
+  columns: {
+    SalaryDeductionFields.sheetId: const DerivedColumn.text('sheet_id'),
+    SalaryDeductionFields.label: const DerivedColumn.text('label'),
+    SalaryDeductionFields.amount: const DerivedColumn.integer('amount'),
+    SalaryDeductionFields.rank: const DerivedColumn.integer('rank'),
   },
 );

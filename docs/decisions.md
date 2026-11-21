@@ -1769,3 +1769,41 @@ transfer, three declared balances and three debts, one of them split and a
 part checked. `test/data/upgrade_test.dart` opens it with the current
 version, its derived tables rebuilt, checks the balances, the variation and
 the open debts, then writes a setting of a module after its latest entry.
+
+### 6.1 Salary sheet
+
+**Decisions.**
+
+- New journal entities `salarySheet` (table `salary_sheets`: year, gross,
+  net, in cents) and `salaryDeduction` (table `salary_deductions`: sheet,
+  label, amount, rank). The sheet's identifier is computed from its year;
+  a deduction's is random (principle 5). A deduction whose sheet is missing
+  is left out when read.
+- One operation saves the whole sheet as the form shows it
+  (`saveSalarySheet`): the sheet's fields (and `_deleted: false`, so that a
+  deleted sheet comes back), each deduction with its label, amount and rank
+  in the order of the form, a new one with a new identifier, and the
+  deletion of those no longer in the form. Deleting the sheet deletes its
+  deductions. Refusals, with their reason: a gross of zero or less, a
+  negative net, a deduction without label or negative.
+- The gap is gross minus the deductions minus net. The screen computes it as
+  the amounts are typed and shows it when it is not zero, never refusing to
+  save; at zero it says that the gross minus the deductions gives the net.
+- A year without sheet proposes the labels of the closest earlier sheet, or
+  AVS, AC and LPP, with empty amounts.
+- « Plus » now starts with « Analyses » (the modules), then the settings
+  under « Réglages ». Each module screen shows its linked category
+  (`ModuleCategoryTile`): its name, whether the tree of the year shown has
+  it, and a dialog to change the name.
+
+**Known limit.** Two devices creating the sheet of the same year offline
+write one sheet, as required, whose fields follow the latest; but each
+device's deductions have their own identifiers, and both sets are kept. The
+user removes the extra ones; `test/domain/modules/salary_test.dart` shows it.
+
+**Evidence.** `test/domain/modules/salary_test.dart` (the example, 0.00 then
+56.00 of gap; deductions added, moved, removed; deletion and return; each
+refusal; the labels proposed; two devices; views and wealth unchanged) and
+`test/pages/modules/salary_page_test.dart` (the example typed in the screen,
+the gap as it is typed, saved, modified, a refusal, deleted; the name of the
+category changed and missing from the tree).

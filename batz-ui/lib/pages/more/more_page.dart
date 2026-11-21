@@ -4,12 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../l10n/app_localizations.dart';
 import '../accounts/accounts_page.dart';
 import '../categories/categories_page.dart';
+import '../modules/salary_page.dart';
 import '../redistribution/redistribution_page.dart';
 import '../server/server_cubit.dart';
 import '../server/server_page.dart';
 import '../validation/rules_page.dart';
 
-/// "Plus": settings and secondary screens.
+/// « Plus »: the analyses (the modules of phase 6), then the settings.
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
 
@@ -20,6 +21,17 @@ class MorePage extends StatelessWidget {
       appBar: AppBar(title: Text(l.navMore)),
       body: ListView(
         children: [
+          _Section(l.moreAnalyses),
+          ListTile(
+            key: const Key('moreSalary'),
+            leading: const Icon(Icons.badge_outlined),
+            title: Text(l.salaryTitle),
+            subtitle: Text(l.salaryMenuHint),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SalaryPage())),
+          ),
+          const Divider(),
+          _Section(l.moreSettings),
           ListTile(
             leading: const Icon(Icons.account_balance_wallet_outlined),
             title: Text(l.accountsTitle),
@@ -59,4 +71,16 @@ class MorePage extends StatelessWidget {
       ),
     );
   }
+}
+
+class _Section extends StatelessWidget {
+  const _Section(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+    child: Text(text, style: Theme.of(context).textTheme.titleSmall),
+  );
 }

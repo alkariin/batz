@@ -91,6 +91,11 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.debtReceivedBeforeEvent => l.errorDebtReceivedBeforeEvent,
   LedgerError.debtSplitOutOfTotal => l.errorDebtSplitOutOfTotal,
   LedgerError.moduleCategoryRequired => l.errorModuleCategoryRequired,
+  LedgerError.unknownSalarySheet => l.errorUnknownSalarySheet,
+  LedgerError.salaryGrossRequired => l.errorSalaryGrossRequired,
+  LedgerError.salaryNetNegative => l.errorSalaryNetNegative,
+  LedgerError.salaryDeductionLabelRequired => l.errorSalaryDeductionLabelRequired,
+  LedgerError.salaryDeductionNegative => l.errorSalaryDeductionNegative,
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {
