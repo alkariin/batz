@@ -61,8 +61,12 @@ For one year and one view:
   **expenses** likewise; **savings** = income − expenses;
 - **« Non classé »**: lines without a usable category (to validate without a
   proposal, a validated line without category, or whose category is no
-  longer in the tree of its payment year). They count at their payment date
-  in both views, outside income and expenses;
+  longer in the tree of its payment year), and the difference between a
+  transaction's amount and what its lines add up to, which only a merge can
+  leave. They count at their payment date in both views, outside income and
+  expenses. Each transaction outside transfers thus counts for exactly its
+  amount: the cash-flow result plus « Non classé » is the sum of the
+  payments of the year;
 - **« À classer »**, one line per nature: amounts that fell in this year from
   a category of another year that has no counterpart here (see below). They
   count in the income or the expenses of their nature.

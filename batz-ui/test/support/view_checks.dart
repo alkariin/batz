@@ -82,8 +82,10 @@ void checkViews(Ledger ledger, {required String reason}) {
     );
     expect((cash.paidForOtherYears, cash.paidInOtherYears), (economic.paidForOtherYears, economic.paidInOtherYears));
     expect(cash.unclassified, economic.unclassified, reason: 'unclassified lines count at their payment date');
-    // The cash-flow total is the sum of the payments of the year, transfers
-    // left out.
+    // The cash-flow result plus « Non classé » is the sum of the payments
+    // of the year, transfers left out: each transaction counts for exactly
+    // its amount, whatever its lines add up to after a merge (step 5.0 of
+    // phase 5).
     final paid = [
       for (final t in ledger.transactions.values)
         if (t.date.year == year && ledger.kindOf(t) != TransactionKind.transfer) t.amount,

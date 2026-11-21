@@ -132,6 +132,106 @@ void main() {
       expect(view.unclassified.total, -5000);
       expect(view.expenses.total, 0);
     });
+
+    test('the merge of the plan: an amount corrected on one device, the same entry attached on another, keeps both '
+        'amounts equal, since attaching writes no unchanged amount', () async {
+      var wallA = 1000, wallB = 1000;
+      final a = await LedgerHarness.open(deviceId: 'aaaaaaaa-0000-4000-8000-000000000000', now: () => wallA);
+      final b = await LedgerHarness.open(deviceId: 'bbbbbbbb-0000-4000-8000-000000000000', now: () => wallB);
+      addTearDown(a.close);
+      addTearDown(b.close);
+      await seedLedger(a);
+      await a.apply(
+        (l) => l.recordEntry('visit', 'visit-line', entry(category: 'food', cents: 30000, date: d(2026, 1, 15))),
+      );
+      await a.apply(
+        (l) => l.recordEntry(
+          'back',
+          'back-line',
+          entry(category: 'food', cents: 12000, direction: Direction.inflow, date: d(2026, 5, 20)),
+        ),
+      );
+      await b.journal.merge(await a.journal.entries());
+
+      // Offline: A corrects the amount of the refund; B, later, attaches it.
+      wallA = 5000;
+      await a.apply(
+        (l) => l.updateEntry(
+          'back',
+          entry(category: 'food', cents: 15000, direction: Direction.inflow, date: d(2026, 5, 20)),
+        ),
+      );
+      wallB = 7000;
+      await b.apply((l) => l.attachRefund('back', 'visit-line'));
+      final written = (await b.journal.entries()).where((e) => e.hlc.millis == 7000).map((e) => e.field).toSet();
+      expect(written, {LineFields.refundedLineId}, reason: 'the amount B knows is the one it would write');
+      final fromA = await a.journal.entries(), fromB = await b.journal.entries();
+      await a.journal.merge(fromB);
+      await b.journal.merge(fromA);
+      for (final device in [a, b]) {
+        final ledger = await device.ledger();
+        final t = ledger.transactions['back']!;
+        expect((t.amount, t.line!.amount, t.line!.refundedLineId), (15000, 15000, 'visit-line'));
+        expect(ledger.views.of(2026, ViewKind.cash)!.unclassified.total, 0);
+      }
+    });
+
+    test('a line whose amount differs from the amount of its transaction, as a device of another version or one already holding '
+        'such a gap can write it: the transaction counts for exactly its amount, the difference is unclassified at '
+        'its payment date, until it is saved again (step 5.0)', () async {
+      await h.apply(
+        (l) => l.recordEntry('visit', 'visit-line', entry(category: 'food', cents: 30000, date: d(2026, 1, 15))),
+      );
+      await h.apply(
+        (l) => l.recordEntry(
+          'back',
+          'back-line',
+          EntryDraft(
+            accountId: 'cash',
+            date: d(2026, 5, 20),
+            cents: 15000,
+            direction: Direction.inflow,
+            categoryId: null,
+            refundedLineId: 'visit-line',
+          ),
+        ),
+      );
+      // Another device wrote the line with the amount it knew.
+      await h.repository.write(Modification.set(LineFields.entity, 'back-line', {LineFields.amount: 12000}));
+
+      final merged = await h.ledger();
+      final t = merged.transactions['back']!;
+      expect((t.amount, t.line!.amount, t.line!.refundedLineId), (15000, 12000, 'visit-line'));
+      for (final kind in ViewKind.values) {
+        final view = merged.views.of(2026, kind)!;
+        expect(view.unclassified.months, [0, 0, 0, 0, 3000, 0, 0, 0, 0, 0, 0, 0], reason: kind.name);
+        expect(view.expenses.total, -30000 + 12000, reason: kind.name);
+        expect(view.savings.total + view.unclassified.total, -30000 + 15000, reason: 'the payments of the year');
+        expect(
+          [for (final c in merged.views.composition(2026, kind, const UnclassifiedRow())) (c.transaction.id, c.cents)],
+          [('back', 3000)],
+        );
+      }
+
+      // Saved again as it stands: both amounts are written, nothing is left
+      // unclassified.
+      final again = await h.apply(
+        (l) => l.updateEntry(
+          'back',
+          EntryDraft(
+            accountId: t.accountId,
+            date: t.date,
+            cents: t.amount,
+            direction: Direction.inflow,
+            categoryId: t.line!.categoryId,
+            refundedLineId: t.line!.refundedLineId,
+          ),
+        ),
+      );
+      expect(again.transactions['back']!.line!.amount, 15000);
+      expect(again.views.of(2026, ViewKind.cash)!.unclassified.total, 0);
+      expect(again.views.of(2026, ViewKind.economic)!.expenses.total, -30000 + 15000);
+    });
   });
 
   group('between years (principle 3)', () {
@@ -276,8 +376,9 @@ void main() {
     },
   );
 
-  test('on random data: twelve months make each total, the cash-flow total is the sum of the payments, the identity '
-      'of the offsets holds, and over all years both views total the same', () {
+  test('on random data: twelve months make each total, the cash-flow result plus « Non classé » is the sum of the '
+      'payments outside transfers, merge gaps included, the identity of the offsets holds, and over all years both '
+      'views total the same', () {
     for (var seed = 1; seed <= 20; seed++) {
       final ledger = randomLedger(Random(seed));
       checkViews(ledger, reason: 'seed $seed');
@@ -297,6 +398,11 @@ void main() {
       );
       expect(views.pendingShares, isNotEmpty, reason: 'seed $seed');
       expect(ledger.brokenRefunds, isNotEmpty, reason: 'seed $seed');
+      expect(
+        ledger.transactions.values.where((t) => t.lines.isNotEmpty && t.lines.single.amount != t.amount),
+        isNotEmpty,
+        reason: 'seed $seed: merge gaps, which checkViews counts in the payments of their year',
+      );
       for (final year in randomYears) {
         final view = views.of(year, ViewKind.economic)!;
         expect(view.redistributions, hasLength(year == 2026 ? 2 : 3), reason: 'seed $seed, $year');

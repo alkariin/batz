@@ -8,12 +8,15 @@ import 'package:batz/data/sync/sync_store.dart';
 import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/proposal.dart';
+import 'package:batz/domain/ledger/redistribution.dart';
+import 'package:batz/domain/ledger/refund.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/period_model.dart';
+import 'package:batz/domain/views/share_operations.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Databases written by versions 0.1.0, 0.2.0, 0.3.0 and 0.4.1 (see
+/// Databases written by versions 0.1.0, 0.2.0, 0.3.0, 0.4.1 and 0.5.0 (see
 /// test/fixtures/README.md).
 const _fixture = 'test/fixtures/v0.1.0/batz.db';
 const _fixtureDeviceId = 'a0000000-0000-4000-8000-000000000001';
@@ -25,6 +28,8 @@ const _fixture030Other = 'b0000000-0000-4000-8000-000000000004';
 const _fixture030Pairing = 'c0000000-0000-4000-8000-000000000005';
 const _fixture041 = 'test/fixtures/v0.4.1/batz.db';
 const _fixture041DeviceId = 'a0000000-0000-4000-8000-000000000041';
+const _fixture050 = 'test/fixtures/v0.5.0/batz.db';
+const _fixture050DeviceId = 'a0000000-0000-4000-8000-000000000050';
 
 void main() {
   late Directory dir;
@@ -33,6 +38,52 @@ void main() {
     File(_fixture).copySync('${dir.path}/$databaseFileName');
   });
   tearDown(() => dir.deleteSync(recursive: true));
+
+  test('a database of version 0.5.0 opens with this version: redistribution rules, attached refund and answer to a '
+      'share kept', () async {
+    File(_fixture050).copySync('${dir.path}/$databaseFileName');
+    final db = await openLocalDatabase(directory: dir, secrets: MemorySecretStore(), encrypt: false);
+    final journal = await Journal.open(db);
+    expect(journal.deviceId, _fixture050DeviceId);
+    expect(journal.derivedTablesRebuilt, isFalse, reason: 'the derived tables of 0.5.0 are unchanged');
+    final entries = await journal.entries();
+    expect(entries, hasLength(139));
+
+    final repository = LedgerRepository(db, journal);
+    final ledger = await repository.load();
+    expect(ledger.sortedAccounts.map((a) => a.name), ['Compte privé', 'Espèces', 'Épargne']);
+    expect(ledger.accounts['acc-bank']!.importFormat, ImportFormat.postfinance);
+    expect(ledger.trees.keys.toList()..sort(), [2026, 2027]);
+    final food2027 = copiedCategoryId('cat-food', 2027);
+    expect(ledger.categories[food2027]!.name, 'Alimentation');
+
+    // The redistribution rule and its copy.
+    expect(ledger.redistributionsOf(2026).single.id, 'red-food');
+    final copy = ledger.redistributionsOf(2027).single;
+    expect(copy.id, copiedRedistributionId('red-food', 2027));
+    expect((copy.sourceId, copy.targetId, copy.basisPoints), (food2027, copiedCategoryId('cat-cleaning', 2027), 1000));
+
+    // The refund attached to its expense.
+    final visit = ledger.transactions['tx-visit']!;
+    expect(ledger.refundsOf(visit).map((t) => t.id), ['tx-back']);
+    expect(ledger.netCostOf(visit), -30000 + 12000);
+    expect(ledger.brokenRefunds, isEmpty);
+
+    // The answer given for the share of 2027.
+    expect(ledger.views.answerOf('tx-market-line', 2027)!.categoryId, food2027);
+    expect(ledger.pendingShareCount, 0);
+    final economic = ledger.views.of(2026, ViewKind.economic)!;
+    expect(economic.redistributions.single.moved.month(1), -(10000 - 4000) ~/ 10);
+    expect(ledger.views.of(2027, ViewKind.economic)!.totalOf(food2027), -60000);
+    expect(ledger.transactions['tx-saving']!.counterpartAccountId, 'acc-savings');
+
+    // The new version writes after the latest entry of 0.5.0.
+    final before = entries.last.hlc;
+    final hlc = await journal.write(ledger.detachRefund('tx-back'));
+    expect(hlc! > before, isTrue);
+    expect((await repository.load()).refundsOf(visit), isEmpty);
+    await db.close();
+  });
 
   test('a database of version 0.4.1 opens with this version: statement, rules, validated lines and lines to '
       'validate kept', () async {

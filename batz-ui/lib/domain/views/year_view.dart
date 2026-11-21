@@ -181,8 +181,9 @@ class YearView {
   /// income or the expenses.
   final Map<CategoryNature, MonthlyAmounts> toClassify;
 
-  /// « Non classé »: lines without a usable category, at their payment date
-  /// in both views, outside income and expenses.
+  /// « Non classé »: lines without a usable category, and what a merge left
+  /// between a transaction's amount and its lines, at their payment date in
+  /// both views, outside income and expenses.
   final MonthlyAmounts unclassified;
 
   /// Income: the income groups and « À classer » of their nature.
@@ -437,7 +438,9 @@ class YearViews {
         add(t, Ledger.fallbackLineId(t.id), null, t.amount, t.date, t.date);
         continue;
       }
+      var lines = 0;
       for (final line in t.lines) {
+        lines += line.amount;
         // A refund attached to a validated expense follows it: category and
         // period (principle 5).
         if (ledger.refundedExpenseOf(t, line) case final expense?) {
@@ -447,6 +450,12 @@ class YearViews {
         }
         add(t, line.id, line.categoryId, line.amount, line.periodStart, line.periodEnd);
       }
+      // A transaction counts for exactly its amount (step 5.0 of phase 5).
+      // Only a merge can leave its lines adding up to another amount: the
+      // amount corrected on one device, the line rewritten with the old one
+      // on another. The difference is « Non classé », where it shows; saving
+      // the transaction again writes both amounts.
+      if (lines != t.amount) add(t, Ledger.fallbackLineId(t.id), null, t.amount - lines, t.date, t.date);
     }
     return flows;
   }

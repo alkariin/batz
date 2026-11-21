@@ -30,7 +30,9 @@ const randomYears = [2026, 2027, 2028, 2029];
 ///   cannot apply;
 /// - refunds attached to an expense of either year, one link in five broken;
 /// - answers for the shares of 2026 lines in 2027 and later years, some
-///   given for another category of origin.
+///   given for another category of origin;
+/// - lines whose amount differs from their transaction's, as a merge can
+///   leave them.
 Ledger randomLedger(Random r, {int transactions = 300}) {
   final categories = <Category>[];
   void add(String id, int year, String name, String? parent, {CategoryNature? nature, int position = 0}) =>
@@ -159,12 +161,15 @@ Ledger randomLedger(Random r, {int transactions = 300}) {
       if (end.isAfter(last)) end = last;
     }
     list.add(LedgerTransaction(id: id, accountId: 'cash', date: date, amount: amount));
+    // One line in fifteen was written by another device with another
+    // amount than the transaction's (step 5.0 of phase 5).
+    final gap = r.nextInt(15) == 0 ? (amount > 0 ? 1 : -1) * (1 + r.nextInt(500)) : 0;
     lines.add(
       TransactionLine(
         id: '$id-l',
         transactionId: id,
         categoryId: category.id,
-        amount: amount,
+        amount: amount + gap,
         periodStart: start,
         periodEnd: end,
       ),

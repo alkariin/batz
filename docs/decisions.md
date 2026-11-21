@@ -1357,3 +1357,45 @@ use case and over HTTP. An app 0.5.0 still works with the server 0.4.0 of
 the NAS until it is upgraded. The rules of the annual view are described in
 `docs/year-view.md`; the architecture, the API, the deployment (with the
 upgrade to 0.5.0) and the README follow.
+
+## 2026-11-21 — Phase 5 decisions taken during development
+
+Functional choices H1 to H8 are in `docs/plan/phase-5.md`. The decisions below
+were taken while implementing it.
+
+### 5.0 A transaction counts for exactly its amount
+
+**Decision.** In the annual view, a validated transaction outside transfers
+whose lines do not add up to its amount gets one more flow: the difference,
+unclassified, at its payment date, in both views. It shows in « Non classé »
+and in its composition, under the transaction; saving the transaction again
+writes both amounts and makes it disappear. For every year, the cash-flow
+result plus « Non classé » is therefore the sum of the payments outside
+transfers, which the balances of phase 5 will count.
+
+**What the merge of the plan really does.** The plan's example (an amount
+corrected on one device, the same entry attached to an expense on another)
+leaves no gap: since 2.0, a modification writes only the fields whose value
+changes, and attaching writes the line's amount only when it differs from
+the transaction's on that device. The operations of the app always write
+both amounts together, so two devices that start consistent stay
+consistent. A gap needs a device that already holds one, or a version that
+writes otherwise; the view copes with it anyway (principle 6).
+
+**Evidence.** `test/domain/views/year_view_test.dart`: the merge of the plan
+on two devices writes only the link and keeps both amounts equal; a line
+amount written apart is counted as above, then saved again. The random
+ledger of the view tests now holds such gaps (one line in fifteen), and
+`checkViews` checks, year by year, cash-flow result plus « Non classé »
+against the payments outside transfers.
+
+### 5.0 Database of version 0.5.0
+
+`batz-ui/test/fixtures/v0.5.0/batz.db` was written by version 0.5.0 (commit
+`ce5e4b2`) through its own operations, with a fixed clock, in a scratch
+worktree: three accounts (one detailed), the trees 2026 and 2027 (« Nourriture »
+renamed in 2027), a redistribution rule and its copy, a refund attached to an
+expense over three months, a payment over two years whose share of 2027 is
+answered, and a transfer. `test/data/upgrade_test.dart` opens it with the
+current version, checks each of these records and the views they give, then
+writes after its latest entry.
