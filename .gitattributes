@@ -1,0 +1,3 @@
+# The expected files of the export are compared byte for byte: keep their
+# CR LF line endings and byte order mark whatever the checkout settings.
+batz-ui/test/fixtures/export/*.csv -text

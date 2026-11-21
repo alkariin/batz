@@ -4,6 +4,7 @@ import 'package:batz/data/ledger/ledger_repository.dart';
 import 'package:batz/data/local/database.dart';
 import 'package:batz/data/local/journal.dart';
 import 'package:batz/domain/calendar_date.dart';
+import 'package:batz/domain/export/export_archive.dart';
 import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/refund.dart';
@@ -16,6 +17,7 @@ import 'package:batz/domain/modules/vacations.dart';
 import 'package:batz/domain/views/share_operations.dart';
 import 'package:batz/domain/views/wealth.dart';
 import 'package:batz/domain/views/year_view.dart';
+import 'package:batz/version.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,7 +42,8 @@ import '../support/machine_lock.dart';
 void main() {
   test('with 10 000 transactions over five years, 200 rules, 12 accounts, 100 balances, 200 debts and the data of '
       'the modules, the ledger reloads after a write in less than 300 ms, and both views of a year, the « Fortune » '
-      'screen, each screen of a module and the flow diagram are computed in less than 100 ms', () async {
+      'screen, each screen of a module and the flow diagram are computed in less than 100 ms, and the export is made in '
+      'less than 2 seconds', () async {
     await MachineLock.exclusive(() async {
       final dir = Directory.systemTemp.createTempSync('batz-perf');
       addTearDown(() => dir.deleteSync(recursive: true));
@@ -167,12 +170,26 @@ void main() {
       // ignore: avoid_print
       print('modules: $moduleTimes ms');
 
+      // The export, its seventeen files and its ZIP, on a ledger just loaded
+      // (step 7.2 of phase 7).
+      final exports = <int>[];
+      for (var run = 0; run < 10; run++) {
+        final fresh = await repository.load();
+        final watch = Stopwatch()..start();
+        final archive = buildExportArchive(fresh, date: _today, appVersion: appVersion);
+        exports.add(watch.elapsedMilliseconds);
+        expect((archive.csvFiles, archive.transactions), (17, fresh.transactions.length));
+      }
+      // ignore: avoid_print
+      print('export: $exports ms');
+
       expect(reloads, everyElement(lessThan(300)), reason: 'every reload after a write');
       expect(computations, everyElement(lessThan(100)), reason: 'both views of a year, every time');
       expect(screens, everyElement(lessThan(100)), reason: 'the « Fortune » screen, every time');
       for (final MapEntry(key: name, value: times) in moduleTimes.entries) {
         expect(times, everyElement(lessThan(100)), reason: 'the screen of $name, every time');
       }
+      expect(exports, everyElement(lessThan(2000)), reason: 'the export, every time');
     });
   }, timeout: const Timeout(Duration(minutes: 3)));
 }

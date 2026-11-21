@@ -2568,4 +2568,54 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get subscriptionInvalid => 'Valeur invalide : vérifiez le montant et les dates.';
+
+  @override
+  String get exportMenu => 'Exporter les données';
+
+  @override
+  String get exportMenuHint => 'Un fichier ZIP de fichiers CSV, pour un tableur';
+
+  @override
+  String get exportTitle => 'Exporter les données';
+
+  @override
+  String get exportContents =>
+      'L\'export enregistre tout ce qui a été saisi ou importé sur cet appareil, dans son état du jour : comptes, soldes déclarés, relevés, catégories, règles, transactions, dettes et saisies des modules. Un fichier CSV par sujet, dans un fichier ZIP, avec un LISEZMOI.txt qui explique le format.';
+
+  @override
+  String get exportNotIncluded =>
+      'Ce que l\'app calcule (vue annuelle, fortune, diagramme) n\'est pas exporté, ni les PDF des relevés, qui restent sur le serveur.';
+
+  @override
+  String get exportNotEncrypted =>
+      'Le fichier n\'est pas chiffré : quiconque l\'ouvre lit vos données. Gardez-le en lieu sûr.';
+
+  @override
+  String get exportOffline => 'L\'export ne passe pas par le serveur et ne modifie rien.';
+
+  @override
+  String get exportButton => 'Exporter';
+
+  @override
+  String get exportWorking => 'Préparation de l\'export…';
+
+  @override
+  String exportSaved(int files, int transactions) {
+    String _temp0 = intl.Intl.pluralLogic(
+      transactions,
+      locale: localeName,
+      other: '$transactions transactions',
+      one: 'une transaction',
+      zero: 'aucune transaction',
+    );
+    return 'Export enregistré : $files fichiers CSV et LISEZMOI.txt, $_temp0.';
+  }
+
+  @override
+  String get exportCancelled => 'Export annulé : rien n\'a été enregistré.';
+
+  @override
+  String exportFailed(String error) {
+    return 'L\'export a échoué : $error';
+  }
 }

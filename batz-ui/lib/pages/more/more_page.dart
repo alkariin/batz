@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../l10n/app_localizations.dart';
 import '../accounts/accounts_page.dart';
 import '../categories/categories_page.dart';
+import '../export/export_page.dart';
 import '../modules/electricity_page.dart';
 import '../modules/salary_page.dart';
 import '../modules/subscriptions_page.dart';
@@ -95,6 +96,14 @@ class MorePage extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () =>
                 Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const RedistributionPage())),
+          ),
+          ListTile(
+            key: const Key('moreExport'),
+            leading: const Icon(Icons.file_download_outlined),
+            title: Text(l.exportMenu),
+            subtitle: Text(l.exportMenuHint),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ExportPage())),
           ),
           ListTile(
             leading: const Icon(Icons.dns_outlined),

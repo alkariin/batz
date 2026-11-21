@@ -4289,6 +4289,78 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Valeur invalide : vérifiez le montant et les dates.'**
   String get subscriptionInvalid;
+
+  /// No description provided for @exportMenu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exporter les données'**
+  String get exportMenu;
+
+  /// No description provided for @exportMenuHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un fichier ZIP de fichiers CSV, pour un tableur'**
+  String get exportMenuHint;
+
+  /// No description provided for @exportTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exporter les données'**
+  String get exportTitle;
+
+  /// No description provided for @exportContents.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'export enregistre tout ce qui a été saisi ou importé sur cet appareil, dans son état du jour : comptes, soldes déclarés, relevés, catégories, règles, transactions, dettes et saisies des modules. Un fichier CSV par sujet, dans un fichier ZIP, avec un LISEZMOI.txt qui explique le format.'**
+  String get exportContents;
+
+  /// No description provided for @exportNotIncluded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que l\'app calcule (vue annuelle, fortune, diagramme) n\'est pas exporté, ni les PDF des relevés, qui restent sur le serveur.'**
+  String get exportNotIncluded;
+
+  /// No description provided for @exportNotEncrypted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le fichier n\'est pas chiffré : quiconque l\'ouvre lit vos données. Gardez-le en lieu sûr.'**
+  String get exportNotEncrypted;
+
+  /// No description provided for @exportOffline.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'export ne passe pas par le serveur et ne modifie rien.'**
+  String get exportOffline;
+
+  /// No description provided for @exportButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exporter'**
+  String get exportButton;
+
+  /// No description provided for @exportWorking.
+  ///
+  /// In fr, this message translates to:
+  /// **'Préparation de l\'export…'**
+  String get exportWorking;
+
+  /// No description provided for @exportSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Export enregistré : {files} fichiers CSV et LISEZMOI.txt, {transactions, plural, =0{aucune transaction} =1{une transaction} other{{transactions} transactions}}.'**
+  String exportSaved(int files, int transactions);
+
+  /// No description provided for @exportCancelled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Export annulé : rien n\'a été enregistré.'**
+  String get exportCancelled;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'export a échoué : {error}'**
+  String exportFailed(String error);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -2202,3 +2202,53 @@ table not deleted is found in its file with each field written as expected,
 computed apart from the code of the export; no deleted record and no
 unknown identifier is found). The random operations of the convergence test
 moved to `test/support/random_operations.dart` to serve both.
+
+### 7.2 The ZIP and the export screen
+
+**Decisions.**
+
+- `buildExportArchive` (pure Dart) builds the ZIP in memory with `archive`:
+  the seventeen CSV files in the order of the plan, then `LISEZMOI.txt`
+  (UTF-8 with a byte order mark and CR LF, so that the Notepad of Windows
+  reads it): the date of the export, the version of the app, the number of
+  transactions, each file with its number of rows, what is not exported,
+  the conventions of the format and how to open a file in Excel. Its name
+  is `batz-export-AAAA-MM-JJ.zip`, from the day of the device
+  (`AppServices.today`). The entries carry the time they were built; only
+  the CSV files are expected to be the same on two devices.
+- `FileAccess.saveZip` hands the bytes to the save dialog of `file_picker`
+  (`application/zip`), as the PDF of a statement is saved since phase 3: the
+  system document picker on Android, the XDG portal on Ubuntu, the native
+  dialog on Windows. A cancelled dialog writes nothing, and the app keeps no
+  copy of the export anywhere.
+- « Plus › Réglages › Exporter les données » (`ExportPage`) says what the
+  export holds and leaves out, that the file is not encrypted (in a card of
+  the error colour), and that it needs no server and changes nothing; after
+  the dialog it says « Export enregistré : 17 fichiers CSV et LISEZMOI.txt,
+  N transactions. », or that the export was cancelled and nothing saved.
+  The files are built on the main isolate, after a frame that shows the
+  progress indicator: under 2 seconds with 10 000 transactions.
+- The expected CSV files are marked `-text` in `.gitattributes`, so that no
+  checkout changes their line endings.
+
+**Evidence.** `test/domain/export/export_archive_test.dart` (the eighteen
+entries in order, each CSV identical to its file, read back with checksums
+by `archive` and by `unzip -t` and `unzip -Z1`; `LISEZMOI.txt` with its date,
+version, counts and conventions); `test/pages/export/export_page_test.dart`
+(from « Plus » on a phone: the texts, a save of the ZIP of the day with its
+counts on the screen and a bank-like text `=SOMME(A1)` written `'=SOMME(A1)`,
+then a cancellation that saves nothing; the journal unchanged by both);
+`test/e2e/export_e2e_test.dart` (two devices entering 120 random operations
+offline and exchanging through a real batz-web produce the same seventeen
+CSV files byte for byte; the export leaves the journal as it was and the
+next exchange sends nothing; with the server stopped, the export of the
+other device is the same); the convergence test now also compares the CSV
+files of its four devices; `test/data/performance_test.dart` measures the
+export on the ledger of 10 000 transactions and the data of phase 6.
+
+**Measure** (2026-11-21, development machine, in the full suite, ten runs):
+the export of that ledger, its seventeen files and the ZIP, 312 to 372 ms,
+below the 2 seconds of the plan; the reload after a write 87 to 116 ms. The
+test fails if any run exceeds its limit. A first measure taken while an
+Android build was still running gave three to five times as much: the
+performance test is only meaningful on a quiet machine, which it waits for.

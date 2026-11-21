@@ -5,6 +5,7 @@
 import 'dart:math';
 
 import 'package:batz/data/server/server_client.dart';
+import 'package:batz/domain/export/ledger_export.dart';
 import 'package:batz/domain/ledger/ledger_exception.dart';
 import 'package:batz/domain/modules/taxes.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -86,6 +87,15 @@ void main() {
       final reference = await devices.first.state();
       for (final d in devices.skip(1)) {
         expect(await d.state(), reference, reason: '${d.name}, seed $seed');
+      }
+      // The same data give the same CSV files, byte for byte (principle 3
+      // of phase 7).
+      Future<Map<String, List<int>>> csv(SimDevice d) async => {
+        for (final f in exportFiles(await d.ledger.ledger())) f.name: f.bytes,
+      };
+      final files = await csv(devices.first);
+      for (final d in devices.skip(1)) {
+        expect(await csv(d), files, reason: '${d.name}, seed $seed');
       }
       final ledger = await devices.first.ledger.ledger();
       expect(applied, greaterThan(120), reason: 'refused $refused');

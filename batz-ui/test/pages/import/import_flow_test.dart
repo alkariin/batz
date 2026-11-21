@@ -68,6 +68,12 @@ class FakeFiles implements FileAccess {
     saved[fileName] = bytes;
     return true;
   }
+
+  @override
+  Future<bool> saveZip(String fileName, Uint8List bytes) async {
+    saved[fileName] = bytes;
+    return true;
+  }
 }
 
 void main() {

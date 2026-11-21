@@ -18,6 +18,10 @@ abstract interface class FileAccess {
   /// Lets the user save [bytes] as a PDF named [fileName]; false when
   /// cancelled.
   Future<bool> savePdf(String fileName, Uint8List bytes);
+
+  /// Lets the user save [bytes] as a ZIP named [fileName] (an export);
+  /// false when cancelled, and then nothing is written.
+  Future<bool> saveZip(String fileName, Uint8List bytes);
 }
 
 /// [FileAccess] through `file_picker` (docs/decisions.md, step 3.0): the
@@ -34,4 +38,8 @@ class SystemFileAccess implements FileAccess {
   @override
   Future<bool> savePdf(String fileName, Uint8List bytes) async =>
       await FilePicker.saveFile(fileName: fileName, bytes: bytes, mimeType: 'application/pdf') != null;
+
+  @override
+  Future<bool> saveZip(String fileName, Uint8List bytes) async =>
+      await FilePicker.saveFile(fileName: fileName, bytes: bytes, mimeType: 'application/zip') != null;
 }
