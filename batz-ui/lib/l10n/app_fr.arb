@@ -296,6 +296,30 @@
       }
     }
   },
+  "errorUnknownRedistribution": "Cette règle de redistribution n'existe plus.",
+  "errorRedistributionSameCategory": "La source et la cible doivent être deux catégories différentes.",
+  "errorRedistributionNotLeaf": "La source et la cible doivent être des catégories sans sous-catégorie de l'année.",
+  "errorRedistributionNatureMismatch": "La source et la cible doivent être deux dépenses ou deux revenus.",
+  "errorRedistributionPercentInvalid": "Indiquez un pourcentage entre 0.01 et 100, avec deux décimales au plus.",
+  "errorRedistributionDuplicate": "Une règle va déjà de cette source vers cette cible : modifiez-la.",
+  "errorRedistributionTargetIsSource": "Cette cible est déjà la source d'une autre règle : une cible ne peut pas être une source.",
+  "errorRedistributionSourceIsTarget": "Cette source est déjà la cible d'une autre règle : une cible ne peut pas être une source.",
+  "errorRedistributionOverHundred": "Les règles de cette source totaliseraient {total} : 100 % au plus.",
+  "@errorRedistributionOverHundred": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "errorCategoryUsedByRedistributions": "Suppression refusée : {count, plural, =1{une règle de redistribution utilise} other{{count} règles de redistribution utilisent}} cette catégorie.",
+  "@errorCategoryUsedByRedistributions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "edit": "Modifier",
   "transactionsEmpty": "Aucune transaction.",
   "transactionsAllAccounts": "Tous les comptes",

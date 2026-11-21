@@ -3,6 +3,7 @@ import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/journal/journal_entry.dart';
 import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/category.dart';
+import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/statement.dart';
 import 'package:batz/domain/ledger/transaction.dart';
@@ -14,7 +15,8 @@ import 'package:batz/domain/period_model.dart';
 /// - Accounts: `bank` (detailed), `cash`, `savings`.
 /// - One tree per year, each the copy of the year before: « Revenus » with
 ///   two categories, « Dépenses » with 8 groups of 5 categories.
-/// - 40 mapping rules per year, 200 in all, copied with the trees.
+/// - 40 mapping rules per year, 200 in all, and 4 redistribution rules per
+///   year, copied with the trees.
 /// - 60 monthly statements of 160 lines (9 600 imported transactions): a
 ///   salary and 159 purchases from 60 shops, 39 of which have a rule. Every
 ///   line is validated except those of the last statement, which are to
@@ -101,6 +103,18 @@ class LargeLedger {
           CategoryFields.parentId: parent == null ? null : categoryIn(parent, year),
           CategoryFields.nature: nature?.name,
           CategoryFields.position: position,
+        });
+      }
+      for (var g = 0; g < 4; g++) {
+        var ruleId = 'redistribution-$g';
+        for (var y = firstYear + 1; y <= year; y++) {
+          ruleId = copiedRedistributionId(ruleId, y);
+        }
+        set(RedistributionFields.entity, ruleId, {
+          RedistributionFields.year: year,
+          RedistributionFields.sourceCategoryId: categoryIn(leaf(g, 0), year),
+          RedistributionFields.targetCategoryId: categoryIn(leaf(g, 1), year),
+          RedistributionFields.basisPoints: 1000 * (g + 1),
         });
       }
       for (final (id, keywords, target) in rules) {

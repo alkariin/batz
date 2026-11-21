@@ -43,6 +43,18 @@ enum LedgerError {
   ruleTargetRequired,
   rulePeriodInvalid,
   categoryUsedByRules,
+
+  // Redistribution rules (phase 4).
+  unknownRedistribution,
+  redistributionSameCategory,
+  redistributionNotLeaf,
+  redistributionNatureMismatch,
+  redistributionPercentInvalid,
+  redistributionDuplicate,
+  redistributionTargetIsSource,
+  redistributionSourceIsTarget,
+  redistributionOverHundred,
+  categoryUsedByRedistributions,
 }
 
 /// A business rule refuses the operation; nothing was written.

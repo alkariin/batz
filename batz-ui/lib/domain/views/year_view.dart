@@ -19,6 +19,7 @@ import '../allocation.dart';
 import '../calendar_date.dart';
 import '../ledger/category.dart';
 import '../ledger/ledger.dart';
+import '../ledger/redistribution.dart';
 import '../ledger/transaction.dart';
 
 /// The two views of a year (specification, 4.2).
@@ -94,6 +95,20 @@ class UnclassifiedRow extends ViewRow {
   List<Object?> get props => [];
 }
 
+/// What a redistribution rule moves in a view (principle 4): month by
+/// month, its percentage of what the source shows before any
+/// redistribution, rounded to the cent, leaves the source and joins the
+/// target, on a line of its own on each side.
+class RedistributionLine {
+  const RedistributionLine(this.rule, this.moved);
+
+  final RedistributionRule rule;
+
+  /// The amounts moved, signed as they add to the target: negative for
+  /// expenses. Under the source the line shows their opposite.
+  final MonthlyAmounts moved;
+}
+
 /// A transaction and the part of it a row counts.
 class Contribution extends Equatable {
   const Contribution(this.transaction, this.cents);
@@ -120,8 +135,12 @@ class YearView {
     required this.paidForOtherYears,
     required this.paidInOtherYears,
     required this.linesToValidate,
+    required List<RedistributionLine> redistributions,
+    required List<InapplicableRedistribution> inapplicable,
   }) : categories = Map.unmodifiable(categories),
-       toClassify = Map.unmodifiable(toClassify);
+       toClassify = Map.unmodifiable(toClassify),
+       redistributions = List.unmodifiable(redistributions),
+       inapplicable = List.unmodifiable(inapplicable);
 
   final int year;
   final ViewKind kind;
@@ -134,10 +153,27 @@ class YearView {
   final bool isPreview;
 
   /// The amounts of each category of [tree]: for a category without
-  /// children, what is classified in it; for a group, the sum of its
-  /// children, plus what was classified in it directly before it became a
-  /// group (only a merge of two devices can do that).
+  /// children, what is classified in it, before redistribution; for a
+  /// group, the sum of its children and of their redistribution lines, plus
+  /// what was classified in it directly before it became a group (only a
+  /// merge of two devices can do that).
   final Map<String, MonthlyAmounts> categories;
+
+  /// The redistribution rules that apply in the year, with what they move,
+  /// by source then target name; their lines show under the source and
+  /// under the target (decision H1: in both views).
+  final List<RedistributionLine> redistributions;
+
+  /// The rules of the year that do not apply, and why (principle 6).
+  final List<InapplicableRedistribution> inapplicable;
+
+  /// What the redistribution lines of [categoryId] add to it: what joins it
+  /// as a target minus what leaves it as a source.
+  MonthlyAmounts redistributedOf(String categoryId) => redistributions.fold(MonthlyAmounts.zero, (sum, line) {
+    if (line.rule.targetId == categoryId) return sum + line.moved;
+    if (line.rule.sourceId == categoryId) return sum + -line.moved;
+    return sum;
+  });
 
   /// « À classer », by nature: amounts that fell in this year from a
   /// category of another year without a counterpart here. They count in the
@@ -410,10 +446,33 @@ class YearViews {
       if (!flow.transaction.isValidated) toValidate.add(flow.transaction.id);
     });
 
-    // A group adds up everything below it.
+    // Redistribution (principle 4): from what each source shows before any
+    // redistribution, month by month.
+    final rules = ledger.redistributionsOf(year);
+    final problems = redistributionProblems(rules, tree);
+    final lines = <RedistributionLine>[];
+    final adjust = <String, List<int>>{};
+    for (final rule in rules) {
+      if (problems[rule.id] != null) continue;
+      final moved = [for (final cents in own[rule.sourceId]!) redistributedCents(cents, rule.basisPoints)];
+      lines.add(RedistributionLine(rule, MonthlyAmounts(moved)));
+      final source = adjust.putIfAbsent(rule.sourceId, () => List.filled(12, 0));
+      final target = adjust.putIfAbsent(rule.targetId, () => List.filled(12, 0));
+      for (var i = 0; i < 12; i++) {
+        source[i] -= moved[i];
+        target[i] += moved[i];
+      }
+    }
+
+    // A group adds up everything below it, redistribution lines included.
     final full = <String, List<int>>{};
     List<int> sum(String id) => full.putIfAbsent(id, () {
       final total = [...own[id]!];
+      if (adjust[id] case final lines?) {
+        for (var i = 0; i < 12; i++) {
+          total[i] += lines[i];
+        }
+      }
       for (final child in tree.childrenOf(id)) {
         final amounts = sum(child.id);
         for (var i = 0; i < 12; i++) {
@@ -422,7 +481,7 @@ class YearViews {
       }
       return total;
     });
-    final categories = {for (final id in tree.byId.keys) id: MonthlyAmounts(sum(id))};
+    final categories = {for (final id in tree.byId.keys) id: MonthlyAmounts(tree.hasChildren(id) ? sum(id) : own[id]!)};
     MonthlyAmounts natureTotal(CategoryNature nature) => [
       for (final root in tree.roots)
         if (root.nature == nature) MonthlyAmounts(sum(root.id)),
@@ -454,6 +513,11 @@ class YearViews {
       paidForOtherYears: paidFor,
       paidInOtherYears: paidIn,
       linesToValidate: toValidate.length,
+      redistributions: lines,
+      inapplicable: [
+        for (final rule in rules)
+          if (problems[rule.id] case final problem?) InapplicableRedistribution(rule, problem),
+      ],
     );
   }
 }

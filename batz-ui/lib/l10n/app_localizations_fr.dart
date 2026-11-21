@@ -487,6 +487,50 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get errorUnknownRedistribution => 'Cette règle de redistribution n\'existe plus.';
+
+  @override
+  String get errorRedistributionSameCategory => 'La source et la cible doivent être deux catégories différentes.';
+
+  @override
+  String get errorRedistributionNotLeaf =>
+      'La source et la cible doivent être des catégories sans sous-catégorie de l\'année.';
+
+  @override
+  String get errorRedistributionNatureMismatch => 'La source et la cible doivent être deux dépenses ou deux revenus.';
+
+  @override
+  String get errorRedistributionPercentInvalid =>
+      'Indiquez un pourcentage entre 0.01 et 100, avec deux décimales au plus.';
+
+  @override
+  String get errorRedistributionDuplicate => 'Une règle va déjà de cette source vers cette cible : modifiez-la.';
+
+  @override
+  String get errorRedistributionTargetIsSource =>
+      'Cette cible est déjà la source d\'une autre règle : une cible ne peut pas être une source.';
+
+  @override
+  String get errorRedistributionSourceIsTarget =>
+      'Cette source est déjà la cible d\'une autre règle : une cible ne peut pas être une source.';
+
+  @override
+  String errorRedistributionOverHundred(String total) {
+    return 'Les règles de cette source totaliseraient $total : 100 % au plus.';
+  }
+
+  @override
+  String errorCategoryUsedByRedistributions(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count règles de redistribution utilisent',
+      one: 'une règle de redistribution utilise',
+    );
+    return 'Suppression refusée : $_temp0 cette catégorie.';
+  }
+
+  @override
   String get edit => 'Modifier';
 
   @override

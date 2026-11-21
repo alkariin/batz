@@ -67,6 +67,16 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.ruleTargetRequired => l.errorRuleTargetRequired,
   LedgerError.rulePeriodInvalid => l.errorRulePeriodInvalid,
   LedgerError.categoryUsedByRules => l.errorCategoryUsedByRules(e.count),
+  LedgerError.unknownRedistribution => l.errorUnknownRedistribution,
+  LedgerError.redistributionSameCategory => l.errorRedistributionSameCategory,
+  LedgerError.redistributionNotLeaf => l.errorRedistributionNotLeaf,
+  LedgerError.redistributionNatureMismatch => l.errorRedistributionNatureMismatch,
+  LedgerError.redistributionPercentInvalid => l.errorRedistributionPercentInvalid,
+  LedgerError.redistributionDuplicate => l.errorRedistributionDuplicate,
+  LedgerError.redistributionTargetIsSource => l.errorRedistributionTargetIsSource,
+  LedgerError.redistributionSourceIsTarget => l.errorRedistributionSourceIsTarget,
+  LedgerError.redistributionOverHundred => l.errorRedistributionOverHundred(formatPercent(e.count)),
+  LedgerError.categoryUsedByRedistributions => l.errorCategoryUsedByRedistributions(e.count),
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {

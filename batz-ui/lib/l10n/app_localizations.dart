@@ -882,6 +882,66 @@ abstract class AppLocalizations {
   /// **'Suppression refusée : {count, plural, =1{une règle vise} other{{count} règles visent}} cette catégorie.'**
   String errorCategoryUsedByRules(int count);
 
+  /// No description provided for @errorUnknownRedistribution.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette règle de redistribution n\'existe plus.'**
+  String get errorUnknownRedistribution;
+
+  /// No description provided for @errorRedistributionSameCategory.
+  ///
+  /// In fr, this message translates to:
+  /// **'La source et la cible doivent être deux catégories différentes.'**
+  String get errorRedistributionSameCategory;
+
+  /// No description provided for @errorRedistributionNotLeaf.
+  ///
+  /// In fr, this message translates to:
+  /// **'La source et la cible doivent être des catégories sans sous-catégorie de l\'année.'**
+  String get errorRedistributionNotLeaf;
+
+  /// No description provided for @errorRedistributionNatureMismatch.
+  ///
+  /// In fr, this message translates to:
+  /// **'La source et la cible doivent être deux dépenses ou deux revenus.'**
+  String get errorRedistributionNatureMismatch;
+
+  /// No description provided for @errorRedistributionPercentInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un pourcentage entre 0.01 et 100, avec deux décimales au plus.'**
+  String get errorRedistributionPercentInvalid;
+
+  /// No description provided for @errorRedistributionDuplicate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une règle va déjà de cette source vers cette cible : modifiez-la.'**
+  String get errorRedistributionDuplicate;
+
+  /// No description provided for @errorRedistributionTargetIsSource.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette cible est déjà la source d\'une autre règle : une cible ne peut pas être une source.'**
+  String get errorRedistributionTargetIsSource;
+
+  /// No description provided for @errorRedistributionSourceIsTarget.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette source est déjà la cible d\'une autre règle : une cible ne peut pas être une source.'**
+  String get errorRedistributionSourceIsTarget;
+
+  /// No description provided for @errorRedistributionOverHundred.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les règles de cette source totaliseraient {total} : 100 % au plus.'**
+  String errorRedistributionOverHundred(String total);
+
+  /// No description provided for @errorCategoryUsedByRedistributions.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suppression refusée : {count, plural, =1{une règle de redistribution utilise} other{{count} règles de redistribution utilisent}} cette catégorie.'**
+  String errorCategoryUsedByRedistributions(int count);
+
   /// No description provided for @edit.
   ///
   /// In fr, this message translates to:

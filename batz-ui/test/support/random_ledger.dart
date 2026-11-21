@@ -4,6 +4,7 @@ import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/ledger.dart';
+import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/domain/period_model.dart';
@@ -21,7 +22,11 @@ const randomYears = [2026, 2027, 2028, 2029];
 ///   between 1.1.2026 and 31.12.2029;
 /// - transfers; validated lines without category or in a category gone;
 /// - imported lines to validate, proposed by rules (some over twelve
-///   months, one as a transfer) or without proposal.
+///   months, one as a transfer) or without proposal;
+/// - redistribution rules: in 2026, 10 % of « Nourriture » to « Charges »
+///   and 25 % of « Salaire » to « Primes », copied in 2027 with 33.33 % of
+///   « Assurance ménage » to « Sorties »; a rule between natures that
+///   cannot apply.
 Ledger randomLedger(Random r, {int transactions = 300}) {
   final categories = <Category>[];
   void add(String id, int year, String name, String? parent, {CategoryNature? nature, int position = 0}) =>
@@ -161,5 +166,31 @@ Ledger randomLedger(Random r, {int transactions = 300}) {
       ),
     );
   }
-  return Ledger(accounts: accounts, categories: categories, transactions: list, lines: lines, rules: rules);
+  RedistributionRule redistribution(String id, int year, String source, String target, int basisPoints) =>
+      RedistributionRule(id: id, year: year, sourceId: source, targetId: target, basisPoints: basisPoints);
+  final redistributions = [
+    redistribution('food-charges', 2026, 'food', 'charges', 1000),
+    redistribution('salary-bonus', 2026, 'salary', 'bonus', 2500),
+    redistribution('mismatch', 2026, 'insurance', 'salary', 500),
+    for (final (id, source, target, bp) in [
+      ('food-charges', 'food', 'charges', 1000),
+      ('salary-bonus', 'salary', 'bonus', 2500),
+    ])
+      redistribution(
+        copiedRedistributionId(id, 2027),
+        2027,
+        copiedCategoryId(source, 2027),
+        copiedCategoryId(target, 2027),
+        bp,
+      ),
+    redistribution('household-leisure', 2027, 'household', copiedCategoryId('leisure', 2027), 3333),
+  ];
+  return Ledger(
+    accounts: accounts,
+    categories: categories,
+    transactions: list,
+    lines: lines,
+    rules: rules,
+    redistributions: redistributions,
+  );
 }

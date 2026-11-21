@@ -11,6 +11,7 @@ import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/ledger_exception.dart';
+import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/transaction.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -32,6 +33,9 @@ Modification? randomOperation(Ledger l, Random r, String id) {
   final categories = l.categories.values.toList();
   final entries = l.transactions.values.where((t) => !t.isTransfer && t.line != null).toList();
   CalendarDate date() => CalendarDate(year, 1 + r.nextInt(12), 1 + r.nextInt(28));
+
+  // The operations of phase 4, now and then.
+  if (r.nextInt(100) < 12) return _phase4Operation(l, r, id, year);
 
   // Weighted: mostly entries and their corrections, like real use.
   final roll = r.nextInt(100);
@@ -127,6 +131,35 @@ Modification? randomOperation(Ledger l, Random r, String id) {
   }
 }
 
+/// Redistribution rules: created, modified or deleted.
+Modification? _phase4Operation(Ledger l, Random r, String id, int year) {
+  final existing = l.redistributionsOf(year).where((rule) => l.redistributions.containsKey(rule.id)).toList();
+  if (existing.isNotEmpty && r.nextInt(3) == 0) {
+    final rule = _pick(r, existing);
+    if (r.nextBool()) return l.deleteRedistribution(rule.id);
+    return l.updateRedistribution(
+      rule.id,
+      RedistributionDraft(
+        year: year,
+        sourceId: rule.sourceId,
+        targetId: rule.targetId,
+        basisPoints: 1 + r.nextInt(6000),
+      ),
+    );
+  }
+  final leaves = l.trees[year]?.assignable ?? const <Category>[];
+  if (leaves.length < 2) return null;
+  return l.createRedistribution(
+    'red-$id',
+    RedistributionDraft(
+      year: year,
+      sourceId: _pick(r, leaves).id,
+      targetId: _pick(r, leaves).id,
+      basisPoints: 1 + r.nextInt(6000),
+    ),
+  );
+}
+
 extension on AccountDraft {
   AccountDraft copyWithArchived(bool archived) =>
       AccountDraft(name: name, type: type, importFormat: importFormat, archived: archived);
@@ -212,7 +245,8 @@ void main() {
       print(
         'seed $seed: $applied operations ($refused refused), $exchanges exchanges ($cuts cut), '
         '${(reference['journal']! as List).length} journal entries, ${ledger.transactions.length} transactions, '
-        '${ledger.categories.length} categories, ${ledger.forest.detached.length} detached',
+        '${ledger.categories.length} categories, ${ledger.forest.detached.length} detached, '
+        '${ledger.redistributions.length} redistribution rules',
       );
       // About ten seconds alone, much more while the other test files run:
       // hundreds of calls with pages of a few entries.

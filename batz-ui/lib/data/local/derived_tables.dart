@@ -1,5 +1,6 @@
 import '../../domain/ledger/account.dart';
 import '../../domain/ledger/category.dart';
+import '../../domain/ledger/redistribution.dart';
 import '../../domain/ledger/rule.dart';
 import '../../domain/ledger/statement.dart';
 import '../../domain/ledger/transaction.dart';
@@ -107,6 +108,7 @@ final List<DerivedTable> appDerivedTables = [
   transactionLinesTable,
   statementsTable,
   rulesTable,
+  redistributionsTable,
 ];
 
 final accountsTable = DerivedTable(
@@ -193,5 +195,16 @@ final rulesTable = DerivedTable(
     RuleFields.targetAccountId: const DerivedColumn.text('target_account_id'),
     RuleFields.periodModel: const DerivedColumn.text('period_model'),
     RuleFields.periodMonths: const DerivedColumn.integer('period_months'),
+  },
+);
+
+final redistributionsTable = DerivedTable(
+  entity: RedistributionFields.entity,
+  table: 'redistributions',
+  columns: {
+    RedistributionFields.year: const DerivedColumn.integer('year'),
+    RedistributionFields.sourceCategoryId: const DerivedColumn.text('source_category_id'),
+    RedistributionFields.targetCategoryId: const DerivedColumn.text('target_category_id'),
+    RedistributionFields.basisPoints: const DerivedColumn.integer('basis_points'),
   },
 );

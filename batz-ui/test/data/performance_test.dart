@@ -70,6 +70,7 @@ void main() {
       computations.add(watch.elapsedMilliseconds);
       expect(cash.savings.total, economic.savings.total + economic.paidForOtherYears - economic.paidInOtherYears);
       expect(economic.paidInOtherYears, isNot(0));
+      expect(economic.redistributions, hasLength(4));
     }
     // ignore: avoid_print
     print('both views of a year: $computations ms');

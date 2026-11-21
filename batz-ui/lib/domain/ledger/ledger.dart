@@ -6,6 +6,7 @@ import 'category.dart';
 import 'issues.dart';
 import 'ledger_exception.dart';
 import 'proposal.dart';
+import 'redistribution.dart';
 import 'rule.dart';
 import 'statement.dart';
 import 'transaction.dart';
@@ -28,7 +29,17 @@ class Ledger {
     Iterable<Statement> statements = const [],
     Iterable<String> deletedStatementIds = const [],
     Iterable<MappingRule> rules = const [],
-  }) : this._(accounts, CategoryForest.build(categories), transactions, lines, statements, deletedStatementIds, rules);
+    Iterable<RedistributionRule> redistributions = const [],
+  }) : this._(
+         accounts,
+         CategoryForest.build(categories),
+         transactions,
+         lines,
+         statements,
+         deletedStatementIds,
+         rules,
+         redistributions,
+       );
 
   Ledger._(
     Iterable<Account> accounts,
@@ -38,12 +49,14 @@ class Ledger {
     Iterable<Statement> statements,
     Iterable<String> deletedStatementIds,
     Iterable<MappingRule> rules,
+    Iterable<RedistributionRule> redistributions,
   ) : accounts = {for (final a in accounts) a.id: a},
       trees = forest.trees,
       transactions = _attach(transactions, lines),
       statements = {for (final s in statements) s.id: s},
       deletedStatementIds = Set.unmodifiable(deletedStatementIds),
-      rules = {for (final r in rules) r.id: r};
+      rules = {for (final r in rules) r.id: r},
+      redistributions = {for (final r in redistributions) r.id: r};
 
   static Map<String, LedgerTransaction> _attach(
     Iterable<LedgerTransaction> transactions,
@@ -76,6 +89,10 @@ class Ledger {
 
   /// The mapping rules of every year, by identifier.
   final Map<String, MappingRule> rules;
+
+  /// The redistribution rules of every year, by identifier (see
+  /// redistribution.dart for their operations).
+  final Map<String, RedistributionRule> redistributions;
 
   /// Every category of every year, by identifier.
   late final Map<String, Category> categories = {for (final tree in trees.values) ...tree.byId};
@@ -196,8 +213,8 @@ class Ledger {
     ]);
   }
 
-  /// Creates the tree of [year]: a copy of the tree of [sourceYearFor] and of
-  /// its mapping rules, or, without one, the two empty groups « Revenus » and
+  /// Creates the tree of [year]: a copy of the tree of [sourceYearFor], of
+  /// its mapping rules and of its redistribution rules, or, without one, the two empty groups « Revenus » and
   /// « Dépenses » (decisions H4 and H6). Copies get computed identifiers
   /// (design rule 4); a copied rule targets the copy of its category.
   Modification createTree(int year) {
@@ -250,6 +267,18 @@ class Ledger {
         RuleFields.periodMonths: rule.periodMonths,
       }.entries) {
         changes.add(FieldChange(RuleFields.entity, copiedRuleId(rule.id, year), field.key, field.value));
+      }
+    }
+    // Redistribution rules follow the copy too, with their categories
+    // transposed (step 4.2).
+    for (final rule in redistributionsOf(year)) {
+      for (final field in {
+        RedistributionFields.year: rule.year,
+        RedistributionFields.sourceCategoryId: rule.sourceId,
+        RedistributionFields.targetCategoryId: rule.targetId,
+        RedistributionFields.basisPoints: rule.basisPoints,
+      }.entries) {
+        changes.add(FieldChange(RedistributionFields.entity, rule.id, field.key, field.value));
       }
     }
     return changes;
@@ -341,7 +370,8 @@ class Ledger {
   }
 
   /// Deletes [id] (decision H5): refused while it has children, or while
-  /// transactions use it, with their number.
+  /// transactions, mapping rules or redistribution rules (decision H2 of
+  /// phase 4) use it, with their number.
   Modification removeCategory(String id) {
     final category = _category(id);
     if (trees[category.year]!.hasChildren(id)) throw const LedgerException(LedgerError.categoryHasChildren);
@@ -349,6 +379,8 @@ class Ledger {
     if (used > 0) throw LedgerException(LedgerError.categoryInUse, count: used);
     final targeting = rules.values.where((r) => r.targetCategoryId == id).length;
     if (targeting > 0) throw LedgerException(LedgerError.categoryUsedByRules, count: targeting);
+    final redistributing = redistributions.values.where((r) => r.sourceId == id || r.targetId == id).length;
+    if (redistributing > 0) throw LedgerException(LedgerError.categoryUsedByRedistributions, count: redistributing);
     return Modification.delete(CategoryFields.entity, id);
   }
 

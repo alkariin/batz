@@ -1092,3 +1092,45 @@ a new rule proposes for the lines left to validate.
 measure of 4.0): both views of a year, on a ledger just loaded, take 9 to
 55 ms over five runs (the first one includes the warm-up). The test fails
 when the best of five exceeds 100 ms.
+
+### 4.2 Redistribution rules
+
+**Decisions.**
+
+- New journal entity `redistribution` (table `redistributions`): year,
+  source category, target category and `basisPoints`, the percentage in
+  hundredths of a percent (1000 is 10 %). A rule needs the four fields to be
+  read; whether it applies is decided at each load. Its operations and its
+  checks live in `domain/ledger/redistribution.dart`, as an extension of the
+  ledger.
+- Creation and modification follow H2 and give their reason: no tree for
+  the year; same category; source or target not a category without children
+  of the year (a top-level group never holds transactions, so it is refused
+  too); natures that differ; a percentage out of 0.01 to 100 %; a rule with
+  the same source and target already there (it is modified instead); a
+  target that is the source of another rule, or a source that is the target
+  of one; the rules from the source above 100 % (the error carries the total
+  it would reach). A modification is checked against the other rules only;
+  its year cannot change.
+- The calculation takes, month by month, the amount the source shows before
+  any redistribution (proposed lines, refunds and shares from other years
+  included: everything placed in it), applies the percentage and rounds to
+  the cent, halves away from zero (`redistributedCents`). That amount leaves
+  the source and joins the target. A category keeps showing its own amount;
+  each rule is a line of its own under the source and under the target; the
+  groups add those lines. Both views (H1).
+- A rule that does not apply is kept, left out of the calculation and
+  listed with its reason: source or target missing from the tree (deleted,
+  detached, another year), not a category without children, the same
+  category, natures that differ, a percentage out of range; then, among the
+  rules that pass those checks, every rule of a source above 100 % and every
+  rule whose target is a source or whose source is a target.
+- The copy of a tree writes the redistribution rules of the source year with
+  computed identifiers (`copiedRedistributionId`) and their categories
+  transposed; a year to come without a tree shows those copies.
+- A category that a redistribution rule uses as source or target cannot be
+  deleted (`categoryUsedByRedistributions`, with the number of rules).
+- `test/support/random_ledger.dart` holds redistribution rules, and the
+  checks of every view (group sums with the redistribution lines, zero sum,
+  identity of the offsets) run on it. The convergence test creates, modifies
+  and deletes redistribution rules on four devices.

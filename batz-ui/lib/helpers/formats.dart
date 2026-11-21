@@ -65,3 +65,22 @@ DateTime? parseDate(String input) {
   if (date.year != year || date.month != month || date.day != day) return null;
   return date;
 }
+
+/// Formats a percentage in hundredths of a percent as `10 %`, `33.33 %` or
+/// `0.5 %`.
+String formatPercent(int basisPoints) {
+  final whole = basisPoints ~/ 100, hundredths = basisPoints.abs() % 100;
+  final fraction = hundredths == 0 ? '' : '.${hundredths.toString().padLeft(2, '0').replaceFirst(RegExp(r'0$'), '')}';
+  return '${basisPoints < 0 && whole == 0 ? '-' : ''}$whole$fraction %';
+}
+
+final _percentPattern = RegExp(r'^(\d{1,3})(?:[.,](\d{1,2}))?$');
+
+/// Parses a percentage typed by the user (`10`, `33.33`, `0,5`, with or
+/// without `%`) into hundredths of a percent, or returns null; at most two
+/// decimals.
+int? parsePercent(String input) {
+  final match = _percentPattern.firstMatch(input.trim().replaceFirst(RegExp(r'\s*%$'), ''));
+  if (match == null) return null;
+  return int.parse(match.group(1)!) * 100 + int.parse((match.group(2) ?? '0').padRight(2, '0'));
+}

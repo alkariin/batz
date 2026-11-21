@@ -40,6 +40,7 @@ void main() {
     final db = await openLocalDatabase(directory: dir, secrets: MemorySecretStore(), encrypt: false);
     final journal = await Journal.open(db);
     expect(journal.deviceId, _fixture041DeviceId);
+    expect(journal.derivedTablesRebuilt, isTrue, reason: 'the redistribution rules are new');
     final entries = await journal.entries();
     expect(entries, hasLength(419));
 

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:batz/domain/journal/journal_entry.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/ledger.dart';
+import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/statement.dart';
 import 'package:batz/domain/ledger/transaction.dart';
@@ -31,7 +32,7 @@ void checkViews(Ledger ledger, {required String reason}) {
         final children = view.tree.childrenOf(category.id);
         if (children.isEmpty) continue;
         expect(
-          children.fold(MonthlyAmounts.zero, (sum, c) => sum + view.categories[c.id]!),
+          children.fold(MonthlyAmounts.zero, (sum, c) => sum + view.categories[c.id]! + view.redistributedOf(c.id)),
           view.categories[category.id],
           reason: '$why, ${category.name}',
         );
@@ -43,9 +44,25 @@ void checkViews(Ledger ledger, {required String reason}) {
         ].fold(view.toClassify[nature]!, (a, b) => a + b);
         expect(groups, nature == CategoryNature.income ? view.income : view.expenses, reason: why);
       }
+      // Redistribution moves amounts between categories: zero in all.
+      expect(
+        view.tree.byId.keys.fold(MonthlyAmounts.zero, (sum, id) => sum + view.redistributedOf(id)),
+        MonthlyAmounts.zero,
+      );
+      for (final line in view.redistributions) {
+        final source = line.rule.sourceId;
+        expect(
+          line.moved,
+          MonthlyAmounts([
+            for (final c in view.categories[source]!.months) redistributedCents(c, line.rule.basisPoints),
+          ]),
+          reason: why,
+        );
+      }
       // The sum of the twelve months is the total of each line.
       for (final amounts in [
         ...view.categories.values,
+        for (final line in view.redistributions) line.moved,
         ...view.toClassify.values,
         view.unclassified,
         view.income,
@@ -343,6 +360,11 @@ void main() {
       ].fold(0, (a, b) => a + b);
       expect(all(ViewKind.economic), all(ViewKind.cash), reason: 'seed $seed');
       expect(views.of(2026, ViewKind.economic)!.paidForOtherYears, isNot(0), reason: 'seed $seed');
+      for (final year in randomYears) {
+        final view = views.of(year, ViewKind.economic)!;
+        expect(view.redistributions, hasLength(year == 2026 ? 2 : 3), reason: 'seed $seed, $year');
+        expect(view.inapplicable.length, year == 2026 ? 1 : 0, reason: 'seed $seed, $year');
+      }
       expect(views.of(2027, ViewKind.economic)!.paidInOtherYears, isNot(0), reason: 'seed $seed');
       expect(
         views.of(2027, ViewKind.economic)!.toClassify[CategoryNature.expense]!.total,
