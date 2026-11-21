@@ -96,6 +96,11 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.salaryNetNegative => l.errorSalaryNetNegative,
   LedgerError.salaryDeductionLabelRequired => l.errorSalaryDeductionLabelRequired,
   LedgerError.salaryDeductionNegative => l.errorSalaryDeductionNegative,
+  LedgerError.unknownTaxYear => l.errorUnknownTaxYear,
+  LedgerError.taxBaseNegative => l.errorTaxBaseNegative,
+  LedgerError.taxRateInvalid => l.errorTaxRateInvalid,
+  LedgerError.taxCoefficientNegative => l.errorTaxCoefficientNegative,
+  LedgerError.taxMarginalRateInvalid => l.errorTaxMarginalRateInvalid,
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {

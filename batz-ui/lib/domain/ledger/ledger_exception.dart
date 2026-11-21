@@ -84,6 +84,11 @@ enum LedgerError {
   salaryNetNegative,
   salaryDeductionLabelRequired,
   salaryDeductionNegative,
+  unknownTaxYear,
+  taxBaseNegative,
+  taxRateInvalid,
+  taxCoefficientNegative,
+  taxMarginalRateInvalid,
 }
 
 /// A business rule refuses the operation; nothing was written.

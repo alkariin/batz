@@ -9,6 +9,7 @@ import '../../domain/ledger/statement.dart';
 import '../../domain/ledger/transaction.dart';
 import '../../domain/modules/salary.dart';
 import '../../domain/modules/settings.dart';
+import '../../domain/modules/taxes.dart';
 
 /// How journal entries of one entity are materialised into a table.
 ///
@@ -120,6 +121,8 @@ final List<DerivedTable> appDerivedTables = [
   moduleSettingsTable,
   salarySheetsTable,
   salaryDeductionsTable,
+  taxYearsTable,
+  taxLinesTable,
 ];
 
 final accountsTable = DerivedTable(
@@ -288,5 +291,27 @@ final salaryDeductionsTable = DerivedTable(
     SalaryDeductionFields.label: const DerivedColumn.text('label'),
     SalaryDeductionFields.amount: const DerivedColumn.integer('amount'),
     SalaryDeductionFields.rank: const DerivedColumn.integer('rank'),
+  },
+);
+
+final taxYearsTable = DerivedTable(
+  entity: TaxYearFields.entity,
+  table: 'tax_years',
+  columns: {
+    TaxYearFields.year: const DerivedColumn.integer('year'),
+    TaxYearFields.taxableWealth: const DerivedColumn.integer('taxable_wealth'),
+    TaxYearFields.marginalRate: const DerivedColumn.integer('marginal_rate'),
+  },
+);
+
+final taxLinesTable = DerivedTable(
+  entity: TaxLineFields.entity,
+  table: 'tax_lines',
+  columns: {
+    TaxLineFields.year: const DerivedColumn.integer('year'),
+    TaxLineFields.tax: const DerivedColumn.text('tax'),
+    TaxLineFields.base: const DerivedColumn.integer('base'),
+    TaxLineFields.baseRate: const DerivedColumn.integer('base_rate'),
+    TaxLineFields.coefficient: const DerivedColumn.integer('coefficient'),
   },
 );

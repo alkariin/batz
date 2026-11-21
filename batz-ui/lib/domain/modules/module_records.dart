@@ -1,5 +1,6 @@
 import 'salary.dart';
 import 'settings.dart';
+import 'taxes.dart';
 
 /// What the user entered in the modules (phase 6), as read from the derived
 /// tables: everything else a module shows is computed when its screen opens
@@ -9,8 +10,20 @@ class ModuleRecords {
     Iterable<ModuleSetting> settings = const [],
     Iterable<SalarySheet> salarySheets = const [],
     Iterable<SalaryDeduction> salaryDeductions = const [],
+    Iterable<TaxYear> taxYears = const [],
+    Iterable<TaxLine> taxLines = const [],
   }) : settings = {for (final s in settings) s.module: s},
-       salarySheets = _sheets(salarySheets, salaryDeductions);
+       salarySheets = _sheets(salarySheets, salaryDeductions),
+       taxYears = {for (final t in taxYears) t.year: t},
+       taxLines = _taxLines(taxLines);
+
+  static Map<int, Map<TaxKind, TaxLine>> _taxLines(Iterable<TaxLine> lines) {
+    final result = <int, Map<TaxKind, TaxLine>>{};
+    for (final line in lines) {
+      (result[line.year] ??= {})[line.tax] = line;
+    }
+    return result;
+  }
 
   /// The sheets by year, each with its deductions; a deduction whose sheet
   /// is missing is left out (rule 2 of phase 1).
@@ -31,4 +44,8 @@ class ModuleRecords {
 
   /// The salary sheets, by year.
   final Map<int, SalarySheet> salarySheets;
+
+  /// The fiscal years, by year, and their lines by year and tax.
+  final Map<int, TaxYear> taxYears;
+  final Map<int, Map<TaxKind, TaxLine>> taxLines;
 }

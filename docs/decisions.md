@@ -1850,3 +1850,44 @@ each node, the nodes give back income, expenses and savings.
 views, and on a desktop in the dark theme without sheet. Screenshots taken
 locally with the real fonts, phone and desktop, light and dark, were checked
 by eye; they are not kept.
+
+### 6.3 Taxes
+
+**Decisions.**
+
+- New journal entities `taxYear` (table `tax_years`: year, taxable wealth in
+  cents, marginal rate in hundredths of a percent) and `taxLine` (table
+  `tax_lines`: year, tax, base in cents, base rate in ten-thousandths of a
+  percent, coefficient in hundredths of a percent), with identifiers
+  computed from the year, and from the year and the tax. The five taxes are
+  fixed (`TaxKind`); the lines of wealth have no base of their own: they use
+  the taxable wealth of the year.
+- One operation saves the year and its five lines as the form shows them;
+  deleting the year deletes its lines. Refusals, with their reason: a
+  negative base or taxable wealth, a base rate out of 0 to 100 %, a negative
+  coefficient, a marginal rate out of 0 to 100 %. A field left empty is
+  kept empty; a line without base or rate counts 0; a coefficient left empty
+  is 100 %.
+- Amount = base × base rate × coefficient, computed exactly (`BigInt`) and
+  rounded once, halves away from zero. The total rate (base rate ×
+  coefficient) is rounded to the fourth decimal, for display only. The
+  shares of the gross and of the net of the salary sheet of the year are in
+  hundredths of a percent; without sheet, none.
+- Paid for the year: minus the sum of what `linesIn` places in the taxes
+  category of the year in the economic view, before redistribution (H1),
+  refunds deducted. No control when the year has no tree (a year before the
+  first tree can be entered) or its tree no such category.
+- The screen computes each line, the total and the control as the values are
+  typed, with the functions of the domain; it is saved as a whole. Two
+  helpers of `formats.dart` type and show percentages with a fixed number of
+  decimals (`2.5000 %`, `155.00 %`). The summary lists every year entered:
+  total, shares, marginal rate, paid and gap.
+
+**Evidence.** `test/domain/modules/taxes_test.dart`: the example line by line
+(15'033.80, 15.66 % and 17.93 %); the control (15'000.00 paid for 2026, 33.80
+left, while the cash-flow view shows 14'500.00); a year before the first tree;
+halves; incomplete lines; on 200 random draws, each amount against an exact
+computation and the total against the sum of the lines; each refusal;
+modification and deletion; two devices; views and wealth unchanged.
+`test/pages/modules/taxes_page_test.dart` types the example in the screen.
+A screenshot on a phone, with the real fonts, was checked by eye.

@@ -84,3 +84,29 @@ int? parsePercent(String input) {
   if (match == null) return null;
   return int.parse(match.group(1)!) * 100 + int.parse((match.group(2) ?? '0').padRight(2, '0'));
 }
+
+/// Formats [value], a number of 10^-[decimals] percent, with exactly
+/// [decimals] decimals: `2.5000 %` (25000, 4), `155.00 %` (15500, 2).
+String formatScaledPercent(int value, int decimals) {
+  final digits = value.abs().toString().padLeft(decimals + 1, '0');
+  final whole = digits.substring(0, digits.length - decimals);
+  final fraction = digits.substring(digits.length - decimals);
+  return '${value < 0 ? '-' : ''}$whole${decimals == 0 ? '' : '.$fraction'} %';
+}
+
+/// Parses a positive number typed with at most [decimals] decimals (`6.5`,
+/// `155`, `0,25`, with or without `%`) into units of 10^-[decimals], or
+/// returns null.
+int? parseScaled(String input, int decimals) {
+  final match = RegExp(
+    r'^(\d{1,9})(?:[.,](\d{1,'
+    '$decimals'
+    r'}))?$',
+  ).firstMatch(input.trim().replaceFirst(RegExp(r'\s*%$'), '').replaceAll(RegExp(r"['’ ]"), ''));
+  if (match == null) return null;
+  var value = int.parse(match.group(1)!);
+  for (var i = 0; i < decimals; i++) {
+    value *= 10;
+  }
+  return value + int.parse((match.group(2) ?? '0').padRight(decimals, '0'));
+}

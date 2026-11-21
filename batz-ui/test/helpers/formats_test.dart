@@ -103,4 +103,26 @@ void main() {
       expect(parseDate(formatDate(date)), date);
     });
   });
+
+  group('scaled percentages (phase 6)', () {
+    test('format with a fixed number of decimals', () {
+      expect(formatScaledPercent(25000, 4), '2.5000 %');
+      expect(formatScaledPercent(100750, 4), '10.0750 %');
+      expect(formatScaledPercent(3875, 4), '0.3875 %');
+      expect(formatScaledPercent(15500, 2), '155.00 %');
+      expect(formatScaledPercent(1566, 2), '15.66 %');
+      expect(formatScaledPercent(5, 2), '0.05 %');
+    });
+
+    test('parse at most the decimals allowed', () {
+      expect(parseScaled('2.5', 4), 25000);
+      expect(parseScaled('6,5 %', 4), 65000);
+      expect(parseScaled('0.0001', 4), 1);
+      expect(parseScaled('0.00001', 4), isNull);
+      expect(parseScaled('155', 2), 15500);
+      expect(parseScaled('79.5', 2), 7950);
+      expect(parseScaled('-3', 2), isNull);
+      expect(parseScaled('abc', 2), isNull);
+    });
+  });
 }

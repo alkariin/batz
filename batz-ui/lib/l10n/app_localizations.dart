@@ -3533,6 +3533,234 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Total : {amount}'**
   String flowTotal(String amount);
+
+  /// No description provided for @errorUnknownTaxYear.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette année fiscale n\'existe plus.'**
+  String get errorUnknownTaxYear;
+
+  /// No description provided for @errorTaxBaseNegative.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une base imposable ne peut pas être négative.'**
+  String get errorTaxBaseNegative;
+
+  /// No description provided for @errorTaxRateInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un taux de base va de 0 à 100 %, avec quatre décimales au plus.'**
+  String get errorTaxRateInvalid;
+
+  /// No description provided for @errorTaxCoefficientNegative.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un coefficient ne peut pas être négatif.'**
+  String get errorTaxCoefficientNegative;
+
+  /// No description provided for @errorTaxMarginalRateInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le taux marginal va de 0 à 100 %, avec deux décimales au plus.'**
+  String get errorTaxMarginalRateInvalid;
+
+  /// No description provided for @taxesTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impôts'**
+  String get taxesTitle;
+
+  /// No description provided for @taxesMenuHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Par année fiscale : lignes, total et contrôle des paiements.'**
+  String get taxesMenuHint;
+
+  /// No description provided for @taxesYear.
+  ///
+  /// In fr, this message translates to:
+  /// **'Année fiscale'**
+  String get taxesYear;
+
+  /// No description provided for @taxesFederalIncome.
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenu fédéral'**
+  String get taxesFederalIncome;
+
+  /// No description provided for @taxesCantonalIncome.
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenu cantonal'**
+  String get taxesCantonalIncome;
+
+  /// No description provided for @taxesCommunalIncome.
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenu communal'**
+  String get taxesCommunalIncome;
+
+  /// No description provided for @taxesCantonalWealth.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fortune cantonale'**
+  String get taxesCantonalWealth;
+
+  /// No description provided for @taxesCommunalWealth.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fortune communale'**
+  String get taxesCommunalWealth;
+
+  /// No description provided for @taxesBase.
+  ///
+  /// In fr, this message translates to:
+  /// **'Base imposable'**
+  String get taxesBase;
+
+  /// No description provided for @taxesTaxableWealth.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fortune imposable'**
+  String get taxesTaxableWealth;
+
+  /// No description provided for @taxesBaseRate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taux de base %'**
+  String get taxesBaseRate;
+
+  /// No description provided for @taxesCoefficient.
+  ///
+  /// In fr, this message translates to:
+  /// **'Coefficient %'**
+  String get taxesCoefficient;
+
+  /// No description provided for @taxesMarginalRate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taux marginal (TMI) %'**
+  String get taxesMarginalRate;
+
+  /// No description provided for @taxesLineResult.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taux total {rate} · {amount}'**
+  String taxesLineResult(String rate, String amount);
+
+  /// No description provided for @taxesLineIncomplete.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ligne incomplète : 0.00'**
+  String get taxesLineIncomplete;
+
+  /// No description provided for @taxesTotal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total'**
+  String get taxesTotal;
+
+  /// No description provided for @taxesShareOfGross.
+  ///
+  /// In fr, this message translates to:
+  /// **'Part du brut'**
+  String get taxesShareOfGross;
+
+  /// No description provided for @taxesShareOfNet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Part du net'**
+  String get taxesShareOfNet;
+
+  /// No description provided for @taxesNoSheet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans fiche salaire pour {year}, les parts du brut et du net ne s\'affichent pas.'**
+  String taxesNoSheet(String year);
+
+  /// No description provided for @taxesControl.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contrôle'**
+  String get taxesControl;
+
+  /// No description provided for @taxesPaid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé pour {year}'**
+  String taxesPaid(String year);
+
+  /// No description provided for @taxesPaidHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que la vue économique de {year} compte dans la catégorie liée : la période compte, pas la date de paiement.'**
+  String taxesPaidHint(String year);
+
+  /// No description provided for @taxesLeftToPay.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reste à payer'**
+  String get taxesLeftToPay;
+
+  /// No description provided for @taxesPaidTooMuch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé en trop'**
+  String get taxesPaidTooMuch;
+
+  /// No description provided for @taxesSettled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé exactement'**
+  String get taxesSettled;
+
+  /// No description provided for @taxesNoControl.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de contrôle pour {year} : l\'année n\'a pas d\'arbre de catégories, ou pas de catégorie liée.'**
+  String taxesNoControl(String year);
+
+  /// No description provided for @taxesSummary.
+  ///
+  /// In fr, this message translates to:
+  /// **'Récapitulatif'**
+  String get taxesSummary;
+
+  /// No description provided for @taxesSummaryLine.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total {total} · brut {gross} · net {net} · TMI {marginal} · payé {paid} · écart {gap}'**
+  String taxesSummaryLine(String total, String gross, String net, String marginal, String paid, String gap);
+
+  /// No description provided for @taxesSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Année fiscale enregistrée.'**
+  String get taxesSaved;
+
+  /// No description provided for @taxesDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer l\'année fiscale {year} ?'**
+  String taxesDeleteConfirm(String year);
+
+  /// No description provided for @taxesDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Année fiscale supprimée.'**
+  String get taxesDeleted;
+
+  /// No description provided for @taxesInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valeur invalide : vérifiez les montants et les pourcentages.'**
+  String get taxesInvalid;
+
+  /// No description provided for @taxesNone.
+  ///
+  /// In fr, this message translates to:
+  /// **'–'**
+  String get taxesNone;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

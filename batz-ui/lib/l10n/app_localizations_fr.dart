@@ -2129,4 +2129,132 @@ class AppLocalizationsFr extends AppLocalizations {
   String flowTotal(String amount) {
     return 'Total : $amount';
   }
+
+  @override
+  String get errorUnknownTaxYear => 'Cette année fiscale n\'existe plus.';
+
+  @override
+  String get errorTaxBaseNegative => 'Une base imposable ne peut pas être négative.';
+
+  @override
+  String get errorTaxRateInvalid => 'Un taux de base va de 0 à 100 %, avec quatre décimales au plus.';
+
+  @override
+  String get errorTaxCoefficientNegative => 'Un coefficient ne peut pas être négatif.';
+
+  @override
+  String get errorTaxMarginalRateInvalid => 'Le taux marginal va de 0 à 100 %, avec deux décimales au plus.';
+
+  @override
+  String get taxesTitle => 'Impôts';
+
+  @override
+  String get taxesMenuHint => 'Par année fiscale : lignes, total et contrôle des paiements.';
+
+  @override
+  String get taxesYear => 'Année fiscale';
+
+  @override
+  String get taxesFederalIncome => 'Revenu fédéral';
+
+  @override
+  String get taxesCantonalIncome => 'Revenu cantonal';
+
+  @override
+  String get taxesCommunalIncome => 'Revenu communal';
+
+  @override
+  String get taxesCantonalWealth => 'Fortune cantonale';
+
+  @override
+  String get taxesCommunalWealth => 'Fortune communale';
+
+  @override
+  String get taxesBase => 'Base imposable';
+
+  @override
+  String get taxesTaxableWealth => 'Fortune imposable';
+
+  @override
+  String get taxesBaseRate => 'Taux de base %';
+
+  @override
+  String get taxesCoefficient => 'Coefficient %';
+
+  @override
+  String get taxesMarginalRate => 'Taux marginal (TMI) %';
+
+  @override
+  String taxesLineResult(String rate, String amount) {
+    return 'Taux total $rate · $amount';
+  }
+
+  @override
+  String get taxesLineIncomplete => 'Ligne incomplète : 0.00';
+
+  @override
+  String get taxesTotal => 'Total';
+
+  @override
+  String get taxesShareOfGross => 'Part du brut';
+
+  @override
+  String get taxesShareOfNet => 'Part du net';
+
+  @override
+  String taxesNoSheet(String year) {
+    return 'Sans fiche salaire pour $year, les parts du brut et du net ne s\'affichent pas.';
+  }
+
+  @override
+  String get taxesControl => 'Contrôle';
+
+  @override
+  String taxesPaid(String year) {
+    return 'Payé pour $year';
+  }
+
+  @override
+  String taxesPaidHint(String year) {
+    return 'Ce que la vue économique de $year compte dans la catégorie liée : la période compte, pas la date de paiement.';
+  }
+
+  @override
+  String get taxesLeftToPay => 'Reste à payer';
+
+  @override
+  String get taxesPaidTooMuch => 'Payé en trop';
+
+  @override
+  String get taxesSettled => 'Payé exactement';
+
+  @override
+  String taxesNoControl(String year) {
+    return 'Pas de contrôle pour $year : l\'année n\'a pas d\'arbre de catégories, ou pas de catégorie liée.';
+  }
+
+  @override
+  String get taxesSummary => 'Récapitulatif';
+
+  @override
+  String taxesSummaryLine(String total, String gross, String net, String marginal, String paid, String gap) {
+    return 'Total $total · brut $gross · net $net · TMI $marginal · payé $paid · écart $gap';
+  }
+
+  @override
+  String get taxesSaved => 'Année fiscale enregistrée.';
+
+  @override
+  String taxesDeleteConfirm(String year) {
+    return 'Supprimer l\'année fiscale $year ?';
+  }
+
+  @override
+  String get taxesDeleted => 'Année fiscale supprimée.';
+
+  @override
+  String get taxesInvalid => 'Valeur invalide : vérifiez les montants et les pourcentages.';
+
+  @override
+  String get taxesNone => '–';
 }

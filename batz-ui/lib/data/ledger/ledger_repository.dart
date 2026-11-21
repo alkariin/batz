@@ -16,6 +16,7 @@ import '../../domain/ledger/transaction.dart';
 import '../../domain/modules/module_records.dart';
 import '../../domain/modules/salary.dart';
 import '../../domain/modules/settings.dart';
+import '../../domain/modules/taxes.dart';
 import '../local/database.dart';
 import '../local/derived_tables.dart';
 import '../local/journal.dart';
@@ -82,12 +83,51 @@ class LedgerRepository {
 
   /// What the user entered in the modules.
   Future<ModuleRecords> _modules() async {
-    final (settings, sheets, deductions) = await (
+    final (settings, sheets, deductions, taxYears, taxLines) = await (
       _rows(moduleSettingsTable, _moduleSetting),
       _rows(salarySheetsTable, _salarySheet),
       _rows(salaryDeductionsTable, _salaryDeduction),
+      _rows(taxYearsTable, _taxYear),
+      _rows(taxLinesTable, _taxLine),
     ).wait;
-    return ModuleRecords(settings: settings, salarySheets: sheets, salaryDeductions: deductions);
+    return ModuleRecords(
+      settings: settings,
+      salarySheets: sheets,
+      salaryDeductions: deductions,
+      taxYears: taxYears,
+      taxLines: taxLines,
+    );
+  }
+
+  /// A fiscal year needs its year; its taxable wealth and marginal rate are
+  /// optional.
+  static TaxYear? _taxYear(Map<String, Object?> row) {
+    final year = row['year'];
+    if (year is! int) return null;
+    final (wealth, marginal) = (row['taxable_wealth'], row['marginal_rate']);
+    return TaxYear(
+      id: row['id']! as String,
+      year: year,
+      taxableWealth: wealth is int ? wealth : null,
+      marginalRate: marginal is int ? marginal : null,
+    );
+  }
+
+  /// A line needs its year and a known tax; base, rate and coefficient are
+  /// optional (an incomplete line counts 0).
+  static TaxLine? _taxLine(Map<String, Object?> row) {
+    final year = row['year'];
+    final tax = _enum(TaxKind.values, row['tax']);
+    if (year is! int || tax == null) return null;
+    final (base, rate, coefficient) = (row['base'], row['base_rate'], row['coefficient']);
+    return TaxLine(
+      id: row['id']! as String,
+      year: year,
+      tax: tax,
+      base: base is int ? base : null,
+      baseRate: rate is int ? rate : null,
+      coefficient: coefficient is int ? coefficient : null,
+    );
   }
 
   /// A salary sheet needs its year, its gross and its net.

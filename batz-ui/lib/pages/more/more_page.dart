@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../accounts/accounts_page.dart';
 import '../categories/categories_page.dart';
 import '../modules/salary_page.dart';
+import '../modules/taxes_page.dart';
 import '../redistribution/redistribution_page.dart';
 import '../server/server_cubit.dart';
 import '../server/server_page.dart';
@@ -29,6 +30,14 @@ class MorePage extends StatelessWidget {
             subtitle: Text(l.salaryMenuHint),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SalaryPage())),
+          ),
+          ListTile(
+            key: const Key('moreTaxes'),
+            leading: const Icon(Icons.account_balance_outlined),
+            title: Text(l.taxesTitle),
+            subtitle: Text(l.taxesMenuHint),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TaxesPage())),
           ),
           const Divider(),
           _Section(l.moreSettings),
