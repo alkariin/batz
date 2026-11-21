@@ -618,5 +618,179 @@
     }
   },
   "statementDeleted": "Relevé supprimé.",
-  "accountStatements": "Relevés importés"
+  "accountStatements": "Relevés importés",
+  "validationTitle": "Validation",
+  "validationToCompleteTab": "À compléter ({count})",
+  "@validationToCompleteTab": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "validationProposedTab": "Proposées ({count})",
+  "@validationProposedTab": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "validationNothingToComplete": "Aucune ligne à compléter.",
+  "validationNothingProposed": "Aucune proposition à confirmer.",
+  "validationConfirm": "Confirmer les propositions ({count})",
+  "@validationConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "validationConfirmed": "{count, plural, =1{Une ligne validée} other{{count} lignes validées}}.",
+  "@validationConfirmed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "validationConflict": "Règles en concurrence : {rules}",
+  "@validationConflict": {
+    "placeholders": {
+      "rules": {
+        "type": "String"
+      }
+    }
+  },
+  "validationUnusable": "La règle « {keywords} » vise une cible inutilisable.",
+  "@validationUnusable": {
+    "placeholders": {
+      "keywords": {
+        "type": "String"
+      }
+    }
+  },
+  "validationRule": "Règle « {keywords} »",
+  "@validationRule": {
+    "placeholders": {
+      "keywords": {
+        "type": "String"
+      }
+    }
+  },
+  "validationTransferWith": "Transfert avec {account}",
+  "@validationTransferWith": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "validationAction": "Valider les lignes",
+  "classifyTitle": "Classer la ligne",
+  "classifyCategory": "Catégorie",
+  "classifyTransfer": "Transfert",
+  "classifyCounterpart": "Compte de contrepartie",
+  "classifyTransferOut": "L'argent part vers ce compte.",
+  "classifyTransferIn": "L'argent vient de ce compte.",
+  "classifyValidate": "Valider",
+  "classifyValidated": "Ligne validée.",
+  "classifyCreateRule": "Créer une règle",
+  "classifyChooseCategory": "Choisissez une catégorie.",
+  "classifyChooseAccount": "Choisissez un compte.",
+  "rulesMenu": "Règles de classement",
+  "rulesTitle": "Règles {year}",
+  "@rulesTitle": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesEmpty": "Aucune règle pour cette année.",
+  "rulesNoTree": "Cette année n'a pas encore d'arbre de catégories.",
+  "ruleNew": "Nouvelle règle",
+  "ruleEdit": "Modifier la règle",
+  "ruleKeywords": "Mots-clés, un par ligne",
+  "ruleKeywordsHint": "Tous sont requis, sans tenir compte des majuscules, des accents ni des espaces. « re: » au début d'un mot-clé pour une expression régulière.",
+  "ruleKeywordInvalid": "Expression régulière invalide : {keyword}",
+  "@ruleKeywordInvalid": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "ruleTarget": "Cible",
+  "rulePeriod": "Période",
+  "rulePeriodNone": "Date du paiement",
+  "rulePeriodPreviousMonth": "Mois précédent",
+  "rulePeriodNextMonth": "Mois suivant",
+  "rulePeriodMonthsAfter": "N mois après le paiement",
+  "rulePeriodMonthsBefore": "N mois avant le paiement",
+  "rulePeriodCurrentYear": "Année civile en cours",
+  "rulePeriodPreviousYear": "Année civile précédente",
+  "ruleMonths": "Nombre de mois",
+  "ruleMatches": "Cette règle classerait {count, plural, =0{aucune ligne non validée} =1{une ligne non validée} other{{count} lignes non validées}}.",
+  "@ruleMatches": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ruleSaved": "Règle enregistrée.",
+  "ruleDeleted": "Règle supprimée.",
+  "ruleDeleteConfirm": "Supprimer cette règle ? Les lignes déjà validées ne changent pas.",
+  "ruleUnusable": "Cible inutilisable : cette règle ne propose rien.",
+  "ruleSummary": "{keywords} → {target}",
+  "@ruleSummary": {
+    "placeholders": {
+      "keywords": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "taskLinesToValidate": "{count, plural, =1{Une ligne à valider} other{{count} lignes à valider}}",
+  "@taskLinesToValidate": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "taskLinesToValidateHint": "Lignes importées : complétez-les ou confirmez les propositions.",
+  "taskConflicts": "{count, plural, =1{Une ligne dont les règles sont en concurrence} other{{count} lignes dont les règles sont en concurrence}}",
+  "@taskConflicts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "taskConflictsHint": "Classez-les à la main ou ajustez les règles.",
+  "taskUnusableRules": "{count, plural, =1{Une règle de {year} ne propose plus rien} other{{count} règles de {year} ne proposent plus rien}}",
+  "@taskUnusableRules": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "taskUnusableRulesHint": "Leur catégorie ou leur compte n'est plus utilisable : modifiez-les.",
+  "transactionsSearch": "Rechercher",
+  "transactionsAllMonths": "Tous les mois",
+  "transactionsAllCategories": "Toutes les catégories",
+  "transactionsUnclassified": "Non classé",
+  "transactionsAllStatuses": "Tous les statuts",
+  "statusToValidate": "À valider",
+  "statusToComplete": "À compléter",
+  "statusProposed": "Proposée",
+  "statusValidated": "Validée"
 }

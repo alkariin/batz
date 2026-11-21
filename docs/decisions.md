@@ -917,3 +917,46 @@ printed ones, five refusals with the journal unchanged, the same statement
 imported by two devices giving no line twice, lines validated with the server
 stopped and received validated by another device after its restart, the PDF
 fetched by fingerprint and missing on a rebuilt server.
+
+### 3.6 Validation screens
+
+**Decisions.**
+
+- The number of lines to validate is a badge on the Transactions entry of
+  the navigation and a card at the top of the transactions list. The home
+  screen lists, before the merge inconsistencies, the lines to validate, the
+  lines whose rules compete and, per year, the rules that propose nothing
+  any more; the first two lead to the validation screen, the third to the
+  rules of the year.
+- The validation screen has two tabs. « À compléter »: each line with its
+  date, amount and whole bank text, and the competing rules or the unusable
+  rule when there is one. « Proposées »: each line with its description, its
+  proposal (category and period, or transfer) and the rule that gives it,
+  and « Confirmer les propositions », one modification for all of them.
+- A line opens the classification screen: category of its payment year and
+  period (from the proposal or the stored classification, the payment date
+  otherwise), or transfer with an account (it says whether the money goes to
+  it or comes from it, from the sign); description and note. « Valider »
+  writes all of it in one modification (`Ledger.validateLine`). « Créer une
+  règle » opens the rule form with the description as first keyword and the
+  chosen target; the form shows, as it is typed, how many lines to validate
+  the rule would classify, and flags an invalid expression.
+- Plus › « Règles de classement » lists the rules of a year (keywords,
+  target, period model), unusable ones marked, and opens the same form to
+  modify or delete one.
+- The transactions list searches words (each required, without case or
+  accents) in the description, the note, the bank text, the category, the
+  accounts and the amount (`1650.00`), and filters by account, year, month,
+  category name (the same name in every year, or « Non classé ») and status
+  (to validate, to complete, proposed, validated). Lines to validate show
+  their state. The search lives in the domain (`Ledger.search`).
+- Everything is local: the validation works without a server and can be
+  left at any point; what is validated is sent at the next exchange.
+
+**Evidence.** `test/pages/validation/validation_flow_test.dart` validates,
+without any server, a rule created from a line (with its count and an
+invalid expression refused), the five proposals confirmed, a transfer
+classified by hand, and the rules screen; then the search and the status
+filter; then the tasks of competing rules and of an unusable rule.
+`test/domain/ledger/search_test.dart` covers each filter and the search
+fields.

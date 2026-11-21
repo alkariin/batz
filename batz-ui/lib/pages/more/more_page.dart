@@ -6,6 +6,7 @@ import '../accounts/accounts_page.dart';
 import '../categories/categories_page.dart';
 import '../server/server_cubit.dart';
 import '../server/server_page.dart';
+import '../validation/rules_page.dart';
 
 /// "Plus": settings and secondary screens.
 class MorePage extends StatelessWidget {
@@ -29,6 +30,12 @@ class MorePage extends StatelessWidget {
             title: Text(l.categoriesTitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const CategoriesPage())),
+          ),
+          ListTile(
+            leading: const Icon(Icons.rule),
+            title: Text(l.rulesMenu),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const RulesPage())),
           ),
           ListTile(
             leading: const Icon(Icons.dns_outlined),

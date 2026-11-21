@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../components/empty_page.dart';
 import '../l10n/app_localizations.dart';
 import 'home/home_page.dart';
+import 'ledger_cubit.dart';
 import 'more/more_page.dart';
 import 'sync/sync_cubit.dart';
 import 'transactions/transactions_page.dart';
@@ -67,9 +68,17 @@ class _AppShellState extends State<AppShell> {
 
   void _select(int index) => setState(() => _selected = Section.values[index]);
 
+  /// The icon of [section]: Transactions carries the number of lines to
+  /// validate (specification, 4.4).
+  Widget _icon(Section section, IconData icon, int toValidate) {
+    if (section != Section.transactions || toValidate == 0) return Icon(icon);
+    return Badge(key: const Key('toValidateBadge'), label: Text('$toValidate'), child: Icon(icon));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final toValidate = context.select<LedgerCubit, int>((c) => c.state.ledger.linesToValidate.length);
     final page = KeyedSubtree(
       key: ValueKey(_selected),
       child: switch (_selected) {
@@ -89,8 +98,12 @@ class _AppShellState extends State<AppShell> {
               selectedIndex: _selected.index,
               onDestinationSelected: _select,
               destinations: [
-                for (final d in _destinations.values)
-                  NavigationDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selectedIcon), label: d.label(l)),
+                for (final MapEntry(key: section, value: d) in _destinations.entries)
+                  NavigationDestination(
+                    icon: _icon(section, d.icon, toValidate),
+                    selectedIcon: _icon(section, d.selectedIcon, toValidate),
+                    label: d.label(l),
+                  ),
               ],
             ),
           );
@@ -104,10 +117,10 @@ class _AppShellState extends State<AppShell> {
                   onDestinationSelected: _select,
                   labelType: NavigationRailLabelType.all,
                   destinations: [
-                    for (final d in _destinations.values)
+                    for (final MapEntry(key: section, value: d) in _destinations.entries)
                       NavigationRailDestination(
-                        icon: Icon(d.icon),
-                        selectedIcon: Icon(d.selectedIcon),
+                        icon: _icon(section, d.icon, toValidate),
+                        selectedIcon: _icon(section, d.selectedIcon, toValidate),
                         label: Text(d.label(l)),
                       ),
                   ],

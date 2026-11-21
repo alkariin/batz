@@ -940,4 +940,255 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get accountStatements => 'Relevés importés';
+
+  @override
+  String get validationTitle => 'Validation';
+
+  @override
+  String validationToCompleteTab(int count) {
+    return 'À compléter ($count)';
+  }
+
+  @override
+  String validationProposedTab(int count) {
+    return 'Proposées ($count)';
+  }
+
+  @override
+  String get validationNothingToComplete => 'Aucune ligne à compléter.';
+
+  @override
+  String get validationNothingProposed => 'Aucune proposition à confirmer.';
+
+  @override
+  String validationConfirm(int count) {
+    return 'Confirmer les propositions ($count)';
+  }
+
+  @override
+  String validationConfirmed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lignes validées',
+      one: 'Une ligne validée',
+    );
+    return '$_temp0.';
+  }
+
+  @override
+  String validationConflict(String rules) {
+    return 'Règles en concurrence : $rules';
+  }
+
+  @override
+  String validationUnusable(String keywords) {
+    return 'La règle « $keywords » vise une cible inutilisable.';
+  }
+
+  @override
+  String validationRule(String keywords) {
+    return 'Règle « $keywords »';
+  }
+
+  @override
+  String validationTransferWith(String account) {
+    return 'Transfert avec $account';
+  }
+
+  @override
+  String get validationAction => 'Valider les lignes';
+
+  @override
+  String get classifyTitle => 'Classer la ligne';
+
+  @override
+  String get classifyCategory => 'Catégorie';
+
+  @override
+  String get classifyTransfer => 'Transfert';
+
+  @override
+  String get classifyCounterpart => 'Compte de contrepartie';
+
+  @override
+  String get classifyTransferOut => 'L\'argent part vers ce compte.';
+
+  @override
+  String get classifyTransferIn => 'L\'argent vient de ce compte.';
+
+  @override
+  String get classifyValidate => 'Valider';
+
+  @override
+  String get classifyValidated => 'Ligne validée.';
+
+  @override
+  String get classifyCreateRule => 'Créer une règle';
+
+  @override
+  String get classifyChooseCategory => 'Choisissez une catégorie.';
+
+  @override
+  String get classifyChooseAccount => 'Choisissez un compte.';
+
+  @override
+  String get rulesMenu => 'Règles de classement';
+
+  @override
+  String rulesTitle(int year) {
+    return 'Règles $year';
+  }
+
+  @override
+  String get rulesEmpty => 'Aucune règle pour cette année.';
+
+  @override
+  String get rulesNoTree => 'Cette année n\'a pas encore d\'arbre de catégories.';
+
+  @override
+  String get ruleNew => 'Nouvelle règle';
+
+  @override
+  String get ruleEdit => 'Modifier la règle';
+
+  @override
+  String get ruleKeywords => 'Mots-clés, un par ligne';
+
+  @override
+  String get ruleKeywordsHint =>
+      'Tous sont requis, sans tenir compte des majuscules, des accents ni des espaces. « re: » au début d\'un mot-clé pour une expression régulière.';
+
+  @override
+  String ruleKeywordInvalid(String keyword) {
+    return 'Expression régulière invalide : $keyword';
+  }
+
+  @override
+  String get ruleTarget => 'Cible';
+
+  @override
+  String get rulePeriod => 'Période';
+
+  @override
+  String get rulePeriodNone => 'Date du paiement';
+
+  @override
+  String get rulePeriodPreviousMonth => 'Mois précédent';
+
+  @override
+  String get rulePeriodNextMonth => 'Mois suivant';
+
+  @override
+  String get rulePeriodMonthsAfter => 'N mois après le paiement';
+
+  @override
+  String get rulePeriodMonthsBefore => 'N mois avant le paiement';
+
+  @override
+  String get rulePeriodCurrentYear => 'Année civile en cours';
+
+  @override
+  String get rulePeriodPreviousYear => 'Année civile précédente';
+
+  @override
+  String get ruleMonths => 'Nombre de mois';
+
+  @override
+  String ruleMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lignes non validées',
+      one: 'une ligne non validée',
+      zero: 'aucune ligne non validée',
+    );
+    return 'Cette règle classerait $_temp0.';
+  }
+
+  @override
+  String get ruleSaved => 'Règle enregistrée.';
+
+  @override
+  String get ruleDeleted => 'Règle supprimée.';
+
+  @override
+  String get ruleDeleteConfirm => 'Supprimer cette règle ? Les lignes déjà validées ne changent pas.';
+
+  @override
+  String get ruleUnusable => 'Cible inutilisable : cette règle ne propose rien.';
+
+  @override
+  String ruleSummary(String keywords, String target) {
+    return '$keywords → $target';
+  }
+
+  @override
+  String taskLinesToValidate(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lignes à valider',
+      one: 'Une ligne à valider',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get taskLinesToValidateHint => 'Lignes importées : complétez-les ou confirmez les propositions.';
+
+  @override
+  String taskConflicts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lignes dont les règles sont en concurrence',
+      one: 'Une ligne dont les règles sont en concurrence',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get taskConflictsHint => 'Classez-les à la main ou ajustez les règles.';
+
+  @override
+  String taskUnusableRules(int count, int year) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count règles de $year ne proposent plus rien',
+      one: 'Une règle de $year ne propose plus rien',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get taskUnusableRulesHint => 'Leur catégorie ou leur compte n\'est plus utilisable : modifiez-les.';
+
+  @override
+  String get transactionsSearch => 'Rechercher';
+
+  @override
+  String get transactionsAllMonths => 'Tous les mois';
+
+  @override
+  String get transactionsAllCategories => 'Toutes les catégories';
+
+  @override
+  String get transactionsUnclassified => 'Non classé';
+
+  @override
+  String get transactionsAllStatuses => 'Tous les statuts';
+
+  @override
+  String get statusToValidate => 'À valider';
+
+  @override
+  String get statusToComplete => 'À compléter';
+
+  @override
+  String get statusProposed => 'Proposée';
+
+  @override
+  String get statusValidated => 'Validée';
 }

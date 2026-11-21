@@ -391,6 +391,70 @@ class Ledger {
     });
   }
 
+  /// The transactions that answer [query], by payment date, most recent
+  /// first (Transactions: search and filters, specification 4.6).
+  List<LedgerTransaction> search(TransactionQuery query) {
+    final words = normalizeText(query.text).split(' ').where((w) => w.isNotEmpty).toList();
+    final category = query.categoryName == null ? null : normalizeName(query.categoryName!);
+    return [
+      for (final t in transactionList(accountId: query.accountId, year: query.year))
+        if ((query.month == null || t.date.month == query.month) &&
+            (query.status == null || _hasStatus(t, query.status!)) &&
+            (category == null || _inCategory(t, category)) &&
+            (words.isEmpty || _matchesWords(t, words)))
+          t,
+    ];
+  }
+
+  bool _hasStatus(LedgerTransaction t, StatusFilter status) => switch (status) {
+    StatusFilter.toValidate => !t.isValidated,
+    StatusFilter.toComplete => validationStateOf(t) == ValidationState.toComplete,
+    StatusFilter.proposed => validationStateOf(t) == ValidationState.proposed,
+    StatusFilter.validated => t.isValidated,
+  };
+
+  /// [normalized] is a normalised category name, or the empty string for
+  /// the unclassified lines (no category, transfers excluded).
+  bool _inCategory(LedgerTransaction t, String normalized) {
+    final category = categoryOf(t);
+    if (normalized.isEmpty) return category == null && kindOf(t) != TransactionKind.transfer;
+    return category != null && normalizeName(category.name) == normalized;
+  }
+
+  bool _matchesWords(LedgerTransaction t, List<String> words) {
+    final haystack = normalizeText(
+      [
+        t.description,
+        t.note,
+        t.rawText ?? '',
+        categoryOf(t)?.name ?? '',
+        accounts[t.accountId]?.name ?? '',
+        accounts[t.counterpartAccountId]?.name ?? '',
+        _amountText(t.amount),
+      ].join(' '),
+    );
+    return words.every(haystack.contains);
+  }
+
+  /// An amount as typed in a search: 1234.50, without sign or separators.
+  static String _amountText(int cents) {
+    final abs = cents.abs();
+    return '${abs ~/ 100}.${(abs % 100).toString().padLeft(2, '0')}';
+  }
+
+  /// The names of the categories that hold transactions, in any year, for
+  /// the category filter: categories of the same name are the same between
+  /// years (specification, 4.1).
+  List<String> get categoryNamesForFilter {
+    final byNormalized = <String, String>{};
+    for (final tree in trees.values) {
+      for (final c in tree.assignable) {
+        byNormalized.putIfAbsent(normalizeName(c.name), () => c.name);
+      }
+    }
+    return byNormalized.values.toList()..sort((a, b) => normalizeName(a).compareTo(normalizeName(b)));
+  }
+
   /// Years that have transactions, in increasing order.
   List<int> get yearsWithTransactions => {for (final t in transactions.values) t.date.year}.toList()..sort();
 
@@ -878,6 +942,26 @@ class Ledger {
     return Modification(_classificationChanges(transaction, classification));
   }
 
+  /// Classifies the imported line [id] and sets its description and note,
+  /// in one modification: what the validation screen writes.
+  Modification validateLine(
+    String id,
+    Classification classification, {
+    required String description,
+    required String note,
+  }) {
+    final transaction = transactions[id];
+    if (transaction == null || !transaction.isImported) throw const LedgerException(LedgerError.unknownTransaction);
+    return Modification([
+      ..._classificationChanges(transaction, classification),
+      FieldChange(TransactionFields.entity, id, TransactionFields.description, description.trim()),
+      FieldChange(TransactionFields.entity, id, TransactionFields.note, note.trim()),
+    ]);
+  }
+
+  /// The lines to validate whose rules compete (decision H5).
+  int get conflictingLines => proposals.values.whereType<Conflict>().length;
+
   /// Confirms the proposals of the lines [ids] that have one (the others are
   /// left out): one modification, unless the lines are too many for one, in
   /// which case each modification holds whole lines.
@@ -1045,4 +1129,22 @@ bool isValidKeyword(String keyword) {
   } on FormatException {
     return false;
   }
+}
+
+/// The statuses the transactions list filters on.
+enum StatusFilter { toValidate, toComplete, proposed, validated }
+
+/// What the transactions list asks for: words to find (in the description,
+/// the note, the bank's text, the category, the accounts or the amount, each
+/// word required, without case or accents) and filters. A null filter keeps
+/// everything; an empty [categoryName] keeps the unclassified lines.
+class TransactionQuery {
+  const TransactionQuery({this.text = '', this.accountId, this.year, this.month, this.categoryName, this.status});
+
+  final String text;
+  final String? accountId;
+  final int? year;
+  final int? month;
+  final String? categoryName;
+  final StatusFilter? status;
 }

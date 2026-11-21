@@ -23,3 +23,10 @@ String titleText(AppLocalizations l, Ledger ledger, LedgerTransaction t) {
   if (t.description.isNotEmpty) return t.description;
   return ledger.categoryOf(t)?.name ?? kindText(l, ledger.kindOf(t));
 }
+
+String statusText(AppLocalizations l, StatusFilter status) => switch (status) {
+  StatusFilter.toValidate => l.statusToValidate,
+  StatusFilter.toComplete => l.statusToComplete,
+  StatusFilter.proposed => l.statusProposed,
+  StatusFilter.validated => l.statusValidated,
+};

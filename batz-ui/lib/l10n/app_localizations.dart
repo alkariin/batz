@@ -1643,6 +1643,384 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Relevés importés'**
   String get accountStatements;
+
+  /// No description provided for @validationTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Validation'**
+  String get validationTitle;
+
+  /// No description provided for @validationToCompleteTab.
+  ///
+  /// In fr, this message translates to:
+  /// **'À compléter ({count})'**
+  String validationToCompleteTab(int count);
+
+  /// No description provided for @validationProposedTab.
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposées ({count})'**
+  String validationProposedTab(int count);
+
+  /// No description provided for @validationNothingToComplete.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune ligne à compléter.'**
+  String get validationNothingToComplete;
+
+  /// No description provided for @validationNothingProposed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune proposition à confirmer.'**
+  String get validationNothingProposed;
+
+  /// No description provided for @validationConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer les propositions ({count})'**
+  String validationConfirm(int count);
+
+  /// No description provided for @validationConfirmed.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une ligne validée} other{{count} lignes validées}}.'**
+  String validationConfirmed(int count);
+
+  /// No description provided for @validationConflict.
+  ///
+  /// In fr, this message translates to:
+  /// **'Règles en concurrence : {rules}'**
+  String validationConflict(String rules);
+
+  /// No description provided for @validationUnusable.
+  ///
+  /// In fr, this message translates to:
+  /// **'La règle « {keywords} » vise une cible inutilisable.'**
+  String validationUnusable(String keywords);
+
+  /// No description provided for @validationRule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Règle « {keywords} »'**
+  String validationRule(String keywords);
+
+  /// No description provided for @validationTransferWith.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transfert avec {account}'**
+  String validationTransferWith(String account);
+
+  /// No description provided for @validationAction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider les lignes'**
+  String get validationAction;
+
+  /// No description provided for @classifyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Classer la ligne'**
+  String get classifyTitle;
+
+  /// No description provided for @classifyCategory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Catégorie'**
+  String get classifyCategory;
+
+  /// No description provided for @classifyTransfer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transfert'**
+  String get classifyTransfer;
+
+  /// No description provided for @classifyCounterpart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte de contrepartie'**
+  String get classifyCounterpart;
+
+  /// No description provided for @classifyTransferOut.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'argent part vers ce compte.'**
+  String get classifyTransferOut;
+
+  /// No description provided for @classifyTransferIn.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'argent vient de ce compte.'**
+  String get classifyTransferIn;
+
+  /// No description provided for @classifyValidate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider'**
+  String get classifyValidate;
+
+  /// No description provided for @classifyValidated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ligne validée.'**
+  String get classifyValidated;
+
+  /// No description provided for @classifyCreateRule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer une règle'**
+  String get classifyCreateRule;
+
+  /// No description provided for @classifyChooseCategory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez une catégorie.'**
+  String get classifyChooseCategory;
+
+  /// No description provided for @classifyChooseAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un compte.'**
+  String get classifyChooseAccount;
+
+  /// No description provided for @rulesMenu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Règles de classement'**
+  String get rulesMenu;
+
+  /// No description provided for @rulesTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Règles {year}'**
+  String rulesTitle(int year);
+
+  /// No description provided for @rulesEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune règle pour cette année.'**
+  String get rulesEmpty;
+
+  /// No description provided for @rulesNoTree.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette année n\'a pas encore d\'arbre de catégories.'**
+  String get rulesNoTree;
+
+  /// No description provided for @ruleNew.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle règle'**
+  String get ruleNew;
+
+  /// No description provided for @ruleEdit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier la règle'**
+  String get ruleEdit;
+
+  /// No description provided for @ruleKeywords.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mots-clés, un par ligne'**
+  String get ruleKeywords;
+
+  /// No description provided for @ruleKeywordsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous sont requis, sans tenir compte des majuscules, des accents ni des espaces. « re: » au début d\'un mot-clé pour une expression régulière.'**
+  String get ruleKeywordsHint;
+
+  /// No description provided for @ruleKeywordInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Expression régulière invalide : {keyword}'**
+  String ruleKeywordInvalid(String keyword);
+
+  /// No description provided for @ruleTarget.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cible'**
+  String get ruleTarget;
+
+  /// No description provided for @rulePeriod.
+  ///
+  /// In fr, this message translates to:
+  /// **'Période'**
+  String get rulePeriod;
+
+  /// No description provided for @rulePeriodNone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date du paiement'**
+  String get rulePeriodNone;
+
+  /// No description provided for @rulePeriodPreviousMonth.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mois précédent'**
+  String get rulePeriodPreviousMonth;
+
+  /// No description provided for @rulePeriodNextMonth.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mois suivant'**
+  String get rulePeriodNextMonth;
+
+  /// No description provided for @rulePeriodMonthsAfter.
+  ///
+  /// In fr, this message translates to:
+  /// **'N mois après le paiement'**
+  String get rulePeriodMonthsAfter;
+
+  /// No description provided for @rulePeriodMonthsBefore.
+  ///
+  /// In fr, this message translates to:
+  /// **'N mois avant le paiement'**
+  String get rulePeriodMonthsBefore;
+
+  /// No description provided for @rulePeriodCurrentYear.
+  ///
+  /// In fr, this message translates to:
+  /// **'Année civile en cours'**
+  String get rulePeriodCurrentYear;
+
+  /// No description provided for @rulePeriodPreviousYear.
+  ///
+  /// In fr, this message translates to:
+  /// **'Année civile précédente'**
+  String get rulePeriodPreviousYear;
+
+  /// No description provided for @ruleMonths.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nombre de mois'**
+  String get ruleMonths;
+
+  /// No description provided for @ruleMatches.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette règle classerait {count, plural, =0{aucune ligne non validée} =1{une ligne non validée} other{{count} lignes non validées}}.'**
+  String ruleMatches(int count);
+
+  /// No description provided for @ruleSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Règle enregistrée.'**
+  String get ruleSaved;
+
+  /// No description provided for @ruleDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Règle supprimée.'**
+  String get ruleDeleted;
+
+  /// No description provided for @ruleDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer cette règle ? Les lignes déjà validées ne changent pas.'**
+  String get ruleDeleteConfirm;
+
+  /// No description provided for @ruleUnusable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cible inutilisable : cette règle ne propose rien.'**
+  String get ruleUnusable;
+
+  /// No description provided for @ruleSummary.
+  ///
+  /// In fr, this message translates to:
+  /// **'{keywords} → {target}'**
+  String ruleSummary(String keywords, String target);
+
+  /// No description provided for @taskLinesToValidate.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une ligne à valider} other{{count} lignes à valider}}'**
+  String taskLinesToValidate(int count);
+
+  /// No description provided for @taskLinesToValidateHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lignes importées : complétez-les ou confirmez les propositions.'**
+  String get taskLinesToValidateHint;
+
+  /// No description provided for @taskConflicts.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une ligne dont les règles sont en concurrence} other{{count} lignes dont les règles sont en concurrence}}'**
+  String taskConflicts(int count);
+
+  /// No description provided for @taskConflictsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Classez-les à la main ou ajustez les règles.'**
+  String get taskConflictsHint;
+
+  /// No description provided for @taskUnusableRules.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une règle de {year} ne propose plus rien} other{{count} règles de {year} ne proposent plus rien}}'**
+  String taskUnusableRules(int count, int year);
+
+  /// No description provided for @taskUnusableRulesHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Leur catégorie ou leur compte n\'est plus utilisable : modifiez-les.'**
+  String get taskUnusableRulesHint;
+
+  /// No description provided for @transactionsSearch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher'**
+  String get transactionsSearch;
+
+  /// No description provided for @transactionsAllMonths.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les mois'**
+  String get transactionsAllMonths;
+
+  /// No description provided for @transactionsAllCategories.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les catégories'**
+  String get transactionsAllCategories;
+
+  /// No description provided for @transactionsUnclassified.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non classé'**
+  String get transactionsUnclassified;
+
+  /// No description provided for @transactionsAllStatuses.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les statuts'**
+  String get transactionsAllStatuses;
+
+  /// No description provided for @statusToValidate.
+  ///
+  /// In fr, this message translates to:
+  /// **'À valider'**
+  String get statusToValidate;
+
+  /// No description provided for @statusToComplete.
+  ///
+  /// In fr, this message translates to:
+  /// **'À compléter'**
+  String get statusToComplete;
+
+  /// No description provided for @statusProposed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposée'**
+  String get statusProposed;
+
+  /// No description provided for @statusValidated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Validée'**
+  String get statusValidated;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

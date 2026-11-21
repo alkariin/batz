@@ -8,6 +8,7 @@ import '../../services.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 import '../sync/sync_cubit.dart';
+import '../validation/validation_page.dart';
 import 'import_cubit.dart';
 import 'statements_page.dart';
 
@@ -163,14 +164,29 @@ class _ImportViewState extends State<_ImportView> {
     final l = AppLocalizations.of(context);
     final s = result.statement;
     return Card(
-      child: ListTile(
-        leading: const Icon(Icons.check_circle_outline),
-        title: Text(l.importDoneTitle),
-        subtitle: Text(
-          '${l.importDonePeriod(formatDate(s.periodStart.toDateTime()), formatDate(s.periodEnd.toDateTime()))}\n'
-          '${l.importDoneLines(result.lines, result.proposed, result.toComplete)}',
-          key: const Key('importResult'),
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.check_circle_outline),
+            title: Text(l.importDoneTitle),
+            subtitle: Text(
+              '${l.importDonePeriod(formatDate(s.periodStart.toDateTime()), formatDate(s.periodEnd.toDateTime()))}\n'
+              '${l.importDoneLines(result.lines, result.proposed, result.toComplete)}',
+              key: const Key('importResult'),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: FilledButton.tonal(
+              key: const Key('importValidate'),
+              onPressed: () =>
+                  Navigator.of(context)
+                      .pushReplacement(MaterialPageRoute<void>(builder: (_) => const ValidationPage())),
+              child: Text(l.validationAction),
+            ),
+          ),
+        ],
       ),
     );
   }
