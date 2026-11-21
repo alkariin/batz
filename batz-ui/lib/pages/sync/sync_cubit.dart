@@ -276,6 +276,7 @@ class SyncCubit extends Cubit<SyncState> {
     if (!manual && _stopped.contains(state.status)) return;
     emit(state.copyWith(status: SyncStatus.syncing));
     final transport = _transport(pairing);
+    var received = false;
     try {
       final report = replace
           ? await _engine.replace(transport, pairingId: pairing.deviceId)
@@ -291,7 +292,7 @@ class SyncCubit extends Cubit<SyncState> {
           clockOffset: report.clockOffset,
         ),
       );
-      if (report.receivedEntries > 0 || report.replaced) await _onReceived?.call();
+      received = report.receivedEntries > 0 || report.replaced;
     } catch (error) {
       final memory = await _store.read(pairing.deviceId);
       final pending = await _journal.pendingFor(memory?.known ?? KnownState.empty);
@@ -299,6 +300,16 @@ class SyncCubit extends Cubit<SyncState> {
       emit(_failed(error, lastSync: memory?.lastSuccess, pending: pending));
     } finally {
       if (transport case final ServerClient client) client.close();
+    }
+    // Reloading the screens is not part of the exchange, which went to its
+    // end: a failure there is reported, never shown as a synchronisation
+    // error.
+    if (received && !isClosed) {
+      try {
+        await _onReceived?.call();
+      } catch (error, stackTrace) {
+        if (!isClosed) addError(error, stackTrace);
+      }
     }
   }
 

@@ -8,6 +8,7 @@ import 'package:batz/data/sync/sync_engine.dart';
 import 'package:batz/data/sync/sync_store.dart';
 import 'package:batz/domain/journal/journal_entry.dart';
 import 'package:batz/pages/sync/sync_cubit.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/fake_server.dart';
@@ -45,14 +46,14 @@ void main() {
     await server.close();
   });
 
-  SyncCubit cubit({int debounce = 3000, int period = 300000}) {
+  SyncCubit cubit({int debounce = 3000, int period = 300000, Future<void> Function()? onReceived}) {
     final c = SyncCubit(
       server: ServerRepository(secrets),
       journal: device.journal,
       engine: SyncEngine(device.journal, SyncStore(device.db)),
       store: SyncStore(device.db),
       transport: (_) => fake,
-      onReceived: () async => reloads++,
+      onReceived: onReceived ?? () async => reloads++,
       debounce: Duration(milliseconds: debounce),
       period: Duration(milliseconds: period),
     );
@@ -83,6 +84,26 @@ void main() {
     await server.journal.merge([entry(DateTime.now().millisecondsSinceEpoch, 0, other, 'theirs', 'title', 'Coop')]);
     await c.sync(manual: true);
     expect(reloads, 1);
+    expect((await device.notes()).keys, containsAll(['mine', 'theirs']));
+  });
+
+  test('a failure to reload the screens after an exchange is not a synchronisation error', () async {
+    final observer = _ErrorRecorder();
+    final previous = Bloc.observer;
+    Bloc.observer = observer;
+    addTearDown(() => Bloc.observer = previous);
+    final errors = observer.errors;
+    final c = cubit(onReceived: () async => throw StateError('reload failed'));
+    await c.start();
+    expect(c.state.status, SyncStatus.upToDate);
+    // Another device's modification reaches the server; receiving it makes
+    // the screens reload, which fails.
+    await server.journal.merge([entry(DateTime.now().millisecondsSinceEpoch, 0, other, 'theirs', 'title', 'Coop')]);
+    await c.sync(manual: true);
+    expect(errors, [isA<StateError>()], reason: 'reported to the observers');
+    expect(c.state.status, SyncStatus.upToDate);
+    expect(c.state.error, isNull);
+    expect(c.state.lastSync, isNotNull);
     expect((await device.notes()).keys, containsAll(['mine', 'theirs']));
   });
 
@@ -271,4 +292,15 @@ void main() {
       });
     }
   });
+}
+
+/// Records the errors cubits report.
+class _ErrorRecorder extends BlocObserver {
+  final errors = <Object>[];
+
+  @override
+  void onError(BlocBase<dynamic> bloc, Object error, StackTrace stackTrace) {
+    errors.add(error);
+    super.onError(bloc, error, stackTrace);
+  }
 }

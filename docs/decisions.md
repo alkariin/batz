@@ -514,3 +514,138 @@ under that load: the convergence test now has a timeout of 3 minutes per seed
 (about 10 seconds alone), and the cubit tests wait for the events they check
 (`SyncCubit.whenIdle`, the states emitted) instead of fixed delays. Four
 consecutive full runs passed afterwards.
+
+## 2026-11-21 — Phase 3 decisions taken during development
+
+Functional choices H1 to H8 are in `docs/plan/phase-3.md`. The decisions below
+were taken while implementing it.
+
+### 3.0 A modification is written in a few statements
+
+**Decision.** `Journal.write` no longer runs several queries per field. The
+changes go into a temporary table, those whose exact JSON value is already
+the current one are deleted from it with one statement (`field_versions`
+joined with `journal`, as before), the rest is inserted into the journal
+under one timestamp, and the derived tables are updated with the set-based
+statements already used to integrate received entries (`_applyLatest`). The
+rules of 2.0 hold unchanged: only the fields whose value changes are written,
+a field never set is written even to `null`, nothing is written when nothing
+changes.
+
+**Measure** (`batz-ui/benchmark/journal_write_test.dart`, run on 2026-11-21 on
+the development machine, Intel Core i7-14700KF, database file in a background
+isolate as in production, journal already holding 20 000 entries): one
+modification of 1 000 fields took 3.4 to 4.5 s before (0.7 s when nothing
+changed), and takes 51 to 71 ms after (19 ms when nothing changes). The tests
+of the journal against its naive model, the rebuild tests and the convergence
+test pass unchanged.
+
+### 3.0 Reloading the screens after an exchange
+
+**Decision.** `SyncCubit` reloads the screens after the exchange is over and
+its status is shown, outside its error handling. A failure to reload is
+reported to the bloc observers (`addError`) and never shown as a
+synchronisation error: the exchange itself went to its end.
+
+### 3.0 `pdftotext` in the server image
+
+**Decision.** The image installs `poppler-utils` from Alpine 3.24
+(`pdftotext` 25.12.0). The server runs it without a shell, the PDF on its
+standard input and the text on its standard output: nothing is written to
+disk, so the container stays read-only.
+
+**Evidence** (2026-11-21):
+
+- The image grows from 34.6 MB to 58.4 MB (`docker image inspect`,
+  uncompressed size).
+- In a container started with `--read-only --cap-drop ALL` as user 10001,
+  `pdftotext -layout -enc UTF-8 - -` reads the PDF from its standard input.
+- `pdftotext -layout` writes exactly the same text with version 24.02 (the
+  development machine, Ubuntu 24.04) and 25.12 (the image), byte for byte, for
+  each real statement at the root of the repository and for the fictitious
+  ones. The extraction therefore keeps the method of the original script
+  (`-layout`); word coordinates (`-bbox-layout`) are not needed.
+
+### 3.0 Choosing and saving a file: `file_picker`
+
+**Decision.** `file_picker` 13.4.0, the only package that both picks and saves
+a file on Android, Windows and Ubuntu: `FilePicker.pickFile` (the PDF to
+import) and `FilePicker.saveFile(bytes: …)` (the original PDF). On Android it
+goes through the system document picker, without any storage permission; on
+Ubuntu through the XDG desktop portal over D-Bus (no `zenity` needed); on
+Windows through the native dialogs. `file_selector`, the other candidate,
+cannot save a file on Android.
+
+**Evidence.** With the dependency, `flutter build linux` and `flutter build
+apk` succeed on the development machine and the APK registers
+`FilePickerPlugin`. Windows is built by CI only.
+
+### 3.0 Sending a file with Dio
+
+**Decision.** The app sends the PDF as the raw body of `POST
+/api/v1/imports`, with `Content-Type: application/pdf`, rather than a
+multipart form: one file, nothing else to send, and the server reads it
+without parsing a form.
+
+**Evidence.** With Dio 5.11.1, `post(data: Uint8List, contentType:
+'application/pdf')` delivers a body of 300 000 bytes identical to the one
+sent, with that content type and its length (a throwaway test against a local
+HTTP server). The real route is covered by the end-to-end tests of step 3.5.
+
+### 3.0 Personal terms in tracked files
+
+**Decision.** `scripts/check-personal-files.sh` also reads
+`personal/terms.txt` (one term per line, never tracked: `/personal/` is
+ignored by git) and fails when a term appears, without case, in a tracked
+file (binary files included, the text of PDF files through `pdftotext`) or
+in a commit message of any branch. A match names the file and the line of the
+term in the list, never the term. Without the list, as in CI, this part is
+skipped and says so.
+
+On the development machine, the list was built by a local script from the
+real statements (holder's name and address, IBANs, account and card numbers,
+phone numbers, names of the other parties of transfers), without displaying
+any of them; generic bank words it caught at first were removed. It can be
+completed by hand.
+
+### 3.0 Fictitious statements
+
+**Decision.** `batz-web/src/internal/infrastructure/extraction/postfinance/fake`
+writes PDF files itself (standard Helvetica fonts, WinAnsi), laid out with
+the positions measured with `pdftotext -bbox-layout` on real statements of
+2026: header block, columns and their right edges, line height, page header
+of the following pages, form code printed vertically in the left margin,
+page number. Only the geometry and the bank's own formulas (« ACHAT/SERVICE
+DU », « CARTE NO », « DONNEUR D'ORDRE: », …) come from real statements;
+every name, place, amount and number is invented. Its output depends only on
+its input: `TestFixturesAreUpToDate` regenerates the test set in
+`postfinance/testdata` and compares it byte for byte (`-update` rewrites it).
+
+The test set: January, February and March 2026, consecutive in dates and
+balances; a statement of another account continuing March; February with a
+movement amount, a total, then a closing balance altered; an invoice that is
+no statement. January has a day that goes on over a new page without its
+date being repeated; both months have labels of up to five lines and an
+amount that pdftotext separates from its label by the vertical footer, once
+with the date of a new day, once without.
+
+That separation was reproduced by its real cause, measured on a real
+statement: the vertical footer's top lies between the top of a label and the
+top of its amount, half a point lower, and pdftotext writes lines in the order
+of their tops.
+
+**Evidence.** `pdftotext -layout` gives the same structure as on the real
+statements. The original script (`legacy/extract_v1.1.py`), run locally on
+the test set, accepts the four consistent statements (27, 21, 12 and 3
+movements) and refuses the three altered ones for the expected reason
+(running balance, totals, closing balance) and the invoice.
+
+### 3.0 Database of version 0.3.0
+
+`batz-ui/test/fixtures/v0.3.0/batz.db` was written by version 0.3.0 (commit
+`806a457`) through its own operations, with a fixed clock: three accounts
+(one detailed), the 2026 tree, an expense, a transfer, a deleted expense, a
+rename integrated as an exchange page from another device, and the memory of
+the server after an exchange. `test/data/upgrade_test.dart` opens it with the
+current version and checks every record, the memory of the server (nothing
+waiting) and a new write after the old entries.

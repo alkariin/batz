@@ -117,17 +117,44 @@ class Journal {
       _columnFor(change.entity, change.field, strict: true);
     }
     final hlc = await _db.transaction(() async {
-      final changed = [
-        for (final change in modification.changes)
-          if (await _currentValue(change.entity, change.recordId, change.field) != jsonEncode(change.value)) change,
-      ];
-      if (changed.isEmpty) return null;
-      final hlc = _clock.tick();
-      for (final change in changed) {
-        final entry = JournalEntry(hlc, change);
-        await _insert(entry);
-        await _apply(entry);
+      // Set-based, like [_merge]: an import or a confirmation in bulk writes
+      // thousands of fields, and one round trip per field took seconds.
+      await _db.customStatement(
+        'CREATE TEMP TABLE IF NOT EXISTS outgoing (entity TEXT, record_id TEXT, field TEXT, value TEXT, '
+        'PRIMARY KEY (entity, record_id, field))',
+      );
+      await _db.customStatement('DELETE FROM temp.outgoing');
+      final changes = modification.changes;
+      const rowsPerStatement = 200;
+      for (var start = 0; start < changes.length; start += rowsPerStatement) {
+        final chunk = changes.sublist(start, (start + rowsPerStatement).clamp(0, changes.length));
+        await _db.customStatement(
+          'INSERT INTO temp.outgoing (entity, record_id, field, value) VALUES '
+          '${List.filled(chunk.length, '(?, ?, ?, ?)').join(', ')}',
+          [
+            for (final c in chunk) ...[c.entity, c.recordId, c.field, jsonEncode(c.value)],
+          ],
+        );
       }
+      // Only the fields whose value changes: the exact JSON value of the
+      // entry that gives the field its current value is compared.
+      await _db.customStatement(
+        'DELETE FROM temp.outgoing WHERE EXISTS (SELECT 1 FROM field_versions v JOIN journal j '
+        'ON j.hlc = v.hlc AND j.entity = v.entity AND j.record_id = v.record_id AND j.field = v.field '
+        'WHERE v.entity = outgoing.entity AND v.record_id = outgoing.record_id AND v.field = outgoing.field '
+        'AND j.value = outgoing.value)',
+      );
+      final remaining = await _db.customSelect('SELECT COUNT(*) AS n FROM temp.outgoing').getSingle();
+      if (remaining.read<int>('n') == 0) return null;
+      final hlc = _clock.tick();
+      await _db.customStatement(
+        'INSERT INTO journal (hlc, entity, record_id, field, value) '
+        'SELECT ?, entity, record_id, field, value FROM temp.outgoing',
+        [hlc.encode()],
+      );
+      await _db.customStatement('DELETE FROM temp.outgoing');
+      // The new timestamp is later than every other: each field takes it.
+      await _applyLatest('SELECT entity, record_id, field, hlc FROM journal WHERE hlc = ?', [hlc.encode()]);
       return hlc;
     });
     if (hlc != null) _localWrites.add(null);
@@ -139,20 +166,6 @@ class Journal {
   /// Emits after each modification written on this device: the
   /// synchronisation follows a few seconds later (decision H2).
   Stream<void> get localWrites => _localWrites.stream;
-
-  /// The JSON-encoded value of the entry that gives [field] its current
-  /// value, or null if no entry ever set it.
-  Future<String?> _currentValue(String entity, String recordId, String field) async {
-    final row = await _db
-        .customSelect(
-          'SELECT j.value AS value FROM field_versions v JOIN journal j '
-          'ON j.hlc = v.hlc AND j.entity = v.entity AND j.record_id = v.record_id AND j.field = v.field '
-          'WHERE v.entity = ? AND v.record_id = ? AND v.field = ?',
-          variables: [Variable.withString(entity), Variable.withString(recordId), Variable.withString(field)],
-        )
-        .getSingleOrNull();
-    return row?.read<String>('value');
-  }
 
   /// Integrates entries made on other devices (or replayed): unknown ones are
   /// stored and applied, known ones are ignored. Entries of an entity or
@@ -204,10 +217,11 @@ class Journal {
   }
 
   /// Applies, for each field of [latestSql] (entity, record_id, field, hlc:
-  /// the latest of a set of journal entries per field), its entry if it is
+  /// the latest of a set of journal entries per field, with the parameters
+  /// [latestArgs]), its entry if it is
   /// newer than the one that gives the field its current value. Fields this
   /// version does not know stay in the journal only.
-  Future<void> _applyLatest(String latestSql) async {
+  Future<void> _applyLatest(String latestSql, [List<Object?> latestArgs = const []]) async {
     final known = [
       for (final table in _tables.values)
         for (final field in [deletedField, ...table.columns.keys]) (table.entity, field),
@@ -220,6 +234,7 @@ class Journal {
       'AND NOT EXISTS (SELECT 1 FROM field_versions v WHERE v.entity = l.entity AND v.record_id = l.record_id '
       'AND v.field = l.field AND v.hlc >= l.hlc)',
       [
+        ...latestArgs,
         for (final (entity, field) in known) ...[entity, field],
       ],
     );
@@ -232,7 +247,7 @@ class Journal {
       final table = _tables[entity]!;
       final column = _columnFor(entity, field, strict: true)!;
       // json_extract turns the JSON text into the SQL value: true and false
-      // become 1 and 0, like [_sqlValue].
+      // become 1 and 0.
       await _db.customStatement(
         'INSERT INTO ${table.table} (id, $column) '
         "SELECT l.record_id, json_extract(j.value, '\$') FROM temp.latest l JOIN journal j "
@@ -415,58 +430,9 @@ class Journal {
     FieldChange(row.entity, row.recordId, row.field, JournalEntry.decodeValue(row.value)),
   );
 
-  /// Stores [entry]; returns false if it was already there.
-  Future<bool> _insert(JournalEntry entry) async {
-    await _db
-        .into(_db.journalEntries)
-        .insert(
-          JournalEntriesCompanion.insert(
-            hlc: entry.hlc.encode(),
-            entity: entry.entity,
-            recordId: entry.recordId,
-            field: entry.field,
-            value: entry.encodedValue,
-          ),
-          mode: InsertMode.insertOrIgnore,
-        );
-    // Inside the transaction, changes() reports this very statement.
-    return await _changes() > 0;
-  }
-
   Future<int> _changes() async {
     final row = await _db.customSelect('SELECT changes() AS n').getSingle();
     return row.read<int>('n');
-  }
-
-  /// Applies [entry] to its derived table if it is the latest change of its
-  /// field.
-  Future<void> _apply(JournalEntry entry) async {
-    final table = _tables[entry.entity];
-    final column = _columnFor(entry.entity, entry.field, strict: false);
-    if (table == null || column == null) return;
-
-    final current =
-        await (_db.select(_db.fieldVersions)..where(
-              (v) => v.entity.equals(entry.entity) & v.recordId.equals(entry.recordId) & v.field.equals(entry.field),
-            ))
-            .getSingleOrNull();
-    if (!supersedes(entry.hlc, current == null ? null : Hlc.parse(current.hlc))) return;
-
-    await _db
-        .into(_db.fieldVersions)
-        .insertOnConflictUpdate(
-          FieldVersionsCompanion.insert(
-            entity: entry.entity,
-            recordId: entry.recordId,
-            field: entry.field,
-            hlc: entry.hlc.encode(),
-          ),
-        );
-    await _db.customStatement(
-      'INSERT INTO ${table.table} (id, $column) VALUES (?, ?) '
-      'ON CONFLICT (id) DO UPDATE SET $column = excluded.$column',
-      [entry.recordId, _sqlValue(entry.value)],
-    );
   }
 
   /// The column that stores [field] of [entity], or null if this version does
@@ -480,12 +446,6 @@ class Journal {
     }
     return column;
   }
-
-  static Object? _sqlValue(Object? value) => switch (value) {
-    true => 1,
-    false => 0,
-    _ => value,
-  };
 }
 
 /// A page continues from more than this journal holds of [origin]:
