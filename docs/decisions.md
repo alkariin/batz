@@ -1239,3 +1239,41 @@ the best of ten runs, all printed; the limits stay 300 and 100 ms.
 refund and an answer from one device to another through a real server,
 checks the same views on both, and copies a tree on two devices offline;
 the convergence test answers shares at random on four devices.
+
+### 4.5 The « Année » screen
+
+**Decisions.**
+
+- `YearPage` takes the « Année » entry of the navigation. It offers the
+  years of `YearViews.years` (the current year first, otherwise the latest)
+  and the toggle Trésorerie / Économique. The view chosen is kept in the
+  local state of the database (`PreferencesStore`, key `year_view_kind`):
+  on this device only, never in the journal; economic the first time (H7).
+- The header gives income, expenses and savings, « Non classé » when it is
+  not zero, and in the economic view the two period offsets, signed as a
+  result. A notice recalls the lines to validate counted as proposed (it
+  opens the validation), another that a year to come is shown with the tree
+  of its copy.
+- The tree lists every category with its total, groups first and folding;
+  under a category, its redistribution lines (« Vers … » under the source,
+  « Depuis … » under the target, with the percentage); after the last
+  top-level group of a nature, « À classer » of that nature when it is not
+  zero; « Non classé » last. Expenses, their groups, their « À classer »
+  and their redistribution lines show as costs, without a minus sign: a
+  refund or what leaves through a redistribution shows with one (H7).
+  Income and « Non classé » show as paid.
+- From 1 100 logical pixels wide, each line shows twelve columns and the
+  total; below, the total and a button that unfolds the twelve months.
+  Every amount (a month or the year) opens the transactions that make it,
+  with the part each one counts (`CompositionPage`); each opens its detail.
+  A redistribution line opens nothing.
+- The home screen shows the key figures of the current year in the
+  economic view (H8) and opens « Année » through the navigation of the
+  shell (`ShellScope`); nothing when the year has no tree to show.
+
+**Evidence.** `test/pages/year/year_page_test.dart` (the toggle on a
+payment over two years, months unfolded, a month and a category opening
+their transactions and a detail, the next year with its preview, a group
+folded, the view kept on the device, twelve columns on a wide screen).
+Screenshots taken locally with the real fonts, phone and desktop sizes,
+were checked by eye; they are not kept.

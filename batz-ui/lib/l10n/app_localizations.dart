@@ -2105,6 +2105,168 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Validée'**
   String get statusValidated;
+
+  /// No description provided for @yearViewCash.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trésorerie'**
+  String get yearViewCash;
+
+  /// No description provided for @yearViewEconomic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Économique'**
+  String get yearViewEconomic;
+
+  /// No description provided for @yearPick.
+  ///
+  /// In fr, this message translates to:
+  /// **'Année affichée'**
+  String get yearPick;
+
+  /// No description provided for @yearIncome.
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenus'**
+  String get yearIncome;
+
+  /// No description provided for @yearExpenses.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépenses'**
+  String get yearExpenses;
+
+  /// No description provided for @yearSavings.
+  ///
+  /// In fr, this message translates to:
+  /// **'Épargne'**
+  String get yearSavings;
+
+  /// No description provided for @yearUnclassified.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non classé'**
+  String get yearUnclassified;
+
+  /// No description provided for @yearToClassify.
+  ///
+  /// In fr, this message translates to:
+  /// **'À classer'**
+  String get yearToClassify;
+
+  /// No description provided for @yearToClassifyNature.
+  ///
+  /// In fr, this message translates to:
+  /// **'À classer · {nature}'**
+  String yearToClassifyNature(String nature);
+
+  /// No description provided for @yearOffsets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Décalages de période'**
+  String get yearOffsets;
+
+  /// No description provided for @yearPaidForOtherYears.
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé en {year} pour d\'autres années'**
+  String yearPaidForOtherYears(String year);
+
+  /// No description provided for @yearPaidInOtherYears.
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé d\'autres années pour {year}'**
+  String yearPaidInOtherYears(String year);
+
+  /// No description provided for @yearToValidate.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une ligne à valider compte} other{{count} lignes à valider comptent}} comme ses règles le proposent.'**
+  String yearToValidate(int count);
+
+  /// No description provided for @yearPreview.
+  ///
+  /// In fr, this message translates to:
+  /// **'{year} n\'a pas encore d\'arbre : il s\'affiche avec celui que sa copie lui donnera.'**
+  String yearPreview(String year);
+
+  /// No description provided for @yearNone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune année à afficher : la première transaction d\'une année crée son arbre.'**
+  String get yearNone;
+
+  /// No description provided for @yearTotal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total'**
+  String get yearTotal;
+
+  /// No description provided for @yearMonths.
+  ///
+  /// In fr, this message translates to:
+  /// **'janv.,févr.,mars,avr.,mai,juin,juil.,août,sept.,oct.,nov.,déc.'**
+  String get yearMonths;
+
+  /// No description provided for @yearMonthDetail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Détail par mois'**
+  String get yearMonthDetail;
+
+  /// No description provided for @yearCostsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les dépenses s\'affichent comme des coûts ; un remboursement les diminue.'**
+  String get yearCostsHint;
+
+  /// No description provided for @yearRedistributionTo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vers {name} · {percent}'**
+  String yearRedistributionTo(String name, String percent);
+
+  /// No description provided for @yearRedistributionFrom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Depuis {name} · {percent}'**
+  String yearRedistributionFrom(String name, String percent);
+
+  /// No description provided for @compositionEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune transaction dans ce montant.'**
+  String get compositionEmpty;
+
+  /// No description provided for @compositionTotal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total'**
+  String get compositionTotal;
+
+  /// No description provided for @compositionPeriod.
+  ///
+  /// In fr, this message translates to:
+  /// **'{month} {year}'**
+  String compositionPeriod(String month, String year);
+
+  /// No description provided for @keyFiguresTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chiffres clés {year}'**
+  String keyFiguresTitle(String year);
+
+  /// No description provided for @keyFiguresHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vue économique : ce que l\'année coûte.'**
+  String get keyFiguresHint;
+
+  /// No description provided for @keyFiguresOpen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir l\'année'**
+  String get keyFiguresOpen;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

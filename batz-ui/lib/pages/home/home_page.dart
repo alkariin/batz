@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../sync/sync_card.dart';
+import 'key_figures_card.dart';
 import 'tasks_card.dart';
 
-/// Accueil: the state of the synchronisation and the tasks to do
-/// (specification, 4.6).
+/// Accueil: the state of the synchronisation, the tasks to do and the key
+/// figures of the year (specification, 4.6; decision H8 of phase 4).
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -13,7 +14,10 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(AppLocalizations.of(context).navHome)),
-      body: ListView(padding: const EdgeInsets.all(16), children: const [SyncCard(), SizedBox(height: 8), TasksCard()]),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: const [SyncCard(), SizedBox(height: 8), TasksCard(), SizedBox(height: 8), KeyFiguresCard()],
+      ),
     );
   }
 }

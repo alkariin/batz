@@ -7,6 +7,7 @@ import 'data/ledger/ledger_repository.dart';
 import 'data/local/database.dart';
 import 'data/local/journal.dart';
 import 'data/local/open_database.dart';
+import 'data/local/preferences_store.dart';
 import 'data/secret_store.dart';
 import 'data/server/server_repository.dart';
 import 'data/sync/sync_engine.dart';
@@ -26,6 +27,7 @@ class AppServices {
   }) : server = ServerRepository(secrets),
        files = files ?? SystemFileAccess(),
        ledger = LedgerRepository(database, journal),
+       preferences = PreferencesStore(database),
        syncStore = SyncStore(database) {
     syncEngine = SyncEngine(journal, syncStore);
   }
@@ -48,6 +50,7 @@ class AppServices {
   final SecretStore secrets;
   final ServerRepository server;
   final LedgerRepository ledger;
+  final PreferencesStore preferences;
   final SyncStore syncStore;
   late final SyncEngine syncEngine;
 

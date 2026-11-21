@@ -8,6 +8,20 @@ import 'ledger_cubit.dart';
 import 'more/more_page.dart';
 import 'sync/sync_cubit.dart';
 import 'transactions/transactions_page.dart';
+import 'year/year_page.dart';
+
+/// Lets a page of the shell show another section (the key figures of the
+/// home screen open « Année »).
+class ShellScope extends InheritedWidget {
+  const ShellScope({super.key, required this.select, required super.child});
+
+  final void Function(Section section) select;
+
+  static ShellScope? maybeOf(BuildContext context) => context.dependOnInheritedWidgetOfExactType<ShellScope>();
+
+  @override
+  bool updateShouldNotify(ShellScope oldWidget) => false;
+}
 
 /// Width from which navigation moves from the bottom bar to a side rail.
 const wideLayoutBreakpoint = 600.0;
@@ -84,11 +98,15 @@ class _AppShellState extends State<AppShell> {
       child: switch (_selected) {
         Section.home => const HomePage(),
         Section.transactions => const TransactionsPage(),
+        Section.year => const YearPage(),
         Section.more => const MorePage(),
         _ => EmptyPage(title: _destinations[_selected]!.label(l)),
       },
     );
+    return ShellScope(select: (section) => _select(section.index), child: _layout(l, page, toValidate));
+  }
 
+  Widget _layout(AppLocalizations l, Widget page, int toValidate) {
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < wideLayoutBreakpoint) {

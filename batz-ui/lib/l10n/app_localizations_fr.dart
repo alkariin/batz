@@ -1248,4 +1248,109 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get statusValidated => 'Validée';
+
+  @override
+  String get yearViewCash => 'Trésorerie';
+
+  @override
+  String get yearViewEconomic => 'Économique';
+
+  @override
+  String get yearPick => 'Année affichée';
+
+  @override
+  String get yearIncome => 'Revenus';
+
+  @override
+  String get yearExpenses => 'Dépenses';
+
+  @override
+  String get yearSavings => 'Épargne';
+
+  @override
+  String get yearUnclassified => 'Non classé';
+
+  @override
+  String get yearToClassify => 'À classer';
+
+  @override
+  String yearToClassifyNature(String nature) {
+    return 'À classer · $nature';
+  }
+
+  @override
+  String get yearOffsets => 'Décalages de période';
+
+  @override
+  String yearPaidForOtherYears(String year) {
+    return 'Payé en $year pour d\'autres années';
+  }
+
+  @override
+  String yearPaidInOtherYears(String year) {
+    return 'Payé d\'autres années pour $year';
+  }
+
+  @override
+  String yearToValidate(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lignes à valider comptent',
+      one: 'Une ligne à valider compte',
+    );
+    return '$_temp0 comme ses règles le proposent.';
+  }
+
+  @override
+  String yearPreview(String year) {
+    return '$year n\'a pas encore d\'arbre : il s\'affiche avec celui que sa copie lui donnera.';
+  }
+
+  @override
+  String get yearNone => 'Aucune année à afficher : la première transaction d\'une année crée son arbre.';
+
+  @override
+  String get yearTotal => 'Total';
+
+  @override
+  String get yearMonths => 'janv.,févr.,mars,avr.,mai,juin,juil.,août,sept.,oct.,nov.,déc.';
+
+  @override
+  String get yearMonthDetail => 'Détail par mois';
+
+  @override
+  String get yearCostsHint => 'Les dépenses s\'affichent comme des coûts ; un remboursement les diminue.';
+
+  @override
+  String yearRedistributionTo(String name, String percent) {
+    return 'Vers $name · $percent';
+  }
+
+  @override
+  String yearRedistributionFrom(String name, String percent) {
+    return 'Depuis $name · $percent';
+  }
+
+  @override
+  String get compositionEmpty => 'Aucune transaction dans ce montant.';
+
+  @override
+  String get compositionTotal => 'Total';
+
+  @override
+  String compositionPeriod(String month, String year) {
+    return '$month $year';
+  }
+
+  @override
+  String keyFiguresTitle(String year) {
+    return 'Chiffres clés $year';
+  }
+
+  @override
+  String get keyFiguresHint => 'Vue économique : ce que l\'année coûte.';
+
+  @override
+  String get keyFiguresOpen => 'Voir l\'année';
 }
