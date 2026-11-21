@@ -1,0 +1,37 @@
+{
+  "accepted": true,
+  "statement": {
+    "format": "postfinance",
+    "iban": "CH0090000000987654321",
+    "currency": "CHF",
+    "periodStart": "2026-04-01",
+    "periodEnd": "2026-04-30",
+    "openingBalance": 986063,
+    "closingBalance": 1561723,
+    "totalCredits": 580000,
+    "totalDebits": 4340,
+    "lines": [
+      {
+        "date": "2026-04-02",
+        "amount": -2450,
+        "rawText": "ACHAT/SERVICE DU 01.04.2026\nCARTE NO XXXX0000\nÉpicerie du Coin\nFictiville",
+        "label": "Épicerie du Coin Fictiville",
+        "balance": 983613
+      },
+      {
+        "date": "2026-04-07",
+        "amount": -1890,
+        "rawText": "ACHAT/SERVICE DU 06.04.2026\nCARTE NO XXXX0000\nBoulangerie des Tests\nFictiville",
+        "label": "Boulangerie des Tests Fictiville",
+        "balance": 981723
+      },
+      {
+        "date": "2026-04-24",
+        "amount": 580000,
+        "rawText": "CRÉDIT\nDONNEUR D'ORDRE:\nEmployeur Fictif SA\nRue de l'Usine 1\n9999 Fictiville",
+        "label": "Employeur Fictif SA Rue de l'Usine 1 9999 Fictiville",
+        "balance": 1561723
+      }
+    ]
+  }
+}

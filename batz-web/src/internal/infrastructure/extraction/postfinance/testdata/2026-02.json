@@ -1,0 +1,160 @@
+{
+  "accepted": true,
+  "statement": {
+    "format": "postfinance",
+    "iban": "CH0090000000123456789",
+    "currency": "CHF",
+    "periodStart": "2026-02-01",
+    "periodEnd": "2026-02-28",
+    "openingBalance": 499022,
+    "closingBalance": 774553,
+    "totalCredits": 581500,
+    "totalDebits": 305969,
+    "lines": [
+      {
+        "date": "2026-02-02",
+        "amount": -165000,
+        "rawText": "DÉBIT\nCH0000000000000000001\nGérance Imaginaire SA\nRue du Bail 3\n9999 Fictiville",
+        "label": "Gérance Imaginaire SA Rue du Bail 3 9999 Fictiville"
+      },
+      {
+        "date": "2026-02-02",
+        "amount": -3890,
+        "rawText": "ACHAT/SERVICE DU 01.02.2026\nCARTE NO XXXX0000\nÉpicerie du Coin\nFictiville",
+        "label": "Épicerie du Coin Fictiville",
+        "balance": 330132
+      },
+      {
+        "date": "2026-02-03",
+        "amount": -650,
+        "rawText": "ACHAT/PRESTATION TWINT DU\n03.02.2026\nCafé de la Démo\n9998 Exempleville (CH)",
+        "label": "Café de la Démo 9998 Exempleville (CH)",
+        "balance": 329482
+      },
+      {
+        "date": "2026-02-04",
+        "amount": -12999,
+        "rawText": "ACHAT/SERVICE DU 03.02.2026\nCARTE NO XXXX0000\nGrand Magasin Inventé\nFictiville",
+        "label": "Grand Magasin Inventé Fictiville",
+        "balance": 316483
+      },
+      {
+        "date": "2026-02-05",
+        "amount": -2100,
+        "rawText": "ACHAT/SERVICE DU 04.02.2026\nCARTE NO XXXX0000\nPharmacie Modèle\nFictiville",
+        "label": "Pharmacie Modèle Fictiville",
+        "balance": 314383
+      },
+      {
+        "date": "2026-02-06",
+        "amount": -500,
+        "rawText": "PRIX POUR\nTENUE DE COMPTE 01.2026",
+        "label": "TENUE DE COMPTE 01.2026",
+        "balance": 313883
+      },
+      {
+        "date": "2026-02-09",
+        "amount": -4560,
+        "rawText": "ACHAT/SERVICE DU 08.02.2026\nCARTE NO XXXX0000\nÉpicerie du Coin\nFictiville",
+        "label": "Épicerie du Coin Fictiville",
+        "balance": 309323
+      },
+      {
+        "date": "2026-02-10",
+        "amount": -2000,
+        "rawText": "ENVOI D'ARGENT TWINT DU 10.02.2026\nPOUR Dominique Essai.\n+41000000001\n, Cinéma",
+        "label": "POUR Dominique Essai. +41000000001 , Cinéma",
+        "balance": 307323
+      },
+      {
+        "date": "2026-02-11",
+        "amount": -1380,
+        "rawText": "ACHAT/SERVICE DU 10.02.2026\nCARTE NO XXXX0000\nBoulangerie des Tests\nFictiville",
+        "label": "Boulangerie des Tests Fictiville",
+        "balance": 305943
+      },
+      {
+        "date": "2026-02-12",
+        "amount": -15900,
+        "rawText": "ACHAT/SHOPPING EN LIGNE DU\n10.02.2026\nCARTE N° XXXX0000\nÉlectroménager en ligne SA\nExempleville (CH)",
+        "label": "Électroménager en ligne SA Exempleville (CH)",
+        "balance": 290043
+      },
+      {
+        "date": "2026-02-13",
+        "amount": -7420,
+        "rawText": "ACHAT/SERVICE DU 12.02.2026\nCARTE NO XXXX0000\nStation Service Inventée\nFictiville",
+        "label": "Station Service Inventée Fictiville",
+        "balance": 282623
+      },
+      {
+        "date": "2026-02-16",
+        "amount": -8950,
+        "rawText": "DÉBIT\nCH0000000000000000002\nAssurance Fictive SA\nCase postale 10\n9997 Assuranceville",
+        "label": "Assurance Fictive SA Case postale 10 9997 Assuranceville",
+        "balance": 273673
+      },
+      {
+        "date": "2026-02-17",
+        "amount": -2875,
+        "rawText": "ACHAT/SERVICE DU 16.02.2026\nCARTE NO XXXX0000\nÉpicerie du Coin\nFictiville",
+        "label": "Épicerie du Coin Fictiville",
+        "balance": 270798
+      },
+      {
+        "date": "2026-02-18",
+        "amount": 1500,
+        "rawText": "RÉCEPTION D'ARGENT TWINT DU\n18.02.2026\nDE Alex Modèle\n+41000000002",
+        "label": "DE Alex Modèle +41000000002",
+        "balance": 272298
+      },
+      {
+        "date": "2026-02-19",
+        "amount": -990,
+        "rawText": "ACHAT/SERVICE DU 18.02.2026\nCARTE NO XXXX0000\nKiosque Fictif\nFictiville",
+        "label": "Kiosque Fictif Fictiville"
+      },
+      {
+        "date": "2026-02-19",
+        "amount": -200,
+        "rawText": "PRIX POUR\nCOMMANDE DE CARTE",
+        "label": "COMMANDE DE CARTE",
+        "balance": 271108
+      },
+      {
+        "date": "2026-02-20",
+        "amount": -4500,
+        "rawText": "ENVOI D'ARGENT TWINT DU 20.02.2026\nPOUR Sacha Témoin.\n+41000000003\n, Cadeau commun",
+        "label": "POUR Sacha Témoin. +41000000003 , Cadeau commun"
+      },
+      {
+        "date": "2026-02-20",
+        "amount": -3105,
+        "rawText": "ACHAT/SERVICE DU 19.02.2026\nCARTE NO XXXX0000\nÉpicerie du Coin\nFictiville",
+        "label": "Épicerie du Coin Fictiville",
+        "balance": 263503
+      },
+      {
+        "date": "2026-02-25",
+        "amount": 580000,
+        "rawText": "CRÉDIT\nDONNEUR D'ORDRE:\nEmployeur Fictif SA\nRue de l'Usine 1\n9999 Fictiville",
+        "label": "Employeur Fictif SA Rue de l'Usine 1 9999 Fictiville",
+        "balance": 843503
+      },
+      {
+        "date": "2026-02-26",
+        "amount": -18950,
+        "rawText": "ACHAT/SERVICE DU 25.02.2026\nCARTE NO XXXX0000\nMagasin de Sport Exemple\n9998 Exempleville",
+        "label": "Magasin de Sport Exemple 9998 Exempleville",
+        "balance": 824553
+      },
+      {
+        "date": "2026-02-27",
+        "amount": -50000,
+        "rawText": "DÉBIT\nCH0000000000000000003\nCamille Exemple\nCompte épargne",
+        "label": "Camille Exemple Compte épargne",
+        "balance": 774553
+      }
+    ]
+  }
+}

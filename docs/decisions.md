@@ -649,3 +649,67 @@ rename integrated as an exchange page from another device, and the memory of
 the server after an exchange. `test/data/upgrade_test.dart` opens it with the
 current version and checks every record, the memory of the server (nothing
 waiting) and a new write after the old entries.
+
+### 3.1 Extraction of PostFinance statements
+
+**Decisions.**
+
+- The domain `statement` holds the statement as read (IBAN without spaces,
+  currency, period, opening and closing balances, printed totals, lines with
+  booking date, signed amount in cents, raw text, short label and the balance
+  printed after the line when there is one) and its checks, in this order:
+  currency (CHF only), period (every line inside it, in order), each balance
+  printed in its course, printed totals, closing balance. The first failure
+  refuses the statement with the name of the check (`currency`, `period`,
+  `runningBalance`, `totals`, `closingBalance`). A statement that cannot be
+  read entirely (a movement without a date or a label, a balance or the totals
+  missing, two IBANs) is refused with the check `layout`; a PDF that is no
+  statement with `IMPORT_UNKNOWN_FORMAT`; a file pdftotext cannot read, or
+  that does not start like a PDF, with `IMPORT_UNREADABLE`. Messages hold
+  dates, amounts and line numbers, never the text of the statement.
+- `extraction/postfinance` keeps the method of the original script (columns
+  placed by the end of the « Crédit » and « Débit » headers of each page,
+  counted in characters, not bytes), with three corrections: the page
+  furniture (vertical form code, « Page n / m », the header block repeated
+  on each page, « Date dd.mm.yyyy ») is removed from the texts, where the
+  original script kept it on six lines of a real statement of 2026; an amount
+  on a line of its own takes the line before as its label, with the date
+  printed on its line when there is one; and the 2025 layout (period, IBAN and
+  currency at the right of the first page) and the 2026 one are both read.
+- Short label (H3): when the first line is a type of operation the module
+  recognises (upper-case words ending with « DU » and maybe its date, or
+  « DÉBIT », « CRÉDIT », « CRÉDIT POSTFINANCE CARD », « PRIX POUR »), that
+  line, the date on the next line, the card line, the IBAN line and « DONNEUR
+  D'ORDRE: » are left out; otherwise, or when nothing is left, the whole text
+  on one line.
+- pdftotext runs without a shell, with a 30-second limit and 8 MiB of text at
+  most; a run that exceeds them refuses the file as unreadable. A missing
+  pdftotext is an internal failure, not a refusal.
+- `batz-web extract <pdf>` prints the JSON of the result (exit code 2 when the
+  statement is refused); `-summary` prints only the verdict and the number of
+  lines, `-amounts` the date and amount of each line. The JSON expected for
+  each fictitious statement is computed by the generator from what it printed
+  (`testdata/*.json`), not from the extraction, and the tests compare the
+  extraction with it.
+- `scripts/check-real-statements.sh` extracts each real statement at the root
+  of the repository and prints only the verdict and the number of lines; when
+  the CSV of the original script is there, it compares dates and amounts and
+  prints only the outcome.
+
+**A defect of the original script.** On the real statement of June 2026, one
+date differs from the CSV of the original script: an amount that pdftotext
+put on a line of its own after the vertical footer, with the date of a new
+day on that line. The original script reads such a line as a movement whose
+text is the date and keeps the date of the movement before; the extraction
+reads the printed date. Checked locally without displaying the line: the
+extracted date is the one printed on that line, the original script's is the
+date of the line before, and the amount is the same. The check script
+accepts a difference only when it has exactly that signature (same amount,
+the original's date equal to the line before, the extracted date later) and
+names the line; any other difference fails it.
+
+**Evidence** (2026-11-21, development machine): `scripts/check-real-statements.sh`
+accepts the three real statements present (62, 49 and 70 lines), with dates
+and amounts identical to the original script except that one date. On the
+fictitious statements, the extraction gives exactly the expected JSON, labels
+and printed balances included.

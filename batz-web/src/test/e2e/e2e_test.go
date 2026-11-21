@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -342,4 +343,34 @@ func TestSyncBetweenTwoDevices(t *testing.T) {
 	all := again.exchange(phoneKey, map[string]string{}, nil)
 	assert.Len(t, all["entries"].([]any), 2, "pages of two")
 	assert.Equal(t, map[string]any{a: page[2]["hlc"], b: mine["hlc"]}, all["known"])
+}
+
+// `batz-web extract` prints, for each fictitious statement, exactly the JSON
+// expected in testdata, and exits with 2 when the statement is refused.
+func TestExtractCommand(t *testing.T) {
+	build(t)
+	files, err := filepath.Glob("../../internal/infrastructure/extraction/postfinance/testdata/*.pdf")
+	require.NoError(t, err)
+	require.NotEmpty(t, files)
+	for _, pdf := range files {
+		want, err := os.ReadFile(strings.TrimSuffix(pdf, ".pdf") + ".json")
+		require.NoError(t, err)
+		var stdout, stderr bytes.Buffer
+		cmd := exec.Command(binary, "extract", pdf)
+		cmd.Stdout, cmd.Stderr = &stdout, &stderr
+		err = cmd.Run()
+		assert.Equal(t, string(want), stdout.String(), filepath.Base(pdf))
+		if bytes.Contains(want, []byte(`"accepted": true`)) {
+			assert.NoError(t, err, filepath.Base(pdf))
+		} else {
+			var exit *exec.ExitError
+			require.ErrorAs(t, err, &exit, filepath.Base(pdf))
+			assert.Equal(t, 2, exit.ExitCode(), filepath.Base(pdf))
+			assert.Contains(t, stderr.String(), "refused", filepath.Base(pdf))
+		}
+	}
+
+	out, err := exec.Command(binary, "extract", "-summary", files[0]).Output()
+	require.NoError(t, err)
+	assert.Regexp(t, `^accepted, \d+ lines\n$`, string(out))
 }

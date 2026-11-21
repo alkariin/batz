@@ -1,0 +1,100 @@
+{
+  "accepted": true,
+  "statement": {
+    "format": "postfinance",
+    "iban": "CH0090000000123456789",
+    "currency": "CHF",
+    "periodStart": "2026-03-01",
+    "periodEnd": "2026-03-31",
+    "openingBalance": 774553,
+    "closingBalance": 986063,
+    "totalCredits": 580000,
+    "totalDebits": 368490,
+    "lines": [
+      {
+        "date": "2026-03-02",
+        "amount": -165000,
+        "rawText": "DÉBIT\nCH0000000000000000001\nGérance Imaginaire SA\nRue du Bail 3\n9999 Fictiville",
+        "label": "Gérance Imaginaire SA Rue du Bail 3 9999 Fictiville",
+        "balance": 609553
+      },
+      {
+        "date": "2026-03-03",
+        "amount": -5230,
+        "rawText": "ACHAT/SERVICE DU 02.03.2026\nCARTE NO XXXX0000\nÉpicerie du Coin\nFictiville",
+        "label": "Épicerie du Coin Fictiville",
+        "balance": 604323
+      },
+      {
+        "date": "2026-03-04",
+        "amount": -1150,
+        "rawText": "ACHAT/SERVICE DU 03.03.2026\nCARTE NO XXXX0000\nBoulangerie des Tests\nFictiville",
+        "label": "Boulangerie des Tests Fictiville",
+        "balance": 603173
+      },
+      {
+        "date": "2026-03-06",
+        "amount": -500,
+        "rawText": "PRIX POUR\nTENUE DE COMPTE 02.2026",
+        "label": "TENUE DE COMPTE 02.2026",
+        "balance": 602673
+      },
+      {
+        "date": "2026-03-09",
+        "amount": -2800,
+        "rawText": "ACHAT/PRESTATION TWINT DU\n09.03.2026\nMarché de Fictiville\nFictiville",
+        "label": "Marché de Fictiville Fictiville",
+        "balance": 599873
+      },
+      {
+        "date": "2026-03-10",
+        "amount": -120000,
+        "rawText": "ACHAT/SERVICE DU 09.03.2026\nCARTE NO XXXX0000\nGarage Imaginaire\nFictiville",
+        "label": "Garage Imaginaire Fictiville",
+        "balance": 479873
+      },
+      {
+        "date": "2026-03-12",
+        "amount": -4410,
+        "rawText": "ACHAT/SERVICE DU 11.03.2026\nCARTE NO XXXX0000\nÉpicerie du Coin\nFictiville",
+        "label": "Épicerie du Coin Fictiville",
+        "balance": 475463
+      },
+      {
+        "date": "2026-03-16",
+        "amount": -8950,
+        "rawText": "DÉBIT\nCH0000000000000000002\nAssurance Fictive SA\nCase postale 10\n9997 Assuranceville",
+        "label": "Assurance Fictive SA Case postale 10 9997 Assuranceville",
+        "balance": 466513
+      },
+      {
+        "date": "2026-03-18",
+        "amount": -6490,
+        "rawText": "ACHAT/SHOPPING EN LIGNE DU\n16.03.2026\nCARTE N° XXXX0000\nLibrairie en ligne SA\nExempleville (CH)",
+        "label": "Librairie en ligne SA Exempleville (CH)",
+        "balance": 460023
+      },
+      {
+        "date": "2026-03-25",
+        "amount": 580000,
+        "rawText": "CRÉDIT\nDONNEUR D'ORDRE:\nEmployeur Fictif SA\nRue de l'Usine 1\n9999 Fictiville",
+        "label": "Employeur Fictif SA Rue de l'Usine 1 9999 Fictiville",
+        "balance": 1040023
+      },
+      {
+        "date": "2026-03-27",
+        "amount": -3960,
+        "rawText": "ACHAT/SERVICE DU 26.03.2026\nCARTE NO XXXX0000\nÉpicerie du Coin\nFictiville",
+        "label": "Épicerie du Coin Fictiville",
+        "balance": 1036063
+      },
+      {
+        "date": "2026-03-30",
+        "amount": -50000,
+        "rawText": "DÉBIT\nCH0000000000000000003\nCamille Exemple\nCompte épargne",
+        "label": "Camille Exemple Compte épargne",
+        "balance": 986063
+      }
+    ]
+  }
+}

@@ -10,33 +10,37 @@ import (
 
 var update = flag.Bool("update", false, "write the fixtures to ../testdata")
 
-// The committed test set is exactly what the generator writes: regenerate it
+// The committed test set is exactly what the generator writes, each PDF
+// with the JSON that `batz-web extract` must print for it: regenerate them
 // with
 //
 //	go test ./internal/infrastructure/extraction/postfinance/fake -update
 func TestFixturesAreUpToDate(t *testing.T) {
 	dir := filepath.Join("..", "testdata")
 	for _, f := range Fixtures() {
-		path := filepath.Join(dir, f.Name+".pdf")
-		want := f.PDF()
-		if !bytes.Equal(want, f.PDF()) {
+		if !bytes.Equal(f.PDF(), f.PDF()) {
 			t.Fatalf("%s: two renderings differ", f.Name)
 		}
-		if *update {
-			if err := os.MkdirAll(dir, 0o755); err != nil {
-				t.Fatal(err)
+		for path, want := range map[string][]byte{
+			filepath.Join(dir, f.Name+".pdf"):  f.PDF(),
+			filepath.Join(dir, f.Name+".json"): f.ExpectedJSON(),
+		} {
+			if *update {
+				if err := os.MkdirAll(dir, 0o755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(path, want, 0o644); err != nil {
+					t.Fatal(err)
+				}
+				continue
 			}
-			if err := os.WriteFile(path, want, 0o644); err != nil {
-				t.Fatal(err)
+			got, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatalf("%s: %v (run with -update)", f.Name, err)
 			}
-			continue
-		}
-		got, err := os.ReadFile(path)
-		if err != nil {
-			t.Fatalf("%s: %v (run with -update)", f.Name, err)
-		}
-		if !bytes.Equal(got, want) {
-			t.Errorf("%s: testdata is out of date (run with -update)", f.Name)
+			if !bytes.Equal(got, want) {
+				t.Errorf("%s is out of date (run with -update)", path)
+			}
 		}
 	}
 }
