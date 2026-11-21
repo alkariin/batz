@@ -9,18 +9,20 @@ import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/balance.dart';
 import 'package:batz/domain/ledger/category.dart';
+import 'package:batz/domain/ledger/debt.dart';
 import 'package:batz/domain/ledger/proposal.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/refund.dart';
 import 'package:batz/domain/ledger/rule.dart';
+import 'package:batz/domain/modules/settings.dart';
 import 'package:batz/domain/period_model.dart';
 import 'package:batz/domain/views/balances.dart';
 import 'package:batz/domain/views/share_operations.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Databases written by versions 0.1.0, 0.2.0, 0.3.0, 0.4.1 and 0.5.0 (see
-/// test/fixtures/README.md).
+/// Databases written by versions 0.1.0, 0.2.0, 0.3.0, 0.4.1, 0.5.0 and 0.6.0
+/// (see test/fixtures/README.md).
 const _fixture = 'test/fixtures/v0.1.0/batz.db';
 const _fixtureDeviceId = 'a0000000-0000-4000-8000-000000000001';
 const _fixture020 = 'test/fixtures/v0.2.0/batz.db';
@@ -33,6 +35,8 @@ const _fixture041 = 'test/fixtures/v0.4.1/batz.db';
 const _fixture041DeviceId = 'a0000000-0000-4000-8000-000000000041';
 const _fixture050 = 'test/fixtures/v0.5.0/batz.db';
 const _fixture050DeviceId = 'a0000000-0000-4000-8000-000000000050';
+const _fixture060 = 'test/fixtures/v0.6.0/batz.db';
+const _fixture060DeviceId = 'a0000000-0000-4000-8000-000000000060';
 
 void main() {
   late Directory dir;
@@ -41,6 +45,41 @@ void main() {
     File(_fixture).copySync('${dir.path}/$databaseFileName');
   });
   tearDown(() => dir.deleteSync(recursive: true));
+
+  test('a database of version 0.6.0 opens with this version: declared balances and debts, one of them split, '
+      'kept', () async {
+    File(_fixture060).copySync('${dir.path}/$databaseFileName');
+    final db = await openLocalDatabase(directory: dir, secrets: MemorySecretStore(), encrypt: false);
+    final journal = await Journal.open(db);
+    expect(journal.deviceId, _fixture060DeviceId);
+    expect(journal.derivedTablesRebuilt, isTrue, reason: 'the settings of the modules are new');
+    final entries = await journal.entries();
+    expect(entries, hasLength(103));
+
+    final repository = LedgerRepository(db, journal);
+    final ledger = await repository.load();
+    expect(ledger.sortedAccounts.map((a) => a.name), ['Compte privé', 'Dettes', 'Espèces', 'Épargne']);
+    final savings = ledger.balances.of('acc-savings');
+    expect(savings.points.map((p) => (p.date.encode(), p.amount)), [('2025-12-31', 1000000), ('2026-06-30', 1080000)]);
+    expect(savings.variationAt(1), 30000);
+    expect(ledger.balances.of('acc-cash').balanceAt(CalendarDate(2026, 3, 31)), 20000 - 4500 - 50000);
+    expect(
+      {for (final d in ledger.debts.values) d.id: (d.total, d.repaid)},
+      {'debt-meal': (4000, false), 'debt-meal-2': (6000, true), 'debt-loan': (8000, false)},
+    );
+    expect(ledger.debts['debt-meal-2']!.receivedDate, CalendarDate(2026, 4, 1));
+    expect(ledger.openDebtsAt(CalendarDate(2026, 3, 31)), 10000);
+    expect(ledger.openDebtsAt(CalendarDate(2026, 11, 21)), 4000 - 8000);
+
+    // The new version writes after the latest entry of 0.6.0.
+    final before = entries.last.hlc;
+    final hlc = await journal.write(ledger.setModuleCategory(ModuleKind.taxes, 'Nourriture'));
+    expect(hlc! > before, isTrue);
+    final after = await repository.load();
+    expect(after.moduleCategory(ModuleKind.taxes, 2026)!.id, 'cat-food');
+    expect(after.views.linesIn(2026, ViewKind.economic, 'cat-food').single.total, -4500);
+    await db.close();
+  });
 
   test('a database of version 0.5.0 opens with this version: redistribution rules, attached refund and answer to a '
       'share kept', () async {

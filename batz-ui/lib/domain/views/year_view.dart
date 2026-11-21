@@ -214,6 +214,17 @@ class YearView {
   Map<String, int> get totals => {for (final e in categories.entries) e.key: e.value.total};
 }
 
+/// A line and what it places in a category of a year, month by month
+/// ([YearViews.linesIn]).
+class CategoryLine {
+  const CategoryLine(this.line, this.months);
+
+  final ViewLine line;
+  final MonthlyAmounts months;
+
+  int get total => months.total;
+}
+
 /// A line whose shares in a year have no category there (decision H5).
 class PendingShare {
   const PendingShare({required this.lineId, required this.transaction, required this.economic, required this.cash});
@@ -272,10 +283,13 @@ class _Unclassified extends _Target {
   const _Unclassified();
 }
 
-/// An amount of a line, before it is placed in a year (principle 2).
-class _Flow {
-  _Flow({
+/// An amount of a line, before it is placed in a year (principle 2 of
+/// phase 4): what the views count, read by the modules (step 6.0 of phase
+/// 6) without classifying or spreading anything again.
+class ViewLine {
+  ViewLine._({
     required this.transaction,
+    required this.ownLineId,
     required this.lineId,
     required this.origin,
     required this.originYear,
@@ -286,6 +300,11 @@ class _Flow {
   });
 
   final LedgerTransaction transaction;
+
+  /// The line the amount belongs to: its own, or for a line to validate the
+  /// identifier it will get once validated. What a module attaches to a
+  /// line (kWh, a trip) uses it.
+  final String ownLineId;
 
   /// The line whose category, period and answers the amount follows: its
   /// own, the one it will get once validated for a line to validate, or
@@ -397,10 +416,10 @@ class YearViews {
 
   // ----------------------------------------------------------------- flows
 
-  late final List<_Flow> _flows = _buildFlows();
+  late final List<ViewLine> _flows = _buildFlows();
 
-  List<_Flow> _buildFlows() {
-    final flows = <_Flow>[];
+  List<ViewLine> _buildFlows() {
+    final flows = <ViewLine>[];
     void add(
       LedgerTransaction t,
       String lineId,
@@ -409,13 +428,15 @@ class YearViews {
       CalendarDate start,
       CalendarDate end, {
       LedgerTransaction? of,
+      String? own,
     }) {
       final year = (of ?? t).date.year;
       final tree = ledger.trees[year];
       final origin = categoryId == null ? null : tree?.byId[categoryId];
       flows.add(
-        _Flow(
+        ViewLine._(
           transaction: t,
+          ownLineId: own ?? lineId,
           lineId: lineId,
           origin: origin,
           originYear: year,
@@ -450,7 +471,16 @@ class YearViews {
         // period (principle 5).
         if (ledger.refundedExpenseOf(t, line) case final expense?) {
           final paid = expense.line;
-          add(t, paid.id, paid.categoryId, line.amount, paid.periodStart, paid.periodEnd, of: expense.transaction);
+          add(
+            t,
+            paid.id,
+            paid.categoryId,
+            line.amount,
+            paid.periodStart,
+            paid.periodEnd,
+            of: expense.transaction,
+            own: line.id,
+          );
           continue;
         }
         add(t, line.id, line.categoryId, line.amount, line.periodStart, line.periodEnd);
@@ -460,9 +490,60 @@ class YearViews {
       // amount corrected on one device, the line rewritten with the old one
       // on another. The difference is « Non classé », where it shows; saving
       // the transaction again writes both amounts.
-      if (lines != t.amount) add(t, Ledger.fallbackLineId(t.id), null, t.amount - lines, t.date, t.date);
+      if (lines != t.amount) {
+        add(t, Ledger.fallbackLineId(t.id), null, t.amount - lines, t.date, t.date, own: '${t.id}-gap');
+      }
     }
     return flows;
+  }
+
+  // ------------------------------------------------------- read by modules
+
+  /// Every amount the views count, as they classify and spread it (step
+  /// 6.0 of phase 6): the modules read them and never classify again.
+  List<ViewLine> get lines => List.unmodifiable(_flows);
+
+  /// The lines that count in [categoryId] of [year], or anything below it,
+  /// in the view [kind], with what each places there month by month,
+  /// before any redistribution (decision H1 of phase 6), by payment date.
+  /// A line counted in the year is listed even when its shares there round
+  /// to zero. Empty when [categoryId] is not in the tree [year] is shown
+  /// with.
+  List<CategoryLine> linesIn(int year, ViewKind kind, String categoryId) {
+    final tree = treeOf(year);
+    if (tree == null || !tree.byId.containsKey(categoryId)) return const [];
+    final subtree = tree.subtreeOf(categoryId);
+    final months = <ViewLine, List<int>>{};
+    _place(year, kind, tree, (flow, target, month, cents) {
+      if (target is _InCategory && subtree.contains(target.id)) {
+        (months[flow] ??= List.filled(12, 0))[month - 1] += cents;
+      }
+    });
+    return [for (final e in months.entries) CategoryLine(e.key, MonthlyAmounts(e.value))]..sort(_byPayment);
+  }
+
+  /// The lines classified, in the tree of the year of their category (the
+  /// payment year, or the expense's for an attached refund), in the
+  /// category named [name] of that tree or anything below it, every year
+  /// together, by payment date (decision H1 of phase 6).
+  List<ViewLine> linesNamed(String name) {
+    final subtrees = <int, Set<String>?>{};
+    Set<String>? subtree(int year) => subtrees.putIfAbsent(year, () {
+      final tree = ledger.trees[year];
+      final named = tree?.named(name);
+      return named == null ? null : tree!.subtreeOf(named.id);
+    });
+    return [
+      for (final flow in _flows)
+        if (flow.origin != null && (subtree(flow.originYear)?.contains(flow.origin!.id) ?? false)) flow,
+    ]..sort((a, b) => _byPayment(CategoryLine(a, MonthlyAmounts.zero), CategoryLine(b, MonthlyAmounts.zero)));
+  }
+
+  static int _byPayment(CategoryLine a, CategoryLine b) {
+    final byDate = a.line.paid.compareTo(b.line.paid);
+    if (byDate != 0) return byDate;
+    final byTransaction = a.line.transaction.id.compareTo(b.line.transaction.id);
+    return byTransaction != 0 ? byTransaction : a.line.ownLineId.compareTo(b.line.ownLineId);
   }
 
   // ------------------------------------------------------------- placement
@@ -472,7 +553,7 @@ class YearViews {
   /// the same name, if it can hold transactions; otherwise the category of
   /// the answer given for its line and that year, while it holds
   /// ([answerOf]); otherwise « À classer ».
-  _Target _target(_Flow flow, int year, CategoryTree tree) {
+  _Target _target(ViewLine flow, int year, CategoryTree tree) {
     final origin = flow.origin!;
     if (year == flow.originYear) return _InCategory(origin.id);
     final match = _sameName.putIfAbsent((origin.id, year), () {
@@ -533,7 +614,7 @@ class YearViews {
     if (first == null) return const [];
     final groups = <(String, int), Map<String, (int, int)>>{};
     final origins = <(String, int), (Category, int, CategoryNature)>{};
-    void add(_Flow flow, int year, int economic, int cash) {
+    void add(ViewLine flow, int year, int economic, int cash) {
       final key = (flow.origin!.id, year);
       origins[key] = (flow.origin!, flow.originYear, flow.nature!);
       final shares = groups.putIfAbsent(key, () => {});
@@ -589,7 +670,7 @@ class YearViews {
     int year,
     ViewKind kind,
     CategoryTree tree,
-    void Function(_Flow flow, _Target target, int month, int cents) sink,
+    void Function(ViewLine flow, _Target target, int month, int cents) sink,
   ) {
     for (final flow in _flows) {
       if (flow.origin == null) {

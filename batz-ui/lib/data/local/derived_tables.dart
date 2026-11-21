@@ -7,6 +7,7 @@ import '../../domain/ledger/rule.dart';
 import '../../domain/ledger/share_classification.dart';
 import '../../domain/ledger/statement.dart';
 import '../../domain/ledger/transaction.dart';
+import '../../domain/modules/settings.dart';
 
 /// How journal entries of one entity are materialised into a table.
 ///
@@ -115,6 +116,7 @@ final List<DerivedTable> appDerivedTables = [
   shareClassificationsTable,
   balancesTable,
   debtsTable,
+  moduleSettingsTable,
 ];
 
 final accountsTable = DerivedTable(
@@ -253,5 +255,14 @@ final debtsTable = DerivedTable(
     DebtFields.repaid: const DerivedColumn.integer('repaid'),
     DebtFields.enteredOn: const DerivedColumn.text('entered_on'),
     DebtFields.checkedOn: const DerivedColumn.text('checked_on'),
+  },
+);
+
+final moduleSettingsTable = DerivedTable(
+  entity: ModuleSettingFields.entity,
+  table: 'module_settings',
+  columns: {
+    ModuleSettingFields.module: const DerivedColumn.text('module'),
+    ModuleSettingFields.categoryName: const DerivedColumn.text('category_name'),
   },
 );

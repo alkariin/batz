@@ -1,5 +1,6 @@
 import '../calendar_date.dart';
 import '../journal/journal_entry.dart';
+import '../modules/module_records.dart';
 import '../period_model.dart';
 import 'account.dart';
 import 'balance.dart';
@@ -36,6 +37,7 @@ class Ledger {
     Iterable<ShareClassification> shareClassifications = const [],
     Iterable<DeclaredBalance> balances = const [],
     Iterable<Debt> debts = const [],
+    ModuleRecords? modules,
   }) : this._(
          accounts,
          CategoryForest.build(categories),
@@ -48,6 +50,7 @@ class Ledger {
          shareClassifications,
          balances,
          debts,
+         modules ?? ModuleRecords.empty,
        );
 
   Ledger._(
@@ -62,6 +65,7 @@ class Ledger {
     Iterable<ShareClassification> shareClassifications,
     Iterable<DeclaredBalance> balances,
     Iterable<Debt> debts,
+    this.modules,
   ) : accounts = {for (final a in accounts) a.id: a},
       trees = forest.trees,
       transactions = _attach(transactions, lines),
@@ -121,6 +125,9 @@ class Ledger {
 
   /// The debts table, by identifier (see debt.dart for its operations).
   final Map<String, Debt> debts;
+
+  /// What the user entered in the modules (see `domain/modules/`).
+  final ModuleRecords modules;
 
   /// Every category of every year, by identifier.
   late final Map<String, Category> categories = {for (final tree in trees.values) ...tree.byId};

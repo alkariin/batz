@@ -313,6 +313,26 @@ void main() {
     expect(wealth.oldBalances.map((o) => o.account.id), ['savings']);
   });
 
+  test('an archived account whose balance is 0 is no longer listed; with a balance, it stays (step 6.0)', () async {
+    await seedLedger(h);
+    await h.apply((l) => l.createAccount('savings', const AccountDraft(name: 'Épargne', type: AccountType.savings)));
+    final today = d(2026, 11, 21);
+    await h.apply((l) => l.declareBalance('savings', d(2026, 1, 31), 50000, today: today));
+    await h.apply((l) => l.declareBalance('private', d(2026, 1, 31), 70000, today: today));
+    await h.apply((l) => l.removeAccount('savings').modification);
+    var ledger = await h.apply((l) => l.removeAccount('private').modification);
+    var at = ledger.wealth(today).at(today);
+    expect(at.accounts.where((a) => a.account.archived).map((a) => a.account.id), ['private', 'savings']);
+
+    ledger = await h.apply((l) => l.declareBalance('savings', d(2026, 10, 31), 0, today: today));
+    at = ledger.wealth(today).at(today);
+    expect(at.accounts.map((a) => a.account.id), isNot(contains('savings')));
+    expect(at.accounts.map((a) => a.account.id), contains('private'));
+    expect(at.total, 70000);
+    expect(ledger.wealth(today).at(d(2026, 9, 30)).accounts.map((a) => a.account.id), contains('savings'));
+    expect(ledger.accounts['savings']!.archived, isTrue, reason: 'still in the settings of the accounts');
+  });
+
   test('without balances nor debts, there is no wealth: no year, no curve', () async {
     await seedLedger(h);
     final wealth = (await h.ledger()).wealth(d(2026, 11, 21));

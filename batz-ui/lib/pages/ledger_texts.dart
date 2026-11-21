@@ -90,6 +90,7 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.debtPercentInvalid => l.errorDebtPercentInvalid,
   LedgerError.debtReceivedBeforeEvent => l.errorDebtReceivedBeforeEvent,
   LedgerError.debtSplitOutOfTotal => l.errorDebtSplitOutOfTotal,
+  LedgerError.moduleCategoryRequired => l.errorModuleCategoryRequired,
 };
 
 String natureText(AppLocalizations l, CategoryNature nature) => switch (nature) {

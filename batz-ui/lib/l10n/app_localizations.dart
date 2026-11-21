@@ -3245,6 +3245,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Voir le tableau des dettes'**
   String get accountDebtsOpen;
+
+  /// No description provided for @errorModuleCategoryRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez le nom de la catégorie.'**
+  String get errorModuleCategoryRequired;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

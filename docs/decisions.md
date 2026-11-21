@@ -1714,3 +1714,58 @@ case and over HTTP. An app 0.6.0 still works with the server 0.5.0 of the
 NAS until it is upgraded. The rules of the wealth are described in
 `docs/wealth.md`; the architecture, the API, the deployment (with the
 upgrade to 0.6.0) and the README follow.
+
+## 2026-11-21 — Phase 6 decisions taken during development
+
+Functional choices H1 to H8 are in `docs/plan/phase-6.md`. The decisions below
+were taken while implementing it.
+
+### 6.0 An archived account at 0 leaves « Fortune »
+
+**Decision.** The accounts of the wealth at a date leave out an archived
+account whose balance is 0 or that has none (decision H4 of phase 5: a
+balance of 0 takes it out). It stays in Plus › Comptes, and on the dates
+when its balance was not 0. `test/domain/views/wealth_test.dart` checks it.
+
+### 6.0 What the modules read from the annual view
+
+**Decisions.**
+
+- The amount of a line before it is placed in a year, internal until now,
+  becomes `ViewLine`, read only: its transaction, its own line
+  (`ownLineId`: the line, or for a line to validate the identifier it will
+  get once validated, what the modules attach kWh or a trip to), the line
+  whose answers it follows, its category of origin and that year, its
+  amount and its period (for an attached refund, the expense's).
+- `YearViews.linesIn(year, kind, categoryId)` gives, for a category of a year
+  and everything below it, each line that counts there and what it places
+  there month by month, with the placement of the views and before any
+  redistribution (H1). A line counted in the year is listed even when its
+  shares round to zero there.
+- `YearViews.linesNamed(name)` gives the lines classified, in the tree of the
+  year of their category, in the category of that name or below it, every
+  year together (the trips).
+- Neither changes an amount; the tests check on random data that the lines
+  of each category of each year and view make what the view shows before
+  redistribution.
+
+### 6.0 Settings of the modules
+
+New journal entity `moduleSetting` (table `module_settings`): the module and
+the name of its category, one record per module with an identifier computed
+from the module. Without a record, the default names of H1. The category of
+a module in a year is the category of that name in the tree the year is
+shown with (a year to come included), compared as names between years; a
+group counts with everything below it; none when the tree has no such name.
+The records of the modules are kept together in `ModuleRecords`, read by the
+repository in a group of their own.
+
+### 6.0 Database of version 0.6.0
+
+`batz-ui/test/fixtures/v0.6.0/batz.db` was written by version 0.6.0 (commit
+`76daa85`) through its own operations, with a fixed clock, in a scratch
+worktree: four accounts (one detailed, one debts account), an expense, a
+transfer, three declared balances and three debts, one of them split and a
+part checked. `test/data/upgrade_test.dart` opens it with the current
+version, its derived tables rebuilt, checks the balances, the variation and
+the open debts, then writes a setting of a module after its latest entry.

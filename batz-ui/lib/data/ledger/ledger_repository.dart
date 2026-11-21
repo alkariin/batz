@@ -13,6 +13,8 @@ import '../../domain/ledger/share_classification.dart';
 import '../../domain/ledger/statement.dart';
 import '../../domain/period_model.dart';
 import '../../domain/ledger/transaction.dart';
+import '../../domain/modules/module_records.dart';
+import '../../domain/modules/settings.dart';
 import '../local/database.dart';
 import '../local/derived_tables.dart';
 import '../local/journal.dart';
@@ -35,12 +37,14 @@ class LedgerRepository {
 
   /// Reads every derived table. The queries are sent together: the database
   /// runs in a background isolate, and the rows of one are read while the
-  /// next ones run (step 4.4). They go in two groups awaited together, a
-  /// record waiting for nine futures at most.
+  /// next ones run (step 4.4). They go in groups awaited together, a record
+  /// waiting for nine futures at most; the tables of the modules are a group
+  /// of their own.
   Future<Ledger> load() async {
     final (
       (accounts, categories, transactions, lines, statements, deleted),
       (rules, redistributions, answers, balances, debts),
+      modules,
     ) = await (
       (
         _rows(accountsTable, _account),
@@ -57,6 +61,7 @@ class LedgerRepository {
         _rows(balancesTable, _balance),
         _rows(debtsTable, _debt),
       ).wait,
+      _modules(),
     ).wait;
     return Ledger(
       accounts: accounts,
@@ -70,7 +75,22 @@ class LedgerRepository {
       shareClassifications: answers,
       balances: balances,
       debts: debts,
+      modules: modules,
     );
+  }
+
+  /// What the user entered in the modules.
+  Future<ModuleRecords> _modules() async {
+    final settings = await _rows(moduleSettingsTable, _moduleSetting);
+    return ModuleRecords(settings: settings);
+  }
+
+  /// A setting needs a known module and a name.
+  static ModuleSetting? _moduleSetting(Map<String, Object?> row) {
+    final module = _enum(ModuleKind.values, row['module']);
+    final name = _string(row['category_name']);
+    if (module == null || name == null) return null;
+    return ModuleSetting(id: row['id']! as String, module: module, categoryName: name);
   }
 
   /// A debt needs a known direction, a person, an amount, a percentage and

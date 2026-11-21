@@ -1047,5 +1047,6 @@
   "debtDeleteConfirm": "Supprimer la dette de {person} ?",
   "@debtDeleteConfirm": {"placeholders": {"person": {"type": "String"}}},
   "debtDeleted": "Dette supprimée.",
-  "accountDebtsOpen": "Voir le tableau des dettes"
+  "accountDebtsOpen": "Voir le tableau des dettes",
+  "errorModuleCategoryRequired": "Indiquez le nom de la catégorie."
 }

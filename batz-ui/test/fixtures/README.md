@@ -48,3 +48,13 @@
   and 2027 whose share of 2027 is answered, and a transfer from cash to
   savings. Used by `test/data/upgrade_test.dart`. Never regenerate it with a
   later version.
+- `v0.6.0/batz.db`: a desktop (unencrypted) database created by version 0.6.0
+  of the app (commit `76daa85`) through `openLocalDatabase`, `Journal.open`
+  and the operations of `Ledger`, with a fixed clock. Device identifier
+  `a0000000-0000-4000-8000-000000000060`. Its 103 journal entries hold four
+  accounts (`acc-bank` detailed, `acc-debts` a debts account), the 2026
+  tree, an expense and a transfer from cash to savings, three declared
+  balances (two on the savings, one on cash), and three debts: one of 200 at
+  50 % split into 40 and 60, the part of 60 checked, and one « je dois ».
+  Used by `test/data/upgrade_test.dart`. Never regenerate it with a later
+  version.

@@ -64,8 +64,8 @@ class WealthAt {
   final CalendarDate date;
 
   /// Every account that can have a balance of its own (not a debts
-  /// account), by name: those with a balance, archived or not (H4), and
-  /// those without one that are not archived.
+  /// account), by name: those with a balance, archived or not (H4) unless an
+  /// archived one is at 0, and those without one that are not archived.
   final List<AccountWealth> accounts;
 
   /// The debts that count that day, whether a debts account exists or not
@@ -281,7 +281,9 @@ class Wealth {
       final balances = this.balances.of(account.id);
       if (!balances.hasOwnBalance) continue;
       final balance = balances.balanceAt(date);
-      if (balance == null && account.archived) continue;
+      // An archived account leaves the list once its balance is 0 (decision
+      // H4 of phase 5, step 6.0): it is still in the settings of accounts.
+      if (account.archived && (balance ?? 0) == 0) continue;
       DeclaredBalance? lastDeclared;
       for (final point in balances.points) {
         if (point.date.isAfter(date)) break;

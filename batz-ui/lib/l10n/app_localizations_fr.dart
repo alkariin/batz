@@ -1954,4 +1954,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get accountDebtsOpen => 'Voir le tableau des dettes';
+
+  @override
+  String get errorModuleCategoryRequired => 'Indiquez le nom de la catégorie.';
 }

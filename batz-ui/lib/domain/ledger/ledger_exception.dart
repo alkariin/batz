@@ -76,6 +76,9 @@ enum LedgerError {
   debtPercentInvalid,
   debtReceivedBeforeEvent,
   debtSplitOutOfTotal,
+
+  // Modules (phase 6).
+  moduleCategoryRequired,
 }
 
 /// A business rule refuses the operation; nothing was written.
