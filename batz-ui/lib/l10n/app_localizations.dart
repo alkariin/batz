@@ -1391,6 +1391,258 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Nom en double dans cette année'**
   String get categoryDuplicateName;
+
+  /// No description provided for @importTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Importer un relevé'**
+  String get importTitle;
+
+  /// No description provided for @importSyncing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchronisation avant l\'import…'**
+  String get importSyncing;
+
+  /// No description provided for @importNotReady.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'import commence par une synchronisation aboutie. Elle n\'a pas abouti : {reason}'**
+  String importNotReady(String reason);
+
+  /// No description provided for @importRetry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer'**
+  String get importRetry;
+
+  /// No description provided for @importNoDetailedAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun compte détaillé : activez l\'import d\'un compte dans Plus › Comptes.'**
+  String get importNoDetailedAccount;
+
+  /// No description provided for @importAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte'**
+  String get importAccount;
+
+  /// No description provided for @importChoose.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir le relevé PDF'**
+  String get importChoose;
+
+  /// No description provided for @importSending.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur lit et vérifie le relevé…'**
+  String get importSending;
+
+  /// No description provided for @importRefusedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Relevé refusé'**
+  String get importRefusedTitle;
+
+  /// No description provided for @importDoneTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Relevé importé'**
+  String get importDoneTitle;
+
+  /// No description provided for @importDonePeriod.
+  ///
+  /// In fr, this message translates to:
+  /// **'Du {start} au {end}'**
+  String importDonePeriod(String start, String end);
+
+  /// No description provided for @importDoneLines.
+  ///
+  /// In fr, this message translates to:
+  /// **'{lines, plural, =1{Une ligne} other{{lines} lignes}} : {proposed} {proposed, plural, =0{proposée} =1{proposée} other{proposées}}, {toComplete} à compléter.'**
+  String importDoneLines(int lines, int proposed, int toComplete);
+
+  /// No description provided for @importStatements.
+  ///
+  /// In fr, this message translates to:
+  /// **'Relevés du compte'**
+  String get importStatements;
+
+  /// No description provided for @importFirstTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Premier relevé de ce compte'**
+  String get importFirstTitle;
+
+  /// No description provided for @importFirstBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce relevé fixe le solde de départ du compte : {balance} au {date}. Aucun relevé antérieur ne pourra être importé ensuite.'**
+  String importFirstBody(String balance, String date);
+
+  /// No description provided for @importFirstConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Importer'**
+  String get importFirstConfirm;
+
+  /// No description provided for @importUnreadable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce fichier n\'est pas un PDF lisible.'**
+  String get importUnreadable;
+
+  /// No description provided for @importUnknownFormat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce PDF n\'est pas un relevé PostFinance.'**
+  String get importUnknownFormat;
+
+  /// No description provided for @importInconsistent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Relevé incohérent, rien n\'est importé : {reason}.'**
+  String importInconsistent(String reason);
+
+  /// No description provided for @importCheckLayout.
+  ///
+  /// In fr, this message translates to:
+  /// **'il n\'a pas pu être lu en entier'**
+  String get importCheckLayout;
+
+  /// No description provided for @importCheckCurrency.
+  ///
+  /// In fr, this message translates to:
+  /// **'le compte n\'est pas en francs suisses'**
+  String get importCheckCurrency;
+
+  /// No description provided for @importCheckPeriod.
+  ///
+  /// In fr, this message translates to:
+  /// **'une ligne est hors de la période du relevé, ou dans le désordre'**
+  String get importCheckPeriod;
+
+  /// No description provided for @importCheckRunningBalance.
+  ///
+  /// In fr, this message translates to:
+  /// **'un solde imprimé en cours de relevé ne correspond pas aux mouvements qui le précèdent'**
+  String get importCheckRunningBalance;
+
+  /// No description provided for @importCheckTotals.
+  ///
+  /// In fr, this message translates to:
+  /// **'les totaux imprimés des crédits ou des débits ne correspondent pas aux mouvements'**
+  String get importCheckTotals;
+
+  /// No description provided for @importCheckClosingBalance.
+  ///
+  /// In fr, this message translates to:
+  /// **'le solde final ne correspond pas au solde initial plus les mouvements'**
+  String get importCheckClosingBalance;
+
+  /// No description provided for @importTooLarge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce fichier dépasse 10 Mo.'**
+  String get importTooLarge;
+
+  /// No description provided for @importServerRefused.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur refuse l\'envoi ({code}).'**
+  String importServerRefused(String code);
+
+  /// No description provided for @importServerTooOld.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur (version {version}) est trop ancien pour importer des relevés : installez la version 0.4.0 ou une suivante.'**
+  String importServerTooOld(String version);
+
+  /// No description provided for @importUnreachable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur ne répond plus : le relevé n\'a pas été envoyé.'**
+  String get importUnreachable;
+
+  /// No description provided for @statementsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Relevés de {account}'**
+  String statementsTitle(String account);
+
+  /// No description provided for @statementsEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun relevé importé.'**
+  String get statementsEmpty;
+
+  /// No description provided for @statementPeriod.
+  ///
+  /// In fr, this message translates to:
+  /// **'{start} – {end}'**
+  String statementPeriod(String start, String end);
+
+  /// No description provided for @statementSummary.
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde initial {opening} · final {closing} · {lines, plural, =1{une ligne} other{{lines} lignes}}'**
+  String statementSummary(String opening, String closing, int lines);
+
+  /// No description provided for @statementSavePdf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer le PDF d\'origine'**
+  String get statementSavePdf;
+
+  /// No description provided for @statementPdfSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'PDF enregistré.'**
+  String get statementPdfSaved;
+
+  /// No description provided for @statementPdfMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur n\'a plus ce PDF : il a sans doute été reconstruit depuis l\'import.'**
+  String get statementPdfMissing;
+
+  /// No description provided for @statementPdfNotPaired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Associez un serveur pour récupérer le PDF d\'origine.'**
+  String get statementPdfNotPaired;
+
+  /// No description provided for @statementPdfUnreachable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur ne répond pas : le PDF n\'a pas pu être récupéré.'**
+  String get statementPdfUnreachable;
+
+  /// No description provided for @statementDeleteLast.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer le dernier relevé'**
+  String get statementDeleteLast;
+
+  /// No description provided for @statementDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer le relevé du {start} au {end} et ses {lines} lignes ? Leurs classements sont perdus ; le relevé pourra être importé de nouveau.'**
+  String statementDeleteConfirm(String start, String end, int lines);
+
+  /// No description provided for @statementDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Relevé supprimé.'**
+  String get statementDeleted;
+
+  /// No description provided for @accountStatements.
+  ///
+  /// In fr, this message translates to:
+  /// **'Relevés importés'**
+  String get accountStatements;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

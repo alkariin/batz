@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
@@ -6,6 +8,7 @@ import 'package:dio/io.dart';
 import '../sync/sync_engine.dart';
 import '../sync/sync_protocol.dart';
 import 'certificate.dart';
+import 'import_protocol.dart';
 
 /// Default HTTPS port of batz-web.
 const defaultServerPort = 8443;
@@ -28,16 +31,18 @@ Uri? parseServerAddress(String input) {
   return Uri(scheme: 'https', host: uri.host, port: uri.hasPort ? uri.port : defaultServerPort);
 }
 
-/// A failure reported by the server, with its machine-readable code.
+/// A failure reported by the server, with its machine-readable code, and the
+/// check in cause for a refused statement.
 class ServerException implements Exception {
-  ServerException(this.status, this.code, this.message);
+  ServerException(this.status, this.code, this.message, {this.check});
 
   final int status;
   final String code;
   final String message;
+  final String? check;
 
   @override
-  String toString() => 'ServerException($status $code): $message';
+  String toString() => 'ServerException($status $code${check == null ? '' : ' $check'}): $message';
 }
 
 /// The server could not be reached (off, wrong address, other network).
@@ -50,13 +55,30 @@ class ServerUnreachableException implements Exception {
 }
 
 class Health {
-  Health({required this.version, required this.minAppVersion, this.syncProtocol});
+  Health({required this.version, required this.minAppVersion, this.syncProtocol, this.importFormats});
   final String version;
   final String minAppVersion;
 
   /// The exchange protocol the server speaks; null for a server older than
   /// the synchronisation (before 0.3.0).
   final int? syncProtocol;
+
+  /// The statement formats the server reads; null for a server older than
+  /// the import (before 0.4.0).
+  final List<String>? importFormats;
+}
+
+/// What the import needs from the server (batz-web/docs/api.md).
+abstract interface class ImportTransport {
+  Future<Health> health();
+
+  /// Sends a statement file; the server answers with what it read, or
+  /// refuses it with a [ServerException] whose code starts with `IMPORT_`.
+  Future<ImportResponse> importStatement(Uint8List pdf);
+
+  /// The original file of the statement of [fingerprint], or null when the
+  /// server does not hold it (it was rebuilt).
+  Future<Uint8List?> statementPdf(String fingerprint);
 }
 
 class PairingResult {
@@ -95,7 +117,7 @@ class ServerDevice {
 }
 
 /// Thin HTTP client of the batz-web API (batz-web/docs/api.md).
-class ServerClient implements SyncTransport {
+class ServerClient implements SyncTransport, ImportTransport {
   /// [pin] is the certificate fingerprint to require; without it the first
   /// certificate seen is accepted and reported to [onCertificate].
   ServerClient(this.baseUrl, {this.pin, this.onCertificate, String? deviceKey})
@@ -125,11 +147,42 @@ class ServerClient implements SyncTransport {
   @override
   Future<Health> health() async {
     final body = await _send('GET', '/healthz') as Map<String, dynamic>;
+    final formats = body['importFormats'];
     return Health(
       version: body['version'] as String,
       minAppVersion: body['minAppVersion'] as String,
       syncProtocol: body['syncProtocol'] as int?,
+      importFormats: formats is List ? formats.whereType<String>().toList() : null,
     );
+  }
+
+  /// Sends a statement file as the raw body of `POST /api/v1/imports`.
+  @override
+  Future<ImportResponse> importStatement(Uint8List pdf) async {
+    final body = await _send(
+      'POST',
+      '/api/v1/imports',
+      data: pdf,
+      contentType: 'application/pdf',
+      timeout: const Duration(seconds: 60),
+    );
+    return ImportResponse.fromJson(body);
+  }
+
+  @override
+  Future<Uint8List?> statementPdf(String fingerprint) async {
+    try {
+      final body = await _send(
+        'GET',
+        '/api/v1/imports/${Uri.encodeComponent(fingerprint)}/pdf',
+        responseType: ResponseType.bytes,
+        timeout: const Duration(seconds: 60),
+      );
+      return Uint8List.fromList(body! as List<int>);
+    } on ServerException catch (e) {
+      if (e.code == 'IMPORT_PDF_NOT_FOUND') return null;
+      rethrow;
+    }
   }
 
   /// One call of an exchange (`POST /api/v1/sync`).
@@ -153,13 +206,26 @@ class ServerClient implements SyncTransport {
     await _send('DELETE', '/api/v1/devices/${Uri.encodeComponent(deviceId)}');
   }
 
-  Future<Object?> _send(String method, String path, {Object? data, Duration? timeout}) async {
+  Future<Object?> _send(
+    String method,
+    String path, {
+    Object? data,
+    Duration? timeout,
+    String? contentType,
+    ResponseType? responseType,
+  }) async {
     final Response<Object?> response;
     try {
       response = await _dio.request<Object?>(
         path,
         data: data,
-        options: Options(method: method, receiveTimeout: timeout, sendTimeout: timeout),
+        options: Options(
+          method: method,
+          receiveTimeout: timeout,
+          sendTimeout: timeout,
+          contentType: contentType,
+          responseType: responseType,
+        ),
       );
     } on DioException catch (e) {
       final seen = _lastFingerprint;
@@ -171,9 +237,22 @@ class ServerClient implements SyncTransport {
     if (pin == null && _lastFingerprint != null) onCertificate?.call(_lastFingerprint!);
     final status = response.statusCode ?? 0;
     if (status >= 200 && status < 300) return response.data;
-    final body = response.data;
+    var body = response.data;
+    if (body is List<int>) {
+      // An error answered to a request for bytes: its JSON body.
+      try {
+        body = jsonDecode(utf8.decode(body));
+      } on FormatException {
+        body = null;
+      }
+    }
     if (body is Map<String, dynamic>) {
-      throw ServerException(status, body['code'] as String? ?? 'UNKNOWN', body['message'] as String? ?? '');
+      throw ServerException(
+        status,
+        body['code'] as String? ?? 'UNKNOWN',
+        body['message'] as String? ?? '',
+        check: body['check'] as String?,
+      );
     }
     throw ServerException(status, 'UNKNOWN', 'HTTP $status');
   }

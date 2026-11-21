@@ -5,6 +5,7 @@ import '../../domain/ids.dart';
 import '../../domain/ledger/account.dart';
 import '../../domain/ledger/ledger_exception.dart';
 import '../../l10n/app_localizations.dart';
+import '../import/statements_page.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 
@@ -117,6 +118,16 @@ class _AccountFormPageState extends State<AccountFormPage> {
               title: Text(l.accountArchived),
               value: _archived,
               onChanged: (value) => setState(() => _archived = value),
+            ),
+          if (account != null && account.isDetailed)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.receipt_long_outlined),
+              title: Text(l.accountStatements),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () =>
+                  Navigator.of(context)
+                      .push(MaterialPageRoute<void>(builder: (_) => StatementsPage(accountId: account.id))),
             ),
           const SizedBox(height: 16),
           FilledButton(onPressed: _save, child: Text(l.save)),

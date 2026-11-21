@@ -17,30 +17,33 @@ class BatzApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (_) => ServerCubit(services.server)..load()),
-        BlocProvider(create: (_) => LedgerCubit(services.ledger)..load()),
-        BlocProvider(
-          create: (context) {
-            final ledger = context.read<LedgerCubit>();
-            return SyncCubit(
-              server: services.server,
-              journal: services.journal,
-              engine: services.syncEngine,
-              store: services.syncStore,
-              transport: services.syncTransport,
-              onReceived: ledger.load,
-            )..start();
-          },
-          lazy: false,
+    return RepositoryProvider.value(
+      value: services,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => ServerCubit(services.server)..load()),
+          BlocProvider(create: (_) => LedgerCubit(services.ledger)..load()),
+          BlocProvider(
+            create: (context) {
+              final ledger = context.read<LedgerCubit>();
+              return SyncCubit(
+                server: services.server,
+                journal: services.journal,
+                engine: services.syncEngine,
+                store: services.syncStore,
+                transport: services.syncTransport,
+                onReceived: ledger.load,
+              )..start();
+            },
+            lazy: false,
+          ),
+        ],
+        // A new pairing, or a forgotten one, restarts the synchronisation.
+        child: BlocListener<ServerCubit, ServerState>(
+          listenWhen: (previous, current) => previous.pairing?.deviceId != current.pairing?.deviceId,
+          listener: (context, _) => context.read<SyncCubit>().pairingChanged(),
+          child: _material(home: const AppShell()),
         ),
-      ],
-      // A new pairing, or a forgotten one, restarts the synchronisation.
-      child: BlocListener<ServerCubit, ServerState>(
-        listenWhen: (previous, current) => previous.pairing?.deviceId != current.pairing?.deviceId,
-        listener: (context, _) => context.read<SyncCubit>().pairingChanged(),
-        child: _material(home: const AppShell()),
       ),
     );
   }

@@ -64,6 +64,10 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
+      # The server of the end-to-end tests reads the fictitious statements
+      # with pdftotext.
+      - name: Install pdftotext
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
       # test/e2e pairs the app's code with this real server, built with the
       # version the tests expect (as test/e2e/server_harness.dart does).
       - name: Build the server for the end-to-end tests

@@ -782,4 +782,162 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get categoryDuplicateName => 'Nom en double dans cette année';
+
+  @override
+  String get importTitle => 'Importer un relevé';
+
+  @override
+  String get importSyncing => 'Synchronisation avant l\'import…';
+
+  @override
+  String importNotReady(String reason) {
+    return 'L\'import commence par une synchronisation aboutie. Elle n\'a pas abouti : $reason';
+  }
+
+  @override
+  String get importRetry => 'Réessayer';
+
+  @override
+  String get importNoDetailedAccount => 'Aucun compte détaillé : activez l\'import d\'un compte dans Plus › Comptes.';
+
+  @override
+  String get importAccount => 'Compte';
+
+  @override
+  String get importChoose => 'Choisir le relevé PDF';
+
+  @override
+  String get importSending => 'Le serveur lit et vérifie le relevé…';
+
+  @override
+  String get importRefusedTitle => 'Relevé refusé';
+
+  @override
+  String get importDoneTitle => 'Relevé importé';
+
+  @override
+  String importDonePeriod(String start, String end) {
+    return 'Du $start au $end';
+  }
+
+  @override
+  String importDoneLines(int lines, int proposed, int toComplete) {
+    String _temp0 = intl.Intl.pluralLogic(lines, locale: localeName, other: '$lines lignes', one: 'Une ligne');
+    String _temp1 = intl.Intl.pluralLogic(
+      proposed,
+      locale: localeName,
+      other: 'proposées',
+      one: 'proposée',
+      zero: 'proposée',
+    );
+    return '$_temp0 : $proposed $_temp1, $toComplete à compléter.';
+  }
+
+  @override
+  String get importStatements => 'Relevés du compte';
+
+  @override
+  String get importFirstTitle => 'Premier relevé de ce compte';
+
+  @override
+  String importFirstBody(String balance, String date) {
+    return 'Ce relevé fixe le solde de départ du compte : $balance au $date. Aucun relevé antérieur ne pourra être importé ensuite.';
+  }
+
+  @override
+  String get importFirstConfirm => 'Importer';
+
+  @override
+  String get importUnreadable => 'Ce fichier n\'est pas un PDF lisible.';
+
+  @override
+  String get importUnknownFormat => 'Ce PDF n\'est pas un relevé PostFinance.';
+
+  @override
+  String importInconsistent(String reason) {
+    return 'Relevé incohérent, rien n\'est importé : $reason.';
+  }
+
+  @override
+  String get importCheckLayout => 'il n\'a pas pu être lu en entier';
+
+  @override
+  String get importCheckCurrency => 'le compte n\'est pas en francs suisses';
+
+  @override
+  String get importCheckPeriod => 'une ligne est hors de la période du relevé, ou dans le désordre';
+
+  @override
+  String get importCheckRunningBalance =>
+      'un solde imprimé en cours de relevé ne correspond pas aux mouvements qui le précèdent';
+
+  @override
+  String get importCheckTotals => 'les totaux imprimés des crédits ou des débits ne correspondent pas aux mouvements';
+
+  @override
+  String get importCheckClosingBalance => 'le solde final ne correspond pas au solde initial plus les mouvements';
+
+  @override
+  String get importTooLarge => 'Ce fichier dépasse 10 Mo.';
+
+  @override
+  String importServerRefused(String code) {
+    return 'Le serveur refuse l\'envoi ($code).';
+  }
+
+  @override
+  String importServerTooOld(String version) {
+    return 'Le serveur (version $version) est trop ancien pour importer des relevés : installez la version 0.4.0 ou une suivante.';
+  }
+
+  @override
+  String get importUnreachable => 'Le serveur ne répond plus : le relevé n\'a pas été envoyé.';
+
+  @override
+  String statementsTitle(String account) {
+    return 'Relevés de $account';
+  }
+
+  @override
+  String get statementsEmpty => 'Aucun relevé importé.';
+
+  @override
+  String statementPeriod(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String statementSummary(String opening, String closing, int lines) {
+    String _temp0 = intl.Intl.pluralLogic(lines, locale: localeName, other: '$lines lignes', one: 'une ligne');
+    return 'Solde initial $opening · final $closing · $_temp0';
+  }
+
+  @override
+  String get statementSavePdf => 'Enregistrer le PDF d\'origine';
+
+  @override
+  String get statementPdfSaved => 'PDF enregistré.';
+
+  @override
+  String get statementPdfMissing => 'Le serveur n\'a plus ce PDF : il a sans doute été reconstruit depuis l\'import.';
+
+  @override
+  String get statementPdfNotPaired => 'Associez un serveur pour récupérer le PDF d\'origine.';
+
+  @override
+  String get statementPdfUnreachable => 'Le serveur ne répond pas : le PDF n\'a pas pu être récupéré.';
+
+  @override
+  String get statementDeleteLast => 'Supprimer le dernier relevé';
+
+  @override
+  String statementDeleteConfirm(String start, String end, int lines) {
+    return 'Supprimer le relevé du $start au $end et ses $lines lignes ? Leurs classements sont perdus ; le relevé pourra être importé de nouveau.';
+  }
+
+  @override
+  String get statementDeleted => 'Relevé supprimé.';
+
+  @override
+  String get accountStatements => 'Relevés importés';
 }

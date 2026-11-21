@@ -6,6 +6,7 @@ import '../../domain/ledger/ledger.dart';
 import '../../domain/ledger/transaction.dart';
 import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
+import '../import/import_page.dart';
 import '../ledger_cubit.dart';
 import 'entry_form_page.dart';
 import 'transaction_detail_page.dart';
@@ -34,7 +35,18 @@ class _TransactionsPageState extends State<TransactionsPage> {
         final years = {...ledger.yearsWithTransactions, CalendarDate.today().year, ?_year}.toList()..sort();
         final list = ledger.transactionList(accountId: accountId, year: _year);
         return Scaffold(
-          appBar: AppBar(title: Text(l.navTransactions)),
+          appBar: AppBar(
+            title: Text(l.navTransactions),
+            actions: [
+              IconButton(
+                key: const Key('importStatement'),
+                tooltip: l.importTitle,
+                icon: const Icon(Icons.upload_file),
+                onPressed: () =>
+                    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ImportPage())),
+              ),
+            ],
+          ),
           floatingActionButton: FloatingActionButton(
             tooltip: l.transactionNew,
             onPressed: () => _create(context),

@@ -13,17 +13,23 @@ const statementTestdata = '../batz-web/src/internal/infrastructure/extraction/po
 /// A statement of the test set as the server answers it: what it read and the
 /// fingerprint of the file.
 class FixtureStatement {
-  FixtureStatement(this.name, this.statement, this.fingerprint, this.pdf);
+  FixtureStatement(this.name, this._statement, this.fingerprint, this.pdf);
 
   final String name;
-  final ExtractedStatement statement;
+  final ExtractedStatement? _statement;
+
+  /// What the server reads in the file; only for a file it accepts.
+  ExtractedStatement get statement => _statement!;
   final String fingerprint;
   final List<int> pdf;
 }
 
-/// Loads `2026-01`, `2026-02`, `2026-03` or `other-account-2026-04`.
+/// Loads a statement of the test set: `2026-01`, `2026-02`, `2026-03`,
+/// `other-account-2026-04`; for the files the server refuses
+/// (`inconsistent-…`, `not-a-statement`), the statement is null.
 FixtureStatement fixtureStatement(String name) {
   final json = jsonDecode(File('$statementTestdata/$name.json').readAsStringSync()) as Map<String, Object?>;
   final pdf = File('$statementTestdata/$name.pdf').readAsBytesSync();
-  return FixtureStatement(name, extractedStatementFromJson(json['statement']), sha256.convert(pdf).toString(), pdf);
+  final statement = json['accepted'] == true ? extractedStatementFromJson(json['statement']) : null;
+  return FixtureStatement(name, statement, sha256.convert(pdf).toString(), pdf);
 }

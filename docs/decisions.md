@@ -871,3 +871,49 @@ written in 113 ms. The test fails beyond one second.
 development machine, database file in a background isolate): the
 confirmation of 500 proposals, 3 500 fields in one modification, is written in
 120 ms; the import of 100 lines in 105 ms. The test fails beyond one second.
+
+### 3.5 The import flow in the app
+
+**Decisions.**
+
+- Transactions › « Importer un relevé » opens a screen run by `ImportCubit`.
+  It first runs an exchange (`SyncCubit.sync`, waited for to its end): if the
+  status is not « À jour » (not paired, offline, revoked, server changed,
+  incompatible, question pending, error), the import does not start and the
+  screen says why, with « Réessayer ».
+- The user picks the detailed account (active ones; usually one) and the PDF
+  (`FileAccess`, `file_picker` in the app, a fake in tests). The app first
+  computes the fingerprint and refuses a statement already imported from its
+  journal, without sending it (H1). It then checks that the server's
+  `/healthz` announces the account's format (a server before 0.4.0 is « trop
+  ancien pour importer »), sends the file, and checks the statement read by
+  the server against its ledger (`Ledger.importStatement`). Every refusal
+  names its reason: the server's code and check, the app's reason with what
+  was expected and found, or a server that stopped answering.
+- The first statement of an account asks for confirmation (H7), naming the
+  opening balance and the date it sets. The check against the ledger is made
+  again at the confirmation: the ledger may have changed meanwhile.
+- The result names the period, the number of lines, how many the rules
+  propose and how many are to complete. The exchange that sends the import
+  follows like after any modification (3 seconds later).
+- « Relevés du compte » (from the import screen, or the form of the detailed
+  account) lists the statements, latest first, with their period, balances
+  and number of lines; each can have its original PDF saved (fetched by
+  fingerprint; a server that no longer holds it is said to have been
+  rebuilt, without error); the latest can be deleted after a confirmation
+  that names its lines (H8).
+- `AppServices` is given to the widget tree (`RepositoryProvider`) with two
+  new seams for tests: the import transport and the file access.
+- The CI job of the app installs `poppler-utils`: its end-to-end tests run
+  the real server, which reads the fictitious statements.
+
+**Evidence.** `test/pages/import/import_flow_test.dart` drives the screens
+(synchronisation first, H7, H1 without calling the server, a skipped month,
+a refusal of the server with its check, the next month, the list, the PDF
+saved then missing, the latest statement deleted, a server unreachable or too
+old). `test/e2e/import_e2e_test.dart` runs the same cubits against a real
+`batz-web`: the three months imported with balances computed equal to the
+printed ones, five refusals with the journal unchanged, the same statement
+imported by two devices giving no line twice, lines validated with the server
+stopped and received validated by another device after its restart, the PDF
+fetched by fingerprint and missing on a rebuilt server.

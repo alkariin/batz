@@ -472,5 +472,151 @@
     }
   },
   "taskDetachedHint": "Elles ne sont plus rattachées à l'arbre de l'année : déplacez-les.",
-  "categoryDuplicateName": "Nom en double dans cette année"
+  "categoryDuplicateName": "Nom en double dans cette année",
+  "importTitle": "Importer un relevé",
+  "importSyncing": "Synchronisation avant l'import…",
+  "importNotReady": "L'import commence par une synchronisation aboutie. Elle n'a pas abouti : {reason}",
+  "@importNotReady": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "importRetry": "Réessayer",
+  "importNoDetailedAccount": "Aucun compte détaillé : activez l'import d'un compte dans Plus › Comptes.",
+  "importAccount": "Compte",
+  "importChoose": "Choisir le relevé PDF",
+  "importSending": "Le serveur lit et vérifie le relevé…",
+  "importRefusedTitle": "Relevé refusé",
+  "importDoneTitle": "Relevé importé",
+  "importDonePeriod": "Du {start} au {end}",
+  "@importDonePeriod": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "importDoneLines": "{lines, plural, =1{Une ligne} other{{lines} lignes}} : {proposed} {proposed, plural, =0{proposée} =1{proposée} other{proposées}}, {toComplete} à compléter.",
+  "@importDoneLines": {
+    "placeholders": {
+      "lines": {
+        "type": "int"
+      },
+      "proposed": {
+        "type": "int"
+      },
+      "toComplete": {
+        "type": "int"
+      }
+    }
+  },
+  "importStatements": "Relevés du compte",
+  "importFirstTitle": "Premier relevé de ce compte",
+  "importFirstBody": "Ce relevé fixe le solde de départ du compte : {balance} au {date}. Aucun relevé antérieur ne pourra être importé ensuite.",
+  "@importFirstBody": {
+    "placeholders": {
+      "balance": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "importFirstConfirm": "Importer",
+  "importUnreadable": "Ce fichier n'est pas un PDF lisible.",
+  "importUnknownFormat": "Ce PDF n'est pas un relevé PostFinance.",
+  "importInconsistent": "Relevé incohérent, rien n'est importé : {reason}.",
+  "@importInconsistent": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "importCheckLayout": "il n'a pas pu être lu en entier",
+  "importCheckCurrency": "le compte n'est pas en francs suisses",
+  "importCheckPeriod": "une ligne est hors de la période du relevé, ou dans le désordre",
+  "importCheckRunningBalance": "un solde imprimé en cours de relevé ne correspond pas aux mouvements qui le précèdent",
+  "importCheckTotals": "les totaux imprimés des crédits ou des débits ne correspondent pas aux mouvements",
+  "importCheckClosingBalance": "le solde final ne correspond pas au solde initial plus les mouvements",
+  "importTooLarge": "Ce fichier dépasse 10 Mo.",
+  "importServerRefused": "Le serveur refuse l'envoi ({code}).",
+  "@importServerRefused": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "importServerTooOld": "Le serveur (version {version}) est trop ancien pour importer des relevés : installez la version 0.4.0 ou une suivante.",
+  "@importServerTooOld": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "importUnreachable": "Le serveur ne répond plus : le relevé n'a pas été envoyé.",
+  "statementsTitle": "Relevés de {account}",
+  "@statementsTitle": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "statementsEmpty": "Aucun relevé importé.",
+  "statementPeriod": "{start} – {end}",
+  "@statementPeriod": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "statementSummary": "Solde initial {opening} · final {closing} · {lines, plural, =1{une ligne} other{{lines} lignes}}",
+  "@statementSummary": {
+    "placeholders": {
+      "opening": {
+        "type": "String"
+      },
+      "closing": {
+        "type": "String"
+      },
+      "lines": {
+        "type": "int"
+      }
+    }
+  },
+  "statementSavePdf": "Enregistrer le PDF d'origine",
+  "statementPdfSaved": "PDF enregistré.",
+  "statementPdfMissing": "Le serveur n'a plus ce PDF : il a sans doute été reconstruit depuis l'import.",
+  "statementPdfNotPaired": "Associez un serveur pour récupérer le PDF d'origine.",
+  "statementPdfUnreachable": "Le serveur ne répond pas : le PDF n'a pas pu être récupéré.",
+  "statementDeleteLast": "Supprimer le dernier relevé",
+  "statementDeleteConfirm": "Supprimer le relevé du {start} au {end} et ses {lines} lignes ? Leurs classements sont perdus ; le relevé pourra être importé de nouveau.",
+  "@statementDeleteConfirm": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "lines": {
+        "type": "int"
+      }
+    }
+  },
+  "statementDeleted": "Relevé supprimé.",
+  "accountStatements": "Relevés importés"
 }
