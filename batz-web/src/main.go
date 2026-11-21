@@ -36,7 +36,12 @@ import (
 	"github.com/alkariin/batz/batz-web/internal/version"
 )
 
-const dbFile = "batz.db"
+// Files and directories of the data directory.
+const (
+	dbFile        = "batz.db"
+	statementsDir = "statements" // original PDF files, named by fingerprint
+	backupsDir    = "backups"    // dated copies of the database
+)
 
 func main() {
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, nil)))
@@ -150,6 +155,13 @@ func serve(cfg config.Config) error {
 	defer db.Close()
 	devices := application.NewDevices(persistence.NewDeviceStore(db), time.Now)
 	sync := application.NewSync(persistence.NewJournalStore(db), time.Now)
+	extractor := postfinance.New()
+	if err := extractor.Available(); err != nil {
+		slog.Warn("pdftotext not found: statements cannot be imported", "error", err)
+	}
+	imports := application.NewImports(extractor,
+		persistence.NewStatementFiles(filepath.Join(cfg.DataDir, statementsDir)),
+		persistence.NewBackups(db, filepath.Join(cfg.DataDir, backupsDir), cfg.Backups, time.Now))
 	cert, err := tlscert.LoadOrCreate(cfg.DataDir, time.Now())
 	if err != nil {
 		return err
@@ -159,12 +171,16 @@ func serve(cfg config.Config) error {
 		return fmt.Errorf("listen: %w", err)
 	}
 	slog.Info("batz-web started",
-		"version", version.Version, "port", cfg.Port, "dataDir", cfg.DataDir,
+		"version", version.Version, "port", cfg.Port, "dataDir", cfg.DataDir, "backups", cfg.Backups,
 		"certificateFingerprint", tlscert.Fingerprint(cert))
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	router := web.NewRouter(devices, sync, web.Health{Version: version.Version, MinAppVersion: version.MinAppVersion})
+	router := web.NewRouter(devices, sync, imports, web.Health{
+		Version:       version.Version,
+		MinAppVersion: version.MinAppVersion,
+		ImportFormats: []string{postfinance.Format},
+	})
 	err = web.Serve(ctx, web.NewServer(router, cert), ln)
 	slog.Info("batz-web stopped")
 	return err

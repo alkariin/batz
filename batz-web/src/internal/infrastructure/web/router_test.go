@@ -16,12 +16,15 @@ import (
 
 	"github.com/alkariin/batz/batz-web/internal/application"
 	"github.com/alkariin/batz/batz-web/internal/domain/device"
+	"github.com/alkariin/batz/batz-web/internal/infrastructure/extraction/postfinance"
 	"github.com/alkariin/batz/batz-web/internal/infrastructure/persistence"
 )
 
 type fixture struct {
 	t       *testing.T
 	devices *application.Devices
+	imports *application.Imports
+	backups *persistence.Backups
 	handler http.Handler
 	now     time.Time
 }
@@ -34,7 +37,13 @@ func newFixture(t *testing.T) *fixture {
 	f := &fixture{t: t, now: time.Date(2026, 11, 20, 10, 0, 0, 0, time.UTC)}
 	f.devices = application.NewDevices(persistence.NewDeviceStore(db), func() time.Time { return f.now })
 	sync := application.NewSync(persistence.NewJournalStore(db), func() time.Time { return f.now })
-	f.handler = NewRouter(f.devices, sync, Health{Version: "v9.9.9", MinAppVersion: "0.1.0"})
+	dir := t.TempDir()
+	f.backups = persistence.NewBackups(db, filepath.Join(dir, "backups"), 12, func() time.Time {
+		f.now = f.now.Add(time.Second)
+		return f.now
+	})
+	f.imports = application.NewImports(postfinance.New(), persistence.NewStatementFiles(filepath.Join(dir, "statements")), f.backups)
+	f.handler = NewRouter(f.devices, sync, f.imports, Health{Version: "v9.9.9", MinAppVersion: "0.1.0", ImportFormats: []string{"postfinance"}})
 	return f
 }
 
@@ -83,7 +92,10 @@ func TestHealthz(t *testing.T) {
 	f := newFixture(t)
 	w, body := f.do("GET", "/healthz", "", nil)
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, map[string]any{"status": "ok", "version": "v9.9.9", "minAppVersion": "0.1.0", "syncProtocol": float64(1)}, body)
+	assert.Equal(t, map[string]any{
+		"status": "ok", "version": "v9.9.9", "minAppVersion": "0.1.0", "syncProtocol": float64(1),
+		"importFormats": []any{"postfinance"},
+	}, body)
 }
 
 func TestPairing(t *testing.T) {

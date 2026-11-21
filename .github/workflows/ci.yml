@@ -148,5 +148,7 @@ jobs:
           done
           docker inspect -f '{{.State.Health.Status}}' batz | grep -qx healthy
           curl -sSk https://127.0.0.1:8443/healthz | tee /dev/stderr | grep -q '"status":"ok"'
+      - name: Extract the test set inside the image
+        run: batz-web/scripts/check-image-extraction.sh batz-web:ci
       - if: failure()
         run: docker logs batz

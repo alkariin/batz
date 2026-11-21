@@ -19,14 +19,21 @@ const maxBodyBytes = 1 << 20
 // application.MaxPageEntries entries.
 const maxSyncBodyBytes = 32 << 20
 
+// MaxImportBytes caps a statement file: a monthly statement weighs about
+// 100 KB.
+const MaxImportBytes = 10 << 20
+
 // Health is what GET /healthz reports.
 type Health struct {
 	Version       string
 	MinAppVersion string
+	// ImportFormats are the statement formats the server reads: an app
+	// tells from their absence that the server is too old to import.
+	ImportFormats []string
 }
 
 // NewRouter wires the routes.
-func NewRouter(devices *application.Devices, sync *application.Sync, health Health) *gin.Engine {
+func NewRouter(devices *application.Devices, sync *application.Sync, imports *application.Imports, health Health) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -38,6 +45,7 @@ func NewRouter(devices *application.Devices, sync *application.Sync, health Heal
 			"version":       health.Version,
 			"minAppVersion": health.MinAppVersion,
 			"syncProtocol":  journal.Protocol,
+			"importFormats": health.ImportFormats,
 		})
 	})
 
@@ -52,6 +60,10 @@ func NewRouter(devices *application.Devices, sync *application.Sync, health Heal
 
 	s := &syncHandler{sync: sync}
 	api.POST("/sync", limitBody(maxSyncBodyBytes), authenticate(devices), s.exchange)
+
+	i := &importHandler{imports: imports}
+	api.POST("/imports", limitBody(MaxImportBytes), authenticate(devices), i.importStatement)
+	api.GET("/imports/:fingerprint/pdf", authenticate(devices), i.pdf)
 	return r
 }
 

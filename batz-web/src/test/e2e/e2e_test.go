@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -187,6 +188,7 @@ func TestHealthzOverHTTPS(t *testing.T) {
 	assert.Equal(t, "v0.0.0-e2e", body["version"])
 	assert.Equal(t, version.MinAppVersion, body["minAppVersion"])
 	assert.Equal(t, float64(1), body["syncProtocol"])
+	assert.Equal(t, []any{"postfinance"}, body["importFormats"])
 
 	// HTTPS only: a plain HTTP request gets no API answer.
 	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/healthz", s.port))
@@ -373,4 +375,67 @@ func TestExtractCommand(t *testing.T) {
 	out, err := exec.Command(binary, "extract", "-summary", files[0]).Output()
 	require.NoError(t, err)
 	assert.Regexp(t, `^accepted, \d+ lines\n$`, string(out))
+}
+
+// An app sends a statement over HTTPS: the server answers with its lines,
+// keeps the file under its fingerprint after a dated copy of its database,
+// and gives the file back.
+func TestImportOverHTTPS(t *testing.T) {
+	dataDir := t.TempDir()
+	s := start(t, dataDir)
+	status, paired := s.pair(s.pairingCode(), "Phone")
+	require.Equal(t, http.StatusCreated, status)
+	key := paired["deviceKey"].(string)
+
+	testdata := "../../internal/infrastructure/extraction/postfinance/testdata/"
+	pdf, err := os.ReadFile(testdata + "2026-02.pdf")
+	require.NoError(t, err)
+	send := func(body []byte) (int, map[string]any) {
+		req, err := http.NewRequest("POST", s.url("/api/v1/imports"), bytes.NewReader(body))
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", "application/pdf")
+		req.Header.Set("Authorization", "Bearer "+key)
+		resp, err := s.client(s.fingerprint).Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		var out map[string]any
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&out))
+		return resp.StatusCode, out
+	}
+	status, body := send(pdf)
+	require.Equal(t, http.StatusOK, status, body)
+	fingerprint := body["fingerprint"].(string)
+	lines := body["statement"].(map[string]any)["lines"].([]any)
+	assert.Len(t, lines, 21)
+
+	stored, err := os.ReadFile(filepath.Join(dataDir, "statements", fingerprint+".pdf"))
+	require.NoError(t, err)
+	assert.Equal(t, pdf, stored)
+	backups, err := filepath.Glob(filepath.Join(dataDir, "backups", "batz-*.db"))
+	require.NoError(t, err)
+	assert.Len(t, backups, 1)
+
+	status, again := send(pdf)
+	require.Equal(t, http.StatusOK, status)
+	assert.Equal(t, body, again)
+	backups, _ = filepath.Glob(filepath.Join(dataDir, "backups", "batz-*.db"))
+	assert.Len(t, backups, 1, "no copy for a file already received")
+
+	inconsistent, err := os.ReadFile(testdata + "inconsistent-total.pdf")
+	require.NoError(t, err)
+	status, refused := send(inconsistent)
+	assert.Equal(t, http.StatusUnprocessableEntity, status)
+	assert.Equal(t, "IMPORT_INCONSISTENT", refused["code"])
+	assert.Equal(t, "totals", refused["check"])
+
+	req, err := http.NewRequest("GET", s.url("/api/v1/imports/"+fingerprint+"/pdf"), nil)
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+key)
+	resp, err := s.client(s.fingerprint).Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	got, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, pdf, got)
 }

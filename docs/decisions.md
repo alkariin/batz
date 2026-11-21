@@ -713,3 +713,48 @@ accepts the three real statements present (62, 49 and 70 lines), with dates
 and amounts identical to the original script except that one date. On the
 fictitious statements, the extraction gives exactly the expected JSON, labels
 and printed balances included.
+
+### 3.2 Import route, original files and copies of the database
+
+**Decisions.**
+
+- `POST /api/v1/imports` takes the PDF as the raw request body (10 MiB at
+  most, `413 IMPORT_TOO_LARGE` beyond) and answers `200` with the
+  fingerprint (SHA-256 of the file, lower-case hex) and the statement read.
+  A refusal is a `422` whose body adds `check` to the usual code and message:
+  `IMPORT_UNREADABLE`, `IMPORT_UNKNOWN_FORMAT`, `IMPORT_INCONSISTENT` with the
+  check in cause. The extraction is deterministic, so the same file always
+  gets the same answer; the server keeps no copy of the answer.
+- The server refuses nothing because it was already imported (decision H1):
+  the app decides from its journal.
+- Imports run one at a time (a mutex in `application.Imports`): when the
+  server does not hold the file yet, it writes a copy of its database, then
+  stores the file; two copies of a file sent together give one backup and one
+  file. A refused statement is neither stored nor backed up, and no file is
+  stored if its backup failed.
+- The copies are written with `VACUUM INTO` into `backups/` in the data
+  directory, named by the UTC time to the millisecond
+  (`batz-20261121T101530.123Z.db`) so that names sort in time order; after
+  each one, the oldest beyond `BATZ_BACKUPS` (12 by default, 1 to 1000) are
+  deleted. A copy is an ordinary database: restoring it is stopping the
+  server and putting it in place of `batz.db`.
+- Files go to `statements/<fingerprint>.pdf`, written under a temporary name
+  and renamed, so that a file present is complete.
+  `GET /api/v1/imports/{fingerprint}/pdf` returns it as `application/pdf`; a
+  fingerprint the server does not hold, or that has not the form of one,
+  gives `404 IMPORT_PDF_NOT_FOUND`, which is what a rebuilt server answers.
+- `/healthz` reports `importFormats` (`["postfinance"]`); a server without
+  it is too old to import. At start, the server warns if pdftotext is
+  missing.
+- The logs of an import hold the device, the beginning of the fingerprint,
+  the number of lines and whether the file was new; those of a refusal the
+  code and the check. Never a text, an amount or the IBAN of a statement; a
+  test sends the test set and checks every line of text against the logs.
+- The image installs `poppler-utils`; CI extracts the test set inside the
+  built image (`batz-web/scripts/check-image-extraction.sh`), in a read-only
+  container without network, and compares with the expected JSON. The CI
+  jobs that run the Go tests install `poppler-utils`.
+
+**Evidence.** In the image started read-only with a data volume, an import
+answers with its 27 lines, `backups/` holds one copy and `statements/` the
+file under its fingerprint; the logs show only the fields above.

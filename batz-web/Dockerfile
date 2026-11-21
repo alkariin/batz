@@ -13,12 +13,18 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath \
 
 FROM alpine:3.24
 
-# Unprivileged user; /data holds the database and the TLS certificate.
+# pdftotext reads the statements: the PDF on its standard input, the text on
+# its standard output, so that the container can stay read-only.
+RUN apk add --no-cache poppler-utils
+
+# Unprivileged user; /data holds the database, the TLS certificate, the
+# original statements and the dated copies of the database.
 RUN adduser -D -H -u 10001 batz && mkdir /data && chown batz:batz /data
 COPY --from=builder /out/batz-web /usr/local/bin/batz-web
 
 ENV BATZ_DATA_DIR=/data \
-    BATZ_PORT=8443
+    BATZ_PORT=8443 \
+    BATZ_BACKUPS=12
 VOLUME /data
 EXPOSE 8443
 USER batz

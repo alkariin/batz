@@ -11,6 +11,7 @@ import (
 	"github.com/alkariin/batz/batz-web/internal/application"
 	"github.com/alkariin/batz/batz-web/internal/domain/device"
 	"github.com/alkariin/batz/batz-web/internal/domain/journal"
+	"github.com/alkariin/batz/batz-web/internal/domain/statement"
 )
 
 // Error codes the app relies on; messages are for humans and logs.
@@ -32,11 +33,19 @@ const (
 	CodeSyncPageTooLarge        = "SYNC_PAGE_TOO_LARGE"
 	CodeSyncPageInvalid         = "SYNC_PAGE_INVALID"
 	CodeSyncStateChanged        = "SYNC_STATE_CHANGED"
+
+	CodeImportUnreadable    = statement.CodeUnreadable
+	CodeImportUnknownFormat = statement.CodeUnknownFormat
+	CodeImportInconsistent  = statement.CodeInconsistent
+	CodeImportTooLarge      = "IMPORT_TOO_LARGE"
+	CodeImportPDFNotFound   = "IMPORT_PDF_NOT_FOUND"
 )
 
-// ErrorBody is the JSON body of every error response.
+// ErrorBody is the JSON body of every error response. Check names the
+// failed check of a refused statement.
 type ErrorBody struct {
 	Code    string `json:"code"`
+	Check   string `json:"check,omitempty"`
 	Message string `json:"message"`
 }
 
@@ -71,6 +80,8 @@ func fail(c *gin.Context, err error) {
 		abort(c, http.StatusBadRequest, CodeSyncPageInvalid, err.Error())
 	case errors.Is(err, application.ErrStateChanged):
 		abort(c, http.StatusConflict, CodeSyncStateChanged, err.Error())
+	case errors.Is(err, application.ErrPDFNotFound):
+		abort(c, http.StatusNotFound, CodeImportPDFNotFound, err.Error())
 	default:
 		slog.Error("request failed", "method", c.Request.Method, "path", c.FullPath(), "error", err)
 		abort(c, http.StatusInternalServerError, CodeInternal, "internal error")
