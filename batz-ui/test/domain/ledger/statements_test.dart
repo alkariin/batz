@@ -5,6 +5,7 @@ import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/ledger_exception.dart';
 import 'package:batz/domain/ledger/statement.dart';
 import 'package:batz/domain/ledger/transaction.dart';
+import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/ledger_fixture.dart';
@@ -348,10 +349,10 @@ void main() {
 
   test('imported lines not classified yet count as unclassified in the totals', () async {
     await import(h, january);
-    final totals = (await h.ledger()).cashTotals(2026);
+    final totals = (await h.ledger()).views.of(2026, ViewKind.cash)!;
     final sum = january.statement.lines.fold(0, (a, l) => a + l.amount);
-    expect(totals.unclassified, sum);
-    expect((totals.income, totals.expenses), (0, 0));
+    expect(totals.unclassified.total, sum);
+    expect((totals.income.total, totals.expenses.total), (0, 0));
   });
 
   test('two devices that import the same statement write the same records: no line twice', () async {

@@ -1043,3 +1043,52 @@ confirmed, one line classified by hand over the year, 19 lines to validate)
 and two manual expenses, one over two years. `test/data/upgrade_test.dart`
 opens it with the current version and checks every kind of record, then that
 a new rule proposes for the lines left to validate.
+
+### 4.1 One calculation for both views of a year
+
+**Decisions.**
+
+- The calculation lives in `batz-ui/lib/domain/views/year_view.dart`. It
+  reads the ledger and adds nothing to `ledger.dart`: `ledger.views` (an
+  extension, cached with an `Expando` for the life of the ledger) gives
+  `YearViews`, whose `of(year, kind)` builds a `YearView` the first time it is
+  asked for. A new ledger is loaded after each write, so nothing is ever
+  stale and nothing is stored (principle 1).
+- Each line of a transaction becomes a *flow*: its origin category, its
+  amount and its period; a line to validate becomes the flow of its
+  proposal (a proposed transfer gives none). The cash-flow view places a
+  flow once, at the month of its payment; the economic view places each of
+  its monthly shares (`allocate`, skipped for a period within one month).
+  Everything after the placement is the same code for both views
+  (principle 2).
+- The origin category is a category of the tree of the payment year, any
+  category of it, a group included (only a merge can classify a line in a
+  group). In another year, a share goes to the category of the same name if
+  it can hold transactions (a group cannot, H5); otherwise to « À classer »
+  of the origin's nature, which counts in the income or the expenses.
+- « Non classé »: a validated transaction without a line, a line without a
+  category or whose category is not in the tree of its payment year, a line
+  to validate without a proposal (no rule, a conflict or an unusable rule).
+  It counts at the payment date in both views, outside income and expenses.
+- A category shows what is classified in it; a group the sum of its
+  children plus what was classified in it directly. Income and expenses are
+  the sums of the top-level groups of their nature and of « À classer ».
+- Period offsets are signed like a result (income positive, expenses
+  negative) and are the same in both views: the economic shares, outside the
+  year, of what was paid in it; and the shares in the year of what was paid
+  in other years. The identity cash result = economic result + first −
+  second holds by construction and is checked on random data.
+- The years offered go from the first tree to the latest of the current
+  year, the latest tree and the latest share. A later year without a tree is
+  shown with `treeOrPreview` (H6): its shares go to the computed identifiers
+  of the copy to come. A year before the first tree gives no view (`null`).
+- `Ledger.cashTotals` and `YearTotals` of phase 1 are gone: their tests
+  read the cash-flow view (one implementation).
+- `composition(year, kind, row, month:)` replays the same placement and
+  keeps the amounts of one row (a category with everything below it,
+  « À classer » of a nature, « Non classé »), summed per transaction.
+
+**Measure** (`test/data/performance_test.dart`, same data and machine as the
+measure of 4.0): both views of a year, on a ledger just loaded, take 9 to
+55 ms over five runs (the first one includes the warm-up). The test fails
+when the best of five exceeds 100 ms.

@@ -5,6 +5,7 @@ import 'package:batz/data/ledger/ledger_repository.dart';
 import 'package:batz/data/local/database.dart';
 import 'package:batz/data/local/journal.dart';
 import 'package:batz/domain/ledger/ledger.dart';
+import 'package:batz/domain/views/year_view.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,15 +13,16 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/large_ledger.dart';
 
 /// Acceptance criterion of phase 4: with 10 000 transactions over five years,
-/// the screens reload in less than 300 ms after a write. Measured on the
-/// development machine in docs/decisions.md (step 4.0).
+/// the screens reload in less than 300 ms after a write, and both views of a
+/// year are computed in less than 100 ms. Measured on the development machine
+/// in docs/decisions.md (steps 4.0 and 4.1).
 ///
 /// The suite runs its test files concurrently: each figure is the best of
 /// five runs, so that another file busy at the same moment does not decide
 /// the outcome. Every run is printed.
 void main() {
   test('with 10 000 transactions over five years and 200 rules, the ledger reloads after a write in less than '
-      '300 ms', () async {
+      '300 ms, and both views of a year are computed in less than 100 ms', () async {
     final dir = Directory.systemTemp.createTempSync('batz-perf');
     addTearDown(() => dir.deleteSync(recursive: true));
     // A device as in production: a database file in a background isolate.
@@ -57,6 +59,21 @@ void main() {
     // ignore: avoid_print
     print('write: $writes ms; reload: $reloads ms');
     expect(reloads.reduce(min), lessThan(300));
+
+    // Both views of a year, on a ledger just loaded: nothing computed yet.
+    final computations = <int>[];
+    for (var run = 0; run < 5; run++) {
+      final fresh = await repository.load();
+      final watch = Stopwatch()..start();
+      final cash = fresh.views.of(2028, ViewKind.cash)!;
+      final economic = fresh.views.of(2028, ViewKind.economic)!;
+      computations.add(watch.elapsedMilliseconds);
+      expect(cash.savings.total, economic.savings.total + economic.paidForOtherYears - economic.paidInOtherYears);
+      expect(economic.paidInOtherYears, isNot(0));
+    }
+    // ignore: avoid_print
+    print('both views of a year: $computations ms');
+    expect(computations.reduce(min), lessThan(100));
   }, timeout: const Timeout(Duration(minutes: 3)));
 }
 

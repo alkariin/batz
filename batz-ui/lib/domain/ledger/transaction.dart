@@ -207,34 +207,3 @@ class TransferDraft {
   final String description;
   final String note;
 }
-
-/// Cash-flow totals of one year: what was paid in it, by category
-/// (specification, 4.2, "Vue trésorerie"). Transfers are left out.
-class YearTotals {
-  const YearTotals({
-    required this.year,
-    required this.byCategory,
-    required this.income,
-    required this.expenses,
-    required this.unclassified,
-  });
-
-  final int year;
-
-  /// Signed total of each category of the year's tree, groups included
-  /// (a group adds up its children). Categories without any amount are
-  /// absent.
-  final Map<String, int> byCategory;
-
-  /// Total of the income groups.
-  final int income;
-
-  /// Total of the expense groups: negative, refunds included.
-  final int expenses;
-
-  /// Lines without a category of the year's tree.
-  final int unclassified;
-
-  /// Income minus expenses.
-  int get savings => income + expenses;
-}

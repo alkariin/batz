@@ -9,6 +9,7 @@ import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/statement.dart';
 import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/domain/period_model.dart';
+import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/ledger_fixture.dart';
@@ -220,14 +221,14 @@ void main() {
         await h.apply((l) => l.createRule('food', rule(['épicerie du coin'], category: 'food')));
         await h.apply((l) => l.createRule('savings', rule(['compte épargne'], account: 'savings')));
         final ledger = await h.ledger();
-        final totals = ledger.cashTotals(2026);
+        final totals = ledger.views.of(2026, ViewKind.cash)!;
         final food = (await linesWith('Épicerie du Coin')).fold(0, (a, t) => a + t.amount);
         final saving = (await linesWith('Compte épargne')).single;
         final all = january.statement.lines.fold(0, (a, l) => a + l.amount);
-        expect(totals.byCategory['food'], food);
-        expect(totals.unclassified, all - food - saving.amount);
+        expect(totals.totalOf('food'), food);
+        expect(totals.unclassified.total, all - food - saving.amount);
         expect(ledger.kindOf(saving), TransactionKind.transfer);
-        expect(totals.expenses, food);
+        expect(totals.expenses.total, food);
       },
     );
 
@@ -380,8 +381,11 @@ void main() {
       );
       expect((ledger.kindOf(o), ledger.kindOf(i)), (TransactionKind.transfer, TransactionKind.transfer));
       expect(o.lines, isEmpty);
-      final totals = ledger.cashTotals(2026);
-      expect(totals.unclassified, january.statement.lines.fold(0, (a, l) => a + l.amount) - out.amount - inflow.amount);
+      final totals = ledger.views.of(2026, ViewKind.cash)!;
+      expect(
+        totals.unclassified.total,
+        january.statement.lines.fold(0, (a, l) => a + l.amount) - out.amount - inflow.amount,
+      );
       expect(refusal(() => ledger.classify(out.id, const Classification.transfer('bank'))), LedgerError.sameAccount);
     });
 
@@ -570,7 +574,7 @@ void main() {
     final there = await other.ledger();
     expect(there.linesOf(statement).where((t) => t.isValidated), hasLength(6));
     expect(there.transactions[rent.id]!.line!.categoryId, 'rent');
-    expect(there.cashTotals(2026).byCategory, (await h.ledger()).cashTotals(2026).byCategory);
+    expect(there.views.of(2026, ViewKind.cash)!.totals, (await h.ledger()).views.of(2026, ViewKind.cash)!.totals);
     await other.close();
   });
 }

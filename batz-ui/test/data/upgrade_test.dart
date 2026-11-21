@@ -10,6 +10,7 @@ import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/proposal.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/period_model.dart';
+import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Databases written by versions 0.1.0, 0.2.0, 0.3.0 and 0.4.1 (see
@@ -132,7 +133,7 @@ void main() {
     expect((food.amount, food.description, food.note), (-4790, 'Marché', 'Légumes et fruits'));
     final saving = ledger.transactions['tx-saving']!;
     expect((saving.accountId, saving.counterpartAccountId, saving.amount), ('acc-cash', 'acc-savings', -20000));
-    expect(ledger.cashTotals(2026).expenses, -4790);
+    expect(ledger.views.of(2026, ViewKind.cash)!.expenses.total, -4790);
 
     // What the device remembered of the server is still there: nothing waits.
     final memory = await SyncStore(db).read(_fixture030Pairing);
@@ -175,7 +176,7 @@ void main() {
     expect(ledger.transactions['tx-withdrawal']!.counterpartAccountId, 'acc-cash');
     final rent = ledger.transactions['tx-rent']!.line!;
     expect((rent.periodStart.encode(), rent.periodEnd.encode()), ('2026-09-01', '2027-08-31'));
-    expect(ledger.cashTotals(2026).expenses, -4790 - 210000);
+    expect(ledger.views.of(2026, ViewKind.cash)!.expenses.total, -4790 - 210000);
 
     // The new version writes into it, after the latest entry of 0.2.0.
     final before = (await journal.entries()).last.hlc;

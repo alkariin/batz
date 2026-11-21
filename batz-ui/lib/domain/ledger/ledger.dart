@@ -1031,61 +1031,6 @@ class Ledger {
     return changes;
   }
 
-  // ------------------------------------------------------------------ totals
-
-  /// Cash-flow totals of [year], by category: every line of the transactions
-  /// paid in [year], at its payment date. Transfers have no line and never
-  /// count as income or expense.
-  YearTotals cashTotals(int year) {
-    final tree = trees[year];
-    final byCategory = <String, int>{};
-    var unclassified = 0;
-    for (final transaction in transactions.values) {
-      if (transaction.date.year != year) continue;
-      if (!transaction.isValidated) {
-        // A line to validate counts as the rules propose (principle 3 of
-        // phase 3); without a proposal, as unclassified.
-        final classification = proposalOf(transaction);
-        if (classification?.isTransfer ?? false) continue;
-        final categoryId = classification?.categoryId;
-        if (tree == null || categoryId == null || !tree.byId.containsKey(categoryId)) {
-          unclassified += transaction.amount;
-          continue;
-        }
-        for (String? id = categoryId; id != null; id = tree.byId[id]!.parentId) {
-          byCategory[id] = (byCategory[id] ?? 0) + transaction.amount;
-        }
-        continue;
-      }
-      if (transaction.isTransfer) continue;
-      if (transaction.lines.isEmpty) {
-        unclassified += transaction.amount;
-        continue;
-      }
-      for (final line in transaction.lines) {
-        final categoryId = line.categoryId;
-        if (tree == null || categoryId == null || !tree.byId.containsKey(categoryId)) {
-          unclassified += line.amount;
-          continue;
-        }
-        for (String? id = categoryId; id != null; id = tree.byId[id]!.parentId) {
-          byCategory[id] = (byCategory[id] ?? 0) + line.amount;
-        }
-      }
-    }
-    int natureTotal(CategoryNature nature) => [
-      for (final root in tree?.roots ?? const <Category>[])
-        if (root.nature == nature) byCategory[root.id] ?? 0,
-    ].fold(0, (a, b) => a + b);
-    return YearTotals(
-      year: year,
-      byCategory: byCategory,
-      income: natureTotal(CategoryNature.income),
-      expenses: natureTotal(CategoryNature.expense),
-      unclassified: unclassified,
-    );
-  }
-
   static int _nextPosition(Iterable<Category> siblings) =>
       siblings.fold(-1, (max, c) => c.position > max ? c.position : max) + 1;
 

@@ -9,6 +9,7 @@ import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/pages/import/import_cubit.dart';
 import 'package:batz/pages/ledger_cubit.dart';
 import 'package:batz/pages/sync/sync_cubit.dart';
+import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/statements.dart';
@@ -214,7 +215,7 @@ void main() {
       final there = await b.device.ledger.ledger();
       expect(there.linesToValidate, hasLength(21));
       expect(there.transactions[rent.id]!.line!.categoryId, 'rent');
-      expect(there.cashTotals(2026).byCategory, ledger.cashTotals(2026).byCategory);
+      expect(there.views.of(2026, ViewKind.cash)!.totals, ledger.views.of(2026, ViewKind.cash)!.totals);
     },
   );
 
