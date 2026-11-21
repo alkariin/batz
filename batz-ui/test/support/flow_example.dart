@@ -7,12 +7,12 @@ import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/domain/modules/salary.dart';
 
-/// The year 2026 of the example of the diagram (plan of phase 6): « Revenus »
-/// holds « Salaire » ([salary] received, 83'856.00 by default) and
-/// « Intérêts » (144.00); the top-level groups of expenses « Logement »
-/// (24'000.00), « Quotidien » (18'000.00) and « Obligations » (21'000.00,
-/// of which « Impôts » 15'000.00). With [sheet], the salary sheet of the
-/// example: gross 96'000.00, AVS 5'088.00, AC 1'056.00, LPP 6'000.00.
+/// The year 2026 of the example of the diagram: « Revenus » holds « Salaire »
+/// ([salary] received, 83'856.00 by default) and « Intérêts » (144.00); the
+/// top-level groups of expenses « Logement » (24'000.00), « Quotidien »
+/// (18'000.00) and « Obligations » (21'000.00, of which « Impôts »
+/// 15'000.00). With [sheet], the salary sheet of the example: gross
+/// 96'000.00, AVS 5'088.00, AC 1'056.00, LPP 6'000.00.
 Future<Ledger> flowExample(
   Future<Ledger> Function(Modification Function(Ledger l) build) apply, {
   int salary = 8385600,

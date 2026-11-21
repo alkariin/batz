@@ -11,7 +11,7 @@ import '../../support/module_checks.dart';
 
 Matcher throwsLedger(LedgerError error) => throwsA(isA<LedgerException>().having((e) => e.error, 'error', error));
 
-/// The sheet of the example of the plan.
+/// The sheet of the reference example.
 SalarySheetDraft exampleSheet({int year = 2026, int net = 8385600}) => SalarySheetDraft(
   year: year,
   gross: 9600000,
@@ -104,7 +104,7 @@ void main() {
     expect(ledger.saveSalarySheet(draft(net: 0, amount: 0), newId: newId).changes, isNotEmpty);
   });
 
-  test('a new sheet proposes the labels of the closest earlier sheet, otherwise AVS, AC and LPP (H2)', () async {
+  test('a new sheet proposes the labels of the closest earlier sheet, otherwise AVS, AC and LPP', () async {
     var ledger = await h.ledger();
     expect(ledger.proposedDeductionLabels(2026), ['AVS', 'AC', 'LPP']);
     ledger = await h.apply(

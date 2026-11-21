@@ -32,7 +32,7 @@ class TransactionDetailPage extends StatelessWidget {
     // Imported lines keep the bank's amount, date and text (4.3).
     final editable = !(ledger.accounts[t.accountId]?.isDetailed ?? false) && !t.isImported;
     final line = t.line;
-    // An attached refund follows the period of its expense (H3).
+    // An attached refund follows the period of its expense.
     final expense = ledger.expenseOf(t);
     final period = expense?.line ?? line;
     final shares = line == null || t.isTransfer || period == null
@@ -47,7 +47,7 @@ class TransactionDetailPage extends StatelessWidget {
         title: Text(l.detailTitle),
         actions: [
           // An imported line is classified again, its description and note
-          // changed, from the classification screen (decision H4).
+          // changed, from the classification screen.
           if (t.isImported)
             IconButton(
               key: const Key('classifyImported'),
@@ -116,7 +116,7 @@ class TransactionDetailPage extends StatelessWidget {
   }
 
   /// The refunds of an expense and its net cost; the expense of a refund,
-  /// or its broken link; attaching and detaching (decisions H3 and H4).
+  /// or its broken link; attaching and detaching.
   List<Widget> _refund(BuildContext context, Ledger ledger, LedgerTransaction t) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);

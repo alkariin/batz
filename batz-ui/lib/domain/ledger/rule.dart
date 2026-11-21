@@ -6,8 +6,7 @@ import '../ids.dart';
 import '../period_model.dart';
 import 'category.dart';
 
-/// Journal entity and fields of a mapping rule of a year (specification,
-/// 4.5).
+/// Journal entity and fields of a mapping rule of a year.
 abstract final class RuleFields {
   static const entity = 'rule';
   static const year = 'year';
@@ -107,9 +106,8 @@ class MappingRule extends Equatable {
   /// Whether every keyword is in [normalized] (a text from [normalizeText]).
   bool matches(String normalized) => _compiled != null && _compiled.every((k) => k.matches(normalized));
 
-  /// What the rule proposes, compared between rules of equal weight
-  /// (decision H5): the same target and the same period model are no
-  /// conflict.
+  /// What the rule proposes, compared between rules of equal weight:
+  /// the same target and the same period model are no conflict.
   (String?, String?, PeriodModel?, int?) get result => (
     targetCategoryId,
     targetAccountId,
@@ -164,13 +162,13 @@ List<String>? decodeKeywords(Object? value) {
 }
 
 /// Identifier of the copy, in [year], of the rule [sourceId]: computed like
-/// the copies of categories, which rules follow (step 3.4).
+/// the copies of categories, which rules follow.
 String copiedRuleId(String sourceId, int year) => derivedId('rule-copy/$sourceId/$year');
 
 /// The keyword « Créer une règle » starts with for a line whose bank text is
-/// [rawText] and whose description is [description] (step 4.0): always a
-/// keyword found in that text as rules read it, so that the rule classifies
-/// at least that line as long as its keywords are kept.
+/// [rawText] and whose description is [description]: always a keyword found
+/// in that text as rules read it, so that the rule classifies at least that
+/// line as long as its keywords are kept.
 ///
 /// The description is usually the short label: lines of the bank text
 /// joined by spaces, generic lines (a card number, an IBAN) left out between

@@ -5,7 +5,7 @@ import 'package:batz/domain/views/year_view.dart';
 
 /// Every amount of the annual views (both views, every year shown) and of
 /// the wealth seen on [today] (each table, the curve, the accounts): what no
-/// entry of a module may change (principle 3 of phase 6).
+/// entry of a module may change.
 Map<String, Object> accountsAndViews(Ledger ledger, CalendarDate today) {
   final views = ledger.views;
   final wealth = ledger.wealth(today);

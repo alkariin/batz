@@ -10,9 +10,8 @@ import 'package:batz/domain/ledger/statement.dart';
 
 CalendarDate _d(int year, int month, int day) => CalendarDate(year, month, day);
 
-/// The example of the plan, entered through the operations of the app:
-/// the private account is detailed, its statement of 2026 imported then
-/// classified.
+/// The reference example, entered through the operations of the app: the
+/// private account is detailed, its statement of 2026 imported then classified.
 Future<Ledger> referenceExample(
   Future<Ledger> Function(Modification Function(Ledger l) build) apply, {
   required CalendarDate today,

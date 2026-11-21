@@ -69,7 +69,7 @@ void main() {
     expect(totals.expenses.total, -176000);
     expect(totals.income.total, 0);
     expect(ledger.views.of(2027, ViewKind.cash)!.expenses.total, -7000);
-    expect(ledger.views.of(2025, ViewKind.cash), isNull, reason: 'before the first tree (H6)');
+    expect(ledger.views.of(2025, ViewKind.cash), isNull, reason: 'before the first tree');
     await h.close();
   });
 }

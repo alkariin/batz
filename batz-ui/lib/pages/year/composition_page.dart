@@ -12,7 +12,7 @@ import 'year_texts.dart';
 
 /// The transactions that make an amount of the « Année » screen: a row of
 /// the view, for the year or one month, with the part each one counts; each
-/// opens its detail (step 4.5).
+/// opens its detail.
 class CompositionPage extends StatelessWidget {
   const CompositionPage({
     super.key,
@@ -29,7 +29,7 @@ class CompositionPage extends StatelessWidget {
   final ViewRow row;
   final String title;
 
-  /// The nature of the row, for the sign of the amounts (decision H7).
+  /// The nature of the row, for the sign of the amounts.
   final CategoryNature? nature;
 
   /// From 1 to 12; the whole year when null.

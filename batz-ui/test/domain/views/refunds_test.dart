@@ -44,7 +44,7 @@ void main() {
   });
   tearDown(() => h.close());
 
-  /// The expense of the criterion: 300 paid on 15.1.2026 for January to
+  /// The expense of the example: 300 paid on 15.1.2026 for January to
   /// March.
   Future<void> visit() => h.apply(
     (l) => l.recordEntry(
@@ -87,7 +87,7 @@ void main() {
         ],
         [('visit', -10000), ('back', 4000)],
       );
-      checkViews(ledger, reason: 'criterion');
+      checkViews(ledger, reason: 'example');
     },
   );
 

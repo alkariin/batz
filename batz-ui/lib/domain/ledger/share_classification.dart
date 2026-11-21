@@ -2,10 +2,9 @@ import 'package:equatable/equatable.dart';
 
 import '../ids.dart';
 
-/// Journal entity and fields of the answer to a share to classify
-/// (specification, 4.2 and chapter 6, « LineYearCategory »; decision H5 of
-/// phase 4): where the shares of a line that fall in a year go, when that
-/// year has no category of the same name as the line's.
+/// Journal entity and fields of the answer to a share to classify: where
+/// the shares of a line that fall in a year go, when that year has no
+/// category of the same name as the line's.
 abstract final class ShareClassificationFields {
   static const entity = 'shareClassification';
   static const lineId = 'lineId';
@@ -40,6 +39,5 @@ class ShareClassification extends Equatable {
 }
 
 /// Identifier of the answer for the line [lineId] in [year]: computed, so
-/// that two devices answering the same question write the same record
-/// (principle 7).
+/// that two devices answering the same question write the same record.
 String shareClassificationId(String lineId, int year) => derivedId('share-classification/$lineId/$year');

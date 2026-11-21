@@ -25,7 +25,7 @@ void main() {
   });
   tearDown(() => h.close());
 
-  group('the lines the annual view counts, read by the modules (step 6.0)', () {
+  group('the lines the annual view counts, read by the modules', () {
     test('in a category of a year: what each line places there month by month, before redistribution, the '
         'lines to validate as proposed and an attached refund following its expense', () async {
       await h.apply((l) => l.addCategory('cleaning', year: 2026, name: 'Entretien ménage', parentId: 'housing'));
@@ -144,7 +144,7 @@ void main() {
     });
   });
 
-  group('module settings (decision H1)', () {
+  group('module settings', () {
     test('default names; a name chosen is used every year, without case or accents; a group counts with what '
         'it holds; a name missing from a year gives no category, without error', () async {
       var ledger = await h.ledger();

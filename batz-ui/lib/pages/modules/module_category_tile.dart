@@ -6,8 +6,8 @@ import '../../l10n/app_localizations.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 
-/// The category a module reads (decision H1 of phase 6): its name, whether
-/// the tree of [year] has it, and a dialog to change the name.
+/// The category a module reads: its name, whether the tree of [year] has
+/// it, and a dialog to change the name.
 class ModuleCategoryTile extends StatelessWidget {
   const ModuleCategoryTile({super.key, required this.module, required this.year});
 

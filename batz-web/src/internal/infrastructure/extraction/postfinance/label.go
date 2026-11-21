@@ -22,9 +22,9 @@ var (
 	orderingRe      = regexp.MustCompile(`^DONNEUR D['’]ORDRE:?$`)
 )
 
-// Label is the short label of a movement (decision H3 of phase 3): its
-// lines without the generic ones, joined by spaces, when the module
-// recognises the type of operation; otherwise the whole text on one line.
+// Label is the short label of a movement: its lines without the generic
+// ones, joined by spaces, when the module recognises the type of
+// operation; otherwise the whole text on one line.
 func Label(lines []string) string {
 	whole := strings.Join(strings.Fields(strings.Join(lines, " ")), " ")
 	if len(lines) == 0 || !(operationDuRe.MatchString(lines[0]) || operationRe.MatchString(lines[0])) {

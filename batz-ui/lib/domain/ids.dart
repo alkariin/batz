@@ -7,8 +7,8 @@ final _random = Random.secure();
 
 /// A random UUID v4 in lower case, e.g. `3f2c1a9e-8b7d-4c6e-9f10-2a3b4c5d6e7f`.
 ///
-/// Records are identified on the device that creates them (specification,
-/// chapter 5), so creation works offline without temporary identifiers.
+/// Records are identified on the device that creates them, so creation
+/// works offline without temporary identifiers.
 String newId() {
   final bytes = List<int>.generate(16, (_) => _random.nextInt(256));
   bytes[6] = (bytes[6] & 0x0f) | 0x40;
@@ -22,8 +22,7 @@ String newId() {
 ///
 /// Records that two devices may create offline from the same source (a copy
 /// of a tree, the lines of an imported statement) get identifiers computed
-/// this way, so that both devices write the same records instead of two
-/// (design rule 4 of phase 1, principle 2 of phase 3).
+/// this way, so that both devices write the same records instead of two.
 String derivedId(String name) {
   final bytes = sha256.convert(utf8.encode('batz/$name')).bytes.sublist(0, 16);
   bytes[6] = (bytes[6] & 0x0f) | 0x50;

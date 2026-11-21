@@ -1,6 +1,6 @@
-// The export between devices, through a real batz-web (step 7.2 of phase
-// 7): it creates no journal entry, needs no server, and two synchronised
-// devices produce the same CSV files, byte for byte.
+// The export between devices, through a real batz-web: it creates no
+// journal entry, needs no server, and two synchronised devices produce
+// the same CSV files, byte for byte.
 import 'dart:math';
 
 import 'package:archive/archive.dart' show ZipDecoder;

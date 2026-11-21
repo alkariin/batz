@@ -1,5 +1,4 @@
-/// Spreading a payment over the months of the period it concerns
-/// (specification, 4.2, "Répartition").
+/// Spreading a payment over the months of the period it concerns.
 library;
 
 import 'calendar_date.dart';

@@ -26,7 +26,7 @@ void main() {
   });
   tearDown(() => h.close());
 
-  group('the example of the specification', () {
+  group('the reference example', () {
     test('2\'100 paid in 2026 for 1.9.2026 – 31.8.2027: 2\'100 in cash 2026; 700 in economic 2026 and 1\'400 in 2027; '
         '1\'400 of offset in each year', () async {
       await h.apply(
@@ -52,7 +52,7 @@ void main() {
       expect(economic2026.categories['rent']!.months, [0, 0, 0, 0, 0, 0, 0, 0, -17500, -17500, -17500, -17500]);
 
       final cash2027 = views.of(2027, ViewKind.cash)!, economic2027 = views.of(2027, ViewKind.economic)!;
-      expect(economic2027.isPreview, isTrue, reason: '2027 has no tree yet: the copy to come (H6)');
+      expect(economic2027.isPreview, isTrue, reason: '2027 has no tree yet: the copy to come');
       expect(economic2027.tree.byId[rent2027]!.name, 'Loyer');
       expect(economic2027.totalOf(rent2027), -140000);
       expect(cash2027.expenses.total, 0);
@@ -133,7 +133,7 @@ void main() {
       expect(view.expenses.total, 0);
     });
 
-    test('the merge of the plan: an amount corrected on one device, the same entry attached on another, keeps both '
+    test('a merge: an amount corrected on one device, the same entry attached on another, keeps both '
         'amounts equal, since attaching writes no unchanged amount', () async {
       var wallA = 1000, wallB = 1000;
       final a = await LedgerHarness.open(deviceId: 'aaaaaaaa-0000-4000-8000-000000000000', now: () => wallA);
@@ -178,7 +178,7 @@ void main() {
 
     test('a line whose amount differs from the amount of its transaction, as a device of another version or one already holding '
         'such a gap can write it: the transaction counts for exactly its amount, the difference is unclassified at '
-        'its payment date, until it is saved again (step 5.0)', () async {
+        'its payment date, until it is saved again', () async {
       await h.apply(
         (l) => l.recordEntry('visit', 'visit-line', entry(category: 'food', cents: 30000, date: d(2026, 1, 15))),
       );
@@ -234,7 +234,7 @@ void main() {
     });
   });
 
-  group('between years (principle 3)', () {
+  group('between years', () {
     test('a share goes to the category of the same name in its year, found again after a rename', () async {
       await h.apply((l) => l.createTree(2027));
       await h.apply(
@@ -268,7 +268,7 @@ void main() {
       expect((await h.ledger()).views.of(2027, ViewKind.economic)!.totalOf(food2027), -60000);
     });
 
-    test('a category of the same name that became a group is no counterpart (H5)', () async {
+    test('a category of the same name that became a group is no counterpart', () async {
       await h.apply((l) => l.createTree(2027));
       await h.apply(
         (l) => l.addCategory('fresh', year: 2027, name: 'Produits frais', parentId: copiedCategoryId('food', 2027)),
@@ -291,35 +291,32 @@ void main() {
       expect(view.totalOf(copiedCategoryId('food', 2027)), 0);
     });
 
-    test(
-      'a year before the first tree is not shown: its shares stay in the offsets of the payment year (H6)',
-      () async {
-        await h.apply(
-          (l) => l.recordEntry(
-            'taxes',
-            'lt',
-            entry(
-              category: 'food',
-              cents: 365000,
-              date: d(2026, 3, 31),
-              periodStart: d(2025, 1, 1),
-              periodEnd: d(2025, 12, 31),
-            ),
+    test('a year before the first tree is not shown: its shares stay in the offsets of the payment year', () async {
+      await h.apply(
+        (l) => l.recordEntry(
+          'taxes',
+          'lt',
+          entry(
+            category: 'food',
+            cents: 365000,
+            date: d(2026, 3, 31),
+            periodStart: d(2025, 1, 1),
+            periodEnd: d(2025, 12, 31),
           ),
-        );
-        final ledger = await h.ledger();
-        expect(ledger.views.of(2025, ViewKind.economic), isNull);
-        expect(ledger.views.of(2025, ViewKind.cash), isNull);
-        final economic = ledger.views.of(2026, ViewKind.economic)!;
-        expect(economic.expenses.total, 0);
-        expect(economic.paidForOtherYears, -365000);
-        expect(ledger.views.of(2026, ViewKind.cash)!.expenses.total, -365000);
-        expect(ledger.views.years(currentYear: 2026), [2026]);
-      },
-    );
+        ),
+      );
+      final ledger = await h.ledger();
+      expect(ledger.views.of(2025, ViewKind.economic), isNull);
+      expect(ledger.views.of(2025, ViewKind.cash), isNull);
+      final economic = ledger.views.of(2026, ViewKind.economic)!;
+      expect(economic.expenses.total, 0);
+      expect(economic.paidForOtherYears, -365000);
+      expect(ledger.views.of(2026, ViewKind.cash)!.expenses.total, -365000);
+      expect(ledger.views.years(currentYear: 2026), [2026]);
+    });
 
     test(
-      'a year to come is shown with the tree of its copy (H6), as long as amounts or the current year reach it',
+      'a year to come is shown with the tree of its copy, as long as amounts or the current year reach it',
       () async {
         await h.apply(
           (l) => l.recordEntry(

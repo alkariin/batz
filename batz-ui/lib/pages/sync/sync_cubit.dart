@@ -25,10 +25,10 @@ enum SyncStatus {
   /// The last exchange went to its end.
   upToDate,
 
-  /// The server could not be reached: no error message (decision H2).
+  /// The server could not be reached: no error message.
   offline,
 
-  /// The server revoked this device: exchanges stop (decision H6).
+  /// The server revoked this device: exchanges stop.
   revoked,
 
   /// The server presents another certificate, or no longer knows this
@@ -39,7 +39,7 @@ enum SyncStatus {
   incompatible,
 
   /// First exchange: the device and the server hold unrelated data; the user
-  /// chooses to merge them or to replace the device's (decision H1).
+  /// chooses to merge them or to replace the device's.
   decisionNeeded,
 
   /// Anything else; see [SyncState.error].
@@ -58,7 +58,7 @@ class SyncState extends Equatable {
     this.error,
   });
 
-  /// Beyond this, the clock of the device is reported as wrong (decision H5).
+  /// Beyond this, the clock of the device is reported as wrong.
   static const clockTolerance = Duration(minutes: 5);
 
   final SyncStatus status;
@@ -109,9 +109,9 @@ class SyncState extends Equatable {
 /// The transport to the paired server; [ServerClient] in the app.
 typedef TransportFactory = SyncTransport Function(Pairing pairing);
 
-/// Runs the synchronisation (decision H2): at start, when the app comes back
-/// to the foreground, a few seconds after a modification, every five minutes
-/// while the app is shown, and on demand. One exchange at a time.
+/// Runs the synchronisation: at start, when the app comes back to the
+/// foreground, a few seconds after a modification, every five minutes while
+/// the app is shown, and on demand. One exchange at a time.
 class SyncCubit extends Cubit<SyncState> {
   SyncCubit({
     required this._server,
@@ -186,8 +186,8 @@ class SyncCubit extends Cubit<SyncState> {
   /// the device with the server's.
   Future<void> merge() => _exclusive(() => _run(manual: true, merge: true));
 
-  /// Replaces the data of this device by the server's (decision H1), after
-  /// the user confirmed: the modifications not sent yet are lost.
+  /// Replaces the data of this device by the server's, after the user
+  /// confirmed: the modifications not sent yet are lost.
   Future<void> replace() => _exclusive(() => _run(manual: true, replace: true));
 
   Future<void> _exclusive(Future<void> Function() action) async {

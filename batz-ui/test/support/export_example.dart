@@ -20,9 +20,9 @@ import 'package:batz/domain/period_model.dart';
 
 CalendarDate _d(int year, int month, int day) => CalendarDate(year, month, day);
 
-/// The example ledger of the export (step 7.1 of phase 7): every sort of
-/// data, invented, with the three transactions of the plan's example. Its
-/// files are `test/fixtures/export/*.csv`.
+/// The example ledger of the export: every sort of data, invented, with the
+/// three transactions of the example in docs/features.md. Its files are
+/// `test/fixtures/export/*.csv`.
 Ledger exportExampleLedger() {
   LedgerTransaction tx(
     String id,

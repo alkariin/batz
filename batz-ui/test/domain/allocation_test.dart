@@ -10,7 +10,7 @@ CalendarDate d(int year, int month, int day) => CalendarDate(year, month, day);
 List<int> cents(List<MonthlyShare> shares) => [for (final s in shares) s.cents];
 
 void main() {
-  group('examples of the specification', () {
+  group('reference examples', () {
     test("2'100 CHF from 1.9.2026 to 31.8.2027: 700 in 2026, 1'400 in 2027", () {
       final shares = allocate(210000, d(2026, 9, 1), d(2027, 8, 31));
       expect(shares, hasLength(12));

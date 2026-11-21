@@ -27,9 +27,10 @@ import '../local/journal.dart';
 /// Reads the [Ledger] from the derived tables and writes modifications to the
 /// journal.
 ///
-/// Reading follows design rule 2 of phase 1: a record that is incomplete or
-/// holds a value this version cannot read is ignored, without error. With
-/// synchronisation, its missing fields may simply not have arrived yet.
+/// Reading follows the design rules of the derived tables: a record that is
+/// incomplete or holds a value this version cannot read is ignored, without
+/// error. With synchronisation, its missing fields may simply not have arrived
+/// yet.
 class LedgerRepository {
   LedgerRepository(this._db, this._journal);
 
@@ -42,9 +43,9 @@ class LedgerRepository {
 
   /// Reads every derived table. The queries are sent together: the database
   /// runs in a background isolate, and the rows of one are read while the
-  /// next ones run (step 4.4). They go in groups awaited together, a record
-  /// waiting for nine futures at most; the tables of the modules are a group
-  /// of their own.
+  /// next ones run. They go in groups awaited together, a record waiting for
+  /// nine futures at most; the tables of the modules are a group of their
+  /// own.
   Future<Ledger> load() async {
     final (
       (accounts, categories, transactions, lines, statements, deleted),
@@ -254,7 +255,7 @@ class LedgerRepository {
 
   /// A declared balance needs its account, a valid date and an amount.
   /// Whether it counts is decided by the domain (an unknown account, a debts
-  /// account: principle 6 of phase 5).
+  /// account).
   static DeclaredBalance? _balance(Map<String, Object?> row) {
     final accountId = _string(row['account_id']);
     final date = CalendarDate.tryParse(row['date'] is String ? row['date']! as String : null);
@@ -281,7 +282,7 @@ class LedgerRepository {
   }
 
   /// A redistribution rule needs a year, a source, a target and a
-  /// percentage. Whether it applies is decided by the domain (principle 6).
+  /// percentage. Whether it applies is decided by the domain.
   static RedistributionRule? _redistribution(Map<String, Object?> row) {
     final year = row['year'];
     final source = _string(row['source_category_id']);

@@ -138,7 +138,7 @@ void main() {
       expect((outcome as Proposed).classification.categoryId, 'car');
     });
 
-    test('a tie of different results is reported, with the rules in competition (H5)', () async {
+    test('a tie of different results is reported, with the rules in competition', () async {
       await h.apply((l) => l.createRule('b', rule(['épicerie'], category: 'food')));
       await h.apply((l) => l.createRule('a', rule(['coin'], category: 'car')));
       final outcome = await outcomeOfFirst('Épicerie du Coin');
@@ -148,7 +148,7 @@ void main() {
       expect(ledger.validationStateOf(line), ValidationState.toComplete);
     });
 
-    test('a tie of the same target and period model is no conflict (H5)', () async {
+    test('a tie of the same target and period model is no conflict', () async {
       await h.apply((l) => l.createRule('b', rule(['épicerie'], category: 'food', model: PeriodModel.currentYear)));
       await h.apply((l) => l.createRule('a', rule(['coin'], category: 'food', model: PeriodModel.currentYear)));
       expect(await outcomeOfFirst('Épicerie du Coin'), isA<Proposed>().having((p) => p.rule.id, 'rule', 'a'));
@@ -247,7 +247,7 @@ void main() {
   });
 
   group('validation', () {
-    group('the keyword proposed by « Créer une règle » (step 4.0)', () {
+    group('the keyword proposed by « Créer une règle »', () {
       test('is the longest run of words of the description found in the bank text', () {
         // A short label whose lines are not consecutive in the bank text: an
         // IBAN line was left out between them.
@@ -411,7 +411,7 @@ void main() {
       expect(after.confirmProposals([for (final t in after.linesToValidate) t.id]), isEmpty);
     });
 
-    test('correcting a proposal validates the line (H4); a validated line stays modifiable', () async {
+    test('correcting a proposal validates the line; a validated line stays modifiable', () async {
       await h.apply((l) => l.createRule('food', rule(['épicerie du coin'], category: 'food')));
       final line = (await linesWith('Épicerie du Coin')).first;
       await h.apply(

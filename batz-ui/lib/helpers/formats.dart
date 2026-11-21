@@ -1,7 +1,7 @@
 /// Swiss formats for amounts and dates: `1'234.50` and `31.12.2026`.
 ///
-/// Amounts are always integer cents (specification, chapter 5): these
-/// functions never go through floating point.
+/// Amounts are always integer cents: these functions never go through
+/// floating point.
 library;
 
 const _thousandsSeparator = "'";

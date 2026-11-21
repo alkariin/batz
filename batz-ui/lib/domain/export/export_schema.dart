@@ -1,7 +1,7 @@
-/// What the export holds of each journal entity (principle 2 of phase 7):
-/// every field goes to one column of one file, or is excluded with its
-/// reason. `test/domain/export/export_completeness_test.dart` fails when an
-/// entity or a field of the journal is in neither.
+/// What the export holds of each journal entity: every field goes to one
+/// column of one file, or is excluded with its reason.
+/// `test/domain/export/export_completeness_test.dart` fails when an entity
+/// or a field of the journal is in neither.
 library;
 
 import '../journal/journal_entry.dart';
@@ -22,7 +22,7 @@ import '../modules/taxes.dart';
 import '../modules/vacations.dart';
 import '../period_model.dart';
 
-/// The names of the files, in the order of the plan.
+/// The names of the files, in the order of docs/features.md, « Export ».
 abstract final class ExportFiles {
   static const accounts = 'comptes.csv';
   static const balances = 'soldes.csv';
@@ -205,8 +205,8 @@ class ExportedEntity {
   final Map<String, String> excluded;
 }
 
-/// Left out of every entity: what is deleted is not exported (H1).
-const excludedFromEveryEntity = {deletedField: 'ce qui est supprimé n’est pas exporté (H1)'};
+/// Left out of every entity: what is deleted is not exported.
+const excludedFromEveryEntity = {deletedField: 'ce qui est supprimé n’est pas exporté'};
 
 /// Entities of the journal left out of the export, with their reason. None:
 /// everything entered or imported is exported.

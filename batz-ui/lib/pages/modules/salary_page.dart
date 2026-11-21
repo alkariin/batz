@@ -12,9 +12,9 @@ import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 import 'module_category_tile.dart';
 
-/// Plus › Analyses › « Fiche salaire » (step 6.1): the sheet of a year,
-/// gross, deductions and net, with the gap computed as they are typed, and
-/// the category of the salary (decision H2 of phase 6).
+/// Plus › Analyses › « Fiche salaire »: the sheet of a year, gross,
+/// deductions and net, with the gap computed as they are typed, and the
+/// category of the salary.
 class SalaryPage extends StatefulWidget {
   const SalaryPage({super.key, this.initialYear});
 

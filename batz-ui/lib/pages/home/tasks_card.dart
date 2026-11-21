@@ -20,13 +20,12 @@ import '../validation/rules_page.dart';
 import '../validation/validation_page.dart';
 import '../wealth/account_page.dart';
 
-/// The tasks of the home screen (specification, 4.6): the lines to
-/// validate, the lines whose rules compete, the rules that propose nothing
-/// any more, the shares to classify, the redistribution rules that do not
-/// apply, the refunds that lost their expense (principle 6 of phase 4), the
-/// balances declared more than six months ago (decision H7 of phase 5), and
-/// the inconsistencies a merge can leave (decision H4 of phase 2), each
-/// leading to the screen that deals with it.
+/// The tasks of the home screen: the lines to validate, the lines whose
+/// rules compete, the rules that propose nothing any more, the shares to
+/// classify, the redistribution rules that do not apply, the refunds that
+/// lost their expense, the balances declared more than six months ago, and
+/// the inconsistencies a merge can leave, each leading to the screen that
+/// deals with it.
 class TasksCard extends StatelessWidget {
   const TasksCard({super.key});
 
@@ -34,8 +33,8 @@ class TasksCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final today = context.read<AppServices>().today();
-    // The device has no screen lock: the app opened without asking
-    // (decision H4 of phase 7), and says so while it lasts.
+    // The device has no screen lock: the app opened without
+    // asking, and says so while it lasts.
     final noScreenLock = context.select<LockCubit, bool>((lock) => lock.state.noScreenLock);
     return BlocBuilder<LedgerCubit, LedgerState>(
       builder: (context, state) {

@@ -24,7 +24,7 @@ enum LedgerError {
   periodInvalid,
   sameAccount,
 
-  // Import of a statement (phase 3).
+  // Import of a statement.
   accountNotDetailed,
   statementOtherFormat,
   statementAlreadyImported,
@@ -36,7 +36,7 @@ enum LedgerError {
   unknownStatement,
   importedTransaction,
 
-  // Mapping rules (phase 3).
+  // Mapping rules.
   unknownRule,
   ruleKeywordsRequired,
   ruleKeywordInvalid,
@@ -44,7 +44,7 @@ enum LedgerError {
   rulePeriodInvalid,
   categoryUsedByRules,
 
-  // Redistribution rules (phase 4).
+  // Redistribution rules.
   unknownRedistribution,
   redistributionSameCategory,
   redistributionNotLeaf,
@@ -56,28 +56,28 @@ enum LedgerError {
   redistributionOverHundred,
   categoryUsedByRedistributions,
 
-  // Refunds attached to an expense (phase 4).
+  // Refunds attached to an expense.
   refundNotInflow,
   refundIsTransfer,
   refundTargetNotExpense,
 
-  // Shares to classify (phase 4).
+  // Shares to classify.
   shareNatureMismatch,
 
-  // Declared balances (phase 5).
+  // Declared balances.
   unknownBalance,
   balanceOnDetailedAccount,
   balanceOnDebtsAccount,
   balanceInFuture,
 
-  // Debts (phase 5).
+  // Debts.
   unknownDebt,
   debtPersonRequired,
   debtPercentInvalid,
   debtReceivedBeforeEvent,
   debtSplitOutOfTotal,
 
-  // Modules (phase 6).
+  // Modules.
   moduleCategoryRequired,
   unknownSalarySheet,
   salaryGrossRequired,
@@ -114,9 +114,8 @@ class LedgerException implements Exception {
   String toString() => 'LedgerException: ${error.name}${count == 0 ? '' : ' ($count)'}';
 }
 
-/// A statement is refused as a whole, nothing written (specification, 4.4),
-/// with what was expected and what the statement holds when the reason
-/// compares them.
+/// A statement is refused as a whole, nothing written, with what was
+/// expected and what the statement holds when the reason compares them.
 class StatementRefusedException extends LedgerException {
   const StatementRefusedException(
     super.error, {

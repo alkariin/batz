@@ -164,7 +164,7 @@ class Journal {
   final _localWrites = StreamController<void>.broadcast(sync: true);
 
   /// Emits after each modification written on this device: the
-  /// synchronisation follows a few seconds later (decision H2).
+  /// synchronisation follows a few seconds later.
   Stream<void> get localWrites => _localWrites.stream;
 
   /// Integrates entries made on other devices (or replayed): unknown ones are
@@ -264,9 +264,9 @@ class Journal {
   /// from a server that sent it from scratch, in one operation: entries,
   /// derived tables and field versions are erased, the device takes a new
   /// identifier, and the page is integrated. Modifications not sent yet are
-  /// lost (decision H1 of phase 2). With a new identifier, the entries this
-  /// device writes from now on never follow, under the same origin, entries
-  /// that were erased. Returns how many entries were integrated.
+  /// lost. With a new identifier, the entries this device writes from now
+  /// on never follow, under the same origin, entries that were erased.
+  /// Returns how many entries were integrated.
   Future<int> replaceWith(JournalPage first, {String Function() newDeviceId = newId}) async {
     if (first.since.latest.isNotEmpty) throw ArgumentError('The first page must start from scratch');
     final id = newDeviceId();

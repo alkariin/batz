@@ -162,7 +162,7 @@ class SyncCard extends StatelessWidget {
 }
 
 /// Asks for confirmation, then replaces the data of this device by the
-/// server's (decision H1).
+/// server's.
 Future<void> confirmReplace(BuildContext context) async {
   final l = AppLocalizations.of(context);
   final cubit = context.read<SyncCubit>();

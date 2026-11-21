@@ -6,16 +6,16 @@ import 'category.dart';
 import 'ledger.dart';
 import 'ledger_exception.dart';
 
-/// Journal entity and fields of a redistribution rule of a year
-/// (specification, 4.1 and chapter 6).
+/// Journal entity and fields of a redistribution rule of a
+/// year.
 abstract final class RedistributionFields {
   static const entity = 'redistribution';
   static const year = 'year';
   static const sourceCategoryId = 'sourceCategoryId';
   static const targetCategoryId = 'targetCategoryId';
 
-  /// The percentage in hundredths of a percent, an integer (principle 8):
-  /// 1000 is 10 %, 3333 is 33.33 %.
+  /// The percentage in hundredths of a percent, an integer: 1000 is 10 %,
+  /// 3333 is 33.33 %.
   static const basisPoints = 'basisPoints';
 }
 
@@ -23,8 +23,8 @@ abstract final class RedistributionFields {
 const fullBasisPoints = 10000;
 
 /// A redistribution rule: month by month, [basisPoints] of what [sourceId]
-/// shows leaves it and joins [targetId], on a line of its own on each side
-/// (principle 4 of phase 4).
+/// shows leaves it and joins [targetId], on a line of its own on each
+/// side.
 class RedistributionRule extends Equatable {
   const RedistributionRule({
     required this.id,
@@ -60,12 +60,11 @@ class RedistributionDraft {
 }
 
 /// Identifier of the copy, in [year], of the redistribution rule [sourceId]:
-/// computed like the copies of categories, which the rules follow
-/// (principle 7).
+/// computed like the copies of categories, which the rules follow.
 String copiedRedistributionId(String sourceId, int year) => derivedId('redistribution-copy/$sourceId/$year');
 
-/// Why a redistribution rule does not apply (principle 6): it stays, and is
-/// listed in the tasks.
+/// Why a redistribution rule does not apply: it stays, and is listed in the
+/// tasks.
 enum RedistributionProblem {
   /// The source is not a category of the year's tree: deleted, detached,
   /// or of another year.
@@ -106,7 +105,7 @@ class InapplicableRedistribution extends Equatable {
 }
 
 /// [cents] × [basisPoints] ÷ 10 000, rounded to the cent, halves away from
-/// zero (principle 8).
+/// zero.
 int redistributedCents(int cents, int basisPoints) {
   final product = cents.abs() * basisPoints;
   final rounded = (product * 2 + fullBasisPoints) ~/ (2 * fullBasisPoints);
@@ -154,7 +153,7 @@ Map<String, RedistributionProblem?> redistributionProblems(List<RedistributionRu
 extension RedistributionOperations on Ledger {
   /// The rules of [year], by source then target name. For a year without a
   /// tree that an earlier year will be copied to, the rules the copy will
-  /// write, with their computed identifiers (decision H6).
+  /// write, with their computed identifiers.
   List<RedistributionRule> redistributionsOf(int year) {
     final tree = trees[year];
     if (tree == null) {
@@ -187,8 +186,8 @@ extension RedistributionOperations on Ledger {
     });
   }
 
-  /// The rules of the years that have a tree which do not apply, by year
-  /// (principle 6): listed in the tasks.
+  /// The rules of the years that have a tree which do not apply, by
+  /// year: listed in the tasks.
   List<InapplicableRedistribution> get inapplicableRedistributions {
     final result = <InapplicableRedistribution>[];
     for (final year in yearsWithTree) {
@@ -201,13 +200,13 @@ extension RedistributionOperations on Ledger {
     return result;
   }
 
-  /// Creates the rule [id] (decision H2). Refused, with its reason: without
-  /// a tree for the year; when source and target are the same, are not both
-  /// categories without children of the year, or are not of the same
-  /// nature; with a percentage out of 0.01 to 100 %; when a rule from the
-  /// same source to the same target exists; when the target is the source
-  /// of another rule or the source the target of one; when the rules from
-  /// the source would exceed 100 % ([LedgerException.count] is that total).
+  /// Creates the rule [id]. Refused, with its reason: without a tree for
+  /// the year; when source and target are the same, are not both categories
+  /// without children of the year, or are not of the same nature; with a
+  /// percentage out of 0.01 to 100 %; when a rule from the same source to
+  /// the same target exists; when the target is the source of another rule
+  /// or the source the target of one; when the rules from the source would
+  /// exceed 100 % ([LedgerException.count] is that total).
   Modification createRedistribution(String id, RedistributionDraft draft) =>
       Modification.set(RedistributionFields.entity, id, _redistributionFields(draft, replacing: null));
 

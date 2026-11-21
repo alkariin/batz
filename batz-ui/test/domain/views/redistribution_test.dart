@@ -160,7 +160,7 @@ void main() {
     expect(copy.moved.month(1), -2000, reason: '10 % of the share of 200.00 paid in 2026');
   });
 
-  test('a year to come shows the rules its copy will receive (H6)', () async {
+  test('a year to come shows the rules its copy will receive', () async {
     await h.apply((l) => l.createRedistribution('ten', draft('food', 'cleaning', 1000)));
     await h.apply(
       (l) => l.recordEntry(
@@ -181,7 +181,7 @@ void main() {
     expect(view.redistributions.single.moved.months, List.filled(12, -1000));
   });
 
-  group('decision H2', () {
+  group('refused rules', () {
     test('each refusal has its reason', () async {
       await h.apply((l) => l.createRedistribution('ten', draft('food', 'cleaning', 1000)));
       final ledger = await h.ledger();
@@ -240,7 +240,7 @@ void main() {
     });
   });
 
-  group('a rule that became inapplicable does not apply and is listed (principle 6)', () {
+  group('a rule that became inapplicable does not apply and is listed', () {
     Future<void> check(RedistributionProblem problem, List<String> ids) async {
       final ledger = await h.ledger();
       expect(ledger.inapplicableRedistributions.map((i) => (i.rule.id, i.problem)).toSet(), {

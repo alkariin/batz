@@ -1,6 +1,6 @@
-// Package postfinance reads the PDF statements of PostFinance, in French
-// (specification, 4.4): the text comes from `pdftotext -layout`, run without
-// a shell, with a time limit.
+// Package postfinance reads the PDF statements of PostFinance, in French:
+// the text comes from `pdftotext -layout`, run without a shell, with a time
+// limit.
 package postfinance
 
 import (

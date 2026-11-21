@@ -6,8 +6,8 @@ import 'ledger.dart';
 import 'ledger_exception.dart';
 import 'redistribution.dart';
 
-/// Journal entity and fields of a debt (specification, 4.7 « Dettes » and
-/// chapter 6): a table of its own, independent of the transactions.
+/// Journal entity and fields of a debt: a table of its own, independent
+/// of the transactions.
 abstract final class DebtFields {
   static const entity = 'debt';
   static const direction = 'direction';
@@ -16,8 +16,8 @@ abstract final class DebtFields {
   /// In cents, more than zero.
   static const amount = 'amount';
 
-  /// The percentage of [amount] that is owed, in hundredths of a percent
-  /// (principle 8 of phase 5): 10000 is 100 %.
+  /// The percentage of [amount] that is owed, in hundredths of a
+  /// percent: 10000 is 100 %.
   static const basisPoints = 'basisPoints';
   static const eventDate = 'eventDate';
   static const invoiceDate = 'invoiceDate';
@@ -28,13 +28,13 @@ abstract final class DebtFields {
 
   /// The day the debt was entered, and the day it was checked as repaid:
   /// written by the app, they serve when the event date or the date of
-  /// receipt is missing (decision H5).
+  /// receipt is missing.
   static const enteredOn = 'enteredOn';
   static const checkedOn = 'checkedOn';
 }
 
 /// Who owes whom: « on me doit » adds to the wealth, « je dois » takes from
-/// it (decision H5).
+/// it.
 enum DebtDirection { owedToMe, iOwe }
 
 /// A line of the debts table.
@@ -70,14 +70,14 @@ class Debt extends Equatable {
   final CalendarDate? checkedOn;
 
   /// The amount times the percentage, rounded to the cent, halves away from
-  /// zero (decision H5; the rounding of the redistribution).
+  /// zero (the rounding of the redistribution).
   int get total => debtTotal(amount, basisPoints);
 
   /// [total], positive when it is owed to me, negative when I owe it.
   int get signedTotal => direction == DebtDirection.owedToMe ? total : -total;
 
   /// The first day the debt counts in the wealth: the day of the event, or
-  /// failing that, the day it was entered (decision H5).
+  /// failing that, the day it was entered.
   CalendarDate get start => eventDate ?? enteredOn;
 
   /// The first day it no longer counts, once repaid: the day of receipt, or
@@ -116,8 +116,8 @@ class Debt extends Equatable {
 /// zero.
 int debtTotal(int amount, int basisPoints) => redistributedCents(amount, basisPoints);
 
-/// What the user enters for a debt: every field of the specification. The
-/// entry and check days are written by the app.
+/// What the user enters for a debt: every field of a debt. The entry and check
+/// days are written by the app.
 class DebtDraft {
   const DebtDraft({
     required this.direction,
@@ -157,7 +157,7 @@ class DebtDraft {
   final bool repaid;
 }
 
-/// The totals of the debts that count at one date (decision H5).
+/// The totals of the debts that count at one date.
 class DebtTotals extends Equatable {
   const DebtTotals({required this.owedToMe, required this.iOwe});
 
@@ -186,9 +186,9 @@ extension DebtOperations on Ledger {
       return byPerson != 0 ? byPerson : a.id.compareTo(b.id);
     });
 
-  /// The signed sum of the debts that count at the end of [date] (decision
-  /// H5): what the line « Dettes » of the wealth shows, whether a debts
-  /// account exists or not.
+  /// The signed sum of the debts that count at the end of [date]: what the
+  /// line « Dettes » of the wealth shows, whether a debts account exists
+  /// or not.
   int openDebtsAt(CalendarDate date) =>
       debts.values.fold(0, (sum, debt) => debt.countsAt(date) ? sum + debt.signedTotal : sum);
 
@@ -232,7 +232,7 @@ extension DebtOperations on Ledger {
   }
 
   /// Checks the debt [id] as repaid [today], received on [receivedDate]
-  /// (the screen proposes today; decision H5).
+  /// (the screen proposes today).
   Modification checkDebt(String id, {required CalendarDate? receivedDate, required CalendarDate today}) {
     final debt = _debt(id);
     final draft = DebtDraft.of(debt);
@@ -265,12 +265,12 @@ extension DebtOperations on Ledger {
     return Modification.delete(DebtFields.entity, id);
   }
 
-  /// Splits the debt [id] in two (decision H6): [firstCents], taken from
-  /// its total, stays on it; the rest goes to the new debt [newId]. Both
-  /// keep direction, person, dates, description and state, and carry their
-  /// part as amount, at 100 %: their totals add up exactly to the total of
-  /// the original. Refused when [firstCents] is not strictly between zero
-  /// and the total.
+  /// Splits the debt [id] in two: [firstCents], taken from its total,
+  /// stays on it; the rest goes to the new debt [newId]. Both keep
+  /// direction, person, dates, description and state, and carry their part
+  /// as amount, at 100 %: their totals add up exactly to the total of the
+  /// original. Refused when [firstCents] is not strictly between zero and
+  /// the total.
   Modification splitDebt(String id, String newId, int firstCents) {
     final debt = _debt(id);
     if (firstCents <= 0 || firstCents >= debt.total) throw const LedgerException(LedgerError.debtSplitOutOfTotal);

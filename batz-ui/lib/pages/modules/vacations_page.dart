@@ -14,10 +14,9 @@ import '../transactions/transaction_detail_page.dart';
 import '../transactions/transaction_texts.dart';
 import 'module_category_tile.dart';
 
-/// Plus › Analyses › « Vacances » (step 6.4, decisions H5 and H6 of phase
-/// 6): the trips by year, the most recent first, with date, place, days,
-/// amount and price per day, the total of each year; the manual lines; the
-/// sheets left without transaction.
+/// Plus › Analyses › « Vacances »: the trips by year, the most recent
+/// first, with date, place, days, amount and price per day, the total of
+/// each year; the manual lines; the sheets left without transaction.
 class VacationsPage extends StatelessWidget {
   const VacationsPage({super.key});
 

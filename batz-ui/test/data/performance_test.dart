@@ -25,20 +25,19 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/large_ledger.dart';
 import '../support/machine_lock.dart';
 
-/// Acceptance criteria of phases 4, 5 and 6: with 10 000 transactions over
-/// five years, 12 accounts, 100 declared balances, 200 debts and the data of
-/// the modules, the screens reload in less than 300 ms after a write, both
-/// views of a year are computed in less than 100 ms, and so are the
-/// « Fortune » screen, each screen of a module and the flow diagram.
-/// Measured on the development machine in docs/decisions.md, « Reference
-/// measures ».
+/// The limits of the app: with 10 000 transactions over five years, 12
+/// accounts, 100 declared balances, 200 debts and the data of the modules, the
+/// screens reload in less than 300 ms after a write, both views of a year are
+/// computed in less than 100 ms, and so are the « Fortune » screen, each screen
+/// of a module and the flow diagram. Measured on the development machine in
+/// docs/decisions.md, « Reference measures ».
 ///
 /// Every one of ten runs must stay below its limit; all are printed. The
 /// suite runs its test files concurrently: the whole test, its data written
 /// then measured, runs while no other test file runs ([MachineLock]), the
 /// servers of the end-to-end files and the screens of the others taking the
-/// processors and the memory of the machine (step 5.2 of phase 5: waiting
-/// for the lock, the data written before could be swapped out).
+/// processors and the memory of the machine (waiting for the lock, the data
+/// written before could be swapped out).
 void main() {
   test('with 10 000 transactions over five years, 200 rules, 12 accounts, 100 balances, 200 debts and the data of '
       'the modules, the ledger reloads after a write in less than 300 ms, and both views of a year, the « Fortune » '
@@ -125,8 +124,7 @@ void main() {
       print('« Fortune » screen: $screens ms');
 
       // Each screen of a module and the diagram, on a ledger just loaded:
-      // the modules are computed when their screen opens (principle 8 of
-      // phase 6).
+      // the modules are computed when their screen opens.
       final modules = <String, void Function(Ledger ledger)>{
         'salary': (l) {
           expect(l.salarySheet(LargeLedger.lastYear)!.gap, 0);
@@ -170,8 +168,8 @@ void main() {
       // ignore: avoid_print
       print('modules: $moduleTimes ms');
 
-      // The export, its seventeen files and its ZIP, on a ledger just loaded
-      // (step 7.2 of phase 7).
+      // The export, its seventeen files and its ZIP, on a ledger just
+      // loaded.
       final exports = <int>[];
       for (var run = 0; run < 10; run++) {
         final fresh = await repository.load();
@@ -199,7 +197,7 @@ final _today = CalendarDate(LargeLedger.lastYear, 12, 31);
 
 /// Reads what the home screen and the navigation show: the tasks, the
 /// shares to classify and the old balances among them, and the key figures
-/// of the year (H8 of phase 4), the net wealth included (step 5.4).
+/// of the year, the net wealth included.
 void _tasks(Ledger ledger) {
   expect(ledger.views.of(LargeLedger.lastYear, ViewKind.economic)!.savings.total, isNot(0));
   final wealth = ledger.wealth(_today);

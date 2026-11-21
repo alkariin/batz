@@ -2,8 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../ids.dart';
 
-/// Nature of a top-level group (specification, 4.1); every category below it
-/// inherits it.
+/// Nature of a top-level group; every category below it inherits it.
 enum CategoryNature { income, expense }
 
 /// Journal entity and fields of a category.
@@ -45,9 +44,9 @@ class Category extends Equatable {
   List<Object?> get props => [id, year, name, parentId, nature, position];
 }
 
-/// The form under which two category names are compared (decision H1 of
-/// phase 1): lower case, without accents, without surrounding spaces.
-/// « Impôts » and « impots » are the same name.
+/// The form under which two category names are compared: lower case,
+/// without accents, without surrounding spaces. « Impôts » and « impots
+/// » are the same name.
 String normalizeName(String name) {
   final buffer = StringBuffer();
   for (final rune in name.trim().toLowerCase().runes) {
@@ -100,16 +99,16 @@ final Map<String, String> _unaccented = () {
   };
 }();
 
-/// Default names of the two groups a first tree starts with (decision H4).
+/// Default names of the two groups a first tree starts with.
 const defaultGroupNames = {CategoryNature.income: 'Revenus', CategoryNature.expense: 'Dépenses'};
 
-/// Identifier of the copy, in [year], of the category [sourceId] (design
-/// rule 4 of phase 1): computed, so that two devices copying the same tree
-/// offline write the same records instead of two trees.
+/// Identifier of the copy, in [year], of the category [sourceId]:
+/// computed, so that two devices copying the same tree offline write the
+/// same records instead of two trees.
 String copiedCategoryId(String sourceId, int year) => derivedId('category-copy/$sourceId/$year');
 
-/// Identifier of a default group of [year] (decision H4), computed for the
-/// same reason as [copiedCategoryId].
+/// Identifier of a default group of [year], computed for the same reason
+/// as [copiedCategoryId].
 String defaultGroupId(int year, CategoryNature nature) => derivedId('category-default/$year/${nature.name}');
 
 /// Why a category is detached from the tree of its year.
@@ -133,7 +132,7 @@ enum DetachReason {
 }
 
 /// A category whose chain of parents does not reach, within its year, a
-/// top-level group with a nature (decision H4 of phase 2).
+/// top-level group with a nature.
 class DetachedCategory extends Equatable {
   const DetachedCategory(this.category, this.reason);
 
@@ -154,11 +153,10 @@ class CategoryForest {
 
   /// Sorts [categories] into the tree of their year and the detached ones.
   ///
-  /// A category is part of its year's tree if its chain of parents, in the
-  /// same year, reaches a top-level group that has a nature, without a loop.
-  /// The others are detached: they are never lost, the categories screen
-  /// lists them so that they can be moved back (design rule 2 for reading,
-  /// decision H4 of phase 2 for showing them).
+  /// A category is part of its year's tree if its chain of parents, in the same
+  /// year, reaches a top-level group that has a nature, without a loop. The
+  /// others are detached: they are never lost, the categories screen lists them
+  /// so that they can be moved back.
   factory CategoryForest.build(Iterable<Category> categories) {
     final byId = {for (final c in categories) c.id: c};
     // Null for a category of a tree; the reason for a detached one.
@@ -303,9 +301,9 @@ class CategoryTree {
     return depth;
   }
 
-  /// Whether a transaction may be classified in [id] (decision H2): only in a
-  /// category without children, and never in a top-level group, which only
-  /// adds up its children.
+  /// Whether a transaction may be classified in [id]: only in a category
+  /// without children, and never in a top-level group, which only adds up its
+  /// children.
   bool canHoldTransactions(String id) {
     final category = byId[id];
     return category != null && !category.isTopLevel && !hasChildren(id);
@@ -342,7 +340,7 @@ class CategoryTree {
       if (canHoldTransactions(c.id)) c,
   ];
 
-  /// The category of this year whose name is [name] (decision H1).
+  /// The category of this year whose name is [name].
   Category? named(String name) {
     final normalized = normalizeName(name);
     for (final category in byId.values) {

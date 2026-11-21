@@ -1,5 +1,5 @@
-/// The CSV format of the export (decision H2 of phase 7): UTF-8 with a byte
-/// order mark, semicolons, CR LF, values written from integers (principle 4).
+/// The CSV format of the export: UTF-8 with a byte order mark, semicolons, CR
+/// LF, values written from integers.
 library;
 
 import 'dart:convert';

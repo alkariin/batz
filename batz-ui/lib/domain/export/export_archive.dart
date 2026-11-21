@@ -1,6 +1,6 @@
-/// The ZIP of an export (decision H2 of phase 7): the seventeen CSV files and
-/// a `LISEZMOI.txt`, built in memory and handed to the save dialog. Nothing
-/// is written anywhere else, and nothing to the journal (principle 1).
+/// The ZIP of an export: the seventeen CSV files and a `LISEZMOI.txt`, built
+/// in memory and handed to the save dialog. Nothing is written anywhere else,
+/// and nothing to the journal.
 library;
 
 import 'dart:convert';

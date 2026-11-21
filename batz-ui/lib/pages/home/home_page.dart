@@ -6,7 +6,7 @@ import 'key_figures_card.dart';
 import 'tasks_card.dart';
 
 /// Accueil: the state of the synchronisation, the tasks to do and the key
-/// figures of the year (specification, 4.6; decision H8 of phase 4).
+/// figures of the year.
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 

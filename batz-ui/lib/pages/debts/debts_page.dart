@@ -14,11 +14,11 @@ import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 import 'debt_form_page.dart';
 
-/// The debts table (specification, 4.7; step 5.5), from « Fortune »: the
-/// debts not repaid first, each with its person, its direction, its total
-/// and its dates; the totals « on me doit », « je dois » and net of the
-/// debts that count today, which is the line « Dettes » of the wealth. A
-/// debt is checked as repaid, unchecked, split, deleted.
+/// The debts table, from « Fortune »: the debts not repaid first, each
+/// with its person, its direction, its total and its dates; the totals «
+/// on me doit », « je dois » and net of the debts that count today, which
+/// is the line « Dettes » of the wealth. A debt is checked as repaid,
+/// unchecked, split, deleted.
 class DebtsPage extends StatelessWidget {
   const DebtsPage({super.key});
 
@@ -40,7 +40,7 @@ class DebtsPage extends StatelessWidget {
     if (done != null && context.mounted) showMessage(context, done);
   }
 
-  /// Checking proposes today as the date of receipt (decision H5).
+  /// Checking proposes today as the date of receipt.
   Future<void> _check(BuildContext context, Debt debt) async {
     final today = context.read<AppServices>().today();
     final received = await showDialog<_Received>(
@@ -244,7 +244,7 @@ class _CheckDialogState extends State<_CheckDialog> {
   }
 }
 
-/// Asks for the first part of a split, taken from [total] (decision H6).
+/// Asks for the first part of a split, taken from [total].
 class _SplitDialog extends StatefulWidget {
   const _SplitDialog({required this.total});
 

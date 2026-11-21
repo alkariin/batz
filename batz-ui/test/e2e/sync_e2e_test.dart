@@ -139,7 +139,7 @@ void main() {
     expect((await receiver.ledger.ledger()).transactions, hasLength(13));
   });
 
-  group('first exchange of a device used separately (H1)', () {
+  group('first exchange of a device used separately', () {
     late SimDevice c;
     setUp(() async {
       c = await SimDevice.create('C', deviceId: idC);

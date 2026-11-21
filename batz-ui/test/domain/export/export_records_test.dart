@@ -1,6 +1,6 @@
 // On data drawn at random by the operations of the app, every record that
 // is not deleted is found in its file with its values, and a deleted one is
-// not (principle 2 of phase 7).
+// not.
 import 'dart:convert';
 import 'dart:math';
 

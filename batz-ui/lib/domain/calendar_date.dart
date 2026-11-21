@@ -1,5 +1,5 @@
-/// A calendar date: a day, with neither time nor time zone (design rule 5 of
-/// phase 1). Stored as `YYYY-MM-DD` text, whose order is the date order.
+/// A calendar date: a day, with neither time nor time zone. Stored as
+/// `YYYY-MM-DD` text, whose order is the date order.
 class CalendarDate implements Comparable<CalendarDate> {
   /// Throws an [ArgumentError] for an impossible date such as 31.2.2026.
   CalendarDate(this.year, this.month, this.day) {

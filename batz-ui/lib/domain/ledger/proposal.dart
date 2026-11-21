@@ -22,8 +22,8 @@ class Classification extends Equatable {
   List<Object?> get props => [categoryId, counterpartAccountId, periodStart, periodEnd];
 }
 
-/// What the rules of its year say of a line to validate (principle 3 of
-/// phase 3): computed at each load, never stored.
+/// What the rules of its year say of a line to validate: computed at
+/// each load, never stored.
 sealed class RuleOutcome extends Equatable {
   const RuleOutcome();
 }
@@ -37,7 +37,7 @@ class NoRule extends RuleOutcome {
 }
 
 /// One result wins: the line is « proposée ». [rule] is the rule that gives
-/// it (the first by identifier when several equal rules agree, decision H5).
+/// it (the first by identifier when several equal rules agree).
 class Proposed extends RuleOutcome {
   const Proposed(this.rule, this.classification);
 
@@ -48,8 +48,8 @@ class Proposed extends RuleOutcome {
   List<Object?> get props => [rule, classification];
 }
 
-/// Rules of equal weight give different results (decision H5): the line is
-/// « à compléter », with the rules in competition.
+/// Rules of equal weight give different results: the line is « à compléter
+/// », with the rules in competition.
 class Conflict extends RuleOutcome {
   const Conflict(this.rules);
 
@@ -73,9 +73,8 @@ class UnusableRule extends RuleOutcome {
 }
 
 /// The outcome of [rules] for a line of raw text [rawText]: the rules that
-/// match and have the most keywords win (specification, 4.5). [classify]
-/// turns the winning rule into its classification, or null when its target
-/// is unusable.
+/// match and have the most keywords win. [classify] turns the winning rule
+/// into its classification, or null when its target is unusable.
 RuleOutcome outcomeOf(String rawText, Iterable<MappingRule> rules, Classification? Function(MappingRule) classify) {
   final text = normalizeText(rawText);
   var best = 0;

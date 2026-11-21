@@ -8,9 +8,8 @@ import '../ledger_cubit.dart';
 import '../transactions/transaction_detail_page.dart';
 import '../transactions/transaction_texts.dart';
 
-/// The refunds whose expense is gone or no longer a validated expense
-/// (principle 6): each opens its detail, where it is detached or attached
-/// again.
+/// The refunds whose expense is gone or no longer a validated expense:
+/// each opens its detail, where it is detached or attached again.
 class BrokenRefundsPage extends StatelessWidget {
   const BrokenRefundsPage({super.key});
 

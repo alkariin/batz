@@ -19,8 +19,8 @@ import '../ledger_texts.dart';
 import '../transactions/transaction_detail_page.dart';
 import '../transactions/transaction_texts.dart';
 
-/// The screen of one account (step 5.4): its balance, the history of its
-/// balances with the balance expected and the value variation of each, its
+/// The screen of one account: its balance, the history of its balances
+/// with the balance expected and the value variation of each, its
 /// movements, and « Déclarer un solde ». The detailed account takes its
 /// balance from its statements; a debts account has none of its own.
 class AccountPage extends StatelessWidget {
@@ -59,7 +59,7 @@ class AccountPage extends StatelessWidget {
     await cubit.write(modification);
     if (!context.mounted) return;
     if (result is _Save) {
-      // The value variation of the balance just declared (step 5.4).
+      // The value variation of the balance just declared.
       final history = cubit.state.ledger.balances.of(accountId).history;
       final step = history.where((s) => s.point.declared?.id == balanceId(accountId, result.date)).firstOrNull;
       final variation = step?.variation;

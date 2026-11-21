@@ -3,9 +3,9 @@ import 'package:equatable/equatable.dart';
 import 'account.dart';
 import 'category.dart';
 
-/// An inconsistency that merging the data of several devices can produce
-/// (decision H4 of phase 2). Never blocking: each one is listed in the tasks
-/// of the home screen and corrected through the usual screens.
+/// An inconsistency that merging the data of several devices can produce.
+/// Never blocking: each one is listed in the tasks of the home screen and
+/// corrected through the usual screens.
 sealed class LedgerIssue extends Equatable {
   const LedgerIssue();
 }

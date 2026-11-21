@@ -5,11 +5,11 @@ import '../../data/device_lock.dart';
 import '../../l10n/app_localizations.dart';
 import 'lock_cubit.dart';
 
-/// The door in front of every screen of the app (principles 5 and 6 of
-/// phase 7). While the app is locked, [child] — the navigator and all its
-/// routes — is not drawn: not built before the first unlocking, then kept
-/// off stage with its state, so that the screen and what was being typed
-/// are found again. On a device without lock (desktops), it is [child].
+/// The door in front of every screen of the app. While the app is locked,
+/// [child] — the navigator and all its routes — is not drawn: not built
+/// before the first unlocking, then kept off stage with its state, so
+/// that the screen and what was being typed are found again. On a device
+/// without lock (desktops), it is [child].
 class LockGate extends StatefulWidget {
   const LockGate({super.key, required this.child});
 
@@ -75,7 +75,7 @@ class _LockGateState extends State<LockGate> {
 
 /// While the app is locked, the « back » of Android closes nothing: without
 /// this, it would close the screen kept behind the lock, and what was being
-/// typed there (principle 6 of phase 7).
+/// typed there.
 ///
 /// It must stand above the `MaterialApp`: the observers of the binding are
 /// asked in the order they were added, and the first that handles « back »

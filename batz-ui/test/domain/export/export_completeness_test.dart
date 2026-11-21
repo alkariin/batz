@@ -1,5 +1,5 @@
-// Principle 2 of phase 7: every entity of the journal and each of its
-// fields is exported, or excluded with its reason.
+// Every entity of the journal and each of its fields is exported, or excluded
+// with its reason.
 import 'package:batz/data/local/derived_tables.dart';
 import 'package:batz/domain/export/export_schema.dart';
 import 'package:batz/domain/export/ledger_export.dart';
@@ -31,7 +31,7 @@ List<String> missingFromExport(Map<String, ExportedEntity> schema, List<DerivedT
 void main() {
   test('every entity of the journal and each of its fields is exported or excluded with its reason', () {
     expect(missingFromExport(exportSchema, appDerivedTables), isEmpty);
-    expect(excludedEntities, isEmpty, reason: 'everything entered or imported is exported (H1)');
+    expect(excludedEntities, isEmpty, reason: 'everything entered or imported is exported');
     expect(excludedFromEveryEntity.keys, [deletedField]);
     for (final reason in [
       ...excludedFromEveryEntity.values,

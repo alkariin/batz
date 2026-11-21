@@ -1,4 +1,4 @@
-// The format of the files of the export (decision H2 of phase 7).
+// The format of the files of the export.
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';

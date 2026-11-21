@@ -18,7 +18,7 @@ import 'package:batz/domain/modules/vacations.dart';
 import 'package:batz/domain/period_model.dart';
 
 /// The data of a heavy user over five years (2026 to 2030), invented: what
-/// the performance tests load (step 4.0 of phase 4).
+/// the performance tests load.
 ///
 /// - Accounts: `bank` (detailed), `cash`, `savings`.
 /// - One tree per year, each the copy of the year before: « Revenus » with
@@ -33,14 +33,14 @@ import 'package:batz/domain/period_model.dart';
 ///   refunds attached to imported purchases.
 /// - In the last year, « Poste 7.4 » is named « Divers »: the shares of the
 ///   year before that fall in it are to classify, half of them answered.
-/// - The wealth (step 5.3 of phase 5): 12 accounts, 100 balances declared
-///   on ten of them, every six months from 31.12.2025, and 200 debts over
-///   the five years, half of them repaid.
-/// - The modules (step 6.7 of phase 6): a group « Modules » with
-///   « Vacances », « Électricité » and « Impôts »; 300 vacation lines in
-///   cash, one in four over a week, one in ten with a sheet; 60 monthly
-///   electricity invoices with their kWh; a salary sheet and a fiscal year
-///   for each year; 40 subscriptions of 3 tranches.
+/// - The wealth: 12 accounts, 100 balances declared on ten of them, every
+///   six months from 31.12.2025, and 200 debts over the five years, half
+///   of them repaid.
+/// - The modules: a group « Modules » with « Vacances », « Électricité »
+///   and « Impôts »; 300 vacation lines in cash, one in four over a week,
+///   one in ten with a sheet; 60 monthly electricity invoices with their
+///   kWh; a salary sheet and a fiscal year for each year; 40 subscriptions
+///   of 3 tranches.
 ///
 /// The records are written as the operations of the app write them, field
 /// by field, without going through the checks of each operation: importing

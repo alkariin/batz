@@ -9,8 +9,8 @@ import 'package:batz/domain/journal/journal_entry.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 
-/// A derived table that exists only in tests: phase 0 has no accounting
-/// entity yet, only the mechanism.
+/// A derived table that exists only in tests, to check the mechanism without
+/// any accounting entity.
 final noteTable = DerivedTable(
   entity: 'note',
   table: 'notes',

@@ -11,7 +11,7 @@ import (
 )
 
 // StatementFiles keeps the original PDF files in a directory, each named by
-// its fingerprint (principle 6 of phase 3).
+// its fingerprint.
 type StatementFiles struct{ dir string }
 
 // NewStatementFiles uses dir, created on the first file.

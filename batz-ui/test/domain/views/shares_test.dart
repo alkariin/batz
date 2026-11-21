@@ -106,7 +106,7 @@ void main() {
     },
   );
 
-  test('a category of the same name that became a group: the question is asked (H5)', () async {
+  test('a category of the same name that became a group: the question is asked', () async {
     await h.apply((l) => l.renameCategory(food2027, 'Nourriture'));
     expect((await h.ledger()).views.pendingShares, isEmpty);
     await h.apply((l) => l.addCategory('fresh', year: 2027, name: 'Produits frais', parentId: food2027));

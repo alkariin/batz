@@ -25,7 +25,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
   late int _year = widget.initialYear ?? CalendarDate.today().year;
 
   /// The years offered: those with a tree, the current one, and the next
-  /// one after the last tree, whose tree can be created by hand (H6).
+  /// one after the last tree, whose tree can be created by hand.
   List<int> _years(Ledger ledger) {
     final years = {...ledger.yearsWithTree, ...ledger.forest.yearsWithDetached, CalendarDate.today().year, _year};
     if (ledger.yearsWithTree.isNotEmpty) years.add(ledger.yearsWithTree.last + 1);
@@ -84,9 +84,8 @@ class _CategoriesPageState extends State<CategoriesPage> {
     );
   }
 
-  /// « À replacer »: the detached categories of the year (decision H4 of
-  /// phase 2), each with the categories below it, and the action that moves
-  /// it back into the tree.
+  /// « À replacer »: the detached categories of the year, each with the
+  /// categories below it, and the action that moves it back into the tree.
   List<Widget> _detachedSection(BuildContext context, Ledger ledger, CategoryTree? tree) {
     final heads = ledger.forest.detachedHeads(_year);
     if (heads.isEmpty) return const [];
@@ -196,7 +195,7 @@ class _TreeView {
   final CategoryTree tree;
 
   /// Categories whose name another category of the year also has, after a
-  /// merge (decision H4 of phase 2).
+  /// merge.
   final Set<String> duplicates;
 
   List<Widget> tiles(BuildContext context) {

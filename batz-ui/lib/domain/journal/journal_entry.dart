@@ -5,8 +5,8 @@ import 'hlc.dart';
 final _namePattern = RegExp(r'^[a-z][a-zA-Z0-9]*$');
 
 /// The reserved field that records a deletion. A record is deleted when the
-/// latest value of this field is `true`; a deletion is a change like any other
-/// (specification, chapter 5).
+/// latest value of this field is `true`; a deletion is a change like any
+/// other.
 const deletedField = '_deleted';
 
 /// Checks that [value] can be stored in the journal: null, bool, int or
@@ -95,7 +95,7 @@ class JournalEntry {
   String toString() => '$hlc $change';
 }
 
-/// The resolution rule: field by field, the latest change wins
-/// (specification, chapter 5). Timestamps of two devices never tie, the
-/// device identifier deciding; replaying the same entry changes nothing.
+/// The resolution rule: field by field, the latest change wins.
+/// Timestamps of two devices never tie, the device identifier deciding;
+/// replaying the same entry changes nothing.
 bool supersedes(Hlc incoming, Hlc? current) => current == null || incoming > current;

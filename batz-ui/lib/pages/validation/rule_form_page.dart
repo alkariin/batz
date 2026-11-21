@@ -12,7 +12,7 @@ import 'validation_texts.dart';
 
 /// Creates or modifies a mapping rule of a year: keywords, target, period
 /// model. It shows, as it is typed, how many lines to validate the rule
-/// would classify (step 3.6).
+/// would classify.
 class RuleFormPage extends StatefulWidget {
   const RuleFormPage({super.key, required this.year, this.rule, this.initial});
 

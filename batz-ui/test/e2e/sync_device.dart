@@ -48,7 +48,7 @@ class SimDevice {
   Future<SyncReport> sync({SyncTransport Function(SyncTransport client)? wrap, bool merge = false}) =>
       _with((t, id) => engine.run(wrap == null ? t : wrap(t), pairingId: id, merge: merge));
 
-  /// Replaces the data of this device by the server's (decision H1).
+  /// Replaces the data of this device by the server's.
   Future<SyncReport> replace() => _with((t, id) => engine.replace(t, pairingId: id));
 
   Future<SyncReport> _with(Future<SyncReport> Function(SyncTransport transport, String pairingId) action) async {

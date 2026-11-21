@@ -16,14 +16,14 @@ import 'rule_form_page.dart';
 import 'validation_texts.dart';
 
 /// What an imported line is classified as: the three choices of the
-/// validation (decision H4 of phase 4).
+/// validation.
 enum _Mode { category, transfer, refund }
 
 /// Classifies one imported line: a category of its year and a period, a
-/// transfer with another account, or, for money that came in, a refund
-/// attached to an expense; its description and note. Validating it writes
-/// the classification (principle 4); for a proposed line it is the
-/// correction of decision H4. « Créer une règle » starts from it.
+/// transfer with another account, or, for money that came in, a refund attached
+/// to an expense; its description and note. Validating it writes the
+/// classification; for a proposed line it is the correction of the proposal. «
+/// Créer une règle » starts from it.
 class ClassifyPage extends StatefulWidget {
   const ClassifyPage({super.key, required this.transactionId});
 
@@ -128,7 +128,7 @@ class _ClassifyPageState extends State<ClassifyPage> {
   }
 
   /// The form starts with a keyword found in the bank text of the line, so
-  /// that the rule classifies at least this line (step 4.0).
+  /// that the rule classifies at least this line.
   Future<void> _createRule(LedgerTransaction t) async {
     final keyword = suggestedKeyword(_description.text, t.rawText ?? '');
     await Navigator.of(context).push(
@@ -138,7 +138,7 @@ class _ClassifyPageState extends State<ClassifyPage> {
           initial: RuleDraft(
             year: t.date.year,
             keywords: [?keyword],
-            // Mapping rules never attach a refund (H4).
+            // Mapping rules never attach a refund.
             targetCategoryId: _mode == _Mode.category ? _categoryId : null,
             targetAccountId: _mode == _Mode.transfer ? _accountId : null,
           ),
@@ -196,7 +196,7 @@ class _ClassifyPageState extends State<ClassifyPage> {
             segments: [
               ButtonSegment(value: _Mode.category, label: Text(l.classifyCategory)),
               ButtonSegment(value: _Mode.transfer, label: Text(l.classifyTransfer)),
-              // Only money that came in refunds an expense (H4).
+              // Only money that came in refunds an expense.
               if (t.amount > 0) ButtonSegment(value: _Mode.refund, label: Text(l.classifyRefund)),
             ],
             selected: {_mode},

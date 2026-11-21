@@ -1,14 +1,13 @@
-/// The wealth (specification, 4.6 « Fortune »; plan of phase 5): the net
-/// wealth at any date, its monthly curve, and the table that explains,
-/// year by year and to the cent, why it changed.
+/// The wealth: the net wealth at any date, its monthly curve, and the
+/// table that explains, year by year and to the cent, why it changed.
 ///
-/// Computed at each load, never stored (principle 1): the journal holds only
-/// the declared balances and the debts. The wealth at a date is the balance
-/// of every account that has one at that date (one calculation,
-/// `balances.dart`), plus the debts that count that day. Every line of the
-/// table is computed for itself, the change of the wealth too (principle
-/// 3); the tests check on random data that they add up. The rules are
-/// described in docs/features.md, « Wealth ».
+/// Computed at each load, never stored: the journal holds only the declared
+/// balances and the debts. The wealth at a date is the balance of every
+/// account that has one at that date (one calculation, `balances.dart`),
+/// plus the debts that count that day. Every line of the table is computed
+/// for itself, the change of the wealth too; the tests check on random data
+/// that they add up. The rules are described in docs/features.md, « Wealth
+/// ».
 library;
 
 import 'package:equatable/equatable.dart';
@@ -49,8 +48,8 @@ class AccountWealth {
   /// balance is the bank's.
   final Statement? lastStatement;
 
-  /// Whether its last declared balance is more than six months old
-  /// (decision H7).
+  /// Whether its last declared balance is more than six months
+  /// old.
   final bool isOld;
 
   bool get inWealth => balance != null;
@@ -63,13 +62,13 @@ class WealthAt {
 
   final CalendarDate date;
 
-  /// Every account that can have a balance of its own (not a debts
-  /// account), by name: those with a balance, archived or not (H4) unless an
-  /// archived one is at 0, and those without one that are not archived.
+  /// Every account that can have a balance of its own (not a debts account),
+  /// by name: those with a balance, archived or not unless an archived one
+  /// is at 0, and those without one that are not archived.
   final List<AccountWealth> accounts;
 
-  /// The debts that count that day, whether a debts account exists or not
-  /// (H5): what is owed to me minus what I owe.
+  /// The debts that count that day, whether a debts account exists or
+  /// not: what is owed to me minus what I owe.
   final int debts;
 
   /// The accounts with a balance, grouped by type in the order of the
@@ -128,8 +127,8 @@ class AccountAmount extends Equatable {
   List<Object?> get props => [accountId, account, amount];
 }
 
-/// Why the wealth of one year changed, line by line (specification, 4.6;
-/// plan of phase 5, decision H3). Each line is computed for itself.
+/// Why the wealth of one year changed, line by line. Each line is
+/// computed for itself.
 class WealthExplanation {
   WealthExplanation({
     required this.year,
@@ -156,19 +155,19 @@ class WealthExplanation {
   final int year;
 
   /// The end of the year before, and the end of the year, or today for the
-  /// current year (decision H8).
+  /// current year.
   final CalendarDate start;
   final CalendarDate end;
 
   /// Whether the year has an annual view: a year before the first category
-  /// tree has none, and its three results are zero (H8).
+  /// tree has none, and its three results are zero.
   final bool hasView;
 
   /// Income minus expenses of the economic view of the year.
   final int economicResult;
 
   /// The period offsets of the year, signed as a result: paid this year for
-  /// other years, and paid in other years for this one (phase 4).
+  /// other years, and paid in other years for this one.
   final int paidForOtherYears;
   final int paidInOtherYears;
 
@@ -195,8 +194,8 @@ class WealthExplanation {
   final int unclassified;
 
   /// Per account, the opposite of its movements of the year while it had
-  /// no balance yet, or once it no longer exists (H3): what left the
-  /// wealth followed, or came into it.
+  /// no balance yet, or once it no longer exists: what left the wealth
+  /// followed, or came into it.
   final List<AccountAmount> outsideWealth;
 
   /// The wealth at [start] and at [end].
@@ -226,8 +225,8 @@ class WealthExplanation {
   static int _sum(List<AccountAmount> amounts) => amounts.fold(0, (sum, a) => sum + a.amount);
 }
 
-/// An account whose last declared balance is more than six months old
-/// (decision H7).
+/// An account whose last declared balance is more than six months
+/// old.
 class OldBalance {
   const OldBalance(this.account, this.lastDeclared);
 
@@ -236,7 +235,7 @@ class OldBalance {
 }
 
 /// The day six months before [date], the day clamped to the month: the
-/// limit of an old balance (specification, chapter 14).
+/// limit of an old balance.
 CalendarDate sixMonthsBefore(CalendarDate date) {
   final months = date.year * 12 + date.month - 1 - 6;
   final year = months ~/ 12, month = months % 12 + 1;
@@ -281,8 +280,8 @@ class Wealth {
       final balances = this.balances.of(account.id);
       if (!balances.hasOwnBalance) continue;
       final balance = balances.balanceAt(date);
-      // An archived account leaves the list once its balance is 0 (decision
-      // H4 of phase 5, step 6.0): it is still in the settings of accounts.
+      // An archived account leaves the list once its balance is 0: it is
+      // still in the settings of accounts.
       if (account.archived && (balance ?? 0) == 0) continue;
       DeclaredBalance? lastDeclared;
       for (final point in balances.points) {
@@ -325,7 +324,7 @@ class Wealth {
     return first;
   }();
 
-  /// The years that have a table (H8): from the first year the wealth holds
+  /// The years that have a table: from the first year the wealth holds
   /// something to the current year.
   List<int> get years {
     final first = firstDate;
@@ -334,7 +333,7 @@ class Wealth {
   }
 
   /// The wealth at the end of each month, from the month of [firstDate] to
-  /// the current one, whose value is today's (H8).
+  /// the current one, whose value is today's.
   late final List<MonthWealth> monthly = () {
     final first = firstDate;
     if (first == null || first.isAfter(today)) return const <MonthWealth>[];
@@ -350,7 +349,7 @@ class Wealth {
   }();
 
   /// The table that explains the change of the wealth in [year], up to
-  /// today for the current year (H8).
+  /// today for the current year.
   WealthExplanation explain(int year) => _tables.putIfAbsent(year, () => _explain(year));
 
   final _tables = <int, WealthExplanation>{};
@@ -440,8 +439,8 @@ class Wealth {
   }
 
   /// The accounts whose last declared balance is more than six months old
-  /// at [today] (H7): not archived, neither detailed nor a debts account.
-  /// An account without a declared balance is not one.
+  /// at [today]: not archived, neither detailed nor a debts account. An
+  /// account without a declared balance is not one.
   List<OldBalance> get oldBalances {
     final limit = sixMonthsBefore(today);
     return [

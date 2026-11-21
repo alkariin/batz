@@ -16,8 +16,7 @@ import '../server/server_page.dart';
 import '../validation/rules_page.dart';
 import '../../version.dart';
 
-/// « Plus »: the analyses (the modules of phase 6), the subscriptions, then
-/// the settings (specification, 4.6).
+/// « Plus »: the analyses (the modules), the subscriptions, then the settings.
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
 

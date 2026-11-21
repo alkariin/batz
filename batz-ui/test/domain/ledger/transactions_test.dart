@@ -43,7 +43,7 @@ void main() {
       expect(l.kindOf(t), TransactionKind.expense);
     });
 
-    test('the type is deduced: expense, refund, income, transfer (H3)', () async {
+    test('the type is deduced: expense, refund, income, transfer', () async {
       expect(defaultDirection(CategoryNature.expense), Direction.outflow);
       expect(defaultDirection(CategoryNature.income), Direction.inflow);
       await h.apply((l) => l.recordEntry('expense', 'l1', entry()));
@@ -71,7 +71,7 @@ void main() {
     });
 
     test('a transaction of the detailed account cannot be modified or deleted by hand', () async {
-      // As an import (phase 3) would write it.
+      // As an import would write it.
       final hlc = Hlc(1, 0, '99999999-0000-4000-8000-000000000000');
       await h.journal.merge([
         for (final f in {'accountId': 'bank', 'date': '2026-05-01', 'amount': -500, 'status': 'validated'}.entries)
@@ -102,7 +102,7 @@ void main() {
       expect(l.updateEntry('t', entry(cents: 1200)).changes, isNotEmpty);
     });
 
-    test('only a category without children, in the tree of the payment year, is accepted (H2)', () async {
+    test('only a category without children, in the tree of the payment year, is accepted', () async {
       final l = await h.ledger();
       for (final category in ['housing', defaultGroupId(2026, CategoryNature.expense), 'nope']) {
         expect(
@@ -118,7 +118,7 @@ void main() {
       );
     });
 
-    test('the first transaction of a year without a tree creates it, in the same modification (H6)', () async {
+    test('the first transaction of a year without a tree creates it, in the same modification', () async {
       var l = await h.ledger();
       expect(l.trees.containsKey(2027), isFalse);
       final food2027 = l.treeOrPreview(2027).named('Nourriture')!.id;
@@ -182,7 +182,7 @@ void main() {
       expect(l.transactionList(accountId: 'cash').single.id, 't', reason: 'listed on both accounts');
     });
 
-    test('a transfer dated in a year without a tree creates it, like any first transaction (H6)', () async {
+    test('a transfer dated in a year without a tree creates it, like any first transaction', () async {
       var l = await h.ledger();
       expect(l.trees.containsKey(2027), isFalse);
       l = await h.apply((l) => l.recordTransfer('t', transfer(date: d(2027, 1, 4))));
@@ -215,7 +215,7 @@ void main() {
     });
   });
 
-  group('usage (H2, H5)', () {
+  group('usage', () {
     test('an account used by transactions is archived instead of deleted, with their number', () async {
       await h.apply((l) => l.recordEntry('t1', 'l1', entry()));
       await h.apply((l) => l.recordTransfer('t2', transfer()));

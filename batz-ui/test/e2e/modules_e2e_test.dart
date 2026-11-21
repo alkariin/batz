@@ -1,7 +1,7 @@
-// The data of phase 6 between devices, through a real batz-web: what is
-// entered in the modules on one device reaches another, which computes the
-// same modules; the same salary sheet, fiscal year or kWh of a line entered
-// on two devices offline gives one record.
+// The data of the modules between devices, through a real batz-web: what is
+// entered in the modules on one device reaches another, which computes the same
+// modules; the same salary sheet, fiscal year or kWh of a line entered on two
+// devices offline gives one record.
 import 'package:batz/domain/ids.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/modules/electricity.dart';

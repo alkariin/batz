@@ -1,7 +1,7 @@
 import 'dart:io';
 
 /// Keeps the performance measurements of the app apart from the other test
-/// files (step 4.7 of phase 4).
+/// files.
 ///
 /// `flutter test` runs test files in concurrent processes; the end-to-end
 /// files build batz-web and run its servers, the others render screens. On
@@ -18,7 +18,7 @@ import 'dart:io';
 /// Once the lock is exclusive, the processes of the files that just released
 /// it may still be ending, and the runner may still be starting the next
 /// ones: on Linux, the measurement also waits until the processors are
-/// quiet (step 5.2 of phase 5).
+/// quiet.
 abstract final class MachineLock {
   static final _path = '${Directory.systemTemp.path}/batz-test-machine.lock';
   static RandomAccessFile? _shared;

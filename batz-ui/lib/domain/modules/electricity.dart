@@ -1,7 +1,6 @@
-/// Electricity (specification, 4.7; decision H7 of phase 6): the kWh entered
-/// for the lines of the electricity category, and per year the price of the
-/// economic view, the kWh spread like the amounts, the days covered and
-/// three ratios.
+/// Electricity: the kWh entered for the lines of the electricity category,
+/// and per year the price of the economic view, the kWh spread like the
+/// amounts, the days covered and three ratios.
 library;
 
 import 'package:equatable/equatable.dart';
@@ -20,12 +19,12 @@ abstract final class ElectricityReadingFields {
   static const entity = 'electricityReading';
   static const lineId = 'lineId';
 
-  /// In Wh, an integer (principle 6).
+  /// In Wh, an integer.
   static const wh = 'wh';
 }
 
-/// Identifier of the reading of [lineId]: computed (principle 5), so that
-/// two devices entering the kWh of the same line write one record.
+/// Identifier of the reading of [lineId]: computed, so that two devices
+/// entering the kWh of the same line write one record.
 String electricityReadingId(String lineId) => derivedId('electricity/$lineId');
 
 class ElectricityReading extends Equatable {
@@ -56,7 +55,7 @@ class ElectricityLine {
   int get days => line.end.toDateTime().difference(line.start.toDateTime()).inDays + 1;
 }
 
-/// The electricity of one year (H7).
+/// The electricity of one year.
 class ElectricityYear {
   const ElectricityYear({
     required this.year,
@@ -141,7 +140,7 @@ extension ElectricityOperations on Ledger {
       if (electricityYear(year).lines.isNotEmpty) year,
   ];
 
-  /// Readings whose line no longer counts in the category (principle 4).
+  /// Readings whose line no longer counts in the category.
   List<ElectricityReading> get orphanReadings {
     final lines = {for (final l in views.linesNamed(moduleCategoryName(ModuleKind.electricity))) l.ownLineId};
     return [

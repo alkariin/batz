@@ -14,7 +14,7 @@ Matcher throwsLedger(LedgerError error) => throwsA(isA<LedgerException>().having
 TrancheDraft tranche(int cents, TrancheFrequency frequency, CalendarDate start, [CalendarDate? end]) =>
     TrancheDraft(amount: cents, frequency: frequency, start: start, end: end);
 
-/// The example of the plan: « Streaming » at 12.90 a month from 1.3.2025 to
+/// The reference example: « Streaming » at 12.90 a month from 1.3.2025 to
 /// 31.12.2025, then 14.90 from 1.1.2026; « Assurance vélo » at 95.00 a year
 /// from 1.6.2024; « Salle de sport », ended on 30.9.2025.
 Future<Ledger> subscriptionExample(Future<Ledger> Function(Modification Function(Ledger l) build) apply) async {

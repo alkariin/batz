@@ -18,12 +18,12 @@ import 'composition_page.dart';
 import 'year_texts.dart';
 
 /// Width from which the months of the year are twelve columns; below, each
-/// line unfolds its months (specification, 4.6).
+/// line unfolds its months.
 const monthColumnsBreakpoint = 1100.0;
 
 /// « Année »: the tree of a year with its amounts, in the cash-flow or the
-/// economic view, month by month (step 4.5). Every amount opens the
-/// transactions that make it.
+/// economic view, month by month. Every amount opens the transactions that
+/// make it.
 class YearPage extends StatefulWidget {
   const YearPage({super.key, this.initialYear});
 
@@ -71,7 +71,7 @@ class _YearPageState extends State<YearPage> {
   @override
   void initState() {
     super.initState();
-    // The view chosen last on this device (decision H7).
+    // The view chosen last on this device.
     context.read<AppServices>().preferences.viewKind().then((kind) {
       if (mounted) setState(() => _kind = kind);
     });
@@ -177,7 +177,7 @@ class _YearPageState extends State<YearPage> {
   void _open(BuildContext context, int year, _Line line, {int? month}) {
     final row = line.row;
     if (row == null) return;
-    // « À classer » leads to the questions of the year (H5).
+    // « À classer » leads to the questions of the year.
     if (row is ToClassifyRow) {
       Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => SharesPage(year: year)));
       return;

@@ -1,5 +1,5 @@
-// The example ledger gives exactly its expected files (step 7.1 of phase 7),
-// the three lines of the plan's example included.
+// The example ledger gives exactly its expected files, the three lines of
+// docs/features.md, « Export », included.
 import 'dart:convert';
 import 'dart:io';
 
@@ -27,7 +27,7 @@ void main() {
     }
   }
 
-  test('the seventeen files, in the order of the plan', () {
+  test('the seventeen files, in their order', () {
     expect(files.map((f) => f.name), ExportFiles.all);
   });
 
@@ -37,7 +37,7 @@ void main() {
     });
   }
 
-  test('the three transactions of the plan, as its example shows them', () {
+  test('the three transactions of the example, as the documentation shows them', () {
     const headers = [
       'Date',
       'Compte',

@@ -1,6 +1,6 @@
-/// The annual salary sheet (specification, 4.7; decision H2 of phase 6):
-/// gross, a free list of deductions, net, and the gap when gross minus the
-/// deductions does not give the net. It has no effect on the accounts.
+/// The annual salary sheet: gross, a free list of deductions, net, and the
+/// gap when gross minus the deductions does not give the net. It has no
+/// effect on the accounts.
 library;
 
 import 'package:equatable/equatable.dart';
@@ -34,11 +34,11 @@ abstract final class SalaryDeductionFields {
   static const rank = 'rank';
 }
 
-/// The labels proposed for the first sheet (H2).
+/// The labels proposed for the first sheet.
 const defaultDeductionLabels = ['AVS', 'AC', 'LPP'];
 
-/// Identifier of the sheet of [year]: computed (principle 5), one sheet per
-/// year even when two devices create it.
+/// Identifier of the sheet of [year]: computed, one sheet per year even
+/// when two devices create it.
 String salarySheetId(int year) => derivedId('salary-sheet/$year');
 
 class SalaryDeduction extends Equatable {
@@ -82,7 +82,7 @@ class SalarySheet extends Equatable {
   int get deductionsTotal => deductions.fold(0, (sum, d) => sum + d.amount);
 
   /// Gross minus the deductions minus net: shown when it is not zero, it
-  /// never prevents saving (H2).
+  /// never prevents saving.
   int get gap => gross - deductionsTotal - net;
 
   SalarySheet withDeductions(Iterable<SalaryDeduction> deductions) =>
@@ -117,7 +117,7 @@ extension SalaryOperations on Ledger {
   SalarySheet? salarySheet(int year) => modules.salarySheets[year];
 
   /// The labels a new sheet of [year] proposes: those of the sheet of the
-  /// closest earlier year that has one, otherwise AVS, AC and LPP (H2).
+  /// closest earlier year that has one, otherwise AVS, AC and LPP.
   List<String> proposedDeductionLabels(int year) {
     SalarySheet? previous;
     for (final sheet in modules.salarySheets.values) {

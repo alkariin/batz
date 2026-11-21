@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// The single accent colour of the app (specification, 4.6).
+/// The single accent colour of the app.
 const accentColor = Color(0xFF2E7D5B);
 
 /// Material 3 theme for [brightness]; the app follows the device setting.

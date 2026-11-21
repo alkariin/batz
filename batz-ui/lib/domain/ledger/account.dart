@@ -1,10 +1,9 @@
 import 'package:equatable/equatable.dart';
 
-/// The ten account types of the specification (4.3). The name is what the
-/// journal stores.
+/// The ten account types. The name is what the journal stores.
 enum AccountType { privateAccount, savings, pillar3, pillar2, investments, vehicle, rentDeposit, cash, debts, other }
 
-/// Bank statement formats the server can read (specification, 4.4).
+/// Bank statement formats the server can read.
 enum ImportFormat { postfinance }
 
 /// Journal entity and fields of an account.

@@ -21,8 +21,7 @@ class Unlocked extends UnlockOutcome {
   const Unlocked();
 }
 
-/// The device has no screen lock: there is nothing to ask (decision H4 of
-/// phase 7).
+/// The device has no screen lock: there is nothing to ask.
 class NoScreenLock extends UnlockOutcome {
   const NoScreenLock();
 }
@@ -42,8 +41,8 @@ class UnlockFailed extends UnlockOutcome {
   final Object error;
 }
 
-/// The lock of the device, asked through the system dialog (specification,
-/// chapter 9: Android only; desktops rely on their operating system).
+/// The lock of the device, asked through the system dialog (Android only;
+/// desktops rely on their operating system).
 abstract interface class DeviceLock {
   /// Whether the device has a screen lock or an enrolled biometric.
   Future<bool> hasScreenLock();
@@ -72,7 +71,7 @@ class SystemDeviceLock implements DeviceLock {
     localizedReason: texts.reason,
     authMessages: [AndroidAuthMessages(signInTitle: texts.title, signInHint: '', cancelButton: texts.cancel)],
     options: const AuthenticationOptions(
-      // Fingerprint, face or the code of the device (decision H3).
+      // Fingerprint, face or the code of the device.
       biometricOnly: false,
       // Opening the app is what the user just asked for: no confirmation
       // button after a recognised face.

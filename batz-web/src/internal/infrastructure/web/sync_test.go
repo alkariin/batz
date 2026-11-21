@@ -133,7 +133,7 @@ func TestSyncChecksProtocolAndAppVersion(t *testing.T) {
 		assert.Contains(t, body["message"], version.MinAppVersion)
 	}
 
-	// The server of phase 7 still accepts apps 0.7.0, and apps 0.8.0-alpha,
+	// The server 0.8.0-alpha still accepts apps 0.7.0, and apps 0.8.0-alpha,
 	// whose suffix does not count.
 	assert.Equal(t, "0.7.0", version.MinAppVersion)
 	for _, accepted := range []string{"0.7.0", "0.8.0-alpha"} {

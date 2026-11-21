@@ -1,8 +1,7 @@
 import 'calendar_date.dart';
 
-/// How a mapping rule sets the period a payment concerns (specification,
-/// 4.5; meanings of decision H6 of phase 3). Without a model, the period is
-/// the payment date.
+/// How a mapping rule sets the period a payment concerns. Without a model,
+/// the period is the payment date.
 enum PeriodModel {
   /// The calendar month before the month of the payment.
   previousMonth,

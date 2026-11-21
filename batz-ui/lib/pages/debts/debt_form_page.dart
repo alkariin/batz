@@ -13,8 +13,8 @@ import '../../services.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 
-/// Creates a debt, or modifies or deletes [debt] (step 5.5): every field of
-/// the specification (4.7), the total computed on screen as it is typed.
+/// Creates a debt, or modifies or deletes [debt]: every field of a debt, the
+/// total computed on screen as it is typed.
 class DebtFormPage extends StatefulWidget {
   const DebtFormPage({super.key, this.debt});
 
@@ -120,7 +120,7 @@ class _DebtFormPageState extends State<DebtFormPage> {
     Navigator.of(context).pop();
   }
 
-  /// Checking the box proposes today as the date of receipt (H5).
+  /// Checking the box proposes today as the date of receipt.
   void _setRepaid(bool repaid) {
     setState(() {
       _repaid = repaid;

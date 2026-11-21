@@ -1,16 +1,15 @@
-/// The annual view (specification, 4.6 « Année »; plan of phase 4): for one
-/// year, the category tree with its amounts month by month, in the
-/// cash-flow view (what was paid in the year) or in the economic view (what
-/// the year cost).
+/// The annual view: for one year, the category tree with its amounts month
+/// by month, in the cash-flow view (what was paid in the year) or in the
+/// economic view (what the year cost).
 ///
-/// Computed at each load from what the user entered, never stored
-/// (principle 1), and one calculation serves both views (principle 2): each
-/// line of a transaction gives amounts dated by month, a single one at the
-/// month of its payment in the cash-flow view, one per monthly share of its
-/// period in the economic view. Everything else is common: the category
-/// chosen in the tree of the month's year, the sums of the groups, the
-/// totals. The two views can thus differ only by where the amounts fall.
-/// The rules are described in docs/features.md, « Annual view ».
+/// Computed at each load from what the user entered, never stored, and one
+/// calculation serves both views: each line of a transaction gives amounts
+/// dated by month, a single one at the month of its payment in the
+/// cash-flow view, one per monthly share of its period in the economic
+/// view. Everything else is common: the category chosen in the tree of the
+/// month's year, the sums of the groups, the totals. The two views can thus
+/// differ only by where the amounts fall. The rules are described in
+/// docs/features.md, « Annual view ».
 library;
 
 import 'package:equatable/equatable.dart';
@@ -23,7 +22,7 @@ import '../ledger/redistribution.dart';
 import '../ledger/share_classification.dart';
 import '../ledger/transaction.dart';
 
-/// The two views of a year (specification, 4.2).
+/// The two views of a year.
 enum ViewKind {
   /// Every amount at its payment date.
   cash,
@@ -78,7 +77,7 @@ class CategoryRow extends ViewRow {
   List<Object?> get props => [categoryId];
 }
 
-/// The amounts whose category has no counterpart in the year (principle 3).
+/// The amounts whose category has no counterpart in the year.
 class ToClassifyRow extends ViewRow {
   const ToClassifyRow(this.nature);
 
@@ -96,10 +95,10 @@ class UnclassifiedRow extends ViewRow {
   List<Object?> get props => [];
 }
 
-/// What a redistribution rule moves in a view (principle 4): month by
-/// month, its percentage of what the source shows before any
-/// redistribution, rounded to the cent, leaves the source and joins the
-/// target, on a line of its own on each side.
+/// What a redistribution rule moves in a view: month by month, its
+/// percentage of what the source shows before any redistribution,
+/// rounded to the cent, leaves the source and joins the target, on a
+/// line of its own on each side.
 class RedistributionLine {
   const RedistributionLine(this.rule, this.moved);
 
@@ -147,7 +146,7 @@ class YearView {
   final ViewKind kind;
 
   /// The tree of the year, or for a year to come that has none yet, the
-  /// tree its copy will give (decision H6).
+  /// tree its copy will give.
   final CategoryTree tree;
 
   /// Whether [tree] is the copy to come rather than a tree written.
@@ -162,10 +161,10 @@ class YearView {
 
   /// The redistribution rules that apply in the year, with what they move,
   /// by source then target name; their lines show under the source and
-  /// under the target (decision H1: in both views).
+  /// under the target (in both views).
   final List<RedistributionLine> redistributions;
 
-  /// The rules of the year that do not apply, and why (principle 6).
+  /// The rules of the year that do not apply, and why.
   final List<InapplicableRedistribution> inapplicable;
 
   /// What the redistribution lines of [categoryId] add to it: what joins it
@@ -192,7 +191,7 @@ class YearView {
   /// Expenses, signed as paid: negative, refunds included.
   final MonthlyAmounts expenses;
 
-  /// Income minus expenses (specification, 4.1).
+  /// Income minus expenses.
   MonthlyAmounts get savings => income + expenses;
 
   /// Period offsets of the year, signed as a result (income positive,
@@ -225,7 +224,7 @@ class CategoryLine {
   int get total => months.total;
 }
 
-/// A line whose shares in a year have no category there (decision H5).
+/// A line whose shares in a year have no category there.
 class PendingShare {
   const PendingShare({required this.lineId, required this.transaction, required this.economic, required this.cash});
 
@@ -283,9 +282,9 @@ class _Unclassified extends _Target {
   const _Unclassified();
 }
 
-/// An amount of a line, before it is placed in a year (principle 2 of
-/// phase 4): what the views count, read by the modules (step 6.0 of phase
-/// 6) without classifying or spreading anything again.
+/// An amount of a line, before it is placed in a year: what the views
+/// count, read by the modules without classifying or spreading anything
+/// again.
 class ViewLine {
   ViewLine._({
     required this.transaction,
@@ -328,7 +327,7 @@ class ViewLine {
   final CalendarDate end;
 
   /// The payment date: the cash-flow view places the amount there, an
-  /// attached refund included (decision H3).
+  /// attached refund included.
   CalendarDate get paid => transaction.date;
 
   /// The shares of the economic view: (year, month, cents).
@@ -342,18 +341,17 @@ class ViewLine {
 /// The views of every year of a [Ledger], computed when first asked for.
 class YearViews {
   /// With [until], only what was paid up to that day counts: the table that
-  /// explains the wealth of the current year stops there (decision H8 of
-  /// phase 5).
+  /// explains the wealth of the current year stops there.
   YearViews(this.ledger, {this.until});
 
   final Ledger ledger;
   final CalendarDate? until;
 
-  /// The first year that has a tree; earlier years are not shown (H6).
+  /// The first year that has a tree; earlier years are not shown.
   late final int? firstYear = ledger.trees.isEmpty ? null : ledger.trees.keys.reduce((a, b) => a < b ? a : b);
 
   /// The tree a year is shown with: its own, or the copy it will receive
-  /// when an earlier year has a tree (H6). Null before the first tree.
+  /// when an earlier year has a tree. Null before the first tree.
   CategoryTree? treeOf(int year) {
     final first = firstYear;
     if (first == null || year < first) return null;
@@ -383,7 +381,7 @@ class YearViews {
     return [for (var year = first; year <= last; year++) year];
   }
 
-  /// The view [kind] of [year]; null when [year] is not shown (H6).
+  /// The view [kind] of [year]; null when [year] is not shown.
   YearView? of(int year, ViewKind kind) => _views.putIfAbsent((year, kind), () => _build(year, kind));
 
   final _views = <(int, ViewKind), YearView?>{};
@@ -452,7 +450,7 @@ class YearViews {
       if (until != null && t.date.isAfter(until!)) continue;
       if (!t.isValidated) {
         // A line to validate counts as its rules propose: category and
-        // period (principle 3 of phase 3); without a proposal, unclassified.
+        // period; without a proposal, unclassified.
         final proposal = ledger.proposalOf(t);
         if (proposal?.isTransfer ?? false) continue;
         final lineId = t.line?.id ?? Ledger.fallbackLineId(t.id);
@@ -468,7 +466,7 @@ class YearViews {
       for (final line in t.lines) {
         lines += line.amount;
         // A refund attached to a validated expense follows it: category and
-        // period (principle 5).
+        // period.
         if (ledger.refundedExpenseOf(t, line) case final expense?) {
           final paid = expense.line;
           add(
@@ -485,11 +483,11 @@ class YearViews {
         }
         add(t, line.id, line.categoryId, line.amount, line.periodStart, line.periodEnd);
       }
-      // A transaction counts for exactly its amount (step 5.0 of phase 5).
-      // Only a merge can leave its lines adding up to another amount: the
-      // amount corrected on one device, the line rewritten with the old one
-      // on another. The difference is « Non classé », where it shows; saving
-      // the transaction again writes both amounts.
+      // A transaction counts for exactly its amount. Only a merge can leave
+      // its lines adding up to another amount: the amount corrected on one
+      // device, the line rewritten with the old one on another. The
+      // difference is « Non classé », where it shows; saving the transaction
+      // again writes both amounts.
       if (lines != t.amount) {
         add(t, Ledger.fallbackLineId(t.id), null, t.amount - lines, t.date, t.date, own: '${t.id}-gap');
       }
@@ -499,16 +497,15 @@ class YearViews {
 
   // ------------------------------------------------------- read by modules
 
-  /// Every amount the views count, as they classify and spread it (step
-  /// 6.0 of phase 6): the modules read them and never classify again.
+  /// Every amount the views count, as they classify and spread it: the
+  /// modules read them and never classify again.
   List<ViewLine> get lines => List.unmodifiable(_flows);
 
   /// The lines that count in [categoryId] of [year], or anything below it,
   /// in the view [kind], with what each places there month by month,
-  /// before any redistribution (decision H1 of phase 6), by payment date.
-  /// A line counted in the year is listed even when its shares there round
-  /// to zero. Empty when [categoryId] is not in the tree [year] is shown
-  /// with.
+  /// before any redistribution, by payment date. A line counted in the
+  /// year is listed even when its shares there round to zero. Empty when
+  /// [categoryId] is not in the tree [year] is shown with.
   List<CategoryLine> linesIn(int year, ViewKind kind, String categoryId) {
     final tree = treeOf(year);
     if (tree == null || !tree.byId.containsKey(categoryId)) return const [];
@@ -525,7 +522,7 @@ class YearViews {
   /// The lines classified, in the tree of the year of their category (the
   /// payment year, or the expense's for an attached refund), in the
   /// category named [name] of that tree or anything below it, every year
-  /// together, by payment date (decision H1 of phase 6).
+  /// together, by payment date.
   List<ViewLine> linesNamed(String name) {
     final subtrees = <int, Set<String>?>{};
     Set<String>? subtree(int year) => subtrees.putIfAbsent(year, () {
@@ -548,11 +545,11 @@ class YearViews {
 
   // ------------------------------------------------------------- placement
 
-  /// The category of [year] that an amount of [flow] goes to (principle 3):
-  /// its own category in the year of its payment; elsewhere the category of
-  /// the same name, if it can hold transactions; otherwise the category of
-  /// the answer given for its line and that year, while it holds
-  /// ([answerOf]); otherwise « À classer ».
+  /// The category of [year] that an amount of [flow] goes to: its own
+  /// category in the year of its payment; elsewhere the category of the
+  /// same name, if it can hold transactions; otherwise the category of the
+  /// answer given for its line and that year, while it holds ([answerOf]);
+  /// otherwise « À classer ».
   _Target _target(ViewLine flow, int year, CategoryTree tree) {
     final origin = flow.origin!;
     if (year == flow.originYear) return _InCategory(origin.id);
@@ -576,7 +573,7 @@ class YearViews {
 
   /// The answer given for the shares of [lineId] in [year], while it holds:
   /// the line still has the category it was given for, and the category
-  /// chosen can hold transactions in the tree of the year (decision H5).
+  /// chosen can hold transactions in the tree of the year.
   ShareClassification? answerOf(String lineId, int year) {
     final tree = treeOf(year);
     final origin = originOf(lineId);
@@ -604,9 +601,9 @@ class YearViews {
     },
   };
 
-  /// The questions waiting for an answer (decision H5): every line with
-  /// amounts in « À classer » of a year shown, in either view, grouped by
-  /// category of origin and year, years then names in order.
+  /// The questions waiting for an answer: every line with amounts in « À
+  /// classer » of a year shown, in either view, grouped by category of
+  /// origin and year, years then names in order.
   late final List<PendingShareGroup> pendingShares = _pendingShares();
 
   List<PendingShareGroup> _pendingShares() {
@@ -710,7 +707,7 @@ class YearViews {
       if (!flow.transaction.isValidated) toValidate.add(flow.transaction.id);
     });
 
-    // Redistribution (principle 4): from what each source shows before any
+    // Redistribution: from what each source shows before any
     // redistribution, month by month.
     final rules = ledger.redistributionsOf(year);
     final problems = redistributionProblems(rules, tree);

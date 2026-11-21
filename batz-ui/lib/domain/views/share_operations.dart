@@ -4,15 +4,15 @@ import '../ledger/ledger_exception.dart';
 import '../ledger/share_classification.dart';
 import 'year_view.dart';
 
-/// Answering the shares to classify (decision H5 of phase 4).
+/// Answering the shares to classify.
 extension ShareOperations on Ledger {
   /// Classifies the shares of the lines [lineIds] that fall in [year] in
   /// [categoryId], a category of that year which can hold transactions and
   /// has the nature of their category of origin: one modification for a
-  /// whole group or for one line. The answer is kept per line and year
-  /// (principle 7: a computed identifier), with the category of origin it
-  /// was given for. A year whose tree is still the copy to come gets it in
-  /// the same modification, as with a first transaction (H5).
+  /// whole group or for one line. The answer is kept per line and year (a
+  /// computed identifier), with the category of origin it was given for. A
+  /// year whose tree is still the copy to come gets it in the same
+  /// modification, as with a first transaction.
   Modification classifyShares(int year, Iterable<String> lineIds, String categoryId) {
     final tree = views.treeOf(year);
     if (tree == null) throw const LedgerException(LedgerError.noTree);

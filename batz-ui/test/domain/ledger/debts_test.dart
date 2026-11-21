@@ -84,7 +84,7 @@ void main() {
   });
 
   test('the line « Dettes » is, at any date, the sum of the debts not repaid that count that day: on me doit adds, '
-      'je dois takes away (specification, phase 5)', () async {
+      'je dois takes away', () async {
     await create('a', debt(amount: 20000, basisPoints: 5000, event: d(2026, 3, 1)), today: d(2026, 3, 5));
     await create('b', debt(amount: 8000, direction: DebtDirection.iOwe), today: d(2026, 3, 10));
     await create(
@@ -137,7 +137,7 @@ void main() {
       for (var date = d(2025, 12, 31); date.isBefore(d(2027, 1, 2)); date = date.addDays(1)) {
         var expected = 0;
         for (final debt in debts) {
-          // Decision H5, read literally.
+          // The rule, read literally.
           final from = debt.eventDate ?? debt.enteredOn;
           final until = debt.receivedDate ?? debt.checkedOn;
           final open = !debt.repaid || (until != null && date.isBefore(until));

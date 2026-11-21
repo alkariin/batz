@@ -1,5 +1,5 @@
 // The ZIP of the export: the seventeen CSV files and LISEZMOI.txt, its dated
-// name, read back by the library and by another tool (step 7.2 of phase 7).
+// name, read back by the library and by another tool.
 import 'dart:convert';
 import 'dart:io';
 

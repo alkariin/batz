@@ -90,14 +90,14 @@ void main() {
       'category; the view chosen is kept on the device', (tester) async {
     await open(tester, const Size(500, 1100));
 
-    // Home: the key figures of the year, in the economic view (H8).
+    // Home: the key figures of the year, in the economic view.
     expect(text(tester, 'keyExpenses'), '700.00');
     expect(text(tester, 'keyIncome'), "5'000.00");
     expect(text(tester, 'keySavings'), "4'300.00");
     await tester.tap(find.byKey(const Key('keyFigures')));
     await settle(tester);
 
-    // The screen opens on the economic view the first time (H7): 700 of the
+    // The screen opens on the economic view the first time: 700 of the
     // 2'100 concern this year, shown as a cost without a sign.
     expect(find.widgetWithText(AppBar, 'Année'), findsOneWidget);
     expect(text(tester, 'yearExpenses'), '700.00');
@@ -144,7 +144,7 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await settle(tester);
 
-    // The next year shows the rest, with the tree its copy will give (H6).
+    // The next year shows the rest, with the tree its copy will give.
     await tester.tap(find.byKey(const Key('yearPick')));
     await settle(tester);
     await tester.tap(find.text('${year + 1}').last);
@@ -163,7 +163,7 @@ void main() {
     await settle(tester);
     expect(find.byKey(const ValueKey('yearLine-rent')), findsNothing);
 
-    // The last view chosen on this device comes back (H7).
+    // The last view chosen on this device comes back.
     await tapNav(tester, 'Accueil');
     await tapNav(tester, 'Année');
     expect(text(tester, 'yearExpenses'), '700.00');

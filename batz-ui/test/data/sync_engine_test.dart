@@ -97,7 +97,7 @@ void main() {
     expect(report.clockOffset.inSeconds, closeTo(7 * 60, 2));
   });
 
-  group('first exchange (H1)', () {
+  group('first exchange', () {
     test('both hold data with no origin in common: the question, before anything is exchanged', () async {
       final serverBefore = await server.journal.entries();
       await expectLater(engine.run(fake, pairingId: 'p'), throwsA(isA<UnrelatedDataException>()));

@@ -12,10 +12,10 @@ import '../transactions/transaction_detail_page.dart';
 import '../transactions/transaction_texts.dart';
 import '../year/year_texts.dart';
 
-/// « Parts à classer » (decision H5): the shares carried to a year that has
-/// no category of the same name, grouped by category of origin and year.
-/// One answer serves a group; a line can be answered alone. Nothing waits on
-/// it: meanwhile the shares count in « À classer ».
+/// « Parts à classer »: the shares carried to a year that has no category of
+/// the same name, grouped by category of origin and year. One answer serves
+/// a group; a line can be answered alone. Nothing waits on it: meanwhile the
+/// shares count in « À classer ».
 class SharesPage extends StatelessWidget {
   const SharesPage({super.key, this.year});
 

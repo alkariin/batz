@@ -11,12 +11,11 @@ import (
 	"time"
 )
 
-// DefaultBackups is how many copies of the database are kept (specification,
-// chapter 14).
+// DefaultBackups is how many copies of the database are kept.
 const DefaultBackups = 12
 
 // Backups writes dated copies of the database into a directory and keeps
-// the latest ones (principle 5 of phase 3).
+// the latest ones.
 type Backups struct {
 	db   *sql.DB
 	dir  string

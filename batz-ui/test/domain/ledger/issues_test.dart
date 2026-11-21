@@ -14,7 +14,7 @@ void main() {
     expect(sample().issues, isEmpty);
   });
 
-  test('two categories of one year with the same name, compared as names are (H1 of phase 1)', () {
+  test('two categories of one year with the same name, compared as names are', () {
     final l = Ledger(
       categories: [
         _g,

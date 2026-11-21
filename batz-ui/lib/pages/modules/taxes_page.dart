@@ -21,10 +21,10 @@ String taxName(AppLocalizations l, TaxKind tax) => switch (tax) {
 String _rate(int value) => formatScaledPercent(value, 4);
 String _percent(int value) => formatScaledPercent(value, 2);
 
-/// Plus › Analyses › « Impôts » (step 6.3, decision H4 of phase 6): a fiscal
-/// year, its five lines with their total rate and amount, the total and its
-/// share of the salary, the marginal rate, the control against what the
-/// economic view counts in the taxes category; the summary of every year.
+/// Plus › Analyses › « Impôts »: a fiscal year, its five lines with their
+/// total rate and amount, the total and its share of the salary, the
+/// marginal rate, the control against what the economic view counts in the
+/// taxes category; the summary of every year.
 class TaxesPage extends StatefulWidget {
   const TaxesPage({super.key});
 

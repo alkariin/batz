@@ -10,7 +10,7 @@ import 'dart:io';
 /// The directories it creates, the binary built and the data of the servers,
 /// are deleted when the test file ends ([cleanUp]): each test file builds
 /// its own binary of 38 MB, which filled the disk of the development machine
-/// once (step 5.5 of phase 5).
+/// once.
 class LocalServer {
   LocalServer._(this.dataDir, this.port, this._process, this._logs);
 

@@ -236,7 +236,7 @@ void main() {
     expect(c.state.error, contains('INTERNAL'));
   });
 
-  group('first exchange (H1)', () {
+  group('first exchange', () {
     setUp(() async => server.journal.write(Modification.set('note', 'theirs', {'title': 'Coop'})));
 
     test('unrelated data: the question; automatic exchanges wait for the answer', () async {

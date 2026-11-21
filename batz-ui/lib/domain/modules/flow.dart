@@ -1,7 +1,7 @@
-/// The flow diagram of a year (specification, 4.7; decision H3 of phase 6):
-/// from the income, on the left, to the taxes, the expenses and the savings,
-/// on the right, with the amounts of the « Année » screen in the view shown.
-/// Computed when its screen opens, never stored (principles 2 and 8).
+/// The flow diagram of a year: from the income, on the left, to the taxes,
+/// the expenses and the savings, on the right, with the amounts of the «
+/// Année » screen in the view shown. Computed when its screen opens, never
+/// stored.
 library;
 
 import '../ledger/category.dart';

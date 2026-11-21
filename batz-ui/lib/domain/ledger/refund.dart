@@ -3,19 +3,18 @@ import 'ledger.dart';
 import 'ledger_exception.dart';
 import 'transaction.dart';
 
-/// Refunds attached to an expense (specification, 4.2; principle 5 and
-/// decisions H3 and H4 of phase 4), apart from the ledger's core. The
+/// Refunds attached to an expense, apart from the ledger's core. The
 /// journal keeps only the link, on the line of the refund; while it leads
 /// to a validated expense, the refund takes its category and its period
 /// ([Ledger.refundedExpenseOf]).
 extension RefundOperations on Ledger {
   /// Attaches the refund [transactionId] to the expense line
-  /// [expenseLineId] (decision H4): money that came in, not a transfer,
-  /// entered by hand or imported, to a validated expense of any account and
-  /// any year. An imported line to validate is validated by it. The line
-  /// keeps a category of its own, the one of the same name as the expense's
-  /// in the tree of its payment year when there is one, and its payment date
-  /// as period: they serve if the link breaks.
+  /// [expenseLineId]: money that came in, not a transfer, entered by hand or
+  /// imported, to a validated expense of any account and any year. An
+  /// imported line to validate is validated by it. The line keeps a category
+  /// of its own, the one of the same name as the expense's in the tree of
+  /// its payment year when there is one, and its payment date as period:
+  /// they serve if the link breaks.
   Modification attachRefund(String transactionId, String expenseLineId) {
     final t = transactions[transactionId];
     if (t == null) throw const LedgerException(LedgerError.unknownTransaction);
@@ -52,7 +51,7 @@ extension RefundOperations on Ledger {
 
   /// Attaches the imported line [transactionId] to the expense line
   /// [expenseLineId] and sets its description and note, in one
-  /// modification: the third choice of the validation screen (H4).
+  /// modification: the third choice of the validation screen.
   Modification validateAsRefund(
     String transactionId,
     String expenseLineId, {
@@ -98,10 +97,10 @@ extension RefundOperations on Ledger {
   ];
 
   /// The validated refunds whose link no longer leads to a validated
-  /// expense (principle 6): the expense or its statement was deleted, it was
-  /// classified otherwise, or the refund is no longer money that came in.
-  /// They count with their own category and date, and are listed in the
-  /// tasks until they are detached or attached again.
+  /// expense: the expense or its statement was deleted, it was classified
+  /// otherwise, or the refund is no longer money that came in. They count
+  /// with their own category and date, and are listed in the tasks until
+  /// they are detached or attached again.
   List<LedgerTransaction> get brokenRefunds =>
       [
         for (final t in transactions.values)

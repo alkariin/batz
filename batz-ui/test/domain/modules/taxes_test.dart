@@ -17,7 +17,7 @@ import 'salary_test.dart' show exampleSheet;
 
 Matcher throwsLedger(LedgerError error) => throwsA(isA<LedgerException>().having((e) => e.error, 'error', error));
 
-/// The fiscal year 2026 of the example of the plan.
+/// The fiscal year 2026 of the reference example.
 const exampleTaxYear = TaxYearDraft(
   year: 2026,
   taxableWealth: 20000000,

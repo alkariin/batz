@@ -1,14 +1,12 @@
-/// The balances of the accounts (specification, 4.3; plan of phase 5,
-/// rules of calculation and decisions H1 to H4).
+/// The balances of the accounts.
 ///
-/// Computed at each load from what the user entered, never stored
-/// (principle 1 of phase 5): the journal holds only the declared balances.
-/// One calculation gives the balance of an account at any date (principle
-/// 2): the last point at or before that date, plus the movements dated after
-/// it, up to that date included. The expected balance of a declared balance,
-/// and its value variation, are that same calculation from the point
-/// before. Every date is the end of its day. The rules are described in
-/// docs/features.md, « Wealth ».
+/// Computed at each load from what the user entered, never stored: the
+/// journal holds only the declared balances. One calculation gives the
+/// balance of an account at any date: the last point at or before that date,
+/// plus the movements dated after it, up to that date included. The expected
+/// balance of a declared balance, and its value variation, are that same
+/// calculation from the point before. Every date is the end of its day. The
+/// rules are described in docs/features.md, « Wealth ».
 library;
 
 import 'package:equatable/equatable.dart';
@@ -22,7 +20,7 @@ import '../ledger/transaction.dart';
 
 /// A known balance of an account at the end of a day: a declared balance,
 /// or the opening balance of the account's first statement, the day before
-/// it starts (decision H2).
+/// it starts.
 class BalancePoint extends Equatable {
   BalancePoint.declared(DeclaredBalance this.declared)
     : date = declared.date,
@@ -50,7 +48,7 @@ class BalancePoint extends Equatable {
 }
 
 /// What a transaction changes on one account: its amount on its own
-/// account, its opposite on the counterpart of a transfer (principle 5).
+/// account, its opposite on the counterpart of a transfer.
 class Movement extends Equatable {
   const Movement(this.transaction, this.amount, {required this.arrival});
 
@@ -85,8 +83,8 @@ class BalanceStep {
   /// for the first point, those before it, which it includes.
   final List<Movement> movements;
 
-  /// The value variation (specification, 4.3): the declared balance minus
-  /// the balance expected, dated the day of the declaration.
+  /// The value variation: the declared balance minus the balance
+  /// expected, dated the day of the declaration.
   int? get variation => expected == null ? null : point.amount - expected!;
 }
 
@@ -124,13 +122,13 @@ class AccountBalances {
   final _sums = <int>[];
 
   /// Whether the account can have a balance: it exists and is not a debts
-  /// account, whose debts table gives the wealth instead (decision H5).
+  /// account, whose debts table gives the wealth instead.
   bool get hasOwnBalance => account != null && account!.type != AccountType.debts;
 
   BalancePoint? get firstPoint => points.isEmpty ? null : points.first;
   BalancePoint? get lastPoint => points.isEmpty ? null : points.last;
 
-  /// The last declared balance, for the reminder of old balances (H7).
+  /// The last declared balance, for the reminder of old balances.
   DeclaredBalance? get lastDeclared {
     for (final point in points.reversed) {
       if (point.declared case final declared?) return declared;
@@ -226,8 +224,8 @@ class Balances {
   final Ledger ledger;
 
   /// The other account of [transaction] when it is a transfer, validated or
-  /// proposed: a line to validate counts as its rules propose it (principle
-  /// 5 of phase 5, principle 3 of phase 3), as in the annual view.
+  /// proposed: a line to validate counts as its rules propose it, as in the
+  /// annual view.
   String? counterpartOf(LedgerTransaction transaction) {
     if (transaction.isValidated) return transaction.counterpartAccountId;
     final proposal = ledger.proposalOf(transaction);

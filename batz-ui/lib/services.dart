@@ -51,8 +51,8 @@ class AppServices {
       database: database,
       journal: journal,
       secrets: secrets,
-      // The app is behind the lock of the device on Android only
-      // (specification, chapter 9).
+      // The app is behind the lock of the device on Android
+      // only.
       deviceLock: Platform.isAndroid ? SystemDeviceLock() : null,
     );
   }
@@ -77,8 +77,8 @@ class AppServices {
   final FileAccess files;
 
   /// Today on this device's calendar: the day balances may be declared up
-  /// to, debts are entered and checked, and the wealth is seen (phase 5).
-  /// Tests set the day.
+  /// to, debts are entered and checked, and the wealth is seen. Tests set
+  /// the day.
   final CalendarDate Function() today;
 
   /// The lock of the device the app stands behind; null where there is
@@ -86,6 +86,6 @@ class AppServices {
   final DeviceLock? deviceLock;
 
   /// The clock of this device, read when the app leaves the screen and
-  /// when it comes back (decision H3 of phase 7). Tests set it.
+  /// when it comes back. Tests set it.
   final DateTime Function() now;
 }

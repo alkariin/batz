@@ -44,15 +44,15 @@ func (d Date) Before(o Date) bool {
 
 // Line is one movement of a statement.
 type Line struct {
-	// Date is the booking date (decision H2 of phase 3).
+	// Date is the booking date.
 	Date Date `json:"date"`
 	// Amount is signed: positive for a credit, negative for a debit.
 	Amount int64 `json:"amount"`
 	// RawText is the bank's text, its lines separated by "\n", page
 	// footers removed. The rules of the app read it, never the label.
 	RawText string `json:"rawText"`
-	// Label is the short label (decision H3): the text without its generic
-	// lines, or the whole text.
+	// Label is the short label: the text without its generic lines, or the
+	// whole text.
 	Label string `json:"label"`
 	// Balance is the balance printed after this line, when there is one.
 	Balance *int64 `json:"balance,omitempty"`
@@ -95,7 +95,7 @@ const (
 	CheckClosingBalance = "closingBalance"
 )
 
-// Currency is the only one batz knows (specification, chapter 2).
+// Currency is the only one batz knows.
 const Currency = "CHF"
 
 var (

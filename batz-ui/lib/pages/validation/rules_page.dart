@@ -7,8 +7,8 @@ import '../ledger_cubit.dart';
 import 'rule_form_page.dart';
 import 'validation_texts.dart';
 
-/// Plus › Règles de classement: the mapping rules of a year (specification,
-/// 4.5), those whose target is unusable marked.
+/// Plus › Règles de classement: the mapping rules of a year, those whose
+/// target is unusable marked.
 class RulesPage extends StatefulWidget {
   const RulesPage({super.key, this.initialYear});
 

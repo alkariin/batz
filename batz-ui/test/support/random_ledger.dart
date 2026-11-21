@@ -11,7 +11,7 @@ import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/domain/period_model.dart';
 
 /// The years a random ledger has amounts in: trees for 2026 and 2027, none
-/// for 2028 and 2029, shown with the copy of 2027 (decision H6).
+/// for 2028 and 2029, shown with the copy of 2027.
 const randomYears = [2026, 2027, 2028, 2029];
 
 /// A ledger drawn at random from [r], built in memory as the repository
@@ -162,7 +162,7 @@ Ledger randomLedger(Random r, {int transactions = 300}) {
     }
     list.add(LedgerTransaction(id: id, accountId: 'cash', date: date, amount: amount));
     // One line in fifteen was written by another device with another
-    // amount than the transaction's (step 5.0 of phase 5).
+    // amount than the transaction's.
     final gap = r.nextInt(15) == 0 ? (amount > 0 ? 1 : -1) * (1 + r.nextInt(500)) : 0;
     lines.add(
       TransactionLine(

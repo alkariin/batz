@@ -5,9 +5,8 @@ import 'subscriptions.dart';
 import 'taxes.dart';
 import 'vacations.dart';
 
-/// What the user entered in the modules (phase 6), as read from the derived
-/// tables: everything else a module shows is computed when its screen opens
-/// (principles 2 and 8 of phase 6).
+/// What the user entered in the modules, as read from the derived tables:
+/// everything else a module shows is computed when its screen opens.
 class ModuleRecords {
   ModuleRecords({
     Iterable<ModuleSetting> settings = const [],
@@ -48,7 +47,7 @@ class ModuleRecords {
   }
 
   /// The sheets by year, each with its deductions; a deduction whose sheet
-  /// is missing is left out (rule 2 of phase 1).
+  /// is missing is left out.
   static Map<int, SalarySheet> _sheets(Iterable<SalarySheet> sheets, Iterable<SalaryDeduction> deductions) {
     final bySheet = <String, List<SalaryDeduction>>{};
     for (final d in deductions) {

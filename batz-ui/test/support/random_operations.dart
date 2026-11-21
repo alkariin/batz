@@ -39,11 +39,11 @@ Modification? randomOperation(Ledger l, Random r, String id) {
   final entries = l.transactions.values.where((t) => !t.isTransfer && t.line != null).toList();
   CalendarDate date() => CalendarDate(year, 1 + r.nextInt(12), 1 + r.nextInt(28));
 
-  // The operations of phase 4, now and then.
+  // Redistribution rules, refunds and answers, now and then.
   if (r.nextInt(100) < 12) return _phase4Operation(l, r, id, year);
-  // The operations of phase 5, now and then.
+  // Declared balances and debts, now and then.
   if (r.nextInt(100) < 10) return _phase5Operation(l, r, id);
-  // The operations of phase 6, now and then.
+  // Module settings and entries, now and then.
   if (r.nextInt(100) < 10) return _phase6Operation(l, r, id);
 
   // Weighted: mostly entries and their corrections, like real use.
@@ -140,8 +140,8 @@ Modification? randomOperation(Ledger l, Random r, String id) {
   }
 }
 
-/// The operations of phase 4: redistribution rules, refunds attached and
-/// detached, answers to the shares to classify.
+/// The operations of the annual view: redistribution rules, refunds attached
+/// and detached, answers to the shares to classify.
 Modification? _phase4Operation(Ledger l, Random r, String id, int year) {
   final roll = r.nextInt(3);
   if (roll == 0) return _refundOperation(l, r);
@@ -200,10 +200,10 @@ Modification? _refundOperation(Ledger l, Random r) {
   return l.attachRefund(refund.id, _pick(r, expenses));
 }
 
-/// The operations of phase 5: declared balances, declared, modified and
-/// deleted, on any account (the detailed account, a debts account and a
-/// date to come are refused); debts, created, modified, checked and
-/// unchecked, split and deleted.
+/// The operations of the wealth: declared balances, declared, modified and
+/// deleted, on any account (the detailed account, a debts account and a date to
+/// come are refused); debts, created, modified, checked and unchecked, split
+/// and deleted.
 Modification? _phase5Operation(Ledger l, Random r, String id) {
   final today = CalendarDate(2026, 11, 20);
   CalendarDate date() => CalendarDate(2025 + r.nextInt(2), 1 + r.nextInt(12), 1 + r.nextInt(28));
@@ -242,7 +242,7 @@ Modification? _debtOperation(Ledger l, Random r, String id, CalendarDate today, 
   };
 }
 
-/// The operations of phase 6: the settings and the entries of the modules.
+/// The operations of the modules: their settings and their entries.
 Modification? _phase6Operation(Ledger l, Random r, String id) {
   final year = 2025 + r.nextInt(3);
   CalendarDate date() => CalendarDate(year, 1 + r.nextInt(12), 1 + r.nextInt(28));

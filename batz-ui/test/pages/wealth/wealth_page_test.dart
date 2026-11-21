@@ -50,7 +50,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('the « Fortune » screen shows the accounts, the curve and the table of the example of the plan', (
+  testWidgets('the « Fortune » screen shows the accounts, the curve and the table of the reference example', (
     tester,
   ) async {
     final today = CalendarDate(2027, 1, 15);
@@ -172,7 +172,7 @@ void main() {
     expect(find.byKey(const Key('wealthNoTree')), findsOneWidget);
     expect(text(tester, 'explain-added'), "+15'000.00");
     expect(text(tester, 'explain-change'), "+15'000.00");
-    expect(find.byKey(const ValueKey('explain-outside')), findsNothing, reason: 'shown only when not zero (H3)');
+    expect(find.byKey(const ValueKey('explain-outside')), findsNothing, reason: 'shown only when not zero');
   });
 
   testWidgets('declaring a balance shows its value variation, which the history keeps', (tester) async {

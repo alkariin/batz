@@ -1,7 +1,7 @@
-// The data of phase 4 between devices, through a real batz-web: the
+// The data of the annual view between devices, through a real batz-web: the
 // redistribution rules, the refunds attached and the answers given on one
-// device reach another, which computes the same views; copying a tree on
-// two devices offline gives the same redistribution rules.
+// device reach another, which computes the same views; copying a tree on two
+// devices offline gives the same redistribution rules.
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/refund.dart';

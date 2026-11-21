@@ -7,9 +7,8 @@ import 'account.dart';
 import 'ledger.dart';
 import 'ledger_exception.dart';
 
-/// Journal entity and fields of a declared balance (specification, 4.3 and
-/// chapter 6, « BalanceDeclaration »): the balance of an account at the end
-/// of a day, entered by the user (decision H1 of phase 5).
+/// Journal entity and fields of a declared balance: the balance of an
+/// account at the end of a day, entered by the user.
 abstract final class BalanceFields {
   static const entity = 'balance';
   static const accountId = 'accountId';
@@ -32,9 +31,9 @@ class DeclaredBalance extends Equatable {
   List<Object?> get props => [id, accountId, date, amount];
 }
 
-/// Identifier of the balance of [accountId] on [date]: computed (principle 7
-/// of phase 5), so that declaring twice the same day replaces the balance,
-/// on one device or on two.
+/// Identifier of the balance of [accountId] on [date]: computed, so that
+/// declaring twice the same day replaces the balance, on one device or on
+/// two.
 String balanceId(String accountId, CalendarDate date) => derivedId('balance/$accountId/${date.encode()}');
 
 /// The declared balances of a [Ledger] and their operations, apart from the
@@ -52,7 +51,7 @@ extension BalanceOperations on Ledger {
   /// reason: an unknown account; the detailed account, whose statements
   /// give the balance; a debts account, which has no balance of its own; a
   /// date after [today]. An archived account accepts one: declaring 0 takes
-  /// it out of the wealth (decision H4).
+  /// it out of the wealth.
   Modification declareBalance(String accountId, CalendarDate date, int amount, {required CalendarDate today}) {
     _checkBalance(accountId, date, today);
     return Modification.set(BalanceFields.entity, balanceId(accountId, date), {

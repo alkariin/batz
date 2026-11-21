@@ -11,11 +11,11 @@ import '../ledger_texts.dart';
 import 'classify_page.dart';
 import 'validation_texts.dart';
 
-/// The validation of imported lines (step 3.6), in two parts: the lines to
-/// complete, one by one, with their whole bank text; the proposed lines,
-/// with their proposal and the rule that gives it, corrected if need be and
-/// confirmed in bulk. Everything is local: it works offline and can be left
-/// at any time.
+/// The validation of imported lines, in two parts: the lines to complete,
+/// one by one, with their whole bank text; the proposed lines, with their
+/// proposal and the rule that gives it, corrected if need be and confirmed
+/// in bulk. Everything is local: it works offline and can be left at any
+/// time.
 class ValidationPage extends StatelessWidget {
   const ValidationPage({super.key});
 

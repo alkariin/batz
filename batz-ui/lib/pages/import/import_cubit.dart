@@ -31,7 +31,7 @@ enum ImportStep {
   /// The statement is refused: see [ImportState.refusal].
   refused,
 
-  /// The first statement of the account: the user confirms it (H7).
+  /// The first statement of the account: the user confirms it.
   confirmFirst,
 
   /// The statement is imported: see [ImportState.result].
@@ -103,11 +103,10 @@ class PendingImport extends Equatable {
 /// app.
 typedef ImportTransportFactory = ImportTransport Function(Pairing pairing);
 
-/// The import of a statement (step 3.5): it starts with a synchronisation;
-/// the server reads and checks the file; the app checks the continuity from
-/// its journal (H1) and writes the statement and its lines in one
-/// modification, after a confirmation for the first statement of an account
-/// (H7).
+/// The import of a statement: it starts with a synchronisation; the server
+/// reads and checks the file; the app checks the continuity from its
+/// journal and writes the statement and its lines in one modification,
+/// after a confirmation for the first statement of an account.
 class ImportCubit extends Cubit<ImportState> {
   ImportCubit({required this._sync, required this._ledger, required this._server, ImportTransportFactory? transport})
     : _transport = transport ?? _client,
@@ -139,7 +138,7 @@ class ImportCubit extends Cubit<ImportState> {
   /// Sends [pdf] for the account [accountId], checks it and imports it, or
   /// asks to confirm the first statement of the account.
   Future<void> importFile(String accountId, Uint8List pdf) async {
-    // Already imported? The journal says so without asking the server (H1).
+    // Already imported? The journal says so without asking the server.
     final fingerprint = sha256.convert(pdf).toString();
     if (_ledger.state.ledger.statements.containsKey(statementId(accountId, fingerprint))) {
       emit(
@@ -186,7 +185,7 @@ class ImportCubit extends Cubit<ImportState> {
     await _integrate(PendingImport(accountId, response), confirmed: false);
   }
 
-  /// The user confirmed the first statement of the account (H7).
+  /// The user confirmed the first statement of the account.
   Future<void> confirmFirst() async {
     final pending = state.pending;
     if (state.step != ImportStep.confirmFirst || pending == null) return;

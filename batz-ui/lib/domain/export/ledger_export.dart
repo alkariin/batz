@@ -1,8 +1,7 @@
-/// The files of an export (decisions H1 and H2 of phase 7): everything
-/// entered or imported, as it is today, one CSV file per subject. The export
-/// only reads the ledger (principle 1) and sorts every file by an order of
-/// its own data, so that two synchronised devices write the same files
-/// (principle 3).
+/// The files of an export: everything entered or imported, as it is today,
+/// one CSV file per subject. The export only reads the ledger and sorts
+/// every file by an order of its own data, so that two synchronised devices
+/// write the same files.
 library;
 
 import 'dart:typed_data';

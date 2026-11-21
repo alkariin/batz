@@ -13,10 +13,10 @@ import '../wealth/wealth_page.dart';
 import '../year/year_page.dart';
 import '../year/year_texts.dart';
 
-/// The key figures of the current year on the home screen (decision H8 of
-/// phase 4): income, expenses and savings in the economic view, with access
-/// to the « Année » screen; and the net wealth of the day (step 5.4), with
-/// access to « Fortune ». Nothing while there is neither.
+/// The key figures of the current year on the home screen: income, expenses
+/// and savings in the economic view, with access to the « Année » screen;
+/// and the net wealth of the day, with access to « Fortune ». Nothing while
+/// there is neither.
 class KeyFiguresCard extends StatelessWidget {
   const KeyFiguresCard({super.key});
 

@@ -113,9 +113,8 @@ class Ledger {
   /// redistribution.dart for their operations).
   final Map<String, RedistributionRule> redistributions;
 
-  /// The answers given for shares to classify, by line and year (decision
-  /// H5 of phase 4): their identifier is computed from both, one record per
-  /// pair.
+  /// The answers given for shares to classify, by line and year: their
+  /// identifier is computed from both, one record per pair.
   final Map<(String, int), ShareClassification> shareClassifications;
 
   /// The balances declared on every account, by identifier (see
@@ -143,9 +142,9 @@ class Ledger {
 
   // ------------------------------------------------------------------ issues
 
-  /// The inconsistencies of decision H4 of phase 2, by year, then accounts:
-  /// categories with the same name in one year, several detailed accounts,
-  /// detached categories.
+  /// The inconsistencies a merge can leave, by year, then accounts: categories
+  /// with the same name in one year, several detailed accounts, detached
+  /// categories.
   late final List<LedgerIssue> issues = () {
     final result = <LedgerIssue>[];
     final years = {...trees.keys, ...forest.yearsWithDetached}.toList()..sort();
@@ -184,10 +183,9 @@ class Ledger {
     return Modification.set(AccountFields.entity, id, _accountFields(draft));
   }
 
-  /// Removes the account [id] (decision H5 of phase 1): deleted if no
-  /// transaction and no declared balance use it, archived otherwise
-  /// (decision H4 of phase 5). An archived account stays in the wealth
-  /// with its last balance.
+  /// Removes the account [id]: deleted if no transaction and no
+  /// declared balance use it, archived otherwise. An archived account
+  /// stays in the wealth with its last balance.
   AccountRemoval removeAccount(String id) {
     final account = accounts[id];
     if (account == null) throw const LedgerException(LedgerError.unknownAccount);
@@ -207,7 +205,7 @@ class Ledger {
 
   /// A second detailed account is refused. An account that already is one
   /// stays editable even when a merge left another detailed account
-  /// (decision H4 of phase 2: never blocking).
+  /// (never blocking).
   void _checkAccount(String id, AccountDraft draft) {
     if (draft.name.trim().isEmpty) throw const LedgerException(LedgerError.nameRequired);
     final alreadyDetailed = accounts[id]?.isDetailed ?? false;
@@ -221,8 +219,8 @@ class Ledger {
   /// Years that have a tree, in increasing order.
   List<int> get yearsWithTree => trees.keys.toList()..sort();
 
-  /// The year whose tree [year] copies (decision H6): the closest earlier
-  /// year that has one, or null if there is none.
+  /// The year whose tree [year] copies: the closest earlier year that has
+  /// one, or null if there is none.
   int? sourceYearFor(int year) {
     int? best;
     for (final candidate in trees.keys) {
@@ -255,10 +253,9 @@ class Ledger {
     ]);
   }
 
-  /// Creates the tree of [year]: a copy of the tree of [sourceYearFor], of
-  /// its mapping rules and of its redistribution rules, or, without one, the two empty groups « Revenus » and
-  /// « Dépenses » (decisions H4 and H6). Copies get computed identifiers
-  /// (design rule 4); a copied rule targets the copy of its category.
+  /// Creates the tree of [year]: a copy of the tree of [sourceYearFor], of its mapping rules and of its
+  /// redistribution rules, or, without one, the two empty groups « Revenus » and « Dépenses ». Copies get
+  /// computed identifiers; a copied rule targets the copy of its category.
   Modification createTree(int year) {
     if (trees.containsKey(year)) throw const LedgerException(LedgerError.treeExists);
     return Modification(_treeChanges(year));
@@ -312,7 +309,7 @@ class Ledger {
       }
     }
     // Redistribution rules follow the copy too, with their categories
-    // transposed (step 4.2).
+    // transposed.
     for (final rule in redistributionsOf(year)) {
       for (final field in {
         RedistributionFields.year: rule.year,
@@ -328,8 +325,7 @@ class Ledger {
 
   /// Adds the category [id] to the tree of [year], under [parentId], or as a
   /// top-level group of [nature] when [parentId] is null. Refused if the name
-  /// is already used in the year (decision H1) or if the parent holds
-  /// transactions (decision H2).
+  /// is already used in the year or if the parent holds transactions.
   Modification addCategory(
     String id, {
     required int year,
@@ -363,12 +359,12 @@ class Ledger {
 
   /// Moves [id] under [parentId], or to the top level with [nature] when
   /// [parentId] is null. Refused if it would create a loop, or if the new
-  /// parent holds transactions (decision H2). The category goes last among
-  /// its new siblings.
+  /// parent holds transactions. The category goes last among its new
+  /// siblings.
   ///
-  /// A detached category (decision H4 of phase 2) is moved the same way, to
-  /// the top level or under a category of its year's tree: this is how it is
-  /// put back, with the categories below it.
+  /// A detached category is moved the same way, to the top level or under a
+  /// category of its year's tree: this is how it is put back, with the
+  /// categories below it.
   Modification moveCategory(String id, {String? parentId, CategoryNature? nature}) {
     final category = categories[id] ?? forest.detached[id]?.category;
     if (category == null) throw const LedgerException(LedgerError.unknownCategory);
@@ -411,9 +407,8 @@ class Ledger {
     return changes.isEmpty ? null : Modification(changes);
   }
 
-  /// Deletes [id] (decision H5): refused while it has children, or while
-  /// transactions, mapping rules or redistribution rules (decision H2 of
-  /// phase 4) use it, with their number.
+  /// Deletes [id]: refused while it has children, or while transactions,
+  /// mapping rules or redistribution rules use it, with their number.
   Modification removeCategory(String id) {
     final category = _category(id);
     if (trees[category.year]!.hasChildren(id)) throw const LedgerException(LedgerError.categoryHasChildren);
@@ -466,7 +461,7 @@ class Ledger {
   }
 
   /// The transactions that answer [query], by payment date, most recent
-  /// first (Transactions: search and filters, specification 4.6).
+  /// first (Transactions: search and filters).
   List<LedgerTransaction> search(TransactionQuery query) {
     final words = normalizeText(query.text).split(' ').where((w) => w.isNotEmpty).toList();
     final category = query.categoryName == null ? null : normalizeName(query.categoryName!);
@@ -518,7 +513,7 @@ class Ledger {
 
   /// The names of the categories that hold transactions, in any year, for
   /// the category filter: categories of the same name are the same between
-  /// years (specification, 4.1).
+  /// years.
   List<String> get categoryNamesForFilter {
     final byNormalized = <String, String>{};
     for (final tree in trees.values) {
@@ -552,10 +547,9 @@ class Ledger {
   /// The category of the line of [transaction], if it is one of the tree of
   /// its payment year.
   ///
-  /// For a line to validate, the category the rules propose (principle 3).
-  /// For a refund attached to an expense, while the link holds, the category
-  /// of the expense, in the tree of the expense's year (principle 5 of
-  /// phase 4).
+  /// For a line to validate, the category the rules propose. For a refund
+  /// attached to an expense, while the link holds, the category of the
+  /// expense, in the tree of the expense's year.
   Category? categoryOf(LedgerTransaction transaction) {
     if (transaction.isValidated && transaction.line != null) {
       if (refundedExpenseOf(transaction, transaction.line!) case final expense?) {
@@ -575,9 +569,9 @@ class Ledger {
       for (final line in t.lines) line.id: (line: line, transaction: t),
   };
 
-  /// Whether [line] of [transaction] is a validated expense: money that
-  /// left, in a category of expense of the tree of its payment year (decision
-  /// H4 of phase 4: what a refund can be attached to).
+  /// Whether [line] of [transaction] is a validated expense: money that left,
+  /// in a category of expense of the tree of its payment year (what a refund
+  /// can be attached to).
   bool isExpenseLine(LedgerTransaction transaction, TransactionLine line) {
     if (!transaction.isValidated || transaction.isTransfer || line.amount >= 0) return false;
     final tree = trees[transaction.date.year];
@@ -589,11 +583,11 @@ class Ledger {
   }
 
   /// The expense line that [line] of [transaction] refunds, while the link
-  /// holds (principle 5 of phase 4): the refund is validated money that came
-  /// in, not a transfer, and its link leads to a validated expense. Null
-  /// otherwise: the line then counts with its own category and period. A
-  /// link is followed one step only: a chain made by two devices leads to a
-  /// refund, never an expense, and has no effect.
+  /// holds: the refund is validated money that came in, not a transfer, and
+  /// its link leads to a validated expense. Null otherwise: the line then
+  /// counts with its own category and period. A link is followed one step
+  /// only: a chain made by two devices leads to a refund, never an expense,
+  /// and has no effect.
   LineOf? refundedExpenseOf(LedgerTransaction transaction, TransactionLine line) {
     final id = line.refundedLineId;
     if (id == null || !transaction.isValidated || transaction.isTransfer || line.amount <= 0) return null;
@@ -621,8 +615,8 @@ class Ledger {
 
   /// The category a refund attached to an expense of category
   /// [expenseCategoryId] keeps as its own, in the tree of [year], its
-  /// payment year (step 4.3): the category of the same name, else
-  /// [current] when it can still hold it, else none.
+  /// payment year: the category of the same name, else [current] when
+  /// it can still hold it, else none.
   String? ownRefundCategory(int year, String? expenseCategoryId, String? current) {
     final tree = treeOrPreview(year);
     final expenseCategory = categories[expenseCategoryId];
@@ -633,7 +627,7 @@ class Ledger {
 
   /// Records a manual expense or income, [id] with its line [lineId]. It is
   /// validated at once. If the year of the payment has no tree yet, the tree
-  /// is created by the same modification (decision H6).
+  /// is created by the same modification.
   Modification recordEntry(String id, String lineId, EntryDraft draft) {
     _checkManualAccount(draft.accountId, transfer: false);
     final changes = [
@@ -674,8 +668,8 @@ class Ledger {
       end = draft.periodEnd ?? (draft.periodStart == null ? draft.date : start);
       if (end.isBefore(start)) throw const LedgerException(LedgerError.periodInvalid);
     } else {
-      // A refund attached to an expense (decision H4 of phase 4): its own
-      // category and its date serve only if the link breaks.
+      // A refund attached to an expense: its own category and its date
+      // serve only if the link breaks.
       if (draft.direction != Direction.inflow) throw const LedgerException(LedgerError.refundNotInflow);
       final expense = linesById[refunded];
       if (expense == null || expense.transaction.id == id || !isExpenseLine(expense.transaction, expense.line)) {
@@ -709,7 +703,7 @@ class Ledger {
   /// Records a transfer: one transaction on the account the money leaves,
   /// with the receiving account as counterpart, and no category. Like any
   /// first transaction of a year without a tree, it creates that tree in the
-  /// same modification (step 1.3 of the phase 1 plan, decision H6).
+  /// same modification.
   Modification recordTransfer(String id, TransferDraft draft) {
     return Modification([
       ..._transferChanges(id, draft, previous: null),
@@ -811,18 +805,17 @@ class Ledger {
 
   /// Imports [extracted], read by the server from the file of [fingerprint],
   /// into the detailed account [accountId]: the statement and all its lines,
-  /// to validate, in one modification (principle 1 of phase 3), with the
-  /// copy of the category tree of each year a line opens. Identifiers are
-  /// computed from the account, the fingerprint and the rank of each line
-  /// (principle 2): two devices importing the same file write the same
-  /// records.
+  /// to validate, in one modification, with the copy of the category tree of
+  /// each year a line opens. Identifiers are computed from the account, the
+  /// fingerprint and the rank of each line: two devices importing the same
+  /// file write the same records.
   ///
   /// Refused as a whole, nothing written, with a [StatementRefusedException]:
   /// the account is not detailed or reads another format; the statement was
-  /// already imported (decision H1); its IBAN differs from the account's
-  /// earlier statements; it does not follow the latest one (the day after it
-  /// and its closing balance are expected); its lines do not add up to the
-  /// difference of its balances; it is too large for one modification.
+  /// already imported; its IBAN differs from the account's earlier
+  /// statements; it does not follow the latest one (the day after it and its
+  /// closing balance are expected); its lines do not add up to the difference
+  /// of its balances; it is too large for one modification.
   StatementImport importStatement(String accountId, ExtractedStatement extracted, {required String fingerprint}) {
     final account = accounts[accountId];
     if (account == null) throw const LedgerException(LedgerError.unknownAccount);
@@ -857,7 +850,7 @@ class Ledger {
       throw const StatementRefusedException(LedgerError.statementSumMismatch);
     }
 
-    // Imported again after a deletion (H8): its records come back, reset.
+    // Imported again after a deletion: its records come back, reset.
     final again = deletedStatementIds.contains(id);
     final changes = <FieldChange>[
       for (final field in {
@@ -896,9 +889,9 @@ class Ledger {
     return StatementImport(modification: Modification(changes), statementId: id, first: last == null);
   }
 
-  /// Deletes the statement [id] and all its lines (decision H8): only the
-  /// latest statement of its account, so that the others stay contiguous. It
-  /// can then be imported again.
+  /// Deletes the statement [id] and all its lines: only the latest statement
+  /// of its account, so that the others stay contiguous. It can then be
+  /// imported again.
   Modification deleteLastStatement(String id) {
     final statement = statements[id];
     if (statement == null) throw const LedgerException(LedgerError.unknownStatement);
@@ -965,7 +958,7 @@ class Ledger {
   ];
 
   /// What the rules say of each line to validate, recomputed at each load
-  /// from its raw text and the rules of its payment year (principle 3).
+  /// from its raw text and the rules of its payment year.
   late final Map<String, RuleOutcome> proposals = () {
     final byYear = <int, List<MappingRule>>{};
     for (final rule in rules.values) {
@@ -1097,10 +1090,9 @@ class Ledger {
 
   // -------------------------------------------------------------- validation
 
-  /// Classifies the imported line [id] (principle 4): writes its category and
-  /// period, or its counterpart account, and validates it. Correcting a
-  /// proposal is classifying it (decision H4); a validated line stays
-  /// modifiable the same way.
+  /// Classifies the imported line [id]: writes its category and period, or
+  /// its counterpart account, and validates it. Correcting a proposal is
+  /// classifying it; a validated line stays modifiable the same way.
   Modification classify(String id, Classification classification) {
     final transaction = transactions[id];
     if (transaction == null || !transaction.isImported) throw const LedgerException(LedgerError.unknownTransaction);
@@ -1124,7 +1116,7 @@ class Ledger {
     ]);
   }
 
-  /// The lines to validate whose rules compete (decision H5).
+  /// The lines to validate whose rules compete.
   int get conflictingLines => proposals.values.whereType<Conflict>().length;
 
   /// Confirms the proposals of the lines [ids] that have one (the others are
@@ -1189,8 +1181,8 @@ class Ledger {
       LineFields.periodStart: start.encode(),
       LineFields.periodEnd: end.encode(),
       // A line deleted with its statement, or by a transfer, comes back; a
-      // category chosen detaches a refund (step 4.3), and a line brought
-      // back must not bring back an old link.
+      // category chosen detaches a refund, and a line brought back must
+      // not bring back an old link.
       if (t.line == null) deletedField: false,
       if (t.line == null || t.line!.refundedLineId != null) LineFields.refundedLineId: null,
     }.entries) {
@@ -1231,7 +1223,7 @@ class AccountRemoval {
 }
 
 /// Where a line stands in the validation; only « validated » is stored, the
-/// other two are deduced from the rules (principle 3 of phase 3).
+/// other two are deduced from the rules.
 enum ValidationState { toComplete, proposed, validated }
 
 /// Whether [keyword] can be a keyword of a rule: a regular expression

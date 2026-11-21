@@ -82,7 +82,7 @@ void main() {
   });
 
   test('on a declared account, the gap with the expected balance is a value variation; income, expenses and every '
-      'amount of the annual view are the same before and after the declaration (specification, phase 5)', () async {
+      'amount of the annual view are the same before and after the declaration', () async {
     await h.apply(
       (l) => l.recordEntry(
         'salary',
@@ -311,7 +311,7 @@ void main() {
   });
 
   test('an account with declared balances is archived rather than deleted, stays in the wealth with its last balance, '
-      'and still accepts a balance, of 0 to leave it (H4)', () async {
+      'and still accepts a balance, of 0 to leave it', () async {
     await declare('savings', d(2026, 3, 31), 150000);
     final removal = (await h.ledger()).removeAccount('savings');
     expect((removal.archives, removal.transactionCount, removal.balanceCount), (true, 0, 1));

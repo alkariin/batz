@@ -15,10 +15,9 @@ import '../year/year_page.dart';
 import 'account_page.dart';
 import 'wealth_curve.dart';
 
-/// « Fortune » (specification, 4.6; step 5.4): the net wealth of the day and
-/// its change since 31 December, the accounts by type with their balance
-/// and its date, the debts, the monthly curve, and the table that explains
-/// the change of a year.
+/// « Fortune »: the net wealth of the day and its change since 31 December,
+/// the accounts by type with their balance and its date, the debts, the
+/// monthly curve, and the table that explains the change of a year.
 class WealthPage extends StatefulWidget {
   const WealthPage({super.key});
 
@@ -187,9 +186,9 @@ class _WealthPageState extends State<WealthPage> {
     );
   }
 
-  /// The table of the year chosen (H8): each line computed for itself;
-  /// the lines by account unfold, « Non classé » leads to the validation,
-  /// the results to the « Année » screen.
+  /// The table of the year chosen: each line computed for itself; the
+  /// lines by account unfold, « Non classé » leads to the validation, the
+  /// results to the « Année » screen.
   Widget _explanation(BuildContext context, AppLocalizations l, Wealth wealth, List<int> years) {
     final theme = Theme.of(context);
     final year = years.contains(_year) ? _year! : years.last;
@@ -330,7 +329,7 @@ class _WealthPageState extends State<WealthPage> {
               signed(table.unclassified),
               onTap: () => _push(const ValidationPage()),
             ),
-            // « Hors fortune » only when it is not zero (H3).
+            // « Hors fortune » only when it is not zero.
             if (table.outsideWealthTotal != 0)
               line(
                 'outside',

@@ -1,5 +1,5 @@
-// « Plus › Réglages › Exporter les données » (step 7.2 of phase 7): saved,
-// then cancelled; the journal does not move.
+// « Plus › Réglages › Exporter les données »: saved, then cancelled; the
+// journal does not move.
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart' show ZipDecoder;
@@ -98,7 +98,7 @@ void main() {
       "Export annulé : rien n'a été enregistré.",
     );
 
-    // Neither export wrote to the journal (principle 1).
+    // Neither export wrote to the journal.
     final after = (await tester.runAsync(services.journal.entries))!;
     expect(after.map((e) => e.hlc), before.map((e) => e.hlc));
   });

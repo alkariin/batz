@@ -1,7 +1,7 @@
-// Convergence: devices apply random operations of the app, those of phase 5
+// Convergence: devices apply random operations of the app, wealth and modules
 // included, with skewed clocks, and exchange through a real batz-web in a
-// random order, sometimes cut in the middle. Once everything is exchanged, every table is identical
-// on every device.
+// random order, sometimes cut in the middle. Once everything is exchanged,
+// every table is identical on every device.
 import 'dart:math';
 
 import 'package:batz/data/server/server_client.dart';
@@ -88,8 +88,7 @@ void main() {
       for (final d in devices.skip(1)) {
         expect(await d.state(), reference, reason: '${d.name}, seed $seed');
       }
-      // The same data give the same CSV files, byte for byte (principle 3
-      // of phase 7).
+      // The same data give the same CSV files, byte for byte.
       Future<Map<String, List<int>>> csv(SimDevice d) async => {
         for (final f in exportFiles(await d.ledger.ledger())) f.name: f.bytes,
       };

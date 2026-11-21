@@ -12,8 +12,8 @@ import '../validation/validation_page.dart';
 import 'import_cubit.dart';
 import 'statements_page.dart';
 
-/// Transactions › Importer un relevé (step 3.5): synchronisation, choice of
-/// the account and of the PDF, the server's reading and checks, the app's
+/// Transactions › Importer un relevé: synchronisation, choice of the
+/// account and of the PDF, the server's reading and checks, the app's
 /// checks, then the result or the reason of the refusal.
 class ImportPage extends StatelessWidget {
   const ImportPage({super.key});

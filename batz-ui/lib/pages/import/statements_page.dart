@@ -12,7 +12,7 @@ import '../ledger_texts.dart';
 
 /// The statements of a detailed account, latest first: period, balances,
 /// number of lines; the original PDF can be saved, the latest statement
-/// deleted (decision H8).
+/// deleted.
 class StatementsPage extends StatelessWidget {
   const StatementsPage({super.key, required this.accountId});
 

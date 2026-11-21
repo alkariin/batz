@@ -19,9 +19,8 @@ String _period(AppLocalizations l, Tranche t) => [
   if (t.end case final end?) l.subscriptionsUntil(DateField.text(end)),
 ].join(' ');
 
-/// Plus › « Abonnements » (step 6.6, decision H8 of phase 6): the current
-/// subscriptions with their cost per month and per year and the totals,
-/// then those to come and those ended.
+/// Plus › « Abonnements »: the current subscriptions with their cost per
+/// month and per year and the totals, then those to come and those ended.
 class SubscriptionsPage extends StatelessWidget {
   const SubscriptionsPage({super.key});
 

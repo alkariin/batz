@@ -7,10 +7,9 @@ import '../../l10n/app_localizations.dart';
 /// `MM.YYYY`.
 String monthLabel(int year, int month) => '${month.toString().padLeft(2, '0')}.$year';
 
-/// The monthly curve of the wealth (decision H8), drawn by the app
-/// (principle 9 of phase 5): a line through the end of each month. Touching
-/// or dragging along it shows the month nearest and its amount; the last
-/// month is shown first.
+/// The monthly curve of the wealth, drawn by the app: a line through the
+/// end of each month. Touching or dragging along it shows the month nearest
+/// and its amount; the last month is shown first.
 class WealthCurve extends StatefulWidget {
   const WealthCurve({super.key, required this.months});
 

@@ -59,9 +59,9 @@ type ImportResult struct {
 	New bool
 }
 
-// Imports reads the statements the apps send (principle 1 of phase 3): the
-// server extracts and checks, keeps the file, and answers with the lines. It
-// writes nothing to the journal; the app does.
+// Imports reads the statements the apps send: the server extracts and
+// checks, keeps the file, and answers with the lines. It writes nothing to
+// the journal; the app does.
 type Imports struct {
 	extractor StatementExtractor
 	files     StatementFiles
@@ -77,8 +77,8 @@ func NewImports(extractor StatementExtractor, files StatementFiles, backups Data
 // Import extracts and checks pdf. A refused statement returns the error of
 // the extraction (statement.Refusal tells its code) and nothing is kept. An
 // accepted one the server did not hold yet is kept under its fingerprint,
-// after a copy of the database (principle 5); sending the same file again
-// gives the same answer and writes nothing.
+// after a copy of the database; sending the same file again gives the same
+// answer and writes nothing.
 func (i *Imports) Import(ctx context.Context, pdf []byte) (ImportResult, error) {
 	fingerprint := Fingerprint(pdf)
 	st, err := i.extractor.Extract(ctx, pdf)

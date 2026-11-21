@@ -17,8 +17,8 @@ import '../../support/module_checks.dart';
 
 Matcher throwsLedger(LedgerError error) => throwsA(isA<LedgerException>().having((e) => e.error, 'error', error));
 
-/// « Électricité » under « Logement » of 2026, and the three invoices of
-/// the example of the plan with their kWh.
+/// « Électricité » under « Logement » of 2026, and the three invoices of the
+/// reference example with their kWh.
 Future<Ledger> electricityExample(LedgerHarness h) async {
   await h.apply((l) => l.addCategory('power', year: 2026, name: 'Électricité', parentId: 'housing'));
   await h.apply(

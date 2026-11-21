@@ -1,5 +1,4 @@
-/// The trips (specification, 4.7 « Vacances »; decisions H5 and H6 of
-/// phase 6): the lines of the vacation category, every year together,
+/// The trips: the lines of the vacation category, every year together,
 /// grouped into trips by their periods; what the user enters about a trip
 /// is kept on a sheet attached to its first line, or on a manual line.
 library;
@@ -29,10 +28,10 @@ abstract final class TripSheetFields {
   static const amount = 'amount';
 }
 
-/// The largest gap, in days, between two lines of one trip (H5).
+/// The largest gap, in days, between two lines of one trip.
 const tripGapDays = 15;
 
-/// Identifier of the sheet attached to [lineId]: computed (principle 5).
+/// Identifier of the sheet attached to [lineId]: computed.
 String tripSheetId(String lineId) => derivedId('trip-sheet/$lineId');
 
 class TripSheet extends Equatable {
@@ -76,7 +75,7 @@ class Trip {
   /// have one, or the manual line.
   final TripSheet? sheet;
 
-  /// Other sheets attached to lines of the trip (H6): signalled, to delete.
+  /// Other sheets attached to lines of the trip: signalled, to delete.
   final List<TripSheet> extraSheets;
 
   bool get isManual => lines.isEmpty;
@@ -113,7 +112,7 @@ class Vacations {
   /// Every trip, the most recent first.
   final List<Trip> trips;
 
-  /// Sheets whose line is in no trip: it left the category, or is gone (H6).
+  /// Sheets whose line is in no trip: it left the category, or is gone.
   final List<TripSheet> orphanSheets;
 
   /// The lines of the category, every year.
@@ -146,8 +145,8 @@ extension VacationOperations on Ledger {
         final byPayment = a.paid.compareTo(b.paid);
         return byPayment != 0 ? byPayment : a.ownLineId.compareTo(b.ownLineId);
       });
-    // Lines joined one to the next by gaps of 15 days or less (H5): sorted
-    // by start, a line joins the trip while it starts at most 15 days after
+    // Lines joined one to the next by gaps of 15 days or less: sorted by
+    // start, a line joins the trip while it starts at most 15 days after
     // the latest end so far.
     final groups = <List<ViewLine>>[];
     CalendarDate? end;
@@ -208,7 +207,7 @@ extension VacationOperations on Ledger {
     });
   }
 
-  /// Creates or modifies the manual line [id]: a trip by itself (H6). Refused
+  /// Creates or modifies the manual line [id]: a trip by itself. Refused
   /// without a date or an amount, or with days below 1.
   Modification saveManualTrip(String id, {required String place, int? days, CalendarDate? date, int? amount}) {
     if (date == null) throw const LedgerException(LedgerError.tripDateRequired);
@@ -231,5 +230,5 @@ extension VacationOperations on Ledger {
   }
 }
 
-/// Identifier of a new manual line: random (principle 5).
+/// Identifier of a new manual line: random.
 String newManualTripId() => newId();

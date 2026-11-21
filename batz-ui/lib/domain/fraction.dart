@@ -1,6 +1,5 @@
 /// An exact rational number, always in lowest terms with a positive
-/// denominator. No floating point is used in calculations (design rule 6 of
-/// phase 1).
+/// denominator. No floating point is used in calculations.
 class Fraction implements Comparable<Fraction> {
   factory Fraction(int numerator, [int denominator = 1]) =>
       Fraction._normalised(BigInt.from(numerator), BigInt.from(denominator));

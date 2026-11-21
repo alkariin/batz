@@ -26,7 +26,7 @@ class ShellScope extends InheritedWidget {
 /// Width from which navigation moves from the bottom bar to a side rail.
 const wideLayoutBreakpoint = 600.0;
 
-/// The five top-level sections (specification, 4.6).
+/// The five top-level sections.
 enum Section { home, transactions, year, wealth, more }
 
 class _Destination {
@@ -64,7 +64,7 @@ class _AppShellState extends State<AppShell> {
   Section _selected = Section.home;
 
   /// Synchronises when the app comes back to the foreground, and only
-  /// periodically while it is shown (decision H2 of phase 2).
+  /// periodically while it is shown.
   late final AppLifecycleListener _lifecycle;
 
   @override
@@ -83,7 +83,7 @@ class _AppShellState extends State<AppShell> {
   void _select(int index) => setState(() => _selected = Section.values[index]);
 
   /// The icon of [section]: Transactions carries the number of lines to
-  /// validate (specification, 4.4).
+  /// validate.
   Widget _icon(Section section, IconData icon, int toValidate) {
     if (section != Section.transactions || toValidate == 0) return Icon(icon);
     return Badge(key: const Key('toValidateBadge'), label: Text('$toValidate'), child: Icon(icon));

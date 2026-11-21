@@ -9,8 +9,7 @@ import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 
 /// Creates or modifies a redistribution rule of a year: source, target and
-/// percentage (decision H2). The domain refuses a rule against H2 and says
-/// why.
+/// percentage. The domain refuses a rule it cannot apply and says why.
 class RedistributionFormPage extends StatefulWidget {
   const RedistributionFormPage({super.key, required this.year, this.rule});
 

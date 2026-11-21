@@ -61,7 +61,7 @@ Ledger sample() {
 List<String> names(CategoryTree tree) => [for (final c in tree.ordered) '${'  ' * tree.depthOf(c.id)}${c.name}'];
 
 void main() {
-  group('names (H1)', () {
+  group('names', () {
     test('compare without case, accents or surrounding spaces', () {
       expect(normalizeName('Impôts'), normalizeName(' impots '));
       expect(normalizeName('ÉLECTRICITÉ'), 'electricite');
@@ -105,7 +105,7 @@ void main() {
     });
   });
 
-  group('trees (H4, H6, rule 4)', () {
+  group('trees', () {
     test('the first tree starts from two empty groups', () {
       final l = apply(Ledger.empty, Ledger.empty.createTree(2026));
       final tree = l.trees[2026]!;
@@ -180,7 +180,7 @@ void main() {
       expect(tree.rootOf('rent').id, expenses2026);
     });
 
-    test('only categories without children, below a group, hold transactions (H2)', () {
+    test('only categories without children, below a group, hold transactions', () {
       final tree = sample().trees[2026]!;
       expect(tree.canHoldTransactions('rent'), isTrue);
       expect(tree.canHoldTransactions('taxes'), isTrue);
@@ -246,7 +246,7 @@ void main() {
     });
   });
 
-  group('incomplete records are ignored (rule 2)', () {
+  group('incomplete records are ignored', () {
     test('missing parent, other year, loop, group without nature', () {
       final l = Ledger(
         categories: [
@@ -266,7 +266,7 @@ void main() {
     });
   });
 
-  group('detached categories (phase 2, H4)', () {
+  group('detached categories', () {
     Ledger detachedSample() => Ledger(
       categories: [
         const Category(id: 'g', year: 2026, name: 'Dépenses', nature: CategoryNature.expense),

@@ -13,8 +13,8 @@ String period(PeriodModel? model, CalendarDate payment, {int? months}) {
 }
 
 void main() {
-  // The table of decision H6, for a payment on 14 March 2026.
-  group('decision H6, payment on 14.3.2026', () {
+  // Every period model, for a payment on 14 March 2026.
+  group('period models, payment on 14.3.2026', () {
     final payment = d(2026, 3, 14);
     test('without model: the payment date', () => expect(period(null, payment), '14.3.2026 – 14.3.2026'));
     test('previous month', () => expect(period(PeriodModel.previousMonth, payment), '1.2.2026 – 28.2.2026'));

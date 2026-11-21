@@ -47,7 +47,7 @@ void main() {
 
   test('the fictitious statements are imported one after the other, their lines to validate', () async {
     final first = await import(h, january);
-    expect(first.first, isTrue, reason: 'the first statement of the account (H7)');
+    expect(first.first, isTrue, reason: 'the first statement of the account');
     var ledger = await h.ledger();
     final statement = ledger.statements[first.statementId]!;
     expect(statement.id, statementId('bank', january.fingerprint));
@@ -65,7 +65,7 @@ void main() {
       expect(t.id, importedTransactionId(statement.id, rank));
       expect((t.accountId, t.date, t.amount), ('bank', line.date, line.amount));
       expect(t.rawText, line.rawText);
-      expect(t.description, line.label, reason: 'the short label (H3)');
+      expect(t.description, line.label, reason: 'the short label');
       expect((t.status, t.statementId, t.statementRank), (TransactionStatus.toValidate, statement.id, rank));
       expect((t.counterpartAccountId, t.note), (null, ''));
       expect(t.lines, isEmpty);
@@ -109,7 +109,7 @@ void main() {
     },
   );
 
-  test('a statement already imported is refused, from the journal (H1)', () async {
+  test('a statement already imported is refused, from the journal', () async {
     await import(h, january);
     expect((await refusal(h, january)).error, LedgerError.statementAlreadyImported);
   });

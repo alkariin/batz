@@ -37,7 +37,7 @@ class _EntryFormPageState extends State<EntryFormPage> {
   late String? _categoryId = _existing?.line?.categoryId;
   late Direction? _direction = _existing == null ? null : (_existing.amount < 0 ? Direction.outflow : Direction.inflow);
 
-  /// The expense line this entry refunds (decision H4), when attached.
+  /// The expense line this entry refunds, when attached.
   late String? _refundedLineId = _existing?.line?.refundedLineId;
   late bool _refund = _refundedLineId != null;
 
@@ -65,7 +65,7 @@ class _EntryFormPageState extends State<EntryFormPage> {
   ];
 
   /// A new payment year: the category becomes the one of the same name in
-  /// that year's tree, if any (specification, 4.1).
+  /// that year's tree, if any.
   void _dateChanged(Ledger ledger) {
     final date = DateField.read(_date);
     if (date == null || date.year == _year) {

@@ -15,11 +15,10 @@ import '../../support/module_checks.dart';
 
 Matcher throwsLedger(LedgerError error) => throwsA(isA<LedgerException>().having((e) => e.error, 'error', error));
 
-/// « Vacances » under the expenses of 2026, and the example of the plan: a
-/// flight of 640.00 paid on 12.3 for 10.7 – 24.7 (or for its payment day
-/// only, without [flightPeriod]); a hotel of 1'200.00 on 11.7; a restaurant
-/// of 85.00 on 20.7; 100.00 refunded on 5.8, attached to the hotel; 300.00 on
-/// 9.8.
+/// « Vacances » under the expenses of 2026, and the reference example: a flight
+/// of 640.00 paid on 12.3 for 10.7 – 24.7 (or for its payment day only, without
+/// [flightPeriod]); a hotel of 1'200.00 on 11.7; a restaurant of 85.00 on 20.7;
+/// 100.00 refunded on 5.8, attached to the hotel; 300.00 on 9.8.
 Future<Ledger> vacationExample(LedgerHarness h, {bool flightPeriod = true}) async {
   await h.apply(
     (l) => l.addCategory('trips', year: 2026, name: 'Vacances', parentId: defaultGroupId(2026, CategoryNature.expense)),

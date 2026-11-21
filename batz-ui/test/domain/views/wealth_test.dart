@@ -67,7 +67,7 @@ void main() {
   setUp(() async => h = await LedgerHarness.open());
   tearDown(() => h.close());
 
-  test('the example of the plan gives each line of the table, and 12\'359.00 of change of the wealth', () async {
+  test('the reference example gives each line of the table, and 12\'359.00 of change of the wealth', () async {
     final today = d(2027, 1, 15);
     final ledger = await referenceExample(h.apply, today: today);
     final wealth = ledger.wealth(today);
@@ -126,7 +126,7 @@ void main() {
     checkWealth(wealth, reason: 'reference');
   });
 
-  test('the table of the current year stops today: what is paid later does not count yet (H8)', () async {
+  test('the table of the current year stops today: what is paid later does not count yet', () async {
     final today = d(2026, 7, 31);
     final ledger = await referenceExample(h.apply, today: d(2027, 1, 15));
     final wealth = ledger.wealth(today);
@@ -283,7 +283,7 @@ void main() {
   });
 
   test('a balance declared more than six months ago is old, on an account not archived, neither detailed nor a debts '
-      'account; an account without a declared balance is not (H7)', () async {
+      'account; an account without a declared balance is not', () async {
     await seedLedger(h);
     await h.apply((l) => l.createAccount('savings', const AccountDraft(name: 'Épargne', type: AccountType.savings)));
     await h.apply((l) => l.createAccount('old', const AccountDraft(name: 'Ancien', type: AccountType.other)));
@@ -313,7 +313,7 @@ void main() {
     expect(wealth.oldBalances.map((o) => o.account.id), ['savings']);
   });
 
-  test('an archived account whose balance is 0 is no longer listed; with a balance, it stays (step 6.0)', () async {
+  test('an archived account whose balance is 0 is no longer listed; with a balance, it stays', () async {
     await seedLedger(h);
     await h.apply((l) => l.createAccount('savings', const AccountDraft(name: 'Épargne', type: AccountType.savings)));
     final today = d(2026, 11, 21);

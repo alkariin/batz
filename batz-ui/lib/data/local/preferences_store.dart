@@ -11,7 +11,7 @@ class PreferencesStore {
   final LocalDatabase _db;
 
   /// The view the « Année » screen opens on: the economic view the first
-  /// time, then the last one chosen on this device (decision H7).
+  /// time, then the last one chosen on this device.
   Future<ViewKind> viewKind() async {
     final row = await (_db.select(_db.localState)..where((s) => s.key.equals(_viewKindKey))).getSingleOrNull();
     return ViewKind.values.where((k) => k.name == row?.value).firstOrNull ?? ViewKind.economic;

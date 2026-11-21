@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/device_lock.dart';
 
-/// How long the app may leave the screen without locking (decision H3 of
-/// phase 7): strictly more than this locks it.
+/// How long the app may leave the screen without locking: strictly more
+/// than this locks it.
 const lockDelay = Duration(seconds: 60);
 
 /// Why the last attempt left the app locked.
@@ -19,7 +19,7 @@ class AppLockState extends Equatable {
     this.noScreenLock = false,
   });
 
-  /// While true, no screen of the app is drawn (principle 5 of phase 7).
+  /// While true, no screen of the app is drawn.
   final bool locked;
 
   /// The system dialog is open.
@@ -32,17 +32,17 @@ class AppLockState extends Equatable {
   final String? error;
 
   /// The device has no screen lock: the app is open, and the home screen
-  /// says so (decision H4).
+  /// says so.
   final bool noScreenLock;
 
   @override
   List<Object?> get props => [locked, unlocking, failure, error, noScreenLock];
 }
 
-/// The door in front of the screens (decisions H3 and H4 of phase 7): the
-/// app starts locked where the device has a lock to ask, and locks again
-/// when it comes back after more than [lockDelay] away. Without a
-/// [DeviceLock] (Windows, Ubuntu) there is no lock at all.
+/// The door in front of the screens: the app starts locked where the
+/// device has a lock to ask, and locks again when it comes back after
+/// more than [lockDelay] away. Without a [DeviceLock] (Windows, Ubuntu)
+/// there is no lock at all.
 class LockCubit extends Cubit<AppLockState> {
   LockCubit(this._lock, {required this._now}) : super(AppLockState(locked: _lock != null));
 

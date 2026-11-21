@@ -4,8 +4,7 @@ import '../calendar_date.dart';
 import '../ids.dart';
 import '../journal/journal_entry.dart';
 
-/// Journal entity and fields of an imported statement (specification,
-/// chapter 6).
+/// Journal entity and fields of an imported statement.
 abstract final class StatementFields {
   static const entity = 'statement';
   static const accountId = 'accountId';
@@ -65,7 +64,7 @@ class Statement extends Equatable {
 
 /// Identifier of the statement of [fingerprint] imported into [accountId]:
 /// computed, so that two devices importing the same file write the same
-/// records (principle 2 of phase 3).
+/// records.
 String statementId(String accountId, String fingerprint) => derivedId('statement/$accountId/$fingerprint');
 
 /// Identifier of the transaction of line [rank] (from 0) of a statement.
@@ -108,7 +107,7 @@ class ExtractedLine {
     this.balance,
   });
 
-  /// Booking date (decision H2 of phase 3).
+  /// Booking date.
   final CalendarDate date;
 
   /// Signed, in cents: positive when money comes in.
@@ -118,7 +117,7 @@ class ExtractedLine {
   /// rules.
   final String rawText;
 
-  /// The short label (decision H3): the initial description.
+  /// The short label: the initial description.
   final String label;
 
   /// The balance the statement prints after this line, if any.
@@ -134,7 +133,7 @@ class StatementImport {
   final String statementId;
 
   /// The first statement of the account: it sets the starting balance, and
-  /// no earlier statement can be imported afterwards (decision H7). The app
-  /// asks for confirmation before writing it.
+  /// no earlier statement can be imported afterwards. The app asks for
+  /// confirmation before writing it.
   final bool first;
 }

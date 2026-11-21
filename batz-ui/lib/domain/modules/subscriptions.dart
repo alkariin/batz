@@ -1,6 +1,5 @@
-/// Subscriptions (specification, 4.7; decision H8 of phase 6): informative,
-/// linked to nothing else. A subscription has tranches; a change of price or
-/// a resumption is a new tranche.
+/// Subscriptions: informative, linked to nothing else. A subscription has
+/// tranches; a change of price or a resumption is a new tranche.
 library;
 
 import 'package:equatable/equatable.dart';
@@ -50,7 +49,7 @@ class Tranche extends Equatable {
   final CalendarDate start;
   final CalendarDate? end;
 
-  /// The amount if monthly; the amount ÷ 12, to the cent, if yearly (H8).
+  /// The amount if monthly; the amount ÷ 12, to the cent, if yearly.
   int get monthlyCost => frequency == TrancheFrequency.monthly ? amount : _twelfth(amount);
 
   /// The amount × 12 if monthly; the amount if yearly.
@@ -145,7 +144,7 @@ class SubscriptionsAt {
   ];
 
   /// The sums of the monthly and of the yearly costs shown, current
-  /// subscriptions only (H8).
+  /// subscriptions only.
   int get monthlyTotal => inState(SubscriptionState.current).fold(0, (sum, s) => sum + s.trancheAt(date)!.monthlyCost);
   int get yearlyTotal => inState(SubscriptionState.current).fold(0, (sum, s) => sum + s.trancheAt(date)!.yearlyCost);
 }
@@ -190,9 +189,9 @@ extension SubscriptionOperations on Ledger {
     ]);
   }
 
-  /// Adds the tranche [trancheId] to [subscriptionId] (H8): the tranche
-  /// before it that has no end is closed the day before it starts. Refused,
-  /// with its reason: an amount of zero or less, an end before the start, a
+  /// Adds the tranche [trancheId] to [subscriptionId]: the tranche before
+  /// it that has no end is closed the day before it starts. Refused, with
+  /// its reason: an amount of zero or less, an end before the start, a
   /// tranche that overlaps another.
   Modification addTranche(String subscriptionId, String trancheId, TrancheDraft draft) {
     final subscription = _subscription(subscriptionId);

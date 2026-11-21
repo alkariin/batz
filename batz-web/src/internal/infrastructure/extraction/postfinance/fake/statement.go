@@ -40,8 +40,8 @@ type Entry struct {
 	Value  time.Time // value date; Date when zero
 	Amount int64     // signed cents: positive for a credit
 	Text   []string  // the lines of the « Texte » column
-	// Label is the short label the extraction must give (decision H3 of
-	// phase 3): the text without its generic lines.
+	// Label is the short label the extraction must give: the text
+	// without its generic lines.
 	Label string
 
 	// Printed is the amount printed instead of Amount, to corrupt a line:

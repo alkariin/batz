@@ -138,7 +138,7 @@ void main() {
     expect(find.byKey(const Key('importChoose')), findsOneWidget);
     expect(sync.requests, isNotEmpty, reason: 'the import starts with a synchronisation');
 
-    // The first statement of the account is confirmed (H7).
+    // The first statement of the account is confirmed.
     files.pick(jan);
     await choose(tester);
     expect(find.text('Premier relevé de ce compte'), findsOneWidget);
@@ -150,7 +150,7 @@ void main() {
       'Du 01.01.2026 au 31.01.2026\n27 lignes : 0 proposée, 27 à compléter.',
     );
 
-    // Already imported: refused from the journal, the server not asked (H1).
+    // Already imported: refused from the journal, the server not asked.
     final calls = imports.importCalls;
     files.pick(jan);
     await choose(tester);

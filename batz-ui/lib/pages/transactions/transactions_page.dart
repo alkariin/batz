@@ -16,7 +16,7 @@ import 'transfer_form_page.dart';
 
 /// Transactions: the lines to validate, then the list, most recent first,
 /// with a search by text and filters by account, period (year and month),
-/// category and status (specification, 4.6).
+/// category and status.
 class TransactionsPage extends StatefulWidget {
   const TransactionsPage({super.key});
 

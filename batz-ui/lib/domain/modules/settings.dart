@@ -1,6 +1,6 @@
-/// The category each module reads (specification, 4.7; decision H1 of
-/// phase 6): one name per module, the same for every year, looked up in the
-/// tree of each year as names are compared between years.
+/// The category each module reads: one name per module, the same for every
+/// year, looked up in the tree of each year as names are compared between
+/// years.
 library;
 
 import 'package:equatable/equatable.dart';
@@ -15,7 +15,7 @@ import '../views/year_view.dart';
 /// The modules linked to a category.
 enum ModuleKind { salary, taxes, vacations, electricity }
 
-/// The names used while the user has chosen none (H1).
+/// The names used while the user has chosen none.
 const defaultModuleCategoryNames = {
   ModuleKind.salary: 'Salaire',
   ModuleKind.taxes: 'Impôts',
@@ -23,8 +23,7 @@ const defaultModuleCategoryNames = {
   ModuleKind.electricity: 'Électricité',
 };
 
-/// Journal entity and fields of the setting of a module (specification,
-/// chapter 6, « ModuleSetting »).
+/// Journal entity and fields of the setting of a module.
 abstract final class ModuleSettingFields {
   static const entity = 'moduleSetting';
   static const module = 'module';
@@ -42,8 +41,8 @@ class ModuleSetting extends Equatable {
   List<Object?> get props => [id, module, categoryName];
 }
 
-/// Identifier of the setting of [module]: computed (principle 5), so that
-/// two devices naming the category write one record.
+/// Identifier of the setting of [module]: computed, so that two devices
+/// naming the category write one record.
 String moduleSettingId(ModuleKind module) => derivedId('module-setting/${module.name}');
 
 /// The settings of the modules and their operations.

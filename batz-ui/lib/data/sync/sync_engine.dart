@@ -49,8 +49,8 @@ void checkCompatibility(Health health) {
 
 /// The first exchange of a device that holds data with a server that holds
 /// others, with no origin in common: the user chooses between merging the
-/// two and replacing the device's data by the server's (decision H1 of
-/// phase 2). Nothing was exchanged.
+/// two and replacing the device's data by the server's. Nothing was
+/// exchanged.
 class UnrelatedDataException implements Exception {
   @override
   String toString() => 'UnrelatedDataException: the device and the server hold unrelated data';
@@ -138,8 +138,8 @@ class SyncEngine {
   }
 
   /// Replaces the data of this device by the server's, then exchanges as
-  /// usual (decision H1 of phase 2). The device takes a new journal
-  /// identifier. Nothing is erased unless the server answered first.
+  /// usual. The device takes a new journal identifier. Nothing is erased
+  /// unless the server answered first.
   Future<SyncReport> replace(SyncTransport transport, {required String pairingId}) async {
     final health = await transport.health();
     checkCompatibility(health);

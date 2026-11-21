@@ -9,9 +9,9 @@ import '../../l10n/app_localizations.dart';
 import '../ledger_cubit.dart';
 import '../transactions/transaction_texts.dart';
 
-/// Finds the expense a refund is attached to (decision H4): validated
-/// expenses of any account and any year, by text and by amount. Returns the
-/// identifier of its line.
+/// Finds the expense a refund is attached to: validated expenses of any
+/// account and any year, by text and by amount. Returns the identifier of
+/// its line.
 class RefundTargetPage extends StatefulWidget {
   const RefundTargetPage({super.key, this.excludeTransactionId});
 

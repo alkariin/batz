@@ -14,9 +14,9 @@ import 'module_category_tile.dart';
 
 String _kwh(int wh) => formatDecimal(wh, 3, trim: true);
 
-/// Plus › Analyses › « Électricité » (step 6.5, decision H7 of phase 6):
-/// per year, the price of the economic view, the kWh, the days covered and
-/// the three ratios; the lines of a year with their kWh.
+/// Plus › Analyses › « Électricité »: per year, the price of the economic
+/// view, the kWh, the days covered and the three ratios; the lines of a
+/// year with their kWh.
 class ElectricityPage extends StatelessWidget {
   const ElectricityPage({super.key});
 

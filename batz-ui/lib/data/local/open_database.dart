@@ -15,7 +15,7 @@ const databaseKeyName = 'database_key';
 
 /// The database file exists but its encryption key is gone (for example the
 /// system keystore was reset). The data cannot be read; it will be recovered
-/// from the server once synchronisation exists (phase 2).
+/// from the server once synchronisation exists.
 class DatabaseKeyLostException implements Exception {
   @override
   String toString() => 'DatabaseKeyLostException: the local database key is missing';
@@ -43,7 +43,7 @@ Future<String> obtainDatabaseKey(SecretStore secrets, {required bool databaseExi
 /// Opens the local database in [directory]. With [encrypt] (Android), the
 /// database is encrypted with SQLCipher under a key kept by the system;
 /// opening fails rather than fall back to an unencrypted database. Desktops
-/// rely on the protection of the operating system (specification, chapter 9).
+/// rely on the protection of the operating system.
 Future<LocalDatabase> openLocalDatabase({
   required Directory directory,
   required SecretStore secrets,

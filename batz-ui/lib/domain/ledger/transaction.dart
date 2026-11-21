@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../calendar_date.dart';
 import 'category.dart';
 
-/// Journal entity and fields of a transaction (specification, 4.2).
+/// Journal entity and fields of a transaction.
 abstract final class TransactionFields {
   static const entity = 'transaction';
   static const accountId = 'accountId';
@@ -33,26 +33,25 @@ abstract final class LineFields {
   static const periodStart = 'periodStart';
   static const periodEnd = 'periodEnd';
 
-  /// The line of the expense a refund is attached to (specification,
-  /// chapter 6; principle 5 of phase 4).
+  /// The line of the expense a refund is attached to.
   static const refundedLineId = 'refundedLineId';
 }
 
-/// What the journal records of a transaction's validation (principle 3 of
-/// phase 3): an imported line is to validate until the user validates it; a
-/// manual entry is validated at once. « Proposée » and « à compléter » are
-/// not stored: they are deduced from the rules of the year.
+/// What the journal records of a transaction's validation: an imported line
+/// is to validate until the user validates it; a manual entry is validated
+/// at once. « Proposée » and « à compléter » are not stored: they are
+/// deduced from the rules of the year.
 enum TransactionStatus { toValidate, validated }
 
-/// The type of a transaction, deduced, never stored (specification, 4.2).
+/// The type of a transaction, deduced, never stored.
 enum TransactionKind { expense, refund, income, transfer }
 
-/// Whether money enters or leaves the account (decision H3).
+/// Whether money enters or leaves the account.
 enum Direction { inflow, outflow }
 
-/// The direction a manual entry takes by default in a category of [nature]
-/// (decision H3): out of the account for an expense, in for an income. The
-/// user reverses it to enter a refund.
+/// The direction a manual entry takes by default in a category of
+/// [nature]: out of the account for an expense, in for an income. The user
+/// reverses it to enter a refund.
 Direction defaultDirection(CategoryNature nature) =>
     nature == CategoryNature.expense ? Direction.outflow : Direction.inflow;
 
@@ -167,8 +166,8 @@ class LedgerTransaction extends Equatable {
   ];
 }
 
-/// What the user enters for an expense or an income (decision H3): an
-/// amount without sign and a direction.
+/// What the user enters for an expense or an income: an amount
+/// without sign and a direction.
 class EntryDraft {
   const EntryDraft({
     required this.accountId,
@@ -201,8 +200,8 @@ class EntryDraft {
   final CalendarDate? periodStart;
   final CalendarDate? periodEnd;
 
-  /// The line of the expense this entry refunds (decision H4): it must be
-  /// money coming in; its period is then its payment date.
+  /// The line of the expense this entry refunds: it must be money coming
+  /// in; its period is then its payment date.
   final String? refundedLineId;
 }
 

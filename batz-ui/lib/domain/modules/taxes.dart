@@ -1,7 +1,7 @@
-/// Taxes by fiscal year (specification, 4.7; decision H4 of phase 6): five
-/// lines whose amounts the app computes from what the user enters, their
-/// total and its share of the salary, and a control against what the
-/// economic view of the year counts in the taxes category.
+/// Taxes by fiscal year: five lines whose amounts the app computes from
+/// what the user enters, their total and its share of the salary, and a
+/// control against what the economic view of the year counts in the taxes
+/// category.
 library;
 
 import 'package:equatable/equatable.dart';
@@ -61,9 +61,8 @@ const fullBaseRate = 1000000;
 /// bound of the marginal rate.
 const fullCoefficient = 10000;
 
-/// Identifiers computed from the year, and from the year and the tax
-/// (principle 5): two devices entering the same year write the same
-/// records.
+/// Identifiers computed from the year, and from the year and the
+/// tax: two devices entering the same year write the same records.
 String taxYearId(int year) => derivedId('tax-year/$year');
 String taxLineId(int year, TaxKind tax) => derivedId('tax-line/$year/${tax.name}');
 
@@ -94,7 +93,7 @@ class TaxLine extends Equatable {
 }
 
 /// [cents] × [baseRate] × [coefficient], rounded once to the cent, halves
-/// away from zero (principle 6).
+/// away from zero.
 int taxAmount(int cents, int baseRate, int coefficient) {
   final product = BigInt.from(cents) * BigInt.from(baseRate) * BigInt.from(coefficient);
   return _round(product, BigInt.from(fullBaseRate) * BigInt.from(fullCoefficient));
@@ -159,7 +158,7 @@ class TaxLineResult {
   final int amount;
 }
 
-/// A fiscal year, computed when its screen opens (principle 8).
+/// A fiscal year, computed when its screen opens.
 class TaxYearResult {
   const TaxYearResult({
     required this.year,

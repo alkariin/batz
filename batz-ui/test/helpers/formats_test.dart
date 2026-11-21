@@ -104,7 +104,7 @@ void main() {
     });
   });
 
-  group('scaled percentages (phase 6)', () {
+  group('scaled percentages', () {
     test('format with a fixed number of decimals', () {
       expect(formatScaledPercent(25000, 4), '2.5000 %');
       expect(formatScaledPercent(100750, 4), '10.0750 %');

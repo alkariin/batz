@@ -22,10 +22,10 @@ String flowNodeName(AppLocalizations l, FlowNode node) => switch (node.kind) {
   FlowNodeKind.salary || FlowNodeKind.taxes || FlowNodeKind.group => node.category!.name,
 };
 
-/// The flow diagram of a year (step 6.2, decision H3 of phase 6), opened
-/// from « Année » with its year and its view, which it can switch: bands
-/// from the income on the left to the taxes, the expenses and the savings
-/// on the right, each as thick as its amount, then the list of the nodes.
+/// The flow diagram of a year, opened from « Année » with its year and
+/// its view, which it can switch: bands from the income on the left to
+/// the taxes, the expenses and the savings on the right, each as thick as
+/// its amount, then the list of the nodes.
 class FlowPage extends StatefulWidget {
   const FlowPage({super.key, required this.year, required this.initialKind});
 

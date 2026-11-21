@@ -23,7 +23,7 @@ void main() {
     addTearDown(lock.close);
   });
 
-  /// The app opened and unlocked, as at 08:00:00 in the plan's example.
+  /// The app opened and unlocked, as at 08:00:00 in the reference example.
   Future<void> open() async {
     final unlocking = lock.unlock(_texts);
     phone.answer(const Unlocked());
@@ -40,7 +40,7 @@ void main() {
     return lock.returned();
   }
 
-  test('the example of the plan, line by line', () async {
+  test('the reference example, line by line', () async {
     // 08:00:00, the app opens: locked, then the home screen after the
     // fingerprint.
     expect(lock.state, const AppLockState(locked: true));

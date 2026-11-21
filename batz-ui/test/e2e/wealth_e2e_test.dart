@@ -1,7 +1,7 @@
-// The data of phase 5 between devices, through a real batz-web: declared
-// balances and debts entered on one device reach another, which computes
-// the same balances and the same open debts; two devices declaring the same
-// account the same day write one balance.
+// The data of the wealth between devices, through a real batz-web: declared
+// balances and debts entered on one device reach another, which computes the
+// same balances and the same open debts; two devices declaring the same account
+// the same day write one balance.
 import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/balance.dart';

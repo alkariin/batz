@@ -47,8 +47,8 @@ void main() {
     });
   });
 
-  // Decision H5 of phase 7: no picture of the last screen in the list of
-  // recent apps, from Android 13 on.
+  // No picture of the last screen in the list of recent apps, from Android 13
+  // on.
   test('the list of recent apps gets no picture of the last screen', () {
     final activity = File('android/app/src/main/kotlin/dev/batz/app/MainActivity.kt').readAsStringSync();
     expect(activity, contains('Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU'));

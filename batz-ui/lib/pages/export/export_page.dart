@@ -7,10 +7,10 @@ import '../../services.dart';
 import '../../version.dart';
 import '../ledger_cubit.dart';
 
-/// « Plus › Réglages › Exporter les données » (phase 7, H1 and H2): what the
-/// export holds, that the file is not encrypted, then the save dialog of
-/// the system. The export reads the ledger of this device; it writes
-/// nothing but the file the user saves (principle 1).
+/// « Plus › Réglages › Exporter les données »: what the export holds, that
+/// the file is not encrypted, then the save dialog of the system. The export
+/// reads the ledger of this device; it writes nothing but the file the user
+/// saves.
 class ExportPage extends StatefulWidget {
   const ExportPage({super.key});
 

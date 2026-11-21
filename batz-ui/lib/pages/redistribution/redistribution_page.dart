@@ -22,7 +22,7 @@ String redistributionProblemText(AppLocalizations l, RedistributionProblem probl
 };
 
 /// Plus › Redistribution: the redistribution rules of a year, those that do
-/// not apply marked with their reason (step 4.6).
+/// not apply marked with their reason.
 class RedistributionPage extends StatefulWidget {
   const RedistributionPage({super.key, this.initialYear});
 

@@ -165,7 +165,7 @@ void main() {
       final t = (await ledger(tester)).transactions[saving.id]!;
       expect((t.isValidated, t.counterpartAccountId, t.note), (true, 'savings', 'Épargne de janvier'));
 
-      // A validated line stays modifiable, from its detail (H4).
+      // A validated line stays modifiable, from its detail.
       await tester.tap(find.byType(BackButton).last);
       await settle(tester);
       await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Transactions')));
