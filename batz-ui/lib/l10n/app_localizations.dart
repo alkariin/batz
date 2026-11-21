@@ -3023,6 +3023,228 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Voir la fortune'**
   String get keyFiguresWealthOpen;
+
+  /// No description provided for @debtsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dettes'**
+  String get debtsTitle;
+
+  /// No description provided for @debtsEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune dette. Une dette compte dans la fortune du jour de l\'événement à la veille de sa réception.'**
+  String get debtsEmpty;
+
+  /// No description provided for @debtsOpen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvertes'**
+  String get debtsOpen;
+
+  /// No description provided for @debtsRepaid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursées'**
+  String get debtsRepaid;
+
+  /// No description provided for @debtsOwedToMe.
+  ///
+  /// In fr, this message translates to:
+  /// **'On me doit'**
+  String get debtsOwedToMe;
+
+  /// No description provided for @debtsIOwe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je dois'**
+  String get debtsIOwe;
+
+  /// No description provided for @debtsNet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Net, dans la fortune'**
+  String get debtsNet;
+
+  /// No description provided for @debtNew.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle dette'**
+  String get debtNew;
+
+  /// No description provided for @debtEdit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier la dette'**
+  String get debtEdit;
+
+  /// No description provided for @debtOwedToMe.
+  ///
+  /// In fr, this message translates to:
+  /// **'On me doit'**
+  String get debtOwedToMe;
+
+  /// No description provided for @debtIOwe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je dois'**
+  String get debtIOwe;
+
+  /// No description provided for @debtPerson.
+  ///
+  /// In fr, this message translates to:
+  /// **'Personne'**
+  String get debtPerson;
+
+  /// No description provided for @debtAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant'**
+  String get debtAmount;
+
+  /// No description provided for @debtPercent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pourcentage'**
+  String get debtPercent;
+
+  /// No description provided for @debtTotal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total : {amount}'**
+  String debtTotal(String amount);
+
+  /// No description provided for @debtEventDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de l\'événement'**
+  String get debtEventDate;
+
+  /// No description provided for @debtInvoiceDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de la facture'**
+  String get debtInvoiceDate;
+
+  /// No description provided for @debtRequestDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de la demande'**
+  String get debtRequestDate;
+
+  /// No description provided for @debtReceivedDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de réception'**
+  String get debtReceivedDate;
+
+  /// No description provided for @debtDescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Description'**
+  String get debtDescription;
+
+  /// No description provided for @debtRepaid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursée'**
+  String get debtRepaid;
+
+  /// No description provided for @debtDatesHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans date d\'événement, la dette compte du jour de sa saisie ; remboursée sans date de réception, jusqu\'à la veille du jour où elle est cochée.'**
+  String get debtDatesHint;
+
+  /// No description provided for @debtInvalidDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date invalide : jj.mm.aaaa, ou laissez vide.'**
+  String get debtInvalidDate;
+
+  /// No description provided for @debtSince.
+  ///
+  /// In fr, this message translates to:
+  /// **'depuis le {date}'**
+  String debtSince(String date);
+
+  /// No description provided for @debtReceivedOn.
+  ///
+  /// In fr, this message translates to:
+  /// **'reçue le {date}'**
+  String debtReceivedOn(String date);
+
+  /// No description provided for @debtCheckTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dette remboursée'**
+  String get debtCheckTitle;
+
+  /// No description provided for @debtCheckHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'La dette cesse de compter dans la fortune le jour de sa réception.'**
+  String get debtCheckHint;
+
+  /// No description provided for @debtCheck.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cocher remboursée'**
+  String get debtCheck;
+
+  /// No description provided for @debtUncheck.
+  ///
+  /// In fr, this message translates to:
+  /// **'Décocher'**
+  String get debtUncheck;
+
+  /// No description provided for @debtSplit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Scinder'**
+  String get debtSplit;
+
+  /// No description provided for @debtSplitTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Scinder la dette'**
+  String get debtSplitTitle;
+
+  /// No description provided for @debtSplitHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant de la première part, pris sur le total de {total}. Le reste forme une deuxième ligne, avec les mêmes personne, sens, dates et description.'**
+  String debtSplitHint(String total);
+
+  /// No description provided for @debtSplitFirst.
+  ///
+  /// In fr, this message translates to:
+  /// **'Première part'**
+  String get debtSplitFirst;
+
+  /// No description provided for @debtSplitDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dette scindée en {first} et {second}.'**
+  String debtSplitDone(String first, String second);
+
+  /// No description provided for @debtDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la dette de {person} ?'**
+  String debtDeleteConfirm(String person);
+
+  /// No description provided for @debtDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dette supprimée.'**
+  String get debtDeleted;
+
+  /// No description provided for @accountDebtsOpen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le tableau des dettes'**
+  String get accountDebtsOpen;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

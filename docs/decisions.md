@@ -1656,3 +1656,49 @@ balance is declared, the limit of six months to the day included; the net
 wealth among the key figures opens « Fortune ». Screenshots of the new
 screens, taken locally with the real fonts at phone and desktop sizes, were
 checked by eye; they are not kept.
+
+### 5.5 The debts table
+
+**Decisions.**
+
+- The line « Dettes » of « Fortune », and the screen of a debts account,
+  open the table (`DebtsPage`): the totals « on me doit », « je dois » and
+  net of the debts that count today (the net is the line of the wealth),
+  then the debts not repaid, then those repaid, each with its person and
+  description, its direction, the day it counts from and its date of
+  receipt, and its total signed as it counts in the wealth.
+- A box checks a debt as repaid: a dialog proposes today as the date of
+  receipt, which can be changed or left empty (the day checked then
+  serves). Unchecking writes at once. A menu on each debt splits it (the
+  first part is asked for, between zero and the total, the second part
+  shown once done) or deletes it, after a confirmation.
+- The form (`DebtFormPage`) holds every field of the specification: the
+  direction, the person, the amount, the percentage (100 by default, two
+  decimals at most), the total computed as they are typed, the
+  description, the four dates (each optional, typed or picked), and
+  « Remboursée », which proposes today as the date of receipt when there is
+  none. A refusal of the domain shows its reason; a date that cannot be
+  read is refused before. The form also deletes the debt.
+
+**Evidence.** `test/pages/debts/debts_page_test.dart`: a debt of 200 at 50 %
+entered from « Fortune » (total computed on screen, the fields written,
+the day of entry recorded), split into 40 and 60 after a first part out of
+the total is refused, the part of 60 checked with today proposed, then
+unchecked, the other part deleted: the totals of the table and the line
+« Dettes » of the wealth follow at each step; a debt without person and a
+receipt before the event are refused with their reason, and « je dois »
+takes from the wealth. Screenshots of the list and the form, taken
+locally with the real fonts, were checked by eye; they are not kept.
+
+### 5.5 The end-to-end files delete what they create
+
+**Decision.** `LocalServer` records the directories it creates, the
+batz-web binary it builds and the data directories of its servers, and
+`test/flutter_test_config.dart` deletes them when each test file ends.
+
+**Why.** Each end-to-end file builds its own binary (38 MB) in a new
+temporary directory, and never deleted it. After the runs of phases 2 to 5,
+289 of them filled the disk of the development machine (11 GB in `/tmp`),
+and a run of the suite stopped, unable to write. They were deleted by
+hand, with 232 data directories of test servers. Since then, a full run
+leaves nothing in `/tmp` but the file of the machine lock.

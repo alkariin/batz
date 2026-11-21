@@ -6,16 +6,38 @@ import 'dart:io';
 ///
 /// The binary comes from BATZ_SERVER_BIN when set (CI builds it once);
 /// otherwise it is built from ../batz-web/src with the Go toolchain on PATH.
+///
+/// The directories it creates, the binary built and the data of the servers,
+/// are deleted when the test file ends ([cleanUp]): each test file builds
+/// its own binary of 38 MB, which filled the disk of the development machine
+/// once (step 5.5 of phase 5).
 class LocalServer {
   LocalServer._(this.dataDir, this.port, this._process, this._logs);
 
   static String? _binary;
+  static final _created = <Directory>[];
+
+  /// Deletes the directories created by this test file. Run by
+  /// `test/flutter_test_config.dart` once the file's tests are over.
+  static Future<void> cleanUp() async {
+    for (final dir in _created) {
+      if (dir.existsSync()) dir.deleteSync(recursive: true);
+    }
+    _created.clear();
+    _binary = null;
+  }
+
+  static Directory _temp(String prefix) {
+    final dir = Directory.systemTemp.createTempSync(prefix);
+    _created.add(dir);
+    return dir;
+  }
 
   static Future<String> binary() async {
     if (_binary != null) return _binary!;
     final fromEnv = Platform.environment['BATZ_SERVER_BIN'];
     if (fromEnv != null && fromEnv.isNotEmpty) return _binary = fromEnv;
-    final out = '${Directory.systemTemp.createTempSync('batz-server').path}/batz-web';
+    final out = '${_temp('batz-server').path}/batz-web';
     final ProcessResult build;
     try {
       build = await Process.run('go', [
@@ -47,7 +69,7 @@ class LocalServer {
   /// thus considered started only once its own process reports that it
   /// listens; if it could not bind, another port is tried.
   static Future<LocalServer> start({Directory? dataDir}) async {
-    final dir = dataDir ?? Directory.systemTemp.createTempSync('batz-e2e');
+    final dir = dataDir ?? _temp('batz-e2e');
     for (var attempt = 1; ; attempt++) {
       final port = await _freePort();
       final process = await Process.start(await binary(), ['serve'], environment: _env(dir, port));

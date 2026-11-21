@@ -13,6 +13,7 @@ import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services.dart';
 import '../accounts/account_form_page.dart';
+import '../debts/debts_page.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 import '../transactions/transaction_detail_page.dart';
@@ -140,9 +141,15 @@ class AccountPage extends StatelessWidget {
                   const SizedBox(height: 8),
                   if (account.isDetailed)
                     Text(l.accountDetailedHint)
-                  else if (account.type == AccountType.debts)
-                    Text(l.accountDebtsHint)
-                  else if (balance == null)
+                  else if (account.type == AccountType.debts) ...[
+                    Text(l.accountDebtsHint),
+                    TextButton(
+                      key: const Key('accountDebtsOpen'),
+                      onPressed: () =>
+                          Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DebtsPage())),
+                      child: Text(l.accountDebtsOpen),
+                    ),
+                  ] else if (balance == null)
                     Text(l.accountNoBalance),
                 ],
               ),

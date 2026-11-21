@@ -7,6 +7,7 @@ import '../../domain/views/wealth.dart';
 import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services.dart';
+import '../debts/debts_page.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 import '../validation/validation_page.dart';
@@ -174,6 +175,7 @@ class _WealthPageState extends State<WealthPage> {
             title: Text(l.wealthDebts, style: theme.textTheme.titleSmall),
             subtitle: Text(l.wealthDebtsHint),
             trailing: Text(formatAmount(now.debts), key: const Key('wealthDebts'), style: theme.textTheme.titleSmall),
+            onTap: () => _push(const DebtsPage()),
           ),
           if (without.isNotEmpty) ...[
             const Divider(height: 1),

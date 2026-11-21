@@ -1829,4 +1829,129 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get keyFiguresWealthOpen => 'Voir la fortune';
+
+  @override
+  String get debtsTitle => 'Dettes';
+
+  @override
+  String get debtsEmpty =>
+      'Aucune dette. Une dette compte dans la fortune du jour de l\'événement à la veille de sa réception.';
+
+  @override
+  String get debtsOpen => 'Ouvertes';
+
+  @override
+  String get debtsRepaid => 'Remboursées';
+
+  @override
+  String get debtsOwedToMe => 'On me doit';
+
+  @override
+  String get debtsIOwe => 'Je dois';
+
+  @override
+  String get debtsNet => 'Net, dans la fortune';
+
+  @override
+  String get debtNew => 'Nouvelle dette';
+
+  @override
+  String get debtEdit => 'Modifier la dette';
+
+  @override
+  String get debtOwedToMe => 'On me doit';
+
+  @override
+  String get debtIOwe => 'Je dois';
+
+  @override
+  String get debtPerson => 'Personne';
+
+  @override
+  String get debtAmount => 'Montant';
+
+  @override
+  String get debtPercent => 'Pourcentage';
+
+  @override
+  String debtTotal(String amount) {
+    return 'Total : $amount';
+  }
+
+  @override
+  String get debtEventDate => 'Date de l\'événement';
+
+  @override
+  String get debtInvoiceDate => 'Date de la facture';
+
+  @override
+  String get debtRequestDate => 'Date de la demande';
+
+  @override
+  String get debtReceivedDate => 'Date de réception';
+
+  @override
+  String get debtDescription => 'Description';
+
+  @override
+  String get debtRepaid => 'Remboursée';
+
+  @override
+  String get debtDatesHint =>
+      'Sans date d\'événement, la dette compte du jour de sa saisie ; remboursée sans date de réception, jusqu\'à la veille du jour où elle est cochée.';
+
+  @override
+  String get debtInvalidDate => 'Date invalide : jj.mm.aaaa, ou laissez vide.';
+
+  @override
+  String debtSince(String date) {
+    return 'depuis le $date';
+  }
+
+  @override
+  String debtReceivedOn(String date) {
+    return 'reçue le $date';
+  }
+
+  @override
+  String get debtCheckTitle => 'Dette remboursée';
+
+  @override
+  String get debtCheckHint => 'La dette cesse de compter dans la fortune le jour de sa réception.';
+
+  @override
+  String get debtCheck => 'Cocher remboursée';
+
+  @override
+  String get debtUncheck => 'Décocher';
+
+  @override
+  String get debtSplit => 'Scinder';
+
+  @override
+  String get debtSplitTitle => 'Scinder la dette';
+
+  @override
+  String debtSplitHint(String total) {
+    return 'Montant de la première part, pris sur le total de $total. Le reste forme une deuxième ligne, avec les mêmes personne, sens, dates et description.';
+  }
+
+  @override
+  String get debtSplitFirst => 'Première part';
+
+  @override
+  String debtSplitDone(String first, String second) {
+    return 'Dette scindée en $first et $second.';
+  }
+
+  @override
+  String debtDeleteConfirm(String person) {
+    return 'Supprimer la dette de $person ?';
+  }
+
+  @override
+  String get debtDeleted => 'Dette supprimée.';
+
+  @override
+  String get accountDebtsOpen => 'Voir le tableau des dettes';
 }
