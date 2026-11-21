@@ -2133,3 +2133,72 @@ latest entry.
   `batz-export-*/`, and `scripts/check-personal-files.sh` refuses those
   names and a `LISEZMOI.txt` (the CSV files of an unzipped export were
   already refused, as any CSV outside test fixtures).
+
+### 7.1 The files of the export
+
+**Decisions.**
+
+- `domain/export/` is pure Dart: `exportFiles(ledger)` gives the seventeen
+  files of the plan, in its order, each with its headers and its sorted
+  rows of typed cells; `csv.dart` writes them (decision H2). The export
+  reads the ledger the screens read and nothing else (principle 1).
+- Completeness (principle 2): `exportSchema` names, for every entity of the
+  journal, its file, the column that holds the identifier of its records,
+  and the column each field goes to with how its stored value is written
+  (text, identifier, amount, percentage, rate, kWh, date, yes/no, integer,
+  label, keywords). The deletion field is excluded from every entity (what
+  is deleted is not exported, H1); no entity is excluded.
+  `test/domain/export/export_completeness_test.dart` compares it with the
+  derived tables of the app, so an entity or a field added later and not
+  placed fails it, and checks that taking any entity or field out is
+  caught.
+- Each file sorts its rows by its own data, identifiers last: accounts by
+  name; balances and statements by account and date; categories by year
+  and in the order of the tree, the detached ones after; transactions by
+  date and identifier; the modules by year. Two synchronised devices hold
+  the same records, so they write the same bytes (principle 3; checked in
+  step 7.2).
+- What is written beside the stored values, so that a line reads alone
+  (H1): the account by its name, a category by its path from its top-level
+  group (« Logement > Loyer »; a detached category as far as its parents
+  go), the parent's name, the statement of a line as its period
+  (« du 2026-09-01 au 2026-09-30 »), the expense a refund is attached to as
+  its date and description, the type of a validated transaction as the app
+  deduces it (none for a line to validate: its proposal is not exported),
+  the total of a debt, the amount of a tax line (none while its base or
+  rate is missing), and the trips as the screen groups them.
+- `transactions.csv` has one row per line, and one row for a transaction
+  without line; the line keeps its own amount (« Montant de la ligne »),
+  since the model allows several lines. A line to validate has no line
+  yet: the kWh and answers attached to the identifier it will get are
+  joined to its transaction all the same.
+- `voyages.csv`: one row per trip, with its sheet when it has one, then one
+  row per other sheet with its remark: « fiche en trop », « fiche sans
+  transaction », or « ligne manuelle incomplète » (a manual line without
+  date or amount, which the screen does not show as a trip).
+  `electricite.csv` keeps kWh whose line is gone, without the columns of
+  the transaction. `abonnements.csv` has one row per tranche, and one for
+  a subscription without tranche. `reglages-modules.csv` has one row per
+  module, with its default name and no identifier when none was chosen.
+- Values written as the journal names them get a label: statuses, types,
+  natures, directions of debts and frequencies in lower case (« validée »,
+  « dépense », « on me doit », « mensuel »), as in the plan's example;
+  account types, taxes, modules and period models as the app names them.
+  The keywords of a rule are written one per line in their cell.
+- Absent values are empty cells, except yes/no, where absent is « non »
+  (the app reads it so).
+
+**Evidence.** `test/domain/export/`: `export_format_test.dart` (each rule of
+H2; 300 random rows of texts made of semicolons, quotes, line breaks,
+accents and formula characters, read back identical by a CSV reader of the
+tests and by the `csv` module of Python); `export_example_test.dart` (an
+example ledger holding every sort of data gives exactly the files of
+`test/fixtures/export/`, which were read by eye, its tax amounts and trip
+recomputed by hand; the three lines of the plan's example; a ledger without
+data gives seventeen files of headers); `export_completeness_test.dart`;
+`export_records_test.dart` (five draws of 400 random operations of every
+phase after a statement import and rules: every record of every derived
+table not deleted is found in its file with each field written as expected,
+computed apart from the code of the export; no deleted record and no
+unknown identifier is found). The random operations of the convergence test
+moved to `test/support/random_operations.dart` to serve both.

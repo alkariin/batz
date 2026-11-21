@@ -1,0 +1,6 @@
+﻿Année;Date;Lieu;Jours;Montant;Date automatique;Montant automatique;Date remplacée;Montant remplacé;Nombre de transactions;Ligne manuelle;Remarque;id;idLigne
+2026;2026-07-10;Lisbonne;8;1200.00;2026-07-10;1250.00;non;oui;2;non;;trip-lisbon;ln-flight
+2026;2026-09-12;Gruyère;2;300.00;;;non;non;0;oui;;trip-manual;
+;;Annulé;3;;;;non;non;;non;fiche sans transaction;trip-orphan;ln-gone
+;;Lisbonne (hôtel);;;;;non;non;;non;fiche en trop;trip-extra;ln-hotel
+;;À compléter;;;;;non;non;;oui;ligne manuelle incomplète;trip-incomplete;

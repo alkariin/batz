@@ -1,0 +1,3 @@
+﻿Sens;Personne;Montant;Pourcentage;Total;Date de l'événement;Date de la facture;Date de la demande;Date de réception;Description;Remboursée;Saisie le;Cochée le;id
+on me doit;Alex Modèle;200.00;50.00;100.00;2026-03-14;;;;"Repas; ""chez Léa""";non;2026-03-15;;debt-meal
+je dois;Sam Exemple;150.00;100.00;150.00;2026-04-01;2026-04-01;2026-04-10;2026-05-02;;oui;2026-04-01;2026-05-02;debt-loan

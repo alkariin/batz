@@ -1,0 +1,3 @@
+﻿Date de paiement;Description;Début de période;Fin de période;Montant;kWh;id;idLigne;idTransaction
+2026-04-30;Électricité T1;2026-01-01;2026-03-31;-240.00;950.5;kwh-power;ln-power;tx-power
+;;;;;100;kwh-gone;ln-gone;

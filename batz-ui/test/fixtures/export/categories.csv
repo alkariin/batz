@@ -1,0 +1,13 @@
+﻿Année;Chemin;Nom;Nature;Groupe parent;Position;id;idParent
+2026;Revenus;Revenus;revenus;;0;g-income;
+2026;Revenus > Salaire;Salaire;;Revenus;0;cat-salary;g-income
+2026;Logement;Logement;dépenses;;1;g-housing;
+2026;Logement > Loyer;Loyer;;Logement;0;cat-rent;g-housing
+2026;Logement > Électricité;Électricité;;Logement;1;cat-power;g-housing
+2026;Quotidien;Quotidien;dépenses;;2;g-daily;
+2026;Quotidien > Restaurant;Restaurant;;Quotidien;0;cat-restaurant;g-daily
+2026;Quotidien > Vacances;Vacances;;Quotidien;1;cat-vacations;g-daily
+2026;Quotidien > Impôts;Impôts;;Quotidien;2;cat-taxes;g-daily
+2027;Logement;Logement;dépenses;;0;g-housing-2027;
+2027;Logement > Loyer;Loyer;;Logement;0;cat-rent-2027;g-housing-2027
+2026;Ancienne catégorie;Ancienne catégorie;;;0;cat-lost;cat-gone

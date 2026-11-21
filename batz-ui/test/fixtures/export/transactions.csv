@@ -1,0 +1,11 @@
+﻿Date;Compte;Montant;Texte de la banque;Description;Note;Statut;Type;Catégorie;Début de période;Fin de période;Montant de la ligne;Compte de contrepartie;Relevé;Rang dans le relevé;Dépense remboursée;idTransaction;idLigne;idCompte;idCatégorie;idCompteContrepartie;idRelevé;idLigneRemboursée
+2026-04-30;Compte privé;-240.00;;Électricité T1;;validée;dépense;Logement > Électricité;2026-01-01;2026-03-31;-240.00;;;;;tx-power;ln-power;acc-private;cat-power;;;
+2026-06-01;Compte privé;-350.00;;Billet d'avion;;validée;dépense;Quotidien > Vacances;2026-07-10;2026-07-10;-350.00;;;;;tx-flight;ln-flight;acc-private;cat-vacations;;;
+2026-07-15;Compte privé;-900.00;;Hôtel;;validée;dépense;Quotidien > Vacances;2026-07-10;2026-07-17;-900.00;;;;;tx-hotel;ln-hotel;acc-private;cat-vacations;;;
+2026-09-01;Compte privé;-2100.00;;Loyer annuel;;validée;dépense;Logement > Loyer;2026-09-01;2027-08-31;-2100.00;;;;;tx-rent;ln-rent;acc-private;cat-rent;;;
+2026-09-03;Compte privé;-85.00;"ACHAT; AUBERGE ""DU LAC""";Restaurant;;validée;dépense;Quotidien > Restaurant;2026-09-03;2026-09-03;-85.00;;du 2026-09-01 au 2026-09-30;0;;tx-restaurant;ln-restaurant;acc-private;cat-restaurant;;st-september;
+2026-09-05;Compte privé;-500.00;;Vers l'épargne;;validée;transfert;;;;;Épargne;;;;tx-saving;;acc-private;;acc-savings;;
+2026-09-10;Compte privé;-12.00;'=A1+1;'=A1+1;;à valider;;;;;;;du 2026-09-01 au 2026-09-30;1;;tx-formula;;acc-private;;;st-september;
+2026-09-20;Compte privé;20.00;;Remboursement repas;;validée;remboursement;Quotidien > Restaurant;2026-09-20;2026-09-20;20.00;;;;2026-09-03 Restaurant;tx-refund;ln-refund;acc-private;cat-restaurant;;;ln-restaurant
+2026-09-25;Compte privé;7000.00;;Salaire septembre;"'+ prime
+versée en octobre";validée;revenu;Revenus > Salaire;2026-09-25;2026-09-25;7000.00;;;;;tx-salary;ln-salary;acc-private;cat-salary;;;

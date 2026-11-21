@@ -1,0 +1,5 @@
+﻿Année;Impôt;Base;Taux de base;Coefficient;Montant;id
+2026;Revenu fédéral;80000.00;2.5000;;2000.00;tax-2026-federal
+2026;Revenu cantonal;80000.00;6.0000;155.00;7440.00;tax-2026-cantonal
+2026;Revenu communal;80000.00;;;;tax-2026-communal
+2026;Fortune cantonale;;0.3000;155.00;232.50;tax-2026-wealth

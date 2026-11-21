@@ -1,0 +1,5 @@
+﻿Abonnement;Note;Montant;Fréquence;Début;Fin;id;idAbonnement
+'=Journal;;240.00;annuel;2026-01-01;2026-12-31;tr-paper;sub-paper
+Musique;Formule famille;12.95;mensuel;2026-01-01;2026-08-31;tr-music-1;sub-music
+Musique;Formule famille;14.95;mensuel;2026-09-01;;tr-music-2;sub-music
+Sans tranche;;;;;;;sub-empty
