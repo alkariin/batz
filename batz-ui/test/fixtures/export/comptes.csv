@@ -1,5 +1,5 @@
-﻿Nom;Type;Format d'import;Archivé;id
-Ancien compte;Autre;;oui;acc-old
-Compte privé;Compte privé;PostFinance;non;acc-private
-Dettes;Dettes;;non;acc-debts
-Épargne;Épargne;;non;acc-savings
+﻿Nom;Type;Format d'import;Archivé;Déclaré aux impôts;Position;id
+Ancien compte;Autre;;oui;non;;acc-old
+Compte privé;Compte privé;PostFinance;non;non;;acc-private
+Dettes;Dettes;;non;non;;acc-debts
+Épargne;Épargne;;non;non;;acc-savings

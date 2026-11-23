@@ -31,7 +31,7 @@ class ExportFile {
 /// The headers of each file, in their order: what is read first, then the
 /// identifiers at the end.
 abstract final class ExportHeaders {
-  static const accounts = ['Nom', 'Type', "Format d'import", 'Archivé', 'id'];
+  static const accounts = ['Nom', 'Type', "Format d'import", 'Archivé', 'Déclaré aux impôts', 'Position', 'id'];
   static const balances = ['Compte', 'Date', 'Montant', 'id', 'idCompte'];
   static const statements = [
     'Compte',
@@ -290,6 +290,8 @@ class _Exporter {
           PlainCell(ExportLabels.accountTypes[a.type]!),
           a.importFormat == null ? null : PlainCell(ExportLabels.importFormats[a.importFormat]!),
           FlagCell(a.archived),
+          FlagCell(a.declared),
+          _int(a.position),
           PlainCell(a.id),
         ],
     ];

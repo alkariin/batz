@@ -78,4 +78,46 @@ void main() {
     expect(find.text('Compte supprimé.'), findsOneWidget);
     expect(find.text('PostFinance'), findsNothing);
   });
+
+  testWidgets(
+    'accounts: moved by their menu; one declared in the tax return shows in colour, here and in « Fortune »',
+    (tester) async {
+      await pumpApp(tester);
+      await openAccounts(tester);
+      await createAccount(tester, 'Banque');
+      await createAccount(tester, 'Porte-monnaie', type: 'Espèces');
+      await createAccount(tester, 'Tirelire', type: 'Épargne');
+      double top(String name) => tester.getTopLeft(find.text(name)).dy;
+      expect(top('Banque') < top('Tirelire') && top('Tirelire') < top('Porte-monnaie'), isTrue, reason: 'by type');
+
+      await tester.tap(find.byKey(const Key('accountMenu-Porte-monnaie')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Monter'));
+      await settle(tester);
+      expect(top('Banque') < top('Porte-monnaie') && top('Porte-monnaie') < top('Tirelire'), isTrue);
+      await tester.tap(find.byKey(const Key('accountMenu-Banque')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Descendre'));
+      await settle(tester);
+      expect(top('Porte-monnaie') < top('Banque') && top('Banque') < top('Tirelire'), isTrue);
+
+      await tester.tap(find.text('Tirelire'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('accountDeclared')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Enregistrer'));
+      await settle(tester);
+      expect(find.text('Épargne · Déclaré aux impôts'), findsOneWidget);
+      final colour = Theme.of(tester.element(find.text('Tirelire'))).colorScheme.tertiary;
+      expect(tester.widget<Text>(find.text('Tirelire')).style?.color, colour);
+      expect(tester.widget<Text>(find.text('Banque')).style?.color, isNot(colour));
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Fortune')));
+      await settle(tester);
+      expect(find.byKey(const Key('wealthDeclaredLegend')), findsOneWidget);
+      expect(tester.widget<Text>(find.text('Tirelire')).style?.color, colour);
+    },
+  );
 }

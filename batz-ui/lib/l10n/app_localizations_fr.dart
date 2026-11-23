@@ -190,6 +190,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get accountArchived => 'Archivé';
 
   @override
+  String get accountDeclared => 'Déclaré aux impôts';
+
+  @override
+  String get accountDeclaredHint => 'Son nom et son solde s\'affichent dans une autre couleur dans « Fortune ».';
+
+  @override
   String get accountDetailed => 'Détaillé';
 
   @override
@@ -1671,6 +1677,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get wealthWithoutBalanceSection => 'Comptes sans solde';
+
+  @override
+  String get wealthDeclaredLegend => 'En couleur : les comptes déclarés aux impôts.';
 
   @override
   String get wealthDebts => 'Dettes';

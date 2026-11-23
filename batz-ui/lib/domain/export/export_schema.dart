@@ -225,6 +225,8 @@ final Map<String, ExportedEntity> exportSchema = {
         labels: ExportLabels.byName(ExportLabels.importFormats),
       ),
       AccountFields.archived: const ExportColumn('Archivé', ExportKind.flag),
+      AccountFields.declared: const ExportColumn('Déclaré aux impôts', ExportKind.flag),
+      AccountFields.position: const ExportColumn('Position', ExportKind.integer),
     },
   ),
   BalanceFields.entity: const ExportedEntity(

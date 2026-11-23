@@ -158,3 +158,8 @@ Future<bool> applyToLedger(BuildContext context, Modification Function(Ledger le
   await cubit.write(modification);
   return true;
 }
+
+/// The style of the name of an account declared in the tax return: in
+/// another colour, the text only; null for the others.
+TextStyle? declaredStyle(BuildContext context, Account account) =>
+    account.declared ? TextStyle(color: Theme.of(context).colorScheme.tertiary) : null;

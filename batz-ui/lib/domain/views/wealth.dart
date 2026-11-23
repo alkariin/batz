@@ -63,24 +63,24 @@ class WealthAt {
   final CalendarDate date;
 
   /// Every account that can have a balance of its own (not a debts account),
-  /// by name: those with a balance, archived or not unless an archived one
-  /// is at 0, and those without one that are not archived.
+  /// in the order of the accounts: those with a balance, archived or not
+  /// unless an archived one is at 0, and those without one that are not
+  /// archived.
   final List<AccountWealth> accounts;
 
   /// The debts that count that day, whether a debts account exists or
   /// not: what is owed to me minus what I owe.
   final int debts;
 
-  /// The accounts with a balance, grouped by type in the order of the
-  /// types.
-  Map<AccountType, List<AccountWealth>> get byType => {
-    for (final type in AccountType.values)
-      if (accounts.any((a) => a.inWealth && a.account.type == type))
-        type: [
-          for (final a in accounts)
-            if (a.inWealth && a.account.type == type) a,
-        ],
-  };
+  /// The accounts with a balance, grouped by type: the groups in the order
+  /// of their first account, the accounts in their order.
+  Map<AccountType, List<AccountWealth>> get byType {
+    final groups = <AccountType, List<AccountWealth>>{};
+    for (final a in accounts) {
+      if (a.inWealth) (groups[a.account.type] ??= []).add(a);
+    }
+    return groups;
+  }
 
   /// The sum of the balances of each type.
   Map<AccountType, int> get totalsByType => {

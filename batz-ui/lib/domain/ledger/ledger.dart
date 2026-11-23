@@ -130,13 +130,47 @@ class Ledger {
   /// Every category of every year, by identifier.
   late final Map<String, Category> categories = {for (final tree in trees.values) ...tree.byId};
 
-  /// Active accounts by name, then archived ones by name.
-  List<Account> get sortedAccounts {
-    int byName(Account a, Account b) => a.name.toLowerCase().compareTo(b.name.toLowerCase());
-    return [
-      ...accounts.values.where((a) => !a.archived).toList()..sort(byName),
-      ...accounts.values.where((a) => a.archived).toList()..sort(byName),
+  /// Active accounts, then archived ones, each in the order the user
+  /// chose: the accounts placed by their position, then the others by type
+  /// and name, the order they have until the user first moves one.
+  List<Account> get sortedAccounts => [
+    ...accounts.values.where((a) => !a.archived).toList()..sort(_accountOrder),
+    ...accounts.values.where((a) => a.archived).toList()..sort(_accountOrder),
+  ];
+
+  static int _accountOrder(Account a, Account b) {
+    final pa = a.position, pb = b.position;
+    if (pa != pb) {
+      if (pa == null) return 1;
+      if (pb == null) return -1;
+      return pa.compareTo(pb);
+    }
+    final byType = a.type.index.compareTo(b.type.index);
+    if (byType != 0) return byType;
+    final byName = a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    return byName != 0 ? byName : a.id.compareTo(b.id);
+  }
+
+  /// Moves the account [id] one place up ([offset] -1) or down (+1) among
+  /// the active accounts, or among the archived ones. Returns null if it is
+  /// already first or last. Every account of the list gets its position, so
+  /// that the order holds whatever comes next.
+  Modification? reorderAccount(String id, int offset) {
+    final account = accounts[id];
+    if (account == null) throw const LedgerException(LedgerError.unknownAccount);
+    final list = [
+      for (final a in sortedAccounts)
+        if (a.archived == account.archived) a,
     ];
+    final from = list.indexWhere((a) => a.id == id);
+    final to = from + offset;
+    if (to < 0 || to >= list.length) return null;
+    list.insert(to, list.removeAt(from));
+    final changes = [
+      for (final (index, a) in list.indexed)
+        if (a.position != index) FieldChange(AccountFields.entity, a.id, AccountFields.position, index),
+    ];
+    return changes.isEmpty ? null : Modification(changes);
   }
 
   // ------------------------------------------------------------------ issues
@@ -1201,6 +1235,7 @@ class Ledger {
     AccountFields.type: draft.type.name,
     AccountFields.importFormat: draft.importFormat?.name,
     AccountFields.archived: draft.archived,
+    AccountFields.declared: draft.declared,
   };
 }
 

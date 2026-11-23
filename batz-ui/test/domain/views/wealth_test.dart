@@ -5,6 +5,7 @@ import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/balance.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/debt.dart';
+import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/domain/views/balances.dart';
 import 'package:batz/domain/views/wealth.dart';
@@ -304,8 +305,8 @@ void main() {
       {'old': false, 'private': true, 'cash': false, 'bank': false, 'savings': false},
     );
     expect(wealth.at(today).withoutBalance.map((a) => a.id), [
-      'cash',
       'bank',
+      'cash',
     ], reason: 'the detailed account has no statement yet');
 
     ledger = await h.apply((l) => l.declareBalance('private', d(2026, 8, 1), 2000, today: today));
@@ -338,7 +339,27 @@ void main() {
     final wealth = (await h.ledger()).wealth(d(2026, 11, 21));
     expect((wealth.firstDate, wealth.years.isEmpty, wealth.monthly.isEmpty), (null, true, true));
     expect(wealth.fortuneAt(d(2026, 11, 21)), 0);
-    expect(wealth.at(d(2026, 11, 21)).withoutBalance.map((a) => a.id), ['cash', 'bank', 'private']);
+    expect(wealth.at(d(2026, 11, 21)).withoutBalance.map((a) => a.id), ['bank', 'private', 'cash']);
+  });
+
+  test('the accounts follow the order chosen by the user; their types group in the order of their first account', () {
+    final today = d(2026, 11, 21);
+    final ledger = Ledger(
+      accounts: const [
+        Account(id: 'bank', name: 'Banque', type: AccountType.privateAccount, position: 2),
+        Account(id: 'save', name: 'Épargne', type: AccountType.savings, position: 0),
+        Account(id: 'cash', name: 'Espèces', type: AccountType.cash, position: 3),
+        Account(id: 'other', name: 'Autre banque', type: AccountType.privateAccount, position: 1),
+      ],
+      balances: [
+        for (final id in ['bank', 'save', 'cash', 'other'])
+          DeclaredBalance(id: 'b-$id', accountId: id, date: d(2026, 1, 1), amount: 100),
+      ],
+    );
+    final now = ledger.wealth(today).at(today);
+    expect(now.accounts.map((a) => a.account.id), ['save', 'other', 'bank', 'cash']);
+    expect(now.byType.keys, [AccountType.savings, AccountType.privateAccount, AccountType.cash]);
+    expect(now.byType[AccountType.privateAccount]!.map((a) => a.account.id), ['other', 'bank']);
   });
 }
 

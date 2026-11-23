@@ -120,9 +120,10 @@ class _WealthPageState extends State<WealthPage> {
       } else {
         date = l.wealthBalanceDate(DateField.text(a.lastPointDate!));
       }
+      final declaredText = declaredStyle(context, a.account);
       return ListTile(
         key: ValueKey('wealthAccount-${a.account.id}'),
-        title: Text(a.account.name),
+        title: Text(a.account.name, style: declaredText),
         subtitle: Wrap(
           spacing: 8,
           crossAxisAlignment: WrapCrossAlignment.center,
@@ -140,7 +141,7 @@ class _WealthPageState extends State<WealthPage> {
             ? Text(
                 formatAmount(a.balance!),
                 key: ValueKey('wealthBalance-${a.account.id}'),
-                style: theme.textTheme.titleSmall,
+                style: theme.textTheme.titleSmall?.merge(declaredText),
               )
             : const Icon(Icons.chevron_right),
         onTap: () => _push(AccountPage(accountId: a.account.id)),
@@ -181,6 +182,15 @@ class _WealthPageState extends State<WealthPage> {
             ListTile(dense: true, title: Text(l.wealthWithoutBalanceSection, style: theme.textTheme.titleSmall)),
             for (final a in without) tile(a),
           ],
+          if (now.accounts.any((a) => a.account.declared))
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: Text(
+                l.wealthDeclaredLegend,
+                key: const Key('wealthDeclaredLegend'),
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.tertiary),
+              ),
+            ),
         ],
       ),
     );

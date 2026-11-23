@@ -7,7 +7,8 @@ import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 import 'account_form_page.dart';
 
-/// Plus > Comptes: the list of accounts, active first, then archived.
+/// Plus > Comptes: the list of accounts, active first, then archived, each
+/// in the order the user chose; the menu of an account moves it up or down.
 class AccountsPage extends StatelessWidget {
   const AccountsPage({super.key});
 
@@ -50,9 +51,27 @@ class AccountsPage extends StatelessWidget {
   Widget _tile(BuildContext context, Account account) {
     final l = AppLocalizations.of(context);
     return ListTile(
+      key: ValueKey('account-${account.id}'),
       leading: Icon(_icon(account.type)),
-      title: Text(account.name),
-      subtitle: Text([accountTypeText(l, account.type), if (account.isDetailed) l.accountDetailed].join(' · ')),
+      title: Text(account.name, style: declaredStyle(context, account)),
+      subtitle: Text(
+        [
+          accountTypeText(l, account.type),
+          if (account.isDetailed) l.accountDetailed,
+          if (account.declared) l.accountDeclared,
+        ].join(' · '),
+      ),
+      trailing: PopupMenuButton<int>(
+        key: Key('accountMenu-${account.name}'),
+        onSelected: (offset) async {
+          final modification = context.read<LedgerCubit>().state.ledger.reorderAccount(account.id, offset);
+          if (modification != null) await applyToLedger(context, (_) => modification);
+        },
+        itemBuilder: (_) => [
+          PopupMenuItem(value: -1, child: Text(l.categoryMoveUp)),
+          PopupMenuItem(value: 1, child: Text(l.categoryMoveDown)),
+        ],
+      ),
       onTap: () => _open(context, account),
     );
   }

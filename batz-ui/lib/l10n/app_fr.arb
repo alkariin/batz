@@ -103,6 +103,8 @@
   "accountImport": "Import des relevés PostFinance",
   "accountImportHint": "Compte détaillé : ses transactions viennent uniquement des relevés. Un seul compte peut l'être.",
   "accountArchived": "Archivé",
+  "accountDeclared": "Déclaré aux impôts",
+  "accountDeclaredHint": "Son nom et son solde s'affichent dans une autre couleur dans « Fortune ».",
   "accountDetailed": "Détaillé",
   "accountDeleteConfirm": "Supprimer le compte « {name} » ? S'il est utilisé par des transactions, il sera archivé.",
   "@accountDeleteConfirm": {
@@ -961,6 +963,7 @@
   "wealthOld": "ancien",
   "wealthWithoutBalance": "Sans solde, hors fortune",
   "wealthWithoutBalanceSection": "Comptes sans solde",
+  "wealthDeclaredLegend": "En couleur : les comptes déclarés aux impôts.",
   "wealthDebts": "Dettes",
   "wealthDebtsHint": "Dettes ouvertes : ce qu'on me doit moins ce que je dois.",
   "wealthCurve": "Évolution",

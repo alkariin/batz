@@ -26,6 +26,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
   late AccountType _type = widget.account?.type ?? AccountType.privateAccount;
   late bool _import = widget.account?.isDetailed ?? false;
   late bool _archived = widget.account?.archived ?? false;
+  late bool _declared = widget.account?.declared ?? false;
 
   @override
   void dispose() {
@@ -39,6 +40,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
       type: _type,
       importFormat: _import ? ImportFormat.postfinance : null,
       archived: _archived,
+      declared: _declared,
     );
     final existing = widget.account;
     final saved = await applyToLedger(
@@ -117,6 +119,14 @@ class _AccountFormPageState extends State<AccountFormPage> {
             subtitle: Text(l.accountImportHint),
             value: _import,
             onChanged: (value) => setState(() => _import = value),
+          ),
+          SwitchListTile(
+            key: const Key('accountDeclared'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(l.accountDeclared),
+            subtitle: Text(l.accountDeclaredHint),
+            value: _declared,
+            onChanged: (value) => setState(() => _declared = value),
           ),
           if (account != null)
             SwitchListTile(

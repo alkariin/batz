@@ -20,7 +20,7 @@ void main() {
   test('an account is created with all its fields', () {
     final m = Ledger.empty.createAccount('a1', const AccountDraft(name: '  Espèces ', type: AccountType.cash));
     expect(m.changes.map((c) => (c.entity, c.recordId)).toSet(), {('account', 'a1')});
-    expect(fields(m), {'name': 'Espèces', 'type': 'cash', 'importFormat': null, 'archived': false});
+    expect(fields(m), {'name': 'Espèces', 'type': 'cash', 'importFormat': null, 'archived': false, 'declared': false});
   });
 
   test('the name is required', () {
@@ -78,14 +78,70 @@ void main() {
     expect(() => Ledger.empty.removeAccount('x'), refusedWith(LedgerError.unknownAccount));
   });
 
-  test('accounts are sorted by name, archived ones last', () {
+  test('until the user moves one, accounts are sorted by type then name, archived ones last', () {
     final ledger = Ledger(
       accounts: [
         const Account(id: '1', name: 'zèbre', type: AccountType.other),
         const Account(id: '2', name: 'Ancien', type: AccountType.other, archived: true),
         const Account(id: '3', name: 'Banque', type: AccountType.other),
+        const Account(id: '4', name: 'Tirelire', type: AccountType.savings),
       ],
     );
-    expect(ledger.sortedAccounts.map((a) => a.id), ['3', '1', '2']);
+    expect(ledger.sortedAccounts.map((a) => a.id), ['4', '3', '1', '2']);
+  });
+
+  test('an account moves up or down among the active ones, or among the archived ones; every account of the '
+      'list gets its position', () {
+    var ledger = Ledger(
+      accounts: [
+        const Account(id: 'a', name: 'A', type: AccountType.privateAccount),
+        const Account(id: 'b', name: 'B', type: AccountType.savings),
+        const Account(id: 'c', name: 'C', type: AccountType.cash),
+        const Account(id: 'old', name: 'Old', type: AccountType.other, archived: true),
+      ],
+    );
+    Ledger apply(Modification m) {
+      final byId = {for (final a in ledger.accounts.values) a.id: a};
+      for (final change in m.changes) {
+        expect((change.entity, change.field), (AccountFields.entity, AccountFields.position));
+        final a = byId[change.recordId]!;
+        byId[a.id] = Account(
+          id: a.id,
+          name: a.name,
+          type: a.type,
+          archived: a.archived,
+          position: change.value! as int,
+        );
+      }
+      return Ledger(accounts: byId.values);
+    }
+
+    expect(ledger.reorderAccount('a', -1), isNull, reason: 'already first');
+    expect(ledger.reorderAccount('old', 1), isNull, reason: 'alone among the archived ones');
+    final move = ledger.reorderAccount('c', -1)!;
+    expect({for (final c in move.changes) c.recordId: c.value}, {'a': 0, 'c': 1, 'b': 2});
+    ledger = apply(move);
+    expect(ledger.sortedAccounts.map((a) => a.id), ['a', 'c', 'b', 'old']);
+    ledger = apply(ledger.reorderAccount('a', 1)!);
+    expect(ledger.sortedAccounts.map((a) => a.id), ['c', 'a', 'b', 'old']);
+    expect(ledger.reorderAccount('b', 1), isNull, reason: 'already last of the active ones');
+    // A new account has no position: it comes after the others.
+    ledger = Ledger(
+      accounts: [
+        ...ledger.accounts.values,
+        const Account(id: 'new', name: '0', type: AccountType.privateAccount),
+      ],
+    );
+    expect(ledger.sortedAccounts.map((a) => a.id), ['c', 'a', 'b', 'new', 'old']);
+    expect(() => ledger.reorderAccount('x', 1), refusedWith(LedgerError.unknownAccount));
+  });
+
+  test('the form writes whether the account is declared in the tax return, never its position', () {
+    final ledger = Ledger(
+      accounts: [const Account(id: 'a', name: 'A', type: AccountType.savings, position: 3)],
+    );
+    final m = ledger.updateAccount('a', const AccountDraft(name: 'A', type: AccountType.savings, declared: true));
+    expect(fields(m)[AccountFields.declared], isTrue);
+    expect(fields(m).containsKey(AccountFields.position), isFalse);
   });
 }
