@@ -9,6 +9,8 @@ import '../../domain/ledger/rule.dart';
 import '../../domain/ledger/transaction.dart';
 import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
+import '../debts/debt_links.dart';
+import '../../domain/ledger/debt.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 import '../refunds/refund_target_page.dart';
@@ -281,6 +283,24 @@ class _ClassifyPageState extends State<ClassifyPage> {
             label: Text(l.classifyCreateRule),
             onPressed: () => _createRule(t),
           ),
+          // A line that repays a debt: once linked, a refund of the expense
+          // the debt came from is validated with it; otherwise it is
+          // classified here as usual.
+          if (ledger.debtsRepayableBy(t).isNotEmpty) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              key: const Key('classifyRepayDebt'),
+              icon: const Icon(Icons.done_all),
+              label: Text(l.debtRepayWithTransaction),
+              onPressed: () async {
+                final repaid = await repayDebtWith(context, t);
+                if (!repaid || !context.mounted) return;
+                if (context.read<LedgerCubit>().state.ledger.transactions[t.id]?.isValidated ?? false) {
+                  Navigator.of(context).pop(true);
+                }
+              },
+            ),
+          ],
         ],
       ),
     );

@@ -5,9 +5,11 @@ import '../journal/journal_entry.dart';
 import 'ledger.dart';
 import 'ledger_exception.dart';
 import 'redistribution.dart';
+import 'refund.dart';
+import 'transaction.dart';
 
-/// Journal entity and fields of a debt: a table of its own, independent
-/// of the transactions.
+/// Journal entity and fields of a debt: a table of its own, which a
+/// transaction may give rise to and another one repay.
 abstract final class DebtFields {
   static const entity = 'debt';
   static const direction = 'direction';
@@ -31,6 +33,13 @@ abstract final class DebtFields {
   /// receipt is missing.
   static const enteredOn = 'enteredOn';
   static const checkedOn = 'checkedOn';
+
+  /// The transaction the debt comes from (the invoice paid for someone):
+  /// its date is the date of the invoice.
+  static const sourceTransactionId = 'sourceTransactionId';
+
+  /// The transaction that repaid the debt: its date is the date of receipt.
+  static const refundTransactionId = 'refundTransactionId';
 }
 
 /// Who owes whom: « on me doit » adds to the wealth, « je dois » takes from
@@ -53,6 +62,8 @@ class Debt extends Equatable {
     this.description = '',
     this.repaid = false,
     this.checkedOn,
+    this.sourceTransactionId,
+    this.refundTransactionId,
   });
 
   final String id;
@@ -68,6 +79,8 @@ class Debt extends Equatable {
   final bool repaid;
   final CalendarDate enteredOn;
   final CalendarDate? checkedOn;
+  final String? sourceTransactionId;
+  final String? refundTransactionId;
 
   /// The amount times the percentage, rounded to the cent, halves away from
   /// zero (the rounding of the redistribution).
@@ -109,6 +122,8 @@ class Debt extends Equatable {
     repaid,
     enteredOn,
     checkedOn,
+    sourceTransactionId,
+    refundTransactionId,
   ];
 }
 
@@ -130,6 +145,7 @@ class DebtDraft {
     this.receivedDate,
     this.description = '',
     this.repaid = false,
+    this.sourceTransactionId,
   });
 
   factory DebtDraft.of(Debt debt) => DebtDraft(
@@ -143,6 +159,7 @@ class DebtDraft {
     receivedDate: debt.receivedDate,
     description: debt.description,
     repaid: debt.repaid,
+    sourceTransactionId: debt.sourceTransactionId,
   );
 
   final DebtDirection direction;
@@ -155,6 +172,10 @@ class DebtDraft {
   final CalendarDate? receivedDate;
   final String description;
   final bool repaid;
+
+  /// The transaction the debt comes from: the date of the invoice is its
+  /// date.
+  final String? sourceTransactionId;
 }
 
 /// The totals of the debts that count at one date.
@@ -209,8 +230,9 @@ extension DebtOperations on Ledger {
 
   /// Creates the debt [id], entered [today]. Refused, with its reason: no
   /// person, an amount of zero or less, a percentage out of 0.01 to 100 %, a
-  /// date of receipt before the event. Checked as repaid at once, it is
-  /// checked [today].
+  /// date of receipt before the event, a source transaction that is unknown
+  /// or a transfer. Checked as repaid at once, it is checked [today]. Its
+  /// date of invoice is the date of its source transaction, if it has one.
   Modification createDebt(String id, DebtDraft draft, {required CalendarDate today}) {
     _checkDebt(draft);
     return Modification.set(DebtFields.entity, id, {
@@ -221,14 +243,71 @@ extension DebtOperations on Ledger {
   }
 
   /// Modifies the debt [id] under the same rules. Checking it as repaid
-  /// records [today] as the day it was checked; unchecking clears it.
+  /// records [today] as the day it was checked; unchecking clears it, with
+  /// the transaction that repaid it.
   Modification updateDebt(String id, DebtDraft draft, {required CalendarDate today}) {
     final debt = _debt(id);
     _checkDebt(draft);
     return Modification.set(DebtFields.entity, id, {
       ..._debtFields(draft),
       if (draft.repaid != debt.repaid) DebtFields.checkedOn: draft.repaid ? today.encode() : null,
+      if (!draft.repaid && debt.refundTransactionId != null) DebtFields.refundTransactionId: null,
     });
+  }
+
+  /// The debts the transaction [transactionId] gave rise to, by person.
+  List<Debt> debtsFrom(String transactionId) => [
+    for (final debt in sortedDebts)
+      if (debt.sourceTransactionId == transactionId) debt,
+  ];
+
+  /// The debts the transaction [transactionId] repaid.
+  List<Debt> debtsRepaidBy(String transactionId) => [
+    for (final debt in sortedDebts)
+      if (debt.refundTransactionId == transactionId) debt,
+  ];
+
+  /// The debts [transaction] can repay: not repaid yet, owed to me when
+  /// money came in, owed by me when it went out; none for a transfer.
+  List<Debt> debtsRepayableBy(LedgerTransaction transaction) {
+    if ((transaction.isValidated && transaction.isTransfer) || transaction.amount == 0) return const [];
+    final direction = transaction.amount > 0 ? DebtDirection.owedToMe : DebtDirection.iOwe;
+    return [
+      for (final debt in sortedDebts)
+        if (!debt.repaid && debt.direction == direction) debt,
+    ];
+  }
+
+  /// Records that [transactionId] repaid the debt [debtId]: the debt is
+  /// checked [today], received on the date of the transaction. When it is
+  /// owed to me and comes from an expense, the transaction is attached to
+  /// that expense as its refund, unless it already refunds another one; a
+  /// line to validate is validated by it. Refused, with its reason: an
+  /// unknown debt or transaction, a debt already repaid, a transfer, money
+  /// that goes the wrong way.
+  Modification repayDebt(String debtId, String transactionId, {required CalendarDate today}) {
+    final debt = _debt(debtId);
+    final t = transactions[transactionId];
+    if (t == null) throw const LedgerException(LedgerError.unknownTransaction);
+    if (debt.repaid) throw const LedgerException(LedgerError.debtAlreadyRepaid);
+    if (t.isValidated && t.isTransfer) throw const LedgerException(LedgerError.debtTransactionIsTransfer);
+    if (!debtsRepayableBy(t).contains(debt)) throw const LedgerException(LedgerError.debtRepaymentDirection);
+    final source = transactions[debt.sourceTransactionId]?.line;
+    final attach =
+        debt.direction == DebtDirection.owedToMe &&
+        source != null &&
+        isExpenseLine(transactions[debt.sourceTransactionId]!, source) &&
+        expenseOf(t) == null;
+    return Modification([
+      for (final field in {
+        DebtFields.repaid: true,
+        DebtFields.receivedDate: t.date.encode(),
+        DebtFields.checkedOn: today.encode(),
+        DebtFields.refundTransactionId: t.id,
+      }.entries)
+        FieldChange(DebtFields.entity, debtId, field.key, field.value),
+      if (attach) ...attachRefund(t.id, source.id).changes,
+    ]);
   }
 
   /// Checks the debt [id] as repaid [today], received on [receivedDate]
@@ -254,10 +333,15 @@ extension DebtOperations on Ledger {
     );
   }
 
-  /// Unchecks the debt [id]: it counts again, its date of receipt kept.
+  /// Unchecks the debt [id]: it counts again, its date of receipt kept, no
+  /// longer repaid by a transaction.
   Modification uncheckDebt(String id) {
     _debt(id);
-    return Modification.set(DebtFields.entity, id, {DebtFields.repaid: false, DebtFields.checkedOn: null});
+    return Modification.set(DebtFields.entity, id, {
+      DebtFields.repaid: false,
+      DebtFields.checkedOn: null,
+      DebtFields.refundTransactionId: null,
+    });
   }
 
   Modification deleteDebt(String id) {
@@ -291,6 +375,8 @@ extension DebtOperations on Ledger {
         DebtFields.repaid: debt.repaid,
         DebtFields.enteredOn: debt.enteredOn.encode(),
         DebtFields.checkedOn: encode(debt.checkedOn),
+        DebtFields.sourceTransactionId: debt.sourceTransactionId,
+        DebtFields.refundTransactionId: debt.refundTransactionId,
       }.entries)
         FieldChange(DebtFields.entity, newId, field.key, field.value),
     ]);
@@ -303,6 +389,11 @@ extension DebtOperations on Ledger {
   }
 
   void _checkDebt(DebtDraft draft) {
+    if (draft.sourceTransactionId case final id?) {
+      final t = transactions[id];
+      if (t == null) throw const LedgerException(LedgerError.unknownTransaction);
+      if (t.isValidated && t.isTransfer) throw const LedgerException(LedgerError.debtTransactionIsTransfer);
+    }
     if (draft.person.trim().isEmpty) throw const LedgerException(LedgerError.debtPersonRequired);
     if (draft.amount <= 0) throw const LedgerException(LedgerError.amountRequired);
     if (draft.basisPoints < 1 || draft.basisPoints > fullBasisPoints) {
@@ -314,13 +405,14 @@ extension DebtOperations on Ledger {
     }
   }
 
-  static Map<String, Object?> _debtFields(DebtDraft draft) => {
+  Map<String, Object?> _debtFields(DebtDraft draft) => {
     DebtFields.direction: draft.direction.name,
     DebtFields.person: draft.person.trim(),
     DebtFields.amount: draft.amount,
     DebtFields.basisPoints: draft.basisPoints,
     DebtFields.eventDate: draft.eventDate?.encode(),
-    DebtFields.invoiceDate: draft.invoiceDate?.encode(),
+    DebtFields.invoiceDate: (transactions[draft.sourceTransactionId]?.date ?? draft.invoiceDate)?.encode(),
+    DebtFields.sourceTransactionId: draft.sourceTransactionId,
     DebtFields.requestDate: draft.requestDate?.encode(),
     DebtFields.receivedDate: draft.receivedDate?.encode(),
     DebtFields.description: draft.description.trim(),

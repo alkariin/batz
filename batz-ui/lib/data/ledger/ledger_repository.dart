@@ -247,6 +247,8 @@ class LedgerRepository {
       repaid: row['repaid'] == 1,
       enteredOn: enteredOn,
       checkedOn: _date(row['checked_on']),
+      sourceTransactionId: _string(row['source_transaction_id']),
+      refundTransactionId: _string(row['refund_transaction_id']),
     );
   }
 

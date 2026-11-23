@@ -74,6 +74,9 @@ enum LedgerError {
   unknownDebt,
   debtPersonRequired,
   debtPercentInvalid,
+  debtAlreadyRepaid,
+  debtTransactionIsTransfer,
+  debtRepaymentDirection,
   debtReceivedBeforeEvent,
   debtSplitOutOfTotal,
 

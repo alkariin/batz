@@ -7,35 +7,51 @@ import '../../domain/ids.dart';
 import '../../domain/ledger/debt.dart';
 import '../../domain/ledger/ledger_exception.dart';
 import '../../domain/ledger/redistribution.dart';
+import '../../domain/ledger/transaction.dart';
 import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
+import '../transactions/transaction_detail_page.dart';
+import '../transactions/transaction_texts.dart';
 
 /// Creates a debt, or modifies or deletes [debt]: every field of a debt, the
-/// total computed on screen as it is typed.
+/// total computed on screen as it is typed. A debt created from [source]
+/// starts from it and keeps the link: its date of invoice is the date of the
+/// transaction. A debt repaid by a transaction shows it, with its date.
 class DebtFormPage extends StatefulWidget {
-  const DebtFormPage({super.key, this.debt});
+  const DebtFormPage({super.key, this.debt, this.source});
 
   final Debt? debt;
+
+  /// The transaction a new debt comes from.
+  final LedgerTransaction? source;
 
   @override
   State<DebtFormPage> createState() => _DebtFormPageState();
 }
 
 class _DebtFormPageState extends State<DebtFormPage> {
-  late DebtDirection _direction = widget.debt?.direction ?? DebtDirection.owedToMe;
+  late DebtDirection _direction =
+      widget.debt?.direction ??
+      (widget.source != null && widget.source!.amount > 0 ? DebtDirection.iOwe : DebtDirection.owedToMe);
   late final _person = TextEditingController(text: widget.debt?.person);
-  late final _amount = TextEditingController(text: widget.debt == null ? '' : formatAmount(widget.debt!.amount));
+  late final _amount = TextEditingController(
+    text: widget.debt != null
+        ? formatAmount(widget.debt!.amount)
+        : widget.source != null
+        ? formatAmount(widget.source!.amount.abs())
+        : '',
+  );
   late final _percent = TextEditingController(
     text: formatPercent(widget.debt?.basisPoints ?? fullBasisPoints).replaceFirst(' %', ''),
   );
-  late final _event = _dateController(widget.debt?.eventDate);
-  late final _invoice = _dateController(widget.debt?.invoiceDate);
+  late final _event = _dateController(widget.debt == null ? widget.source?.date : widget.debt!.eventDate);
+  late final _invoice = _dateController(widget.debt?.invoiceDate ?? widget.source?.date);
   late final _request = _dateController(widget.debt?.requestDate);
   late final _received = _dateController(widget.debt?.receivedDate);
-  late final _description = TextEditingController(text: widget.debt?.description);
+  late final _description = TextEditingController(text: widget.debt?.description ?? widget.source?.description);
   late bool _repaid = widget.debt?.repaid ?? false;
   String? _dateError;
 
@@ -83,6 +99,7 @@ class _DebtFormPageState extends State<DebtFormPage> {
       receivedDate: date(_received),
       description: _description.text,
       repaid: _repaid,
+      sourceTransactionId: widget.debt?.sourceTransactionId ?? widget.source?.id,
     );
     final today = context.read<AppServices>().today();
     final existing = widget.debt;
@@ -130,11 +147,33 @@ class _DebtFormPageState extends State<DebtFormPage> {
     });
   }
 
+  /// The transaction [id] in a few words, with the date it gives the debt;
+  /// a tap opens it.
+  Widget _linked(BuildContext context, String label, String id, String key) {
+    final ledger = context.watch<LedgerCubit>().state.ledger;
+    final t = ledger.transactions[id];
+    if (t == null) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
+    return ListTile(
+      key: Key(key),
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.link),
+      title: Text('$label : ${DateField.text(t.date)}'),
+      subtitle: Text('${titleText(l, ledger, t)} · ${formatAmount(t.amount)}'),
+      onTap: () =>
+          Navigator.of(context)
+              .push(MaterialPageRoute<void>(builder: (_) => TransactionDetailPage(transactionId: t.id))),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final debt = widget.debt;
     final total = _total;
+    final ledger = context.watch<LedgerCubit>().state.ledger;
+    final sourceId = debt?.sourceTransactionId ?? widget.source?.id;
+    final refundId = _repaid ? debt?.refundTransactionId : null;
     Widget dateField(TextEditingController controller, String label, String key) => Padding(
       padding: const EdgeInsets.only(top: 8),
       child: DateField(controller: controller, label: label, fieldKey: Key(key), onChanged: () => setState(() {})),
@@ -207,9 +246,15 @@ class _DebtFormPageState extends State<DebtFormPage> {
             decoration: InputDecoration(labelText: l.debtDescription),
           ),
           dateField(_event, l.debtEventDate, 'debtEventDate'),
-          dateField(_invoice, l.debtInvoiceDate, 'debtInvoiceDate'),
+          if (sourceId != null && ledger.transactions.containsKey(sourceId))
+            _linked(context, l.debtInvoiceDate, sourceId, 'debtSourceTransaction')
+          else
+            dateField(_invoice, l.debtInvoiceDate, 'debtInvoiceDate'),
           dateField(_request, l.debtRequestDate, 'debtRequestDate'),
-          dateField(_received, l.debtReceivedDate, 'debtReceivedDate'),
+          if (refundId != null && ledger.transactions.containsKey(refundId))
+            _linked(context, l.debtReceivedDate, refundId, 'debtRefundTransaction')
+          else
+            dateField(_received, l.debtReceivedDate, 'debtReceivedDate'),
           if (_dateError != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
