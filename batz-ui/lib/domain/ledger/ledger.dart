@@ -258,13 +258,16 @@ class Ledger {
   List<int> get yearsWithTree => trees.keys.toList()..sort();
 
   /// The year whose tree [year] copies: the closest earlier year that has
-  /// one, or null if there is none.
+  /// one; for a year before every tree, the first tree, so that a payment
+  /// made the year before for the first year finds the same names; null
+  /// when there is no tree.
   int? sourceYearFor(int year) {
-    int? best;
+    int? earlier, later;
     for (final candidate in trees.keys) {
-      if (candidate < year && (best == null || candidate > best)) best = candidate;
+      if (candidate < year && (earlier == null || candidate > earlier)) earlier = candidate;
+      if (candidate > year && (later == null || candidate < later)) later = candidate;
     }
-    return best;
+    return earlier ?? later;
   }
 
   /// The tree of [year] if it exists, otherwise the tree it would get from
@@ -292,8 +295,8 @@ class Ledger {
   }
 
   /// Creates the tree of [year]: a copy of the tree of [sourceYearFor], of its mapping rules and of its
-  /// redistribution rules, or, without one, the two empty groups « Revenus » and « Dépenses ». Copies get
-  /// computed identifiers; a copied rule targets the copy of its category.
+  /// redistribution rules, or, without any tree, the two empty groups « Revenus » and « Dépenses ». Copies
+  /// get computed identifiers; a copied rule targets the copy of its category.
   Modification createTree(int year) {
     if (trees.containsKey(year)) throw const LedgerException(LedgerError.treeExists);
     return Modification(_treeChanges(year));

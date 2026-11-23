@@ -168,7 +168,8 @@ pages turn into a French message. `LedgerCubit` holds the current `Ledger`
 for every page.
 
 - **Category trees**: one per year, copied from the closest earlier year that
-  has one, at the first transaction of the year or by hand; copies and
+  has one (a year before every tree copies the first one), at the first
+  transaction of the year or by hand; copies and
   default groups get identifiers computed with SHA-256. Names are compared
   without case, accents or surrounding spaces. A category whose parents do
   not reach, in the same year, a top-level group with a nature is

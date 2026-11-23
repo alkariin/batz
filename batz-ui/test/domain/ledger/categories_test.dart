@@ -119,9 +119,10 @@ void main() {
       expect(() => sample().createTree(2026), refusedWith(LedgerError.treeExists));
     });
 
-    test('a year copies the closest earlier year that has a tree', () {
+    test('a year copies the closest earlier year that has a tree, a year before every tree the first one', () {
       var l = sample();
-      expect(l.sourceYearFor(2026), isNull);
+      expect(Ledger.empty.sourceYearFor(2026), isNull);
+      expect(l.sourceYearFor(2026), isNull, reason: 'its own tree');
       expect(l.sourceYearFor(2030), 2026);
       l = apply(l, l.createTree(2028));
       l = apply(l, l.renameCategory(copiedCategoryId('rent', 2028), 'Loyer 2028'));
@@ -131,9 +132,12 @@ void main() {
       expect(l.trees[2029]!.named('Loyer 2028'), isNotNull);
       l = apply(l, l.createTree(2027));
       expect(l.trees[2027]!.named('Loyer'), isNotNull);
-      // A year before every tree starts again from the two groups.
+      // A year before every tree copies the first one: a payment made in
+      // 2025 for 2026 finds the same names.
+      expect(l.sourceYearFor(2025), 2026);
       l = apply(l, l.createTree(2025));
-      expect(names(l.trees[2025]!), ['Revenus', 'Dépenses']);
+      expect(names(l.trees[2025]!), names(l.trees[2026]!));
+      expect(l.trees[2025]!.named('Loyer')!.id, copiedCategoryId('rent', 2025));
     });
 
     test('a copy keeps the structure, with identifiers computed from the source and the year', () {

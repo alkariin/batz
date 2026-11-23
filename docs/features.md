@@ -153,7 +153,9 @@ tree** (2027 seen from 2026) is shown with the tree and the redistribution
 rules its copy will receive, the shares that fall in it going to the
 identifiers the copy will write. A **year before the first tree** is not
 shown: its shares (taxes of 2025 paid in 2026) leave the economic view of
-the year of payment and appear only in its offsets.
+the year of payment and appear only in its offsets. Its tree, created by
+hand or by its first transaction (a subscription paid in December 2025 for
+2026), copies the first tree, so that its shares find the same names.
 
 ### Between years: the same name
 
