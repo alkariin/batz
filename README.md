@@ -10,7 +10,7 @@ Android, Windows and Ubuntu; a small server on your home network reads the
 statements and keeps the reference copy of the data. Nothing leaves your
 home, and there is no account to create.
 
-**Status: alpha** (version 0.9.0-alpha). Everything planned for version 1.0
+**Status: alpha** (version 0.10.0-alpha). Everything planned for version 1.0
 is there; the version number will follow once it has been used for a while.
 The screens are in French; the bank statements read are those of
 PostFinance, in Swiss francs.

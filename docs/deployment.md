@@ -29,16 +29,16 @@ Each release carries `batz-web-<version>.tar.gz`, a `docker save` of the image
 # Synology: docker lives in /usr/local/bin, missing from the PATH of
 # non-interactive SSH sessions.
 export PATH="$PATH:/usr/local/bin"
-gunzip -c batz-web-v0.9.0-alpha.tar.gz | docker load
+gunzip -c batz-web-v0.10.0-alpha.tar.gz | docker load
 mkdir -p /volume1/docker/batz/data
 # Hand the data folder to uid 10001 (or: sudo chown 10001:10001 …).
 docker run --rm --user 0 --entrypoint chown \
-  -v /volume1/docker/batz/data:/data batz-web:v0.9.0-alpha 10001:10001 /data
+  -v /volume1/docker/batz/data:/data batz-web:v0.10.0-alpha 10001:10001 /data
 docker rm -f batz-web 2>/dev/null
 docker run -d --name batz-web --restart unless-stopped \
   -p 8443:8443 -v /volume1/docker/batz/data:/data \
   --read-only --cap-drop ALL --security-opt no-new-privileges:true \
-  batz-web:v0.9.0-alpha
+  batz-web:v0.10.0-alpha
 docker inspect -f '{{.State.Health.Status}}' batz-web   # healthy after a few seconds
 curl -sk https://localhost:8443/healthz                  # version and minimum app version
 ```
@@ -118,8 +118,8 @@ the pairing and the choices of the device.
   `%APPDATA%\batz\batz\` on Windows. On Ubuntu, run
   `./install-desktop-entry.sh` again if the folder moved.
 
-When a version raises the minimum app version of the server (0.9.0-alpha
-does: it requires the app 0.9.0), update the server and every app. An app
+When a version raises the minimum app version of the server (0.10.0-alpha
+does: it requires the app 0.10.0), update the server and every app. An app
 older than the minimum refuses to synchronise and keeps its changes until it
 is updated; then the next exchange sends them.
 
@@ -156,7 +156,7 @@ a released install.
    `batz-ui/lib/version.dart` (a test checks they agree), and raise the build
    number (`+N`) above the one of every published version.
 2. Publish a GitHub release tagged `v<version name>`, suffix included
-   (`0.9.0-alpha+10` → `v0.9.0-alpha`), as an ordinary release: Obtainium
+   (`0.10.0-alpha+11` → `v0.10.0-alpha`), as an ordinary release: Obtainium
    skips pre-releases. The release workflow checks the tag and the build
    number, then attaches the APK, the Ubuntu and Windows archives and the
    server image file.

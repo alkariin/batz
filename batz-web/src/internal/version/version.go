@@ -14,14 +14,15 @@ import (
 // A plain `go build` keeps "dev".
 var Version = "dev"
 
-// MinAppVersion is the oldest app version this server works with: 0.9.0 is
-// the first that reads the lines of the rules, the fixed amounts of
-// redistribution, the order of the accounts and their tax flag, the notes
-// of balances and the links between debts and transactions; an older one
-// would keep them in its journal and show other totals. The app compares it
-// with its own version and refuses to synchronise when it is older; the
-// server refuses its exchanges too.
-const MinAppVersion = "0.9.0"
+// MinAppVersion is the oldest app version this server works with: 0.10.0 is
+// the first that keeps the lines of a transaction split between categories
+// when it modifies it; an older one would rewrite it with one line and
+// leave the others counted twice. 0.9.0 was the first to read the lines of
+// the rules, the fixed amounts of redistribution, the order of the accounts
+// and their tax flag, the notes of balances and the links between debts and
+// transactions. The app compares it with its own version and refuses to
+// synchronise when it is older; the server refuses its exchanges too.
+const MinAppVersion = "0.10.0"
 
 var versionPattern = regexp.MustCompile(`^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?`)
 
