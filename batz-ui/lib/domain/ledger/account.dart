@@ -13,10 +13,26 @@ abstract final class AccountFields {
   static const type = 'type';
   static const importFormat = 'importFormat';
   static const archived = 'archived';
+
+  /// Where the user placed the account among the others, from 0; absent
+  /// until the accounts are first reordered.
+  static const position = 'position';
+
+  /// Whether the account is declared in the tax return: « Fortune » shows it
+  /// in another colour.
+  static const declared = 'declared';
 }
 
 class Account extends Equatable {
-  const Account({required this.id, required this.name, required this.type, this.importFormat, this.archived = false});
+  const Account({
+    required this.id,
+    required this.name,
+    required this.type,
+    this.importFormat,
+    this.archived = false,
+    this.position,
+    this.declared = false,
+  });
 
   final String id;
   final String name;
@@ -26,27 +42,42 @@ class Account extends Equatable {
   final ImportFormat? importFormat;
   final bool archived;
 
+  /// Null until the user reorders the accounts.
+  final int? position;
+
+  /// Declared in the tax return.
+  final bool declared;
+
   /// A detailed account is one whose transactions come from its bank
   /// statements: it is detailed if and only if import is enabled.
   bool get isDetailed => importFormat != null;
 
   @override
-  List<Object?> get props => [id, name, type, importFormat, archived];
+  List<Object?> get props => [id, name, type, importFormat, archived, position, declared];
 }
 
-/// What the user enters to create or modify an account.
+/// What the user enters to create or modify an account; its position
+/// changes only by moving it up or down.
 class AccountDraft {
-  const AccountDraft({required this.name, required this.type, this.importFormat, this.archived = false});
+  const AccountDraft({
+    required this.name,
+    required this.type,
+    this.importFormat,
+    this.archived = false,
+    this.declared = false,
+  });
 
   factory AccountDraft.of(Account account) => AccountDraft(
     name: account.name,
     type: account.type,
     importFormat: account.importFormat,
     archived: account.archived,
+    declared: account.declared,
   );
 
   final String name;
   final AccountType type;
   final ImportFormat? importFormat;
   final bool archived;
+  final bool declared;
 }

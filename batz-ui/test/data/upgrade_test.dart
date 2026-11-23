@@ -122,7 +122,7 @@ void main() {
 
     final repository = LedgerRepository(db, journal);
     final ledger = await repository.load();
-    expect(ledger.sortedAccounts.map((a) => a.name), ['Compte privé', 'Dettes', 'Espèces', 'Épargne']);
+    expect(ledger.sortedAccounts.map((a) => a.name), ['Compte privé', 'Épargne', 'Espèces', 'Dettes']);
     final savings = ledger.balances.of('acc-savings');
     expect(savings.points.map((p) => (p.date.encode(), p.amount)), [('2025-12-31', 1000000), ('2026-06-30', 1080000)]);
     expect(savings.variationAt(1), 30000);
@@ -157,7 +157,7 @@ void main() {
 
     final repository = LedgerRepository(db, journal);
     final ledger = await repository.load();
-    expect(ledger.sortedAccounts.map((a) => a.name), ['Compte privé', 'Espèces', 'Épargne']);
+    expect(ledger.sortedAccounts.map((a) => a.name), ['Compte privé', 'Épargne', 'Espèces']);
     expect(ledger.accounts['acc-bank']!.importFormat, ImportFormat.postfinance);
     expect(ledger.trees.keys.toList()..sort(), [2026, 2027]);
     final food2027 = copiedCategoryId('cat-food', 2027);
@@ -210,7 +210,7 @@ void main() {
 
     final repository = LedgerRepository(db, journal);
     final ledger = await repository.load();
-    expect(ledger.sortedAccounts.map((a) => a.name), ['Compte privé', 'Espèces', 'Épargne']);
+    expect(ledger.sortedAccounts.map((a) => a.name), ['Compte privé', 'Épargne', 'Espèces']);
     expect(ledger.accounts['acc-bank']!.importFormat, ImportFormat.postfinance);
     final names = ['Revenus', 'Salaire', 'Dépenses', 'Logement', 'Loyer', 'Nourriture', 'Assurances'];
     expect(ledger.trees.keys.toList()..sort(), [2026, 2027]);
@@ -283,7 +283,7 @@ void main() {
 
     final repository = LedgerRepository(db, journal);
     final ledger = await repository.load();
-    expect(ledger.sortedAccounts.map((a) => a.name), ['Compte privé', 'Espèces', 'Épargne']);
+    expect(ledger.sortedAccounts.map((a) => a.name), ['Compte privé', 'Épargne', 'Espèces']);
     expect(ledger.accounts['acc-bank']!.importFormat, ImportFormat.postfinance);
     expect(ledger.trees[2026]!.ordered.map((c) => c.name), [
       'Revenus',

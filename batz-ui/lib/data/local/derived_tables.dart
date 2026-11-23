@@ -140,6 +140,8 @@ final accountsTable = DerivedTable(
     AccountFields.type: const DerivedColumn.text('type'),
     AccountFields.importFormat: const DerivedColumn.text('import_format'),
     AccountFields.archived: const DerivedColumn.integer('archived'),
+    AccountFields.position: const DerivedColumn.integer('position'),
+    AccountFields.declared: const DerivedColumn.integer('declared'),
   },
 );
 

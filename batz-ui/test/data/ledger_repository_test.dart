@@ -17,7 +17,7 @@ void main() {
       (l) => l.createAccount('a1', const AccountDraft(name: 'Espèces', type: AccountType.cash)),
     );
     expect(ledger.accounts['a1'], const Account(id: 'a1', name: 'Espèces', type: AccountType.cash));
-    expect(await h.journal.entries(), hasLength(4));
+    expect(await h.journal.entries(), hasLength(5));
     await h.close();
   });
 

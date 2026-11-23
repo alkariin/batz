@@ -415,6 +415,18 @@ abstract class AppLocalizations {
   /// **'Archivé'**
   String get accountArchived;
 
+  /// No description provided for @accountDeclared.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déclaré aux impôts'**
+  String get accountDeclared;
+
+  /// No description provided for @accountDeclaredHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Son nom et son solde s\'affichent dans une autre couleur dans « Fortune ».'**
+  String get accountDeclaredHint;
+
   /// No description provided for @accountDetailed.
   ///
   /// In fr, this message translates to:
@@ -2765,6 +2777,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Comptes sans solde'**
   String get wealthWithoutBalanceSection;
+
+  /// No description provided for @wealthDeclaredLegend.
+  ///
+  /// In fr, this message translates to:
+  /// **'En couleur : les comptes déclarés aux impôts.'**
+  String get wealthDeclaredLegend;
 
   /// No description provided for @wealthDebts.
   ///

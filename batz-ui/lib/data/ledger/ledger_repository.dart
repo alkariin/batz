@@ -338,6 +338,8 @@ class LedgerRepository {
       type: type,
       importFormat: parsedFormat,
       archived: row['archived'] == 1,
+      position: row['position'] is int ? row['position']! as int : null,
+      declared: row['declared'] == 1,
     );
   }
 
