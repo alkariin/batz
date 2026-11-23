@@ -189,13 +189,23 @@ the PDF to import, the original PDF and the export.
 
 ### Mapping rules and proposals
 
-Keywords are one field holding a JSON list (the journal holds scalars). Text
-and keywords are compared lower-cased, without accents, whitespace collapsed,
-so a keyword spans lines; a `re:` keyword keeps its case (lower-casing turns
-`\S` into `\s`) and matches without case. The rules with the most keywords
-win; a winning rule whose target is unusable proposes nothing rather than let
-a weaker rule decide. Only `toValidate` and `validated` are stored: proposals
-are computed at load, so writing a rule writes only the rule.
+The lines of a rule are one field, `lines`, holding a JSON list (the journal
+holds scalars). Lines are alternatives because « or » is the common case;
+`ET` joins required terms and is read only in capitals between spaces, so a
+shop called « Bar et Café » needs no escape. Rules written before 0.9 keep
+their `keywords` field (all required) and read as one line `a ET b`: no
+entry of the journal is rewritten, and a modification writes `lines` and
+clears `keywords`. Text and terms are compared lower-cased, without accents,
+whitespace collapsed, so a term spans lines; a `re:` term keeps its case
+(lower-casing turns `\S` into `\s`) and matches without case. The weight
+of a rule is the number of terms of its heaviest matching line; the
+heaviest rules win, and a winning rule whose target is unusable proposes
+nothing rather than let a weaker rule decide. Rules propose the payment
+date only: the period models of 0.8 (« mois suivant »…) are no longer read,
+and a period that differs is set on the line. Only `toValidate` and
+`validated` are stored: proposals are computed at load, so writing a rule
+writes only the rule. Deleting a category deletes the rules that classify in
+it, in the same modification; the redistribution rules still refuse it.
 
 ## Ledger rules
 
@@ -236,6 +246,35 @@ amount counts the difference unclassified, so cash-flow result plus « Non
 classé » stays the sum of the payments. Redistribution rules are checked
 again at each load: one that no longer applies is kept and listed. The view
 chosen is kept per device in `local_state`, never in the journal.
+
+### Fixed amounts of redistribution follow the payments
+
+A fixed amount is taken per payment, not per month: a month with two rent
+payments in the cash-flow view, or a payment covering two months, then
+moves the right amount. In the economic view it is spread with the same
+allocation as the payment. Fixed amounts come before percentages, which
+apply to what remains, so a source never changes sign. Refunds give nothing:
+a refund of the rent pays no charges.
+
+### Accounts: a position written on the first move
+
+`position` is absent until the user moves an account; then every account of
+the list (active or archived) gets one, so later moves and merges keep a
+definite order (ties fall back on type, name, identifier). The default order
+is by type then name, the order « Fortune » already grouped by: the first
+move changes nothing else. « Déclaré aux impôts » is a field of the account,
+shown only as a colour (the tertiary colour of the theme) and a legend.
+
+### Debts linked to transactions
+
+A debt stores `sourceTransactionId` and `refundTransactionId`; the
+transactions store nothing. The date of invoice is copied from the source
+transaction at each write of the debt, the date of receipt from the
+repaying transaction when it is linked, so the wealth keeps reading dates of
+the debt alone. Repaying a debt owed to me attaches the transaction as the
+refund of the source expense through the ordinary refund link, in the same
+modification: the expense shows its net cost and the views need nothing
+new. A transaction deleted leaves the link dangling and the debt as it was.
 
 ### Refunds: one link, followed one step
 
@@ -338,9 +377,12 @@ pre-releases, which Obtainium skips; see [deployment.md](deployment.md).
 
 ### The minimum app version follows the journal entities
 
-The server's minimum app version rises when a version adds journal entities:
-an older app would keep them unapplied and show other totals. It is 0.7.0, as
-0.8.0-alpha added no entity, route or migration: both versions mix freely.
+The server's minimum app version rises when a version adds journal entities
+or fields that change what is shown: an older app would keep them unapplied
+and show other totals. It is 0.9.0: 0.9.0-alpha adds rule lines, fixed
+amounts of redistribution, account positions and their tax flag, notes of
+balances and the links of debts; an app 0.8 would read a rule without
+keywords as unusable and a fixed amount as a rule without percentage.
 
 ## CI and tests
 
