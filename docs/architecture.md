@@ -143,16 +143,16 @@ use plain SQLite.
 
 | Journal entity | Table | Fields |
 |---|---|---|
-| `account` | `accounts` | name, type, importFormat, archived |
+| `account` | `accounts` | name, type, importFormat, archived, position, declared |
 | `category` | `categories` | year, name, parentId, nature (top-level groups), position |
 | `transaction` | `transactions` | accountId, date, amount, counterpartAccountId, description, note, status (`toValidate`, `validated`), rawText, statementId, statementRank |
 | `transactionLine` | `transaction_lines` | transactionId, categoryId, amount, periodStart, periodEnd, refundedLineId |
 | `statement` | `statements` | accountId, format, iban, periodStart, periodEnd, openingBalance, closingBalance, fingerprint |
-| `rule` | `rules` | year, keywords (JSON list), targetCategoryId or targetAccountId, periodModel, periodMonths |
-| `redistribution` | `redistributions` | year, sourceCategoryId, targetCategoryId, basisPoints (hundredths of a percent) |
+| `rule` | `rules` | year, lines (JSON list; `keywords`, a JSON list, for a rule written before 0.9), targetCategoryId or targetAccountId |
+| `redistribution` | `redistributions` | year, sourceCategoryId, targetCategoryId, basisPoints (hundredths of a percent) or amount (cents per payment) |
 | `shareClassification` | `share_classifications` | lineId, year, categoryId, originCategoryId |
-| `balance` | `balances` | accountId, date, amount (identifier computed from the account and the date) |
-| `debt` | `debts` | direction, person, amount, basisPoints, eventDate, invoiceDate, requestDate, receivedDate, description, repaid, enteredOn, checkedOn |
+| `balance` | `balances` | accountId, date, amount, note (identifier computed from the account and the date) |
+| `debt` | `debts` | direction, person, amount, basisPoints, eventDate, invoiceDate, requestDate, receivedDate, description, repaid, enteredOn, checkedOn, sourceTransactionId, refundTransactionId |
 | `moduleSetting` | `module_settings` | module, categoryName (identifier computed from the module) |
 | `salarySheet`, `salaryDeduction` | `salary_sheets`, `salary_deductions` | year, gross, net; sheetId, label, amount, rank |
 | `taxYear`, `taxLine` | `tax_years`, `tax_lines` | year, taxableWealth, marginalRate; year, tax, base, baseRate, coefficient |
@@ -507,10 +507,11 @@ read in the wrong column.
 - On the detailed account, the amount, date, account and raw text of a line
   never change, and no line is entered or deleted by hand; category, period,
   description and note change.
-- The rules of a year match the raw text of a line: every keyword, without
-  case, accents or repeated spaces, or `re:` for a regular expression. The
-  rule with the most keywords wins; a tie of different results is a
-  conflict. Rules follow the copy of a tree.
+- The rules of a year match the raw text of a line: one of its lines, each
+  term of the line joined by `ET`, without case, accents or repeated
+  spaces, or `re:` for a regular expression. The rule whose matching line
+  has the most terms wins; a tie of different targets is a conflict. A rule
+  proposes the payment date. Rules follow the copy of a tree.
 - A line is « à valider » or « validée ». For a line to validate, the
   classification shown and counted in the totals is computed at each load
   from the rules of its year, never stored: « proposée » when one result

@@ -1,7 +1,7 @@
 # Features
 
-How the app computes and shows what the user entered: the annual view, the
-wealth, the modules and the export. How the data are stored and synchronised
+How the app computes and shows what the user entered: the classification
+rules, the annual view, the wealth, the modules and the export. How the data are stored and synchronised
 is in [architecture](architecture.md).
 
 Only what the user enters or imports is stored. Every figure below is
@@ -10,6 +10,38 @@ the same journal show the same figures, and a change on one (a category
 renamed, a period corrected) changes every view on every device at the next
 load. Amounts are kept in cents, never in floating point; a result
 is rounded once, to the cent, halves away from zero.
+
+## Classification rules
+
+A mapping rule of a year classifies the lines to validate: in its category,
+or as a transfer with an account. « Plus › Catégories et règles » shows the
+tree of the year with, under each category, the rules that classify in it;
+then the transfer rules under their account, and the rules whose target can
+no longer be used. A tap on a category opens the same menu as its button:
+add a rule, a sub-category, rename, move, up, down, delete. Deleting a
+category deletes its rules with it. A button explains the rules.
+
+- A rule has **lines**, one of which must be found in the raw text of the
+  bank: lines are alternatives (OU). Within a line, terms joined by `ET`, in
+  capitals between spaces, are each required, anywhere and in any order
+  (« coop ET pronto »); without `ET`, the line is looked for as written,
+  words side by side. « et » in lower case is a word of the text.
+- Case, accents and repeated spaces do not count; a term written `re:…` is a
+  regular expression.
+- The **weight** of a rule for a text is the number of terms of its
+  heaviest matching line. The heaviest rules win; a tie between different
+  targets is a conflict and the line stays « à compléter ».
+- A rule always proposes the **payment date** as the period; the period is
+  changed on the line itself.
+- Proposals are computed at each load, never stored: a rule created,
+  modified or deleted changes only the lines still to validate.
+- A rule written by version 0.8 or earlier had keywords, all required: it
+  reads as the single line `a ET b`, and its period model is no longer read.
+  Modified, it is written as lines.
+
+**Example.** « Restaurant » has the lines `mcdonald` and `coop ET pronto`;
+« Courses » has `coop`. « COOP PRONTO SHOP 123 » goes to « Restaurant »
+(two terms against one); « Coop City » goes to « Courses ».
 
 ## Annual view
 
@@ -110,23 +142,33 @@ renamed back to « nourriture », the 2027 share is found again by its name.
 
 ### Redistribution
 
-A rule of a year moves, month by month and in both views, a percentage of
-what a source category shows to a target category.
+A rule of a year moves, in both views, part of what a source category shows
+to a target category: a percentage, month by month, or a fixed amount of
+each payment.
 
 - Source and target are categories without children of the same year and
-  nature; the percentage goes from 0.01 to 100 % with two decimals at most
-  (kept in hundredths of a percent); the rules from one source add up to
-  100 % at most; a target cannot be a source.
-- Each month, the percentage of the source's amount *before any
-  redistribution* (proposed lines, refunds and shares from other years
-  included), rounded to the cent, leaves the source and joins the target,
-  on a line of its own on each side. Categories keep showing their own
-  amounts and groups add the lines, so a group holding both, the income,
-  the expenses and the savings do not change.
+  nature; a rule has either a percentage, from 0.01 to 100 % with two
+  decimals at most (kept in hundredths of a percent), or a fixed amount in
+  cents, more than zero; the percentages from one source add up to 100 % at
+  most; a target cannot be a source.
+- **Fixed amounts** come first, payment by payment: each payment classified
+  in the source (an expense going out, an income coming in; refunds give
+  nothing) gives the amount of each rule of the source in turn, until the
+  payment is used up. The cash-flow view moves it at the payment date, the
+  economic view spreads it over the period of the payment like the payment
+  itself.
+- **Percentages** then take, each month, their share of what the source
+  shows once its fixed amounts are out (proposed lines, refunds and shares
+  from other years included), rounded to the cent.
+- What moves leaves the source and joins the target on a line of its own on
+  each side. Categories keep showing their own amounts and groups add the
+  lines, so a group holding both, the income, the expenses and the savings
+  do not change.
 - A rule that no longer applies is kept, left out and listed in the tasks:
   source or target missing, now a group or detached; natures that differ;
-  after a merge of two devices, rules from one source above 100 % (all of
-  them) or a target that is also a source (the rules in cause).
+  after a merge of two devices, both or neither of a percentage and an
+  amount, percentages from one source above 100 % (all of them) or a target
+  that is also a source (the rules in cause).
 - The rules follow the copy of a tree, with computed identifiers.
 
 **Example.** 10 % of « Nourriture » to « Entretien ménage »: in March,
@@ -135,6 +177,13 @@ what a source category shows to a target category.
 Nourriture · 10 % » 34.57. With 60.01 paid on 30 June for June and July,
 the cash-flow view moves 6.00 in June, the economic view 3.00 in June and
 3.00 in July (shares of 30.01 and 30.00, each rounded).
+
+**Example of fixed amounts.** A rent of 2'000.00 includes 250.00 of charges
+and 100.00 of parking space: two rules from « Loyer », 250.00 to « Charges »
+and 100.00 to « Place de parc ». Each month « Loyer » shows 2'000.00 with
+« Vers Charges · 250.00 par paiement » −250.00 and « Vers Place de parc ·
+100.00 par paiement » −100.00 below it: 1'650.00 of rent. A payment of
+300.00 gives 250.00 and 50.00; a refund of the rent gives nothing.
 
 ### Refunds attached to their expense
 
@@ -191,9 +240,9 @@ Every date is the end of its day. Code: `batz-ui/lib/domain/ledger/`
 
 The *points* of an account are the balances it is known to hold:
 
-- each **declared balance**: a date and an amount, which may be negative (a
-  loan). One per account and per day: declaring twice the same day replaces
-  it, on one device or two;
+- each **declared balance**: a date, an amount, which may be negative (a
+  loan), and a free note. One per account and per day: declaring twice the
+  same day replaces it, on one device or two;
 - for an account with statements, the **opening balance of its first
   statement, the day before it starts** (31.12.2025 for a statement starting
   on 1.1.2026). The detailed account enters the wealth that way; no balance
@@ -237,16 +286,30 @@ the limit is 28.2). An account without declared balance is no task:
 
 A debt has a direction (« on me doit », « je dois »), a person, an amount, a
 percentage (0.01 to 100, 100 by default, kept in hundredths of a percent),
-the dates of the event, the invoice, the request and the receipt, a
-description and whether it is repaid; the app also records the days it was
-entered and checked.
+the dates of the event, of the transaction of the invoice, of the request
+and of the transaction of the repayment, a description and whether it is
+repaid; the app also records the days it was entered and checked.
+
+- **From a transaction**: « Créer une dette » on the screen of a
+  transaction (not a transfer) starts a debt from it: « on me doit » for
+  money that left, « je dois » for money that came in, its amount, its
+  description, its date as the date of the event. The debt keeps the link;
+  its date of invoice is the date of the transaction.
+- **Repaid by a transaction**: « Rembourse une dette » on the screen of a
+  transaction, or of a line being validated, lists the open debts it can
+  repay (owed to me for money that came in, owed by me for money that went
+  out). The debt is checked, repaid on the date of the transaction, and
+  keeps the link. When it is owed to me and comes from an expense, the
+  transaction becomes the refund of that expense (and a line to validate is
+  validated by it), unless it already refunds another one. Unchecking the
+  debt drops the link to its repayment; the refund stays until detached.
 
 - **Total**: amount × percentage, rounded to the cent (200.00 at 50 % is
   100.00).
 - **When it counts**: from the day of the event (failing that, the day it was
   entered) to the day before its receipt (failing that, the day before it
   was checked as repaid); not repaid, from its start on. Checking proposes
-  today as the date of receipt; unchecking makes it count again.
+  today as the date of the repayment; unchecking makes it count again.
 - **Sign**: « on me doit » adds to the wealth, « je dois » takes from it.
   The wealth shows one line « Dettes », the signed sum of the debts that
   count that day, whether a debts account exists or not: such an account
@@ -271,6 +334,13 @@ and its date (the end of the last statement for the detailed account), the
 accounts without balance, the line « Dettes », the **curve**, which gives
 the wealth at the end of each month up to the current one, valued today,
 and the table of each year from the first to the current one.
+
+Accounts follow the order chosen in « Plus › Comptes », where each moves up
+or down by its menu; until the first move they go by type, then name. In
+« Fortune » they group by type, the groups in the order of their first
+account. An account **declared in the tax return** (a switch of its form)
+shows its name and balance in another colour, the text only, with a legend
+below the accounts.
 
 ### Explanation table
 
@@ -336,9 +406,10 @@ The table of 2025 shows 15'000.00 of accounts added (the private account and
   changes: the line of the debts is the change of the open debts (+500.00)
   minus the movement on « Dettes » (+500.00), zero.
 - **An expense advanced for two**: 200.00 of restaurant and a debt « on me
-  doit 100.00 » (200.00 at 50 %) give a cash-flow result of −200.00 and
-  +100.00 on the line of the debts. Paid back later as a refund in
-  « Restaurant », with the debt checked: −100.00 and 0.
+  doit 100.00 », created from the expense, (200.00 at 50 %) give a cash-flow result of −200.00 and
+  +100.00 on the line of the debts. Paid back later by a transfer that
+  repays the debt: it becomes the refund of the restaurant, and the debt is
+  checked that day: −100.00 and 0.
 
 ## Modules
 
@@ -614,15 +685,15 @@ the format, how to open a file in Excel, and a pointer to this section.
 
 | File | One row per | Columns |
 |---|---|---|
-| `comptes.csv` | account | Nom; Type; Format d'import; Archivé; id |
-| `soldes.csv` | declared balance | Compte; Date; Montant; id; idCompte |
+| `comptes.csv` | account | Nom; Type; Format d'import; Archivé; Déclaré aux impôts; Position; id |
+| `soldes.csv` | declared balance | Compte; Date; Montant; Note; id; idCompte |
 | `releves.csv` | imported statement | Compte; Format; IBAN; Début de période; Fin de période; Solde initial; Solde final; Empreinte du fichier; id; idCompte |
 | `categories.csv` | category of a year | Année; Chemin; Nom; Nature; Groupe parent; Position; id; idParent |
-| `regles.csv` | mapping rule | Année; Mots-clés; Catégorie cible; Compte cible; Modèle de période; Mois; id; idCatégorieCible; idCompteCible |
-| `redistributions.csv` | redistribution rule | Année; Catégorie source; Catégorie cible; Pourcentage; id; idCatégorieSource; idCatégorieCible |
+| `regles.csv` | mapping rule | Année; Lignes; Catégorie cible; Compte cible; id; idCatégorieCible; idCompteCible |
+| `redistributions.csv` | redistribution rule | Année; Catégorie source; Catégorie cible; Pourcentage; Montant fixe; id; idCatégorieSource; idCatégorieCible |
 | `transactions.csv` | line of a transaction | Date; Compte; Montant; Texte de la banque; Description; Note; Statut; Type; Catégorie; Début de période; Fin de période; Montant de la ligne; Compte de contrepartie; Relevé; Rang dans le relevé; Dépense remboursée; idTransaction; idLigne; idCompte; idCatégorie; idCompteContrepartie; idRelevé; idLigneRemboursée |
 | `parts-reportees.csv` | answer for a carried share | Date de paiement; Description; Montant; Année; Catégorie choisie; Catégorie d'origine; id; idLigne; idTransaction; idCatégorieChoisie; idCatégorieOrigine |
-| `dettes.csv` | debt | Sens; Personne; Montant; Pourcentage; Total; Date de l'événement; Date de la facture; Date de la demande; Date de réception; Description; Remboursée; Saisie le; Cochée le; id |
+| `dettes.csv` | debt | Sens; Personne; Montant; Pourcentage; Total; Date de l'événement; Date de la transaction de la facture; Date de la demande; Date de la transaction du remboursement; Description; Remboursée; Saisie le; Cochée le; id; idTransactionFacture; idTransactionRemboursement |
 | `fiches-salaire.csv` | salary sheet | Année; Brut; Net; id |
 | `deductions-salaire.csv` | deduction of a sheet | Année; Rang; Libellé; Montant; id; idFiche |
 | `annees-fiscales.csv` | fiscal year | Année; Fortune imposable; TMI; id |
@@ -645,9 +716,13 @@ Notes:
 - **`categories.csv`**: « Chemin » goes from the top-level group to the
   category; « Nature » (revenus, dépenses) is the one of its top-level
   group. Rows follow the order of the tree.
-- **`regles.csv`**: the keywords of a rule are written one per line in
-  their cell; « Mois » is the number of months of a period model that needs
-  one.
+- **`regles.csv`**: the lines of a rule are written one per line in their
+  cell, `ET` kept; a rule written as keywords shows its single line
+  `a ET b`.
+- **`redistributions.csv`**: « Pourcentage » or « Montant fixe », the other
+  empty.
+- **`comptes.csv`**: « Position » is empty until the accounts are first
+  reordered.
 - **`impots.csv`**: « Montant » is base × base rate × coefficient, as the
   screen shows it; empty while the base or the rate is missing. The lines
   of wealth have no base of their own: the taxable wealth is in

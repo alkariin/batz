@@ -10,7 +10,7 @@ Android, Windows and Ubuntu; a small server on your home network reads the
 statements and keeps the reference copy of the data. Nothing leaves your
 home, and there is no account to create.
 
-**Status: alpha** (version 0.8.0-alpha). Everything planned for version 1.0
+**Status: alpha** (version 0.9.0-alpha). Everything planned for version 1.0
 is there; the version number will follow once it has been used for a while.
 The screens are in French; the bank statements read are those of
 PostFinance, in Swiss francs.
@@ -19,9 +19,9 @@ PostFinance, in Swiss francs.
 
 - **Import and validation.** The statement of the month is sent to the
   server, which reads and checks it; its lines arrive « à valider », already
-  classified by your mapping rules (keywords, a target category or account,
-  a period model). Confirm the proposals in bulk, complete the rest, create a
-  rule from a line. Validation works offline, on the phone.
+  classified by your mapping rules (lines of keywords, each line an
+  alternative, under the category or account they classify in). Confirm the
+  proposals in bulk, complete the rest, create a rule from a line. Validation works offline, on the phone.
 - **Two views of a year.** The cash-flow view shows what was paid in the
   year; the economic view shows what the year cost: a payment that concerns
   twelve months from September counts four months this year and eight the
@@ -73,8 +73,8 @@ copy of the data, so a lost server is rebuilt from any of them.
 1. « Plus › Comptes »: create your accounts. Enable the import of statements
    on the bank account: it becomes the *detailed* account, the one whose
    every line is imported.
-2. « Plus › Catégories »: build the tree of the year, under groups of income
-   and of expenses. batz comes with no tree: yours is the right one. It is
+2. « Plus › Catégories et règles »: build the tree of the year, under groups
+   of income and of expenses. batz comes with no tree: yours is the right one. It is
    copied to the next year at the first transaction dated there.
 3. « Transactions »: import the first statement (at home, the server on).
    Complete its lines; create a rule each time a line will come back. The
