@@ -515,6 +515,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Indiquez un pourcentage entre 0.01 et 100, avec deux décimales au plus.';
 
   @override
+  String get errorRedistributionAmountInvalid => 'Indiquez un montant fixe supérieur à zéro.';
+
+  @override
+  String get errorRedistributionPercentOrAmount => 'Indiquez soit un pourcentage, soit un montant fixe.';
+
+  @override
   String get errorRedistributionDuplicate => 'Une règle va déjà de cette source vers cette cible : modifiez-la.';
 
   @override
@@ -1352,7 +1358,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get redistributionExplain =>
-      'Chaque mois, le pourcentage du montant de la source passe dans la cible, sur une ligne distincte de chaque côté, dans les deux vues.';
+      'Un pourcentage : chaque mois, cette part du montant de la source passe dans la cible. Un montant fixe : il est retiré de chaque paiement de la source, par exemple les charges et la place de parc comprises dans le loyer. Une ligne distincte de chaque côté, dans les deux vues.';
 
   @override
   String get redistributionEmpty => 'Aucune règle de redistribution cette année.';
@@ -1377,6 +1383,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get redistributionPercentHint => 'De 0.01 à 100, deux décimales au plus.';
+
+  @override
+  String get redistributionFixed => 'Montant fixe';
+
+  @override
+  String get redistributionAmount => 'Montant par paiement';
+
+  @override
+  String get redistributionAmountHint =>
+      'Retiré de chaque paiement de la source, au plus le paiement. Les remboursements ne sont pas touchés ; un pourcentage s\'applique à ce qui reste.';
+
+  @override
+  String redistributionPerPayment(String amount) {
+    return '$amount par paiement';
+  }
 
   @override
   String redistributionRule(String source, String target) {
@@ -1421,6 +1442,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get redistributionProblemPercentInvalid => 'Ne s\'applique pas : le pourcentage n\'est pas entre 0.01 et 100.';
+
+  @override
+  String get redistributionProblemAmountInvalid => 'Ne s\'applique pas : le montant fixe n\'est pas supérieur à zéro.';
+
+  @override
+  String get redistributionProblemPercentOrAmount =>
+      'Ne s\'applique pas : la règle a à la fois un pourcentage et un montant fixe, ou aucun des deux.';
 
   @override
   String get redistributionProblemOverHundred => 'Ne s\'applique pas : les règles de cette source dépassent 100 %.';

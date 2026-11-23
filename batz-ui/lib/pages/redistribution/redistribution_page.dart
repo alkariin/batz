@@ -17,8 +17,17 @@ String redistributionProblemText(AppLocalizations l, RedistributionProblem probl
   RedistributionProblem.sameCategory => l.redistributionProblemSameCategory,
   RedistributionProblem.natureMismatch => l.redistributionProblemNatureMismatch,
   RedistributionProblem.percentInvalid => l.redistributionProblemPercentInvalid,
+  RedistributionProblem.amountInvalid => l.redistributionProblemAmountInvalid,
+  RedistributionProblem.percentOrAmount => l.redistributionProblemPercentOrAmount,
   RedistributionProblem.overHundred => l.redistributionProblemOverHundred,
   RedistributionProblem.chain => l.redistributionProblemChain,
+};
+
+/// What [rule] moves: its percentage, or its fixed amount per payment.
+String redistributionValueText(AppLocalizations l, RedistributionRule rule) => switch (rule) {
+  RedistributionRule(:final amount?, basisPoints: null) => l.redistributionPerPayment(formatAmount(amount)),
+  RedistributionRule(:final basisPoints?, amount: null) => formatPercent(basisPoints),
+  _ => '?',
 };
 
 /// Plus › Redistribution: the redistribution rules of a year, those that do
@@ -85,7 +94,7 @@ class _RedistributionPageState extends State<RedistributionPage> {
                     title: Text(l.redistributionRule(name(rule.sourceId), name(rule.targetId))),
                     subtitle: Text(
                       [
-                        formatPercent(rule.basisPoints),
+                        redistributionValueText(l, rule),
                         if (problems[rule.id] case final problem?) redistributionProblemText(l, problem),
                       ].join(' · '),
                     ),

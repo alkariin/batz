@@ -4,6 +4,7 @@ import 'package:batz/domain/ledger/ledger_exception.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/statement.dart';
+import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -16,6 +17,9 @@ final income = defaultGroupId(2026, CategoryNature.income);
 
 RedistributionDraft draft(String source, String target, int basisPoints, {int year = 2026}) =>
     RedistributionDraft(year: year, sourceId: source, targetId: target, basisPoints: basisPoints);
+
+RedistributionDraft fixed(String source, String target, int amount) =>
+    RedistributionDraft(year: 2026, sourceId: source, targetId: target, amount: amount);
 
 LedgerError? refusal(void Function() build) {
   try {
@@ -117,6 +121,149 @@ void main() {
     expect(view.categories['housing']!.month(1), -3000);
     expect(view.expenses.month(1), -10000);
     expect(view.inapplicable, isEmpty);
+  });
+
+  group('a fixed amount', () {
+    setUp(() async {
+      await h.apply((l) => l.addCategory('parking', year: 2026, name: 'Place de parc', parentId: 'housing'));
+    });
+
+    test('a rent of 2000.00 with charges of 250.00 and a parking space of 100.00: each payment of « Loyer » '
+        'keeps 1650.00, in both views, the expenses unchanged', () async {
+      for (final month in [1, 2, 3]) {
+        await h.apply(
+          (l) =>
+              l.recordEntry('rent-$month', 'l$month', entry(category: 'rent', cents: 200000, date: d(2026, month, 28))),
+        );
+      }
+      await h.apply((l) => l.createRedistribution('charges', fixed('rent', 'cleaning', 25000)));
+      await h.apply((l) => l.createRedistribution('parking', fixed('rent', 'parking', 10000)));
+      final ledger = await h.ledger();
+      for (final kind in ViewKind.values) {
+        final view = ledger.views.of(2026, kind)!;
+        expect(view.redistributions.map((r) => (r.rule.id, r.moved.total)), [('charges', -75000), ('parking', -30000)]);
+        for (final month in [1, 2, 3]) {
+          expect((view.categories['rent']! + view.redistributedOf('rent')).month(month), -165000, reason: kind.name);
+          expect(view.redistributedOf('cleaning').month(month), -25000);
+          expect(view.redistributedOf('parking').month(month), -10000);
+        }
+        expect(view.categories['housing']!.total, -600000, reason: 'moved inside the group');
+        expect(view.expenses.total, -600000);
+      }
+    });
+
+    test('in the economic view, the amount follows the period of the payment; a payment smaller than the '
+        'amounts is used up in turn; refunds give nothing; a percentage takes from what remains', () async {
+      // Paid on 30 November for November and December.
+      await h.apply(
+        (l) => l.recordEntry(
+          'ahead',
+          'l1',
+          entry(
+            category: 'rent',
+            cents: 400000,
+            date: d(2026, 11, 30),
+            periodStart: d(2026, 11, 1),
+            periodEnd: d(2026, 12, 31),
+          ),
+        ),
+      );
+      await h.apply((l) => l.recordEntry('small', 'l2', entry(category: 'rent', cents: 30000, date: d(2026, 3, 1))));
+      await h.apply(
+        (l) => l.recordEntry(
+          'back',
+          'l3',
+          entry(category: 'rent', cents: 5000, direction: Direction.inflow, date: d(2026, 4, 1)),
+        ),
+      );
+      await h.apply((l) => l.createRedistribution('charges', fixed('rent', 'cleaning', 25000)));
+      await h.apply((l) => l.createRedistribution('parking', fixed('rent', 'parking', 10000)));
+      await h.apply((l) => l.createRedistribution('ten', draft('rent', 'food', 1000)));
+      final ledger = await h.ledger();
+      final cash = ledger.views.of(2026, ViewKind.cash)!, economic = ledger.views.of(2026, ViewKind.economic)!;
+      RedistributionLine line(YearView view, String id) => view.redistributions.singleWhere((r) => r.rule.id == id);
+
+      // The payment of two months: whole in November in cash, half in each
+      // month in the economic view.
+      expect(line(cash, 'charges').moved.month(11), -25000);
+      expect((line(economic, 'charges').moved.month(11), line(economic, 'charges').moved.month(12)), (-12500, -12500));
+      // 300.00: 250.00 of charges, then the 50.00 left for the parking.
+      expect((line(cash, 'charges').moved.month(3), line(cash, 'parking').moved.month(3)), (-25000, -5000));
+      // The refund of April: no fixed amount; 10 % of it goes back.
+      expect((line(cash, 'charges').moved.month(4), line(cash, 'parking').moved.month(4)), (0, 0));
+      expect(line(cash, 'ten').moved.month(4), 500);
+      // 10 % of what is left once the fixed amounts are out: 4000 - 350.
+      expect(line(cash, 'ten').moved.month(11), -36500);
+      expect(line(cash, 'ten').moved.month(3), 0, reason: 'nothing left of 300.00');
+      for (final view in [cash, economic]) {
+        expect(view.expenses.total, -425000);
+      }
+    });
+
+    test('an income keeps its sign: a fixed part of each salary goes to « Primes »', () async {
+      await h.apply(
+        (l) => l.recordEntry(
+          'pay',
+          'l1',
+          entry(category: 'salary', cents: 600000, direction: Direction.inflow, date: d(2026, 1, 25)),
+        ),
+      );
+      await h.apply((l) => l.createRedistribution('bonus', fixed('salary', 'bonus', 50000)));
+      final view = (await h.ledger()).views.of(2026, ViewKind.cash)!;
+      expect(view.redistributions.single.moved.month(1), 50000);
+      expect((view.categories['salary']! + view.redistributedOf('salary')).month(1), 550000);
+      expect(view.income.total, 600000);
+    });
+
+    test('refusals: an amount of zero, both or neither of a percentage and an amount; percentages alone count '
+        'towards 100 %', () async {
+      final ledger = await h.ledger();
+      expect(
+        refusal(() => ledger.createRedistribution('r', fixed('rent', 'parking', 0))),
+        LedgerError.redistributionAmountInvalid,
+      );
+      expect(
+        refusal(
+          () => ledger.createRedistribution(
+            'r',
+            const RedistributionDraft(
+              year: 2026,
+              sourceId: 'rent',
+              targetId: 'parking',
+              basisPoints: 1000,
+              amount: 100,
+            ),
+          ),
+        ),
+        LedgerError.redistributionPercentOrAmount,
+      );
+      expect(
+        refusal(
+          () => ledger.createRedistribution(
+            'r',
+            const RedistributionDraft(year: 2026, sourceId: 'rent', targetId: 'parking'),
+          ),
+        ),
+        LedgerError.redistributionPercentOrAmount,
+      );
+      await h.apply((l) => l.createRedistribution('all', draft('rent', 'cleaning', fullBasisPoints)));
+      expect(refusal(() => (ledger).createRedistribution('r', fixed('rent', 'parking', 100))), isNull);
+      // A merge that leaves both on one rule: it does not apply.
+      await h.apply((l) => l.createRedistribution('p', fixed('rent', 'parking', 100)));
+      await h.repository.write(
+        Modification.set(RedistributionFields.entity, 'p', {RedistributionFields.basisPoints: 1000}),
+      );
+      expect((await h.ledger()).inapplicableRedistributions.map((i) => (i.rule.id, i.problem)), [
+        ('p', RedistributionProblem.percentOrAmount),
+      ]);
+    });
+
+    test('a fixed amount follows the copy of the tree', () async {
+      await h.apply((l) => l.createRedistribution('charges', fixed('rent', 'cleaning', 25000)));
+      await h.apply((l) => l.createTree(2027));
+      final copy = (await h.ledger()).redistributionsOf(2027).single;
+      expect((copy.amount, copy.basisPoints), (25000, null));
+    });
   });
 
   test('the base of a rule is what the source shows: proposed lines and shares from another year', () async {

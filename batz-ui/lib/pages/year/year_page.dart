@@ -85,7 +85,6 @@ class _YearPageState extends State<YearPage> {
   List<_Line> _lines(AppLocalizations l, Ledger ledger, YearView view) {
     final tree = view.tree;
     final lines = <_Line>[];
-    String percent(int basisPoints) => formatPercent(basisPoints);
 
     void visit(Category category, int depth) {
       final children = tree.childrenOf(category.id);
@@ -109,7 +108,10 @@ class _YearPageState extends State<YearPage> {
           lines.add(
             _Line(
               key: 'redistribution-${line.rule.id}-source',
-              label: l.yearRedistributionTo(tree.byId[line.rule.targetId]?.name ?? '?', percent(line.rule.basisPoints)),
+              label: l.yearRedistributionTo(
+                tree.byId[line.rule.targetId]?.name ?? '?',
+                redistributionValueText(l, line.rule),
+              ),
               depth: depth + 1,
               amounts: -line.moved,
               nature: nature,
@@ -123,7 +125,7 @@ class _YearPageState extends State<YearPage> {
               key: 'redistribution-${line.rule.id}-target',
               label: l.yearRedistributionFrom(
                 tree.byId[line.rule.sourceId]?.name ?? '?',
-                percent(line.rule.basisPoints),
+                redistributionValueText(l, line.rule),
               ),
               depth: depth + 1,
               amounts: line.moved,

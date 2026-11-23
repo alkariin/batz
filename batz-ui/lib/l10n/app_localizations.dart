@@ -942,6 +942,18 @@ abstract class AppLocalizations {
   /// **'Indiquez un pourcentage entre 0.01 et 100, avec deux décimales au plus.'**
   String get errorRedistributionPercentInvalid;
 
+  /// No description provided for @errorRedistributionAmountInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un montant fixe supérieur à zéro.'**
+  String get errorRedistributionAmountInvalid;
+
+  /// No description provided for @errorRedistributionPercentOrAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez soit un pourcentage, soit un montant fixe.'**
+  String get errorRedistributionPercentOrAmount;
+
   /// No description provided for @errorRedistributionDuplicate.
   ///
   /// In fr, this message translates to:
@@ -2265,7 +2277,7 @@ abstract class AppLocalizations {
   /// No description provided for @redistributionExplain.
   ///
   /// In fr, this message translates to:
-  /// **'Chaque mois, le pourcentage du montant de la source passe dans la cible, sur une ligne distincte de chaque côté, dans les deux vues.'**
+  /// **'Un pourcentage : chaque mois, cette part du montant de la source passe dans la cible. Un montant fixe : il est retiré de chaque paiement de la source, par exemple les charges et la place de parc comprises dans le loyer. Une ligne distincte de chaque côté, dans les deux vues.'**
   String get redistributionExplain;
 
   /// No description provided for @redistributionEmpty.
@@ -2315,6 +2327,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'De 0.01 à 100, deux décimales au plus.'**
   String get redistributionPercentHint;
+
+  /// No description provided for @redistributionFixed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant fixe'**
+  String get redistributionFixed;
+
+  /// No description provided for @redistributionAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant par paiement'**
+  String get redistributionAmount;
+
+  /// No description provided for @redistributionAmountHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retiré de chaque paiement de la source, au plus le paiement. Les remboursements ne sont pas touchés ; un pourcentage s\'applique à ce qui reste.'**
+  String get redistributionAmountHint;
+
+  /// No description provided for @redistributionPerPayment.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} par paiement'**
+  String redistributionPerPayment(String amount);
 
   /// No description provided for @redistributionRule.
   ///
@@ -2393,6 +2429,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ne s\'applique pas : le pourcentage n\'est pas entre 0.01 et 100.'**
   String get redistributionProblemPercentInvalid;
+
+  /// No description provided for @redistributionProblemAmountInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne s\'applique pas : le montant fixe n\'est pas supérieur à zéro.'**
+  String get redistributionProblemAmountInvalid;
+
+  /// No description provided for @redistributionProblemPercentOrAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne s\'applique pas : la règle a à la fois un pourcentage et un montant fixe, ou aucun des deux.'**
+  String get redistributionProblemPercentOrAmount;
 
   /// No description provided for @redistributionProblemOverHundred.
   ///

@@ -280,20 +280,22 @@ class LedgerRepository {
     );
   }
 
-  /// A redistribution rule needs a year, a source, a target and a
-  /// percentage. Whether it applies is decided by the domain.
+  /// A redistribution rule needs a year, a source and a target. Whether
+  /// it applies, with a percentage or a fixed amount, is decided by the
+  /// domain.
   static RedistributionRule? _redistribution(Map<String, Object?> row) {
     final year = row['year'];
     final source = _string(row['source_category_id']);
     final target = _string(row['target_category_id']);
-    final basisPoints = row['basis_points'];
-    if (year is! int || source == null || target == null || basisPoints is! int) return null;
+    final basisPoints = row['basis_points'], amount = row['amount'];
+    if (year is! int || source == null || target == null) return null;
     return RedistributionRule(
       id: row['id']! as String,
       year: year,
       sourceId: source,
       targetId: target,
-      basisPoints: basisPoints,
+      basisPoints: basisPoints is int ? basisPoints : null,
+      amount: amount is int ? amount : null,
     );
   }
 

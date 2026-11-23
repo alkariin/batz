@@ -12,6 +12,8 @@
 /// docs/features.md, « Annual view ».
 library;
 
+import 'dart:math';
+
 import 'package:equatable/equatable.dart';
 
 import '../allocation.dart';
@@ -95,10 +97,12 @@ class UnclassifiedRow extends ViewRow {
   List<Object?> get props => [];
 }
 
-/// What a redistribution rule moves in a view: month by month, its
-/// percentage of what the source shows before any redistribution,
-/// rounded to the cent, leaves the source and joins the target, on a
-/// line of its own on each side.
+/// What a redistribution rule moves in a view, leaving the source and
+/// joining the target on a line of its own on each side: for a fixed
+/// amount, that amount of each payment classified in the source, at most
+/// the payment, where the payment falls in the view; for a percentage,
+/// month by month, its percentage of what the source shows once the fixed
+/// amounts are out, rounded to the cent.
 class RedistributionLine {
   const RedistributionLine(this.rule, this.moved);
 
@@ -331,9 +335,12 @@ class ViewLine {
   CalendarDate get paid => transaction.date;
 
   /// The shares of the economic view: (year, month, cents).
-  late final List<(int, int, int)> shares = start.year == end.year && start.month == end.month
-      ? [(start.year, start.month, amount)]
-      : [for (final share in allocate(amount, start, end)) (share.month.year, share.month.month, share.cents)];
+  late final List<(int, int, int)> shares = sharesOf(amount);
+
+  /// [cents] spread over the period like the amount: (year, month, cents).
+  List<(int, int, int)> sharesOf(int cents) => start.year == end.year && start.month == end.month
+      ? [(start.year, start.month, cents)]
+      : [for (final share in allocate(cents, start, end)) (share.month.year, share.month.month, share.cents)];
 
   bool concerns(int year) => start.year <= year && end.year >= year;
 }
@@ -695,10 +702,23 @@ class YearViews {
     final toClassify = {for (final nature in CategoryNature.values) nature: List.filled(12, 0)};
     final unclassified = List.filled(12, 0);
     final toValidate = <String>{};
+    final rules = ledger.redistributionsOf(year);
+    final problems = redistributionProblems(rules, tree);
+    final applicable = [
+      for (final rule in rules)
+        if (problems[rule.id] == null) rule,
+    ];
+    // The payments of the sources of fixed amounts, as they fall here.
+    final fixedSources = {
+      for (final rule in applicable)
+        if (rule.isFixed) rule.sourceId,
+    };
+    final payments = <String, Set<ViewLine>>{};
     _place(year, kind, tree, (flow, target, month, cents) {
       switch (target) {
         case _InCategory(:final id):
           own[id]![month - 1] += cents;
+          if (fixedSources.contains(id)) (payments[id] ??= {}).add(flow);
         case _ToClassify(:final nature):
           toClassify[nature]![month - 1] += cents;
         case _Unclassified():
@@ -707,21 +727,62 @@ class YearViews {
       if (!flow.transaction.isValidated) toValidate.add(flow.transaction.id);
     });
 
-    // Redistribution: from what each source shows before any
-    // redistribution, month by month.
-    final rules = ledger.redistributionsOf(year);
-    final problems = redistributionProblems(rules, tree);
+    // Redistribution. Fixed amounts first, payment by payment: a payment
+    // goes out of the account (an expense) or into it (an income), refunds
+    // take nothing; the rules of a source take their amount in turn, until
+    // the payment is used up.
+    final moved = <String, List<int>>{};
+    for (final source in fixedSources) {
+      final income = tree.natureOf(source) == CategoryNature.income;
+      for (final flow in payments[source] ?? const <ViewLine>{}) {
+        var left = income ? flow.amount : -flow.amount;
+        for (final rule in applicable) {
+          if (left <= 0) break;
+          if (!rule.isFixed || rule.sourceId != source) continue;
+          final taken = min(rule.amount!, left);
+          left -= taken;
+          final months = moved.putIfAbsent(rule.id, () => List.filled(12, 0));
+          final signed = income ? taken : -taken;
+          switch (kind) {
+            case ViewKind.cash:
+              months[flow.paid.month - 1] += signed;
+            case ViewKind.economic:
+              for (final (y, m, cents) in flow.sharesOf(signed)) {
+                if (y == year) months[m - 1] += cents;
+              }
+          }
+        }
+      }
+    }
+    // Then percentages, month by month, of what each source shows once its
+    // fixed amounts are out (a source is never a target).
+    final afterFixed = <String, List<int>>{};
+    for (final rule in applicable) {
+      if (!rule.isPercentage) continue;
+      final base = afterFixed.putIfAbsent(rule.sourceId, () {
+        final amounts = [...own[rule.sourceId]!];
+        for (final fixed in applicable) {
+          if (fixed.isFixed && fixed.sourceId == rule.sourceId) {
+            final out = moved[fixed.id];
+            for (var i = 0; i < 12 && out != null; i++) {
+              amounts[i] -= out[i];
+            }
+          }
+        }
+        return amounts;
+      });
+      moved[rule.id] = [for (final cents in base) redistributedCents(cents, rule.basisPoints!)];
+    }
     final lines = <RedistributionLine>[];
     final adjust = <String, List<int>>{};
-    for (final rule in rules) {
-      if (problems[rule.id] != null) continue;
-      final moved = [for (final cents in own[rule.sourceId]!) redistributedCents(cents, rule.basisPoints)];
-      lines.add(RedistributionLine(rule, MonthlyAmounts(moved)));
+    for (final rule in applicable) {
+      final amounts = moved[rule.id] ?? List.filled(12, 0);
+      lines.add(RedistributionLine(rule, MonthlyAmounts(amounts)));
       final source = adjust.putIfAbsent(rule.sourceId, () => List.filled(12, 0));
       final target = adjust.putIfAbsent(rule.targetId, () => List.filled(12, 0));
       for (var i = 0; i < 12; i++) {
-        source[i] -= moved[i];
-        target[i] += moved[i];
+        source[i] -= amounts[i];
+        target[i] += amounts[i];
       }
     }
 

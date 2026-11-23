@@ -267,6 +267,28 @@ void main() {
     await settle(tester);
     expect(text(tester, ValueKey('yearAmount-redistribution-${rule.id}-target')), '34.57');
     expect((await ledger(tester)).views.of(year, ViewKind.cash)!.redistributions.single.moved.month(3), -3457);
+
+    // The same rule as a fixed amount per payment.
+    await nav(tester, 'Plus');
+    await tester.tap(find.byKey(const Key('moreRedistribution')));
+    await settle(tester);
+    await tester.tap(find.byKey(ValueKey('redistribution-${rule.id}')));
+    await settle(tester);
+    await tester.tap(find.text('Montant fixe'));
+    await settle(tester);
+    await tester.enterText(find.byKey(const Key('redistributionAmount')), '0');
+    await tester.tap(find.byKey(const Key('redistributionSave')));
+    await settle(tester);
+    expect(find.text('Indiquez un montant fixe supérieur à zéro.'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('redistributionAmount')), '50');
+    await tester.tap(find.byKey(const Key('redistributionSave')));
+    await settle(tester);
+    expect(find.text('50.00 par paiement'), findsOneWidget);
+    await tester.tap(find.byType(BackButton));
+    await settle(tester);
+    await nav(tester, 'Année');
+    expect(find.text('Vers Entretien ménage · 50.00 par paiement'), findsOneWidget);
+    expect(text(tester, ValueKey('yearAmount-redistribution-${rule.id}-target')), '50.00');
   });
 }
 

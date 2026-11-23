@@ -395,7 +395,7 @@ void main() {
       );
       for (final year in randomYears) {
         final view = views.of(year, ViewKind.economic)!;
-        expect(view.redistributions, hasLength(year == 2026 ? 2 : 3), reason: 'seed $seed, $year');
+        expect(view.redistributions, hasLength(year == 2026 ? 5 : 3), reason: 'seed $seed, $year');
         expect(view.inapplicable.length, year == 2026 ? 1 : 0, reason: 'seed $seed, $year');
       }
       expect(views.of(2027, ViewKind.economic)!.paidInOtherYears, isNot(0), reason: 'seed $seed');

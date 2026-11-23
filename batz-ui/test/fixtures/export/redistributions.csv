@@ -1,2 +1,3 @@
-﻿Année;Catégorie source;Catégorie cible;Pourcentage;id;idCatégorieSource;idCatégorieCible
-2026;Quotidien > Restaurant;Quotidien > Vacances;25.00;red-restaurant;cat-restaurant;cat-vacations
+﻿Année;Catégorie source;Catégorie cible;Pourcentage;Montant fixe;id;idCatégorieSource;idCatégorieCible
+2026;Logement > Loyer;Quotidien > Impôts;;250.00;red-rent;cat-rent;cat-taxes
+2026;Quotidien > Restaurant;Quotidien > Vacances;25.00;;red-restaurant;cat-restaurant;cat-vacations

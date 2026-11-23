@@ -37,12 +37,25 @@ void checkViews(Ledger ledger, {required String reason}) {
         view.tree.byId.keys.fold(MonthlyAmounts.zero, (sum, id) => sum + view.redistributedOf(id)),
         MonthlyAmounts.zero,
       );
+      // A percentage applies, month by month, to what the source shows once
+      // its fixed amounts are out; a fixed amount moves money of the sign
+      // of its source's nature, at most what the source's payments hold.
       for (final line in view.redistributions) {
         final source = line.rule.sourceId;
+        final fixedOut = [
+          for (final other in view.redistributions)
+            if (other.rule.isFixed && other.rule.sourceId == source) other.moved,
+        ].fold(MonthlyAmounts.zero, (a, b) => a + b);
+        if (line.rule.isFixed) {
+          final income = view.tree.natureOf(source) == CategoryNature.income;
+          expect(line.moved.months.every((c) => income ? c >= 0 : c <= 0), isTrue, reason: why);
+          continue;
+        }
         expect(
           line.moved,
           MonthlyAmounts([
-            for (final c in view.categories[source]!.months) redistributedCents(c, line.rule.basisPoints),
+            for (final (i, c) in view.categories[source]!.months.indexed)
+              redistributedCents(c - fixedOut.months[i], line.rule.basisPoints!),
           ]),
           reason: why,
         );

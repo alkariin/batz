@@ -227,6 +227,7 @@ final redistributionsTable = DerivedTable(
     RedistributionFields.sourceCategoryId: const DerivedColumn.text('source_category_id'),
     RedistributionFields.targetCategoryId: const DerivedColumn.text('target_category_id'),
     RedistributionFields.basisPoints: const DerivedColumn.integer('basis_points'),
+    RedistributionFields.amount: const DerivedColumn.integer('amount'),
   },
 );
 

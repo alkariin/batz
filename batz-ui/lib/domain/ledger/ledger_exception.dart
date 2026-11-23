@@ -48,6 +48,8 @@ enum LedgerError {
   redistributionNotLeaf,
   redistributionNatureMismatch,
   redistributionPercentInvalid,
+  redistributionAmountInvalid,
+  redistributionPercentOrAmount,
   redistributionDuplicate,
   redistributionTargetIsSource,
   redistributionSourceIsTarget,
