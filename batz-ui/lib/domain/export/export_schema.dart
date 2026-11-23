@@ -290,6 +290,7 @@ final Map<String, ExportedEntity> exportSchema = {
       RedistributionFields.sourceCategoryId: ExportColumn('idCatégorieSource', _id),
       RedistributionFields.targetCategoryId: ExportColumn('idCatégorieCible', _id),
       RedistributionFields.basisPoints: ExportColumn('Pourcentage', ExportKind.percent),
+      RedistributionFields.amount: ExportColumn('Montant fixe', _amount),
     },
   ),
   TransactionFields.entity: ExportedEntity(

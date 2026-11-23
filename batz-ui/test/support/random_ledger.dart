@@ -26,7 +26,9 @@ const randomYears = [2026, 2027, 2028, 2029];
 /// - redistribution rules: in 2026, 10 % of « Nourriture » to « Charges »
 ///   and 25 % of « Salaire » to « Primes », copied in 2027 with 33.33 % of
 ///   « Assurance ménage » to « Sorties »; a rule between natures that
-///   cannot apply;
+///   cannot apply; in 2026, fixed amounts of 250.00 and 100.00 of each
+///   payment of « Loyer » to « Charges » and « Loisirs », and 5 % of what
+///   remains to « Assurances »;
 /// - refunds attached to an expense of either year, one link in five broken;
 /// - answers for the shares of 2026 lines in 2027 and later years, some
 ///   given for another category of origin;
@@ -188,7 +190,12 @@ Ledger randomLedger(Random r, {int transactions = 300}) {
 
   RedistributionRule redistribution(String id, int year, String source, String target, int basisPoints) =>
       RedistributionRule(id: id, year: year, sourceId: source, targetId: target, basisPoints: basisPoints);
+  RedistributionRule fixed(String id, String source, String target, int amount) =>
+      RedistributionRule(id: id, year: 2026, sourceId: source, targetId: target, amount: amount);
   final redistributions = [
+    fixed('rent-charges', 'rent', 'charges', 25000),
+    fixed('rent-leisure', 'rent', 'leisure', 10000),
+    redistribution('rent-insurance', 2026, 'rent', 'insurance', 500),
     redistribution('food-charges', 2026, 'food', 'charges', 1000),
     redistribution('salary-bonus', 2026, 'salary', 'bonus', 2500),
     redistribution('mismatch', 2026, 'insurance', 'salary', 500),

@@ -129,6 +129,7 @@ Ledger exportExampleLedger() {
         targetId: 'cat-vacations',
         basisPoints: 2500,
       ),
+      RedistributionRule(id: 'red-rent', year: 2026, sourceId: 'cat-rent', targetId: 'cat-taxes', amount: 25000),
     ],
     transactions: [
       tx('tx-power', _d(2026, 4, 30), -24000, description: 'Électricité T1'),

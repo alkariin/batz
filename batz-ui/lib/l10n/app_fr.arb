@@ -306,6 +306,8 @@
   "errorRedistributionNotLeaf": "La source et la cible doivent être des catégories sans sous-catégorie de l'année.",
   "errorRedistributionNatureMismatch": "La source et la cible doivent être deux dépenses ou deux revenus.",
   "errorRedistributionPercentInvalid": "Indiquez un pourcentage entre 0.01 et 100, avec deux décimales au plus.",
+  "errorRedistributionAmountInvalid": "Indiquez un montant fixe supérieur à zéro.",
+  "errorRedistributionPercentOrAmount": "Indiquez soit un pourcentage, soit un montant fixe.",
   "errorRedistributionDuplicate": "Une règle va déjà de cette source vers cette cible : modifiez-la.",
   "errorRedistributionTargetIsSource": "Cette cible est déjà la source d'une autre règle : une cible ne peut pas être une source.",
   "errorRedistributionSourceIsTarget": "Cette source est déjà la cible d'une autre règle : une cible ne peut pas être une source.",
@@ -857,7 +859,7 @@
   "redistributionMenu": "Redistribution",
   "redistributionTitle": "Redistribution {year}",
   "@redistributionTitle": {"placeholders": {"year": {"type": "String"}}},
-  "redistributionExplain": "Chaque mois, le pourcentage du montant de la source passe dans la cible, sur une ligne distincte de chaque côté, dans les deux vues.",
+  "redistributionExplain": "Un pourcentage : chaque mois, cette part du montant de la source passe dans la cible. Un montant fixe : il est retiré de chaque paiement de la source, par exemple les charges et la place de parc comprises dans le loyer. Une ligne distincte de chaque côté, dans les deux vues.",
   "redistributionEmpty": "Aucune règle de redistribution cette année.",
   "redistributionNoTree": "Cette année n'a pas encore d'arbre.",
   "redistributionNew": "Nouvelle règle",
@@ -866,6 +868,17 @@
   "redistributionTarget": "Cible",
   "redistributionPercent": "Pourcentage",
   "redistributionPercentHint": "De 0.01 à 100, deux décimales au plus.",
+  "redistributionFixed": "Montant fixe",
+  "redistributionAmount": "Montant par paiement",
+  "redistributionAmountHint": "Retiré de chaque paiement de la source, au plus le paiement. Les remboursements ne sont pas touchés ; un pourcentage s'applique à ce qui reste.",
+  "redistributionPerPayment": "{amount} par paiement",
+  "@redistributionPerPayment": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "redistributionRule": "De {source} vers {target}",
   "@redistributionRule": {"placeholders": {"source": {"type": "String"}, "target": {"type": "String"}}},
   "redistributionSaved": "Règle enregistrée.",
@@ -880,6 +893,8 @@
   "redistributionProblemSameCategory": "Ne s'applique pas : la source et la cible sont la même catégorie.",
   "redistributionProblemNatureMismatch": "Ne s'applique pas : la source et la cible ne sont pas de même nature.",
   "redistributionProblemPercentInvalid": "Ne s'applique pas : le pourcentage n'est pas entre 0.01 et 100.",
+  "redistributionProblemAmountInvalid": "Ne s'applique pas : le montant fixe n'est pas supérieur à zéro.",
+  "redistributionProblemPercentOrAmount": "Ne s'applique pas : la règle a à la fois un pourcentage et un montant fixe, ou aucun des deux.",
   "redistributionProblemOverHundred": "Ne s'applique pas : les règles de cette source dépassent 100 %.",
   "redistributionProblemChain": "Ne s'applique pas : une cible est aussi la source d'une règle.",
   "taskInapplicableRedistributions": "{count, plural, =1{Une règle de redistribution ne s'applique pas} other{{count} règles de redistribution ne s'appliquent pas}} en {year}",

@@ -313,6 +313,7 @@ class Ledger {
         RedistributionFields.sourceCategoryId: rule.sourceId,
         RedistributionFields.targetCategoryId: rule.targetId,
         RedistributionFields.basisPoints: rule.basisPoints,
+        RedistributionFields.amount: rule.amount,
       }.entries) {
         changes.add(FieldChange(RedistributionFields.entity, rule.id, field.key, field.value));
       }
