@@ -99,7 +99,7 @@ void main() {
     await repository.write(
       (await repository.load()).createRule(
         'rule',
-        const RuleDraft(year: 2026, keywords: ['commerce', 'fictiville'], targetCategoryId: 'food'),
+        const RuleDraft(year: 2026, lines: ['commerce ET fictiville'], targetCategoryId: 'food'),
       ),
     );
     ledger = await repository.load();

@@ -16,7 +16,6 @@ import '../lock/lock_cubit.dart';
 import '../redistribution/redistribution_page.dart';
 import '../refunds/broken_refunds_page.dart';
 import '../shares/shares_page.dart';
-import '../validation/rules_page.dart';
 import '../validation/validation_page.dart';
 import '../wealth/account_page.dart';
 
@@ -85,7 +84,7 @@ class TasksCard extends StatelessWidget {
               Icons.warning_amber_outlined,
               l.taskUnusableRules(count, year),
               l.taskUnusableRulesHint,
-              RulesPage(initialYear: year),
+              CategoriesPage(initialYear: year),
               warning: true,
             ),
           if (shares > 0)

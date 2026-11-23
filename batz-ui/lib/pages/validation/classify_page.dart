@@ -135,9 +135,10 @@ class _ClassifyPageState extends State<ClassifyPage> {
       MaterialPageRoute<bool>(
         builder: (_) => RuleFormPage(
           year: t.date.year,
+          chooseTarget: true,
           initial: RuleDraft(
             year: t.date.year,
-            keywords: [?keyword],
+            lines: [?keyword],
             // Mapping rules never attach a refund.
             targetCategoryId: _mode == _Mode.category ? _categoryId : null,
             targetAccountId: _mode == _Mode.transfer ? _accountId : null,
@@ -177,18 +178,18 @@ class _ClassifyPageState extends State<ClassifyPage> {
             const SizedBox(height: 8),
             Text(
               l.validationConflict(
-                rules.map((r) => '« ${keywordsText(r)} » → ${ruleTargetText(l, ledger, r)}').join(' ; '),
+                rules.map((r) => '« ${keywordsText(l, r)} » → ${ruleTargetText(l, ledger, r)}').join(' ; '),
               ),
               style: TextStyle(color: theme.colorScheme.error),
             ),
           ],
           if (outcome case UnusableRule(:final rule)) ...[
             const SizedBox(height: 8),
-            Text(l.validationUnusable(keywordsText(rule)), style: TextStyle(color: theme.colorScheme.error)),
+            Text(l.validationUnusable(keywordsText(l, rule)), style: TextStyle(color: theme.colorScheme.error)),
           ],
           if (outcome case Proposed(:final rule)) ...[
             const SizedBox(height: 8),
-            Text(l.validationRule(keywordsText(rule)), style: theme.textTheme.bodySmall),
+            Text(l.validationRule(keywordsText(l, rule)), style: theme.textTheme.bodySmall),
           ],
           const SizedBox(height: 16),
           SegmentedButton<_Mode>(

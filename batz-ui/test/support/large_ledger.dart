@@ -15,7 +15,6 @@ import 'package:batz/domain/modules/salary.dart';
 import 'package:batz/domain/modules/subscriptions.dart';
 import 'package:batz/domain/modules/taxes.dart';
 import 'package:batz/domain/modules/vacations.dart';
-import 'package:batz/domain/period_model.dart';
 
 /// The data of a heavy user over five years (2026 to 2030), invented: what
 /// the performance tests load.
@@ -183,11 +182,9 @@ class LargeLedger {
         }
         set(RuleFields.entity, ruleId, {
           RuleFields.year: year,
-          RuleFields.keywords: encodeKeywords(keywords),
+          RuleFields.lines: encodeRuleLines([legacyRuleLine(keywords)]),
           RuleFields.targetCategoryId: categoryIn(target, year),
           RuleFields.targetAccountId: null,
-          RuleFields.periodModel: null,
-          RuleFields.periodMonths: null,
         });
       }
     }
@@ -226,9 +223,7 @@ class LargeLedger {
         });
         if (last) continue;
         final category = isSalary ? salary : (shop < shopsWithRule ? shopCategory(shop) : leaf(groups - 1, 4));
-        final (periodStart, periodEnd) = rank % 20 == 5
-            ? periodFor(PeriodModel.monthsAfter, date, months: 12)
-            : (date, date);
+        final (periodStart, periodEnd) = rank % 20 == 5 ? yearFrom(date) : (date, date);
         if (category == leaf(groups - 1, 4) && periodEnd.year == lastYear && year < lastYear && rank % 40 == 5) {
           set(ShareClassificationFields.entity, shareClassificationId('$id-line', lastYear), {
             ShareClassificationFields.lineId: '$id-line',
@@ -261,9 +256,7 @@ class LargeLedger {
     for (var i = 0; i < manualEntries; i++) {
       final year = firstYear + i % years;
       final date = CalendarDate(year, 1 + i % 12, 1 + i % 28);
-      final (periodStart, periodEnd) = i % 10 == 3
-          ? periodFor(PeriodModel.monthsAfter, date, months: 12)
-          : (date, date);
+      final (periodStart, periodEnd) = i % 10 == 3 ? yearFrom(date) : (date, date);
       final amount = -(500 + i * 113 % 20000);
       set(TransactionFields.entity, 'manual-$i', {
         TransactionFields.accountId: 'cash',
@@ -462,4 +455,10 @@ class LargeLedger {
       await repository.write(modification);
     }
   }
+}
+
+/// Twelve months from [date]: to the day before the same day a year later.
+(CalendarDate, CalendarDate) yearFrom(CalendarDate date) {
+  final day = date.day.clamp(1, CalendarDate.daysInMonth(date.year + 1, date.month));
+  return (date, CalendarDate(date.year + 1, date.month, day).addDays(-1));
 }

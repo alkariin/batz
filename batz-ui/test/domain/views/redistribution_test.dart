@@ -4,7 +4,6 @@ import 'package:batz/domain/ledger/ledger_exception.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/statement.dart';
-import 'package:batz/domain/period_model.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -121,21 +120,14 @@ void main() {
   });
 
   test('the base of a rule is what the source shows: proposed lines and shares from another year', () async {
-    // A line to validate, proposed in « Nourriture » for the next month.
+    // A line to validate, proposed in « Nourriture » at its payment date.
     final january = fixtureStatement('2026-01');
     await h.repository.write(
       (await h.ledger()).importStatement('bank', january.statement, fingerprint: january.fingerprint).modification,
     );
     await h.apply(
-      (l) => l.createRule(
-        'groceries',
-        const RuleDraft(
-          year: 2026,
-          keywords: ['épicerie du coin'],
-          targetCategoryId: 'food',
-          periodModel: PeriodModel.nextMonth,
-        ),
-      ),
+      (l) =>
+          l.createRule('groceries', const RuleDraft(year: 2026, lines: ['épicerie du coin'], targetCategoryId: 'food')),
     );
     await h.apply((l) => l.createRedistribution('ten', draft('food', 'cleaning', 1000)));
     // A share of 2026 falls in 2027, whose tree is the copy, rules included.
@@ -153,7 +145,7 @@ void main() {
         .where((t) => t.rawText!.contains('Épicerie du Coin'))
         .fold(0, (a, t) => a + t.amount);
     final economic2026 = ledger.views.of(2026, ViewKind.economic)!;
-    expect(economic2026.redistributions.single.moved.month(2), redistributedCents(groceries, 1000));
+    expect(economic2026.redistributions.single.moved.month(1), redistributedCents(groceries, 1000));
     final economic2027 = ledger.views.of(2027, ViewKind.economic)!;
     final copy = economic2027.redistributions.single;
     expect(copy.rule.id, copiedRedistributionId('ten', 2027));

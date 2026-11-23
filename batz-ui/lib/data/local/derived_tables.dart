@@ -212,11 +212,10 @@ final rulesTable = DerivedTable(
   table: 'rules',
   columns: {
     RuleFields.year: const DerivedColumn.integer('year'),
+    RuleFields.lines: const DerivedColumn.text('lines'),
     RuleFields.keywords: const DerivedColumn.text('keywords'),
     RuleFields.targetCategoryId: const DerivedColumn.text('target_category_id'),
     RuleFields.targetAccountId: const DerivedColumn.text('target_account_id'),
-    RuleFields.periodModel: const DerivedColumn.text('period_model'),
-    RuleFields.periodMonths: const DerivedColumn.integer('period_months'),
   },
 );
 

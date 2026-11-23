@@ -20,7 +20,6 @@ import '../modules/settings.dart';
 import '../modules/subscriptions.dart';
 import '../modules/taxes.dart';
 import '../modules/vacations.dart';
-import '../period_model.dart';
 
 /// The names of the files, in the order of docs/features.md, « Export ».
 abstract final class ExportFiles {
@@ -68,7 +67,7 @@ abstract final class ExportFiles {
 /// The texts the export writes for the values the journal stores as names.
 /// Statuses, types, natures, directions and frequencies are written in lower
 /// case, as values (« validée », « dépense »); types of accounts, taxes,
-/// modules and period models as the app names them.
+/// and modules as the app names them.
 abstract final class ExportLabels {
   static const accountTypes = {
     AccountType.privateAccount: 'Compte privé',
@@ -94,15 +93,6 @@ abstract final class ExportLabels {
     TransactionKind.refund: 'remboursement',
     TransactionKind.income: 'revenu',
     TransactionKind.transfer: 'transfert',
-  };
-
-  static const periodModels = {
-    PeriodModel.previousMonth: 'Mois précédent',
-    PeriodModel.nextMonth: 'Mois suivant',
-    PeriodModel.monthsAfter: 'N mois après le paiement',
-    PeriodModel.monthsBefore: 'N mois avant le paiement',
-    PeriodModel.currentYear: 'Année civile en cours',
-    PeriodModel.previousYear: 'Année civile précédente',
   };
 
   static const debtDirections = {DebtDirection.owedToMe: 'on me doit', DebtDirection.iOwe: 'je dois'};
@@ -171,8 +161,8 @@ enum ExportKind {
   /// A name of the journal, written with its label.
   label,
 
-  /// The JSON list of the keywords of a rule, one keyword per line.
-  keywords,
+  /// The JSON list of the lines of a rule, one per line of the cell.
+  ruleLines,
 }
 
 /// The column a field goes to.
@@ -279,20 +269,17 @@ final Map<String, ExportedEntity> exportSchema = {
       CategoryFields.position: const ExportColumn('Position', ExportKind.integer),
     },
   ),
-  RuleFields.entity: ExportedEntity(
+  RuleFields.entity: const ExportedEntity(
     file: ExportFiles.rules,
     idColumn: 'id',
     fields: {
-      RuleFields.year: const ExportColumn('Année', ExportKind.integer),
-      RuleFields.keywords: const ExportColumn('Mots-clés', ExportKind.keywords),
-      RuleFields.targetCategoryId: const ExportColumn('idCatégorieCible', _id),
-      RuleFields.targetAccountId: const ExportColumn('idCompteCible', _id),
-      RuleFields.periodModel: ExportColumn(
-        'Modèle de période',
-        ExportKind.label,
-        labels: ExportLabels.byName(ExportLabels.periodModels),
-      ),
-      RuleFields.periodMonths: const ExportColumn('Mois', ExportKind.integer),
+      RuleFields.year: ExportColumn('Année', ExportKind.integer),
+      RuleFields.lines: ExportColumn('Lignes', ExportKind.ruleLines, absentShowsComputed: true),
+      RuleFields.targetCategoryId: ExportColumn('idCatégorieCible', _id),
+      RuleFields.targetAccountId: ExportColumn('idCompteCible', _id),
+    },
+    excluded: {
+      RuleFields.keywords: 'ancienne forme des lignes : la colonne « Lignes » la reprend en une ligne « a ET b »',
     },
   ),
   RedistributionFields.entity: const ExportedEntity(

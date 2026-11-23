@@ -48,11 +48,9 @@ abstract final class ExportHeaders {
   static const categories = ['Année', 'Chemin', 'Nom', 'Nature', 'Groupe parent', 'Position', 'id', 'idParent'];
   static const rules = [
     'Année',
-    'Mots-clés',
+    'Lignes',
     'Catégorie cible',
     'Compte cible',
-    'Modèle de période',
-    'Mois',
     'id',
     'idCatégorieCible',
     'idCompteCible',
@@ -355,16 +353,14 @@ class _Exporter {
 
   List<List<Cell?>> _rules() {
     final rules = ledger.rules.values.toList()
-      ..sort((a, b) => _compare([a.year, a.keywords.join('\n'), a.id], [b.year, b.keywords.join('\n'), b.id]));
+      ..sort((a, b) => _compare([a.year, a.lines.join('\n'), a.id], [b.year, b.lines.join('\n'), b.id]));
     return [
       for (final r in rules)
         [
           IntCell(r.year),
-          TextCell(r.keywords.join('\n')),
+          TextCell(r.lines.join('\n')),
           _categoryPath(r.targetCategoryId),
           _accountName(r.targetAccountId),
-          r.periodModel == null ? null : PlainCell(ExportLabels.periodModels[r.periodModel]!),
-          _int(r.periodMonths),
           PlainCell(r.id),
           _id(r.targetCategoryId),
           _id(r.targetAccountId),

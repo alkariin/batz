@@ -8,7 +8,6 @@ import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/share_classification.dart';
 import 'package:batz/domain/ledger/transaction.dart';
-import 'package:batz/domain/period_model.dart';
 
 /// The years a random ledger has amounts in: trees for 2026 and 2027, none
 /// for 2028 and 2029, shown with the copy of 2027.
@@ -67,23 +66,10 @@ Ledger randomLedger(Random r, {int transactions = 300}) {
     const Account(id: 'savings', name: 'Épargne', type: AccountType.savings),
   ];
   final rules = [
-    MappingRule(id: 'r-food', year: 2026, keywords: ['épicerie'], targetCategoryId: 'food'),
-    MappingRule(
-      id: 'r-insurance',
-      year: 2026,
-      keywords: ['assurance'],
-      targetCategoryId: 'insurance',
-      periodModel: PeriodModel.monthsAfter,
-      periodMonths: 12,
-    ),
-    MappingRule(id: 'r-savings', year: 2026, keywords: ['épargne'], targetAccountId: 'savings'),
-    MappingRule(
-      id: 'r-leisure',
-      year: 2027,
-      keywords: ['cinéma'],
-      targetCategoryId: copiedCategoryId('leisure', 2027),
-      periodModel: PeriodModel.nextMonth,
-    ),
+    MappingRule(id: 'r-food', year: 2026, lines: ['épicerie'], targetCategoryId: 'food'),
+    MappingRule(id: 'r-insurance', year: 2026, lines: ['assurance'], targetCategoryId: 'insurance'),
+    MappingRule(id: 'r-savings', year: 2026, lines: ['épargne'], targetAccountId: 'savings'),
+    MappingRule(id: 'r-leisure', year: 2027, lines: ['cinéma'], targetCategoryId: copiedCategoryId('leisure', 2027)),
   ];
 
   final list = <LedgerTransaction>[];

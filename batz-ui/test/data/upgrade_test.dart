@@ -19,7 +19,6 @@ import 'package:batz/domain/modules/salary.dart';
 import 'package:batz/domain/modules/settings.dart';
 import 'package:batz/domain/modules/taxes.dart';
 import 'package:batz/domain/modules/vacations.dart';
-import 'package:batz/domain/period_model.dart';
 import 'package:batz/domain/views/balances.dart';
 import 'package:batz/domain/views/share_operations.dart';
 import 'package:batz/domain/views/year_view.dart';
@@ -57,7 +56,7 @@ void main() {
     final db = await openLocalDatabase(directory: dir, secrets: MemorySecretStore(), encrypt: false);
     final journal = await Journal.open(db);
     expect(journal.deviceId, _fixture070DeviceId);
-    expect(journal.derivedTablesRebuilt, isFalse, reason: 'this version adds no entity to the journal');
+    expect(journal.derivedTablesRebuilt, isTrue, reason: 'rules have lines');
     final entries = await journal.entries();
     expect(entries, hasLength(177));
 
@@ -224,8 +223,8 @@ void main() {
       for (final id in ['rule-food', 'rule-rent', 'rule-savings']) copiedRuleId(id, 2027),
     });
     final rent = ledger.rules['rule-rent']!;
-    expect(rent.keywords, ['gérance', 'bail']);
-    expect((rent.targetCategoryId, rent.periodModel), ('cat-rent', PeriodModel.nextMonth));
+    expect(rent.lines, ['gérance ET bail'], reason: 'keywords written before lines are one line, all required');
+    expect(rent.targetCategoryId, 'cat-rent', reason: 'its period model is no longer read');
     expect(ledger.rules['rule-savings']!.targetAccountId, 'acc-savings');
     expect(ledger.rules[copiedRuleId('rule-food', 2027)]!.targetCategoryId, copiedCategoryId('cat-food', 2027));
 
@@ -263,7 +262,7 @@ void main() {
     final hlc = await journal.write(
       ledger.createRule(
         'rule-bakery',
-        const RuleDraft(year: 2026, keywords: ['boulangerie'], targetCategoryId: 'cat-food'),
+        const RuleDraft(year: 2026, lines: ['boulangerie'], targetCategoryId: 'cat-food'),
       ),
     );
     expect(hlc! > before, isTrue);

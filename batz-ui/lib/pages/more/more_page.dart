@@ -13,7 +13,6 @@ import '../modules/vacations_page.dart';
 import '../redistribution/redistribution_page.dart';
 import '../server/server_cubit.dart';
 import '../server/server_page.dart';
-import '../validation/rules_page.dart';
 import '../../version.dart';
 
 /// « Plus »: the analyses (the modules), the subscriptions, then the settings.
@@ -78,16 +77,11 @@ class MorePage extends StatelessWidget {
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const AccountsPage())),
           ),
           ListTile(
+            key: const Key('moreCategories'),
             leading: const Icon(Icons.account_tree_outlined),
             title: Text(l.categoriesTitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const CategoriesPage())),
-          ),
-          ListTile(
-            leading: const Icon(Icons.rule),
-            title: Text(l.rulesMenu),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const RulesPage())),
           ),
           ListTile(
             key: const Key('moreRedistribution'),

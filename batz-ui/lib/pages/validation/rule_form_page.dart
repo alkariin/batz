@@ -2,69 +2,65 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/ids.dart';
-import '../../domain/ledger/ledger.dart';
 import '../../domain/ledger/rule.dart';
-import '../../domain/period_model.dart';
 import '../../l10n/app_localizations.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
-import 'validation_texts.dart';
+import 'rules_help.dart';
 
-/// Creates or modifies a mapping rule of a year: keywords, target, period
-/// model. It shows, as it is typed, how many lines to validate the rule
-/// would classify.
+/// Creates or modifies a mapping rule of a year: its lines, one of which
+/// must match, and its target. It shows, as it is typed, how many lines to
+/// validate the rule would classify.
+///
+/// A rule opened from its category keeps that category; a transfer rule
+/// keeps its kind and chooses its account. From the validation, where the
+/// classification is still being chosen, [chooseTarget] offers both.
 class RuleFormPage extends StatefulWidget {
-  const RuleFormPage({super.key, required this.year, this.rule, this.initial});
+  const RuleFormPage({super.key, required this.year, this.rule, this.initial, this.chooseTarget = false});
 
   final int year;
 
   /// The rule modified; null for a new one.
   final MappingRule? rule;
 
-  /// What a new rule starts with (from the line being classified).
+  /// What a new rule starts with: its category, or the line being
+  /// classified.
   final RuleDraft? initial;
+
+  /// Whether the target can be any category or any account.
+  final bool chooseTarget;
 
   @override
   State<RuleFormPage> createState() => _RuleFormPageState();
 }
 
 class _RuleFormPageState extends State<RuleFormPage> {
-  late final TextEditingController _keywords;
-  late final TextEditingController _months;
+  late final TextEditingController _lines;
   late bool _transfer;
   String? _categoryId;
   String? _accountId;
-  PeriodModel? _model;
 
   @override
   void initState() {
     super.initState();
     final draft = widget.rule == null ? widget.initial : RuleDraft.of(widget.rule!);
-    _keywords = TextEditingController(text: draft?.keywords.join('\n') ?? '');
-    _months = TextEditingController(text: draft?.periodMonths?.toString() ?? '');
-    _transfer = draft?.targetAccountId != null;
+    _lines = TextEditingController(text: draft?.lines.join('\n') ?? '');
+    _transfer = draft?.targetAccountId != null || (!widget.chooseTarget && draft?.targetCategoryId == null);
     _categoryId = draft?.targetCategoryId;
     _accountId = draft?.targetAccountId;
-    _model = draft?.periodModel;
   }
 
   @override
   void dispose() {
-    _keywords.dispose();
-    _months.dispose();
+    _lines.dispose();
     super.dispose();
   }
 
   RuleDraft get _draft => RuleDraft(
     year: widget.year,
-    keywords: [
-      for (final k in _keywords.text.split('\n'))
-        if (k.trim().isNotEmpty) k.trim(),
-    ],
+    lines: ruleLinesOf(_lines.text),
     targetCategoryId: _transfer ? null : _categoryId,
     targetAccountId: _transfer ? _accountId : null,
-    periodModel: _transfer ? null : _model,
-    periodMonths: int.tryParse(_months.text.trim()),
   );
 
   Future<void> _save() async {
@@ -106,18 +102,27 @@ class _RuleFormPageState extends State<RuleFormPage> {
     final tree = ledger.trees[widget.year];
     final rule = widget.rule;
     final invalid = [
-      for (final k in _keywords.text.split('\n'))
-        if (k.trim().isNotEmpty && !isValidKeyword(k)) k.trim(),
+      for (final line in ruleLinesOf(_lines.text))
+        if (!isValidRuleLine(line)) line,
     ];
     final accounts = [
       for (final a in ledger.sortedAccounts)
         if (!a.isDetailed && (!a.archived || a.id == _accountId)) a,
     ];
     final categories = tree?.assignable ?? const [];
+    final accountPicker = DropdownButtonFormField<String>(
+      key: const Key('ruleAccount'),
+      initialValue: accounts.any((a) => a.id == _accountId) ? _accountId : null,
+      isExpanded: true,
+      decoration: InputDecoration(labelText: l.classifyCounterpart),
+      items: [for (final a in accounts) DropdownMenuItem(value: a.id, child: Text(a.name))],
+      onChanged: (id) => setState(() => _accountId = id),
+    );
     return Scaffold(
       appBar: AppBar(
         title: Text(rule == null ? l.ruleNew : l.ruleEdit),
         actions: [
+          const RulesHelpButton(),
           if (rule != null)
             IconButton(tooltip: l.delete, icon: const Icon(Icons.delete_outline), onPressed: () => _delete(rule)),
         ],
@@ -125,11 +130,19 @@ class _RuleFormPageState extends State<RuleFormPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (!widget.chooseTarget && !_transfer) ...[
+            Text(
+              l.ruleFor(ledger.categories[_categoryId]?.name ?? '?'),
+              key: const Key('ruleCategoryName'),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+          ],
           TextField(
             key: const Key('ruleKeywords'),
-            controller: _keywords,
-            minLines: 2,
-            maxLines: 6,
+            controller: _lines,
+            minLines: 3,
+            maxLines: 10,
             decoration: InputDecoration(
               labelText: l.ruleKeywords,
               helperText: l.ruleKeywordsHint,
@@ -139,56 +152,32 @@ class _RuleFormPageState extends State<RuleFormPage> {
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 16),
-          SegmentedButton<bool>(
-            segments: [
-              ButtonSegment(value: false, label: Text(l.classifyCategory)),
-              ButtonSegment(value: true, label: Text(l.classifyTransfer)),
-            ],
-            selected: {_transfer},
-            onSelectionChanged: (s) => setState(() => _transfer = s.first),
-          ),
-          const SizedBox(height: 16),
-          if (!_transfer) ...[
-            DropdownButtonFormField<String>(
-              key: const Key('ruleCategory'),
-              initialValue: categories.any((c) => c.id == _categoryId) ? _categoryId : null,
-              isExpanded: true,
-              decoration: InputDecoration(labelText: l.classifyCategory),
-              items: [for (final c in categories) DropdownMenuItem(value: c.id, child: Text(c.name))],
-              onChanged: (id) => setState(() => _categoryId = id),
+          if (widget.chooseTarget) ...[
+            SegmentedButton<bool>(
+              segments: [
+                ButtonSegment(value: false, label: Text(l.classifyCategory)),
+                ButtonSegment(value: true, label: Text(l.classifyTransfer)),
+              ],
+              selected: {_transfer},
+              onSelectionChanged: (s) => setState(() => _transfer = s.first),
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<PeriodModel?>(
-              key: const Key('rulePeriod'),
-              initialValue: _model,
-              isExpanded: true,
-              decoration: InputDecoration(labelText: l.rulePeriod),
-              items: [
-                for (final model in <PeriodModel?>[null, ...PeriodModel.values])
-                  DropdownMenuItem(value: model, child: Text(periodModelText(l, model, null))),
-              ],
-              onChanged: (model) => setState(() => _model = model),
-            ),
-            if (_model?.takesMonths ?? false) ...[
-              const SizedBox(height: 16),
-              TextField(
-                key: const Key('ruleMonths'),
-                controller: _months,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: l.ruleMonths),
-                onChanged: (_) => setState(() {}),
-              ),
-            ],
-          ] else
-            DropdownButtonFormField<String>(
-              key: const Key('ruleAccount'),
-              initialValue: accounts.any((a) => a.id == _accountId) ? _accountId : null,
-              isExpanded: true,
-              decoration: InputDecoration(labelText: l.classifyCounterpart),
-              items: [for (final a in accounts) DropdownMenuItem(value: a.id, child: Text(a.name))],
-              onChanged: (id) => setState(() => _accountId = id),
-            ),
-          const SizedBox(height: 16),
+            if (!_transfer)
+              DropdownButtonFormField<String>(
+                key: const Key('ruleCategory'),
+                initialValue: categories.any((c) => c.id == _categoryId) ? _categoryId : null,
+                isExpanded: true,
+                decoration: InputDecoration(labelText: l.classifyCategory),
+                items: [for (final c in categories) DropdownMenuItem(value: c.id, child: Text(c.name))],
+                onChanged: (id) => setState(() => _categoryId = id),
+              )
+            else
+              accountPicker,
+            const SizedBox(height: 16),
+          ] else if (_transfer) ...[
+            accountPicker,
+            const SizedBox(height: 16),
+          ],
           Text(
             l.ruleMatches(ledger.linesClassifiedBy(_draft, replacing: rule?.id)),
             key: const Key('ruleMatches'),

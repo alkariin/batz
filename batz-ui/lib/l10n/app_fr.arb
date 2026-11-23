@@ -9,6 +9,7 @@
   "startupErrorTitle": "batz ne peut pas démarrer",
   "startupErrorBody": "La base de données locale n'a pas pu être ouverte. Détail technique :",
   "cancel": "Annuler",
+  "close": "Fermer",
   "confirm": "Confirmer",
   "serverTitle": "Serveur",
   "serverPaired": "Associé au serveur",
@@ -133,7 +134,12 @@
   "errorNameRequired": "Le nom est obligatoire.",
   "errorSecondDetailedAccount": "Un seul compte peut être détaillé : l'import est déjà activé sur un autre compte.",
   "errorUnknownAccount": "Ce compte n'existe plus.",
-  "categoriesTitle": "Catégories",
+  "categoriesTitle": "Catégories et règles",
+  "categoriesTransfers": "Transferts",
+  "categoriesTransfersHint": "Règles qui marquent une ligne comme transfert vers un compte.",
+  "categoriesAddTransferRule": "Ajouter une règle de transfert",
+  "categoriesUnusableRules": "Règles sans cible utilisable",
+  "categoriesUnusableRulesHint": "Leur catégorie ou leur compte n'est plus utilisable : elles ne proposent rien.",
   "categoriesYear": "Année",
   "categoriesNoTree": "Pas encore d'arbre pour {year}.",
   "@categoriesNoTree": {
@@ -178,6 +184,7 @@
   "categoryMove": "Déplacer",
   "categoryMoveUp": "Monter",
   "categoryMoveDown": "Descendre",
+  "categoryAddRule": "Ajouter une règle",
   "categoryMoveTitle": "Déplacer « {name} » vers",
   "@categoryMoveTitle": {
     "placeholders": {
@@ -199,6 +206,17 @@
     "placeholders": {
       "name": {
         "type": "String"
+      }
+    }
+  },
+  "categoryDeleteWithRules": "Supprimer la catégorie « {name} » et {count, plural, =1{sa règle} other{ses {count} règles}} ?",
+  "@categoryDeleteWithRules": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -280,18 +298,9 @@
   "errorUnknownStatement": "Ce relevé n'existe plus.",
   "errorImportedTransaction": "Une ligne importée garde le montant, la date, le compte et le texte de la banque ; seules sa catégorie, sa période, sa description et sa note se modifient.",
   "errorUnknownRule": "Cette règle n'existe plus.",
-  "errorRuleKeywordsRequired": "Indiquez au moins un mot-clé.",
-  "errorRuleKeywordInvalid": "Expression régulière invalide : corrigez le mot-clé qui commence par « re: ».",
+  "errorRuleKeywordsRequired": "Indiquez au moins une ligne.",
+  "errorRuleKeywordInvalid": "Expression régulière invalide : corrigez le terme qui commence par « re: ».",
   "errorRuleTargetRequired": "Choisissez une catégorie ou un compte de transfert.",
-  "errorRulePeriodInvalid": "Indiquez un nombre de mois entre 1 et 120.",
-  "errorCategoryUsedByRules": "Suppression refusée : {count, plural, =1{une règle vise} other{{count} règles visent}} cette catégorie.",
-  "@errorCategoryUsedByRules": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "errorUnknownRedistribution": "Cette règle de redistribution n'existe plus.",
   "errorRedistributionSameCategory": "La source et la cible doivent être deux catégories différentes.",
   "errorRedistributionNotLeaf": "La source et la cible doivent être des catégories sans sous-catégorie de l'année.",
@@ -722,21 +731,22 @@
   "classifyCreateRule": "Créer une règle",
   "classifyChooseCategory": "Choisissez une catégorie.",
   "classifyChooseAccount": "Choisissez un compte.",
-  "rulesMenu": "Règles de classement",
-  "rulesTitle": "Règles {year}",
-  "@rulesTitle": {
+  "ruleNew": "Nouvelle règle",
+  "ruleEdit": "Modifier la règle",
+  "ruleFor": "Classe dans « {target} »",
+  "@ruleFor": {
     "placeholders": {
-      "year": {
-        "type": "int"
+      "target": {
+        "type": "String"
       }
     }
   },
-  "rulesEmpty": "Aucune règle pour cette année.",
-  "rulesNoTree": "Cette année n'a pas encore d'arbre de catégories.",
-  "ruleNew": "Nouvelle règle",
-  "ruleEdit": "Modifier la règle",
-  "ruleKeywords": "Mots-clés, un par ligne",
-  "ruleKeywordsHint": "Tous sont requis, sans tenir compte des majuscules, des accents ni des espaces. « re: » au début d'un mot-clé pour une expression régulière.",
+  "rulesOr": " OU ",
+  "rulesHelp": "Aide sur les règles",
+  "rulesHelpTitle": "Règles de classement",
+  "rulesHelpBody": "Une règle classe les lignes importées encore à valider dans sa catégorie, ou comme transfert vers un compte. Elle lit le texte de la banque, jamais la description.\n\nChaque ligne de la règle est une possibilité : la règle s'applique dès qu'une de ses lignes est trouvée dans le texte (OU).\n\nPour exiger plusieurs termes qui ne se suivent pas, joignez-les par ET en majuscules : « coop ET pronto » demande « coop » et « pronto », n'importe où dans le texte. Sans ET, la ligne est cherchée telle quelle, mots collés.\n\nLes majuscules, les accents et les espaces répétés ne comptent pas. « re: » au début d'un terme en fait une expression régulière, par exemple « re:migros|coop ».\n\nQuand plusieurs règles s'appliquent, celle dont la ligne trouvée a le plus de termes gagne. À égalité entre deux cibles, la ligne reste « à compléter ».\n\nLa période proposée est toujours la date du paiement. Une règle créée, modifiée ou supprimée ne change que les lignes encore à valider.",
+  "ruleKeywords": "Lignes de la règle",
+  "ruleKeywordsHint": "Une ligne trouvée suffit. « ET » en majuscules entre deux termes : les deux sont requis, n'importe où dans le texte.",
   "ruleKeywordInvalid": "Expression régulière invalide : {keyword}",
   "@ruleKeywordInvalid": {
     "placeholders": {
@@ -746,15 +756,6 @@
     }
   },
   "ruleTarget": "Cible",
-  "rulePeriod": "Période",
-  "rulePeriodNone": "Date du paiement",
-  "rulePeriodPreviousMonth": "Mois précédent",
-  "rulePeriodNextMonth": "Mois suivant",
-  "rulePeriodMonthsAfter": "N mois après le paiement",
-  "rulePeriodMonthsBefore": "N mois avant le paiement",
-  "rulePeriodCurrentYear": "Année civile en cours",
-  "rulePeriodPreviousYear": "Année civile précédente",
-  "ruleMonths": "Nombre de mois",
   "ruleMatches": "Cette règle classerait {count, plural, =0{aucune ligne non validée} =1{une ligne non validée} other{{count} lignes non validées}}.",
   "@ruleMatches": {
     "placeholders": {

@@ -145,6 +145,12 @@ abstract class AppLocalizations {
   /// **'Annuler'**
   String get cancel;
 
+  /// No description provided for @close.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer'**
+  String get close;
+
   /// No description provided for @confirm.
   ///
   /// In fr, this message translates to:
@@ -514,8 +520,38 @@ abstract class AppLocalizations {
   /// No description provided for @categoriesTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Catégories'**
+  /// **'Catégories et règles'**
   String get categoriesTitle;
+
+  /// No description provided for @categoriesTransfers.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transferts'**
+  String get categoriesTransfers;
+
+  /// No description provided for @categoriesTransfersHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Règles qui marquent une ligne comme transfert vers un compte.'**
+  String get categoriesTransfersHint;
+
+  /// No description provided for @categoriesAddTransferRule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une règle de transfert'**
+  String get categoriesAddTransferRule;
+
+  /// No description provided for @categoriesUnusableRules.
+  ///
+  /// In fr, this message translates to:
+  /// **'Règles sans cible utilisable'**
+  String get categoriesUnusableRules;
+
+  /// No description provided for @categoriesUnusableRulesHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Leur catégorie ou leur compte n\'est plus utilisable : elles ne proposent rien.'**
+  String get categoriesUnusableRulesHint;
 
   /// No description provided for @categoriesYear.
   ///
@@ -595,6 +631,12 @@ abstract class AppLocalizations {
   /// **'Descendre'**
   String get categoryMoveDown;
 
+  /// No description provided for @categoryAddRule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une règle'**
+  String get categoryAddRule;
+
   /// No description provided for @categoryMoveTitle.
   ///
   /// In fr, this message translates to:
@@ -612,6 +654,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Supprimer la catégorie « {name} » ?'**
   String categoryDeleteConfirm(String name);
+
+  /// No description provided for @categoryDeleteWithRules.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la catégorie « {name} » et {count, plural, =1{sa règle} other{ses {count} règles}} ?'**
+  String categoryDeleteWithRules(String name, int count);
 
   /// No description provided for @categoryDeleted.
   ///
@@ -849,13 +897,13 @@ abstract class AppLocalizations {
   /// No description provided for @errorRuleKeywordsRequired.
   ///
   /// In fr, this message translates to:
-  /// **'Indiquez au moins un mot-clé.'**
+  /// **'Indiquez au moins une ligne.'**
   String get errorRuleKeywordsRequired;
 
   /// No description provided for @errorRuleKeywordInvalid.
   ///
   /// In fr, this message translates to:
-  /// **'Expression régulière invalide : corrigez le mot-clé qui commence par « re: ».'**
+  /// **'Expression régulière invalide : corrigez le terme qui commence par « re: ».'**
   String get errorRuleKeywordInvalid;
 
   /// No description provided for @errorRuleTargetRequired.
@@ -863,18 +911,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Choisissez une catégorie ou un compte de transfert.'**
   String get errorRuleTargetRequired;
-
-  /// No description provided for @errorRulePeriodInvalid.
-  ///
-  /// In fr, this message translates to:
-  /// **'Indiquez un nombre de mois entre 1 et 120.'**
-  String get errorRulePeriodInvalid;
-
-  /// No description provided for @errorCategoryUsedByRules.
-  ///
-  /// In fr, this message translates to:
-  /// **'Suppression refusée : {count, plural, =1{une règle vise} other{{count} règles visent}} cette catégorie.'**
-  String errorCategoryUsedByRules(int count);
 
   /// No description provided for @errorUnknownRedistribution.
   ///
@@ -1860,30 +1896,6 @@ abstract class AppLocalizations {
   /// **'Choisissez un compte.'**
   String get classifyChooseAccount;
 
-  /// No description provided for @rulesMenu.
-  ///
-  /// In fr, this message translates to:
-  /// **'Règles de classement'**
-  String get rulesMenu;
-
-  /// No description provided for @rulesTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Règles {year}'**
-  String rulesTitle(int year);
-
-  /// No description provided for @rulesEmpty.
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucune règle pour cette année.'**
-  String get rulesEmpty;
-
-  /// No description provided for @rulesNoTree.
-  ///
-  /// In fr, this message translates to:
-  /// **'Cette année n\'a pas encore d\'arbre de catégories.'**
-  String get rulesNoTree;
-
   /// No description provided for @ruleNew.
   ///
   /// In fr, this message translates to:
@@ -1896,16 +1908,46 @@ abstract class AppLocalizations {
   /// **'Modifier la règle'**
   String get ruleEdit;
 
+  /// No description provided for @ruleFor.
+  ///
+  /// In fr, this message translates to:
+  /// **'Classe dans « {target} »'**
+  String ruleFor(String target);
+
+  /// No description provided for @rulesOr.
+  ///
+  /// In fr, this message translates to:
+  /// **' OU '**
+  String get rulesOr;
+
+  /// No description provided for @rulesHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aide sur les règles'**
+  String get rulesHelp;
+
+  /// No description provided for @rulesHelpTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Règles de classement'**
+  String get rulesHelpTitle;
+
+  /// No description provided for @rulesHelpBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une règle classe les lignes importées encore à valider dans sa catégorie, ou comme transfert vers un compte. Elle lit le texte de la banque, jamais la description.\n\nChaque ligne de la règle est une possibilité : la règle s\'applique dès qu\'une de ses lignes est trouvée dans le texte (OU).\n\nPour exiger plusieurs termes qui ne se suivent pas, joignez-les par ET en majuscules : « coop ET pronto » demande « coop » et « pronto », n\'importe où dans le texte. Sans ET, la ligne est cherchée telle quelle, mots collés.\n\nLes majuscules, les accents et les espaces répétés ne comptent pas. « re: » au début d\'un terme en fait une expression régulière, par exemple « re:migros|coop ».\n\nQuand plusieurs règles s\'appliquent, celle dont la ligne trouvée a le plus de termes gagne. À égalité entre deux cibles, la ligne reste « à compléter ».\n\nLa période proposée est toujours la date du paiement. Une règle créée, modifiée ou supprimée ne change que les lignes encore à valider.'**
+  String get rulesHelpBody;
+
   /// No description provided for @ruleKeywords.
   ///
   /// In fr, this message translates to:
-  /// **'Mots-clés, un par ligne'**
+  /// **'Lignes de la règle'**
   String get ruleKeywords;
 
   /// No description provided for @ruleKeywordsHint.
   ///
   /// In fr, this message translates to:
-  /// **'Tous sont requis, sans tenir compte des majuscules, des accents ni des espaces. « re: » au début d\'un mot-clé pour une expression régulière.'**
+  /// **'Une ligne trouvée suffit. « ET » en majuscules entre deux termes : les deux sont requis, n\'importe où dans le texte.'**
   String get ruleKeywordsHint;
 
   /// No description provided for @ruleKeywordInvalid.
@@ -1919,60 +1961,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Cible'**
   String get ruleTarget;
-
-  /// No description provided for @rulePeriod.
-  ///
-  /// In fr, this message translates to:
-  /// **'Période'**
-  String get rulePeriod;
-
-  /// No description provided for @rulePeriodNone.
-  ///
-  /// In fr, this message translates to:
-  /// **'Date du paiement'**
-  String get rulePeriodNone;
-
-  /// No description provided for @rulePeriodPreviousMonth.
-  ///
-  /// In fr, this message translates to:
-  /// **'Mois précédent'**
-  String get rulePeriodPreviousMonth;
-
-  /// No description provided for @rulePeriodNextMonth.
-  ///
-  /// In fr, this message translates to:
-  /// **'Mois suivant'**
-  String get rulePeriodNextMonth;
-
-  /// No description provided for @rulePeriodMonthsAfter.
-  ///
-  /// In fr, this message translates to:
-  /// **'N mois après le paiement'**
-  String get rulePeriodMonthsAfter;
-
-  /// No description provided for @rulePeriodMonthsBefore.
-  ///
-  /// In fr, this message translates to:
-  /// **'N mois avant le paiement'**
-  String get rulePeriodMonthsBefore;
-
-  /// No description provided for @rulePeriodCurrentYear.
-  ///
-  /// In fr, this message translates to:
-  /// **'Année civile en cours'**
-  String get rulePeriodCurrentYear;
-
-  /// No description provided for @rulePeriodPreviousYear.
-  ///
-  /// In fr, this message translates to:
-  /// **'Année civile précédente'**
-  String get rulePeriodPreviousYear;
-
-  /// No description provided for @ruleMonths.
-  ///
-  /// In fr, this message translates to:
-  /// **'Nombre de mois'**
-  String get ruleMonths;
 
   /// No description provided for @ruleMatches.
   ///

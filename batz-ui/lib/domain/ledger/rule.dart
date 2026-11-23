@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 
 import '../ids.dart';
-import '../period_model.dart';
 import 'category.dart';
 
 /// Journal entity and fields of a mapping rule of a year.
@@ -11,25 +10,35 @@ abstract final class RuleFields {
   static const entity = 'rule';
   static const year = 'year';
 
-  /// The keywords, as a JSON list of strings: the journal holds scalars.
+  /// The lines of the rule, as a JSON list of strings (the journal holds
+  /// scalars): the rule matches when one of them does.
+  static const lines = 'lines';
+
+  /// The keywords of a rule written before lines existed, as a JSON list of
+  /// strings, all required: read as the single line `a ET b` while [lines]
+  /// is absent, never written any more.
   static const keywords = 'keywords';
 
   /// The target: a category of the year's tree, or an account for a
   /// transfer. Exactly one is set.
   static const targetCategoryId = 'targetCategoryId';
   static const targetAccountId = 'targetAccountId';
-  static const periodModel = 'periodModel';
-  static const periodMonths = 'periodMonths';
 }
 
-/// A keyword written `re:…` is a regular expression.
+/// A term written `re:…` is a regular expression.
 const regexKeywordPrefix = 're:';
 
-/// The form under which keywords and texts are compared: lower case, without
+/// The word that joins the terms of a line, all of them required: written
+/// in capitals between spaces, so that « et » in a shop name stays a word.
+const andWord = 'ET';
+
+final _andSeparator = RegExp(r'\s+ET\s+');
+
+/// The form under which terms and texts are compared: lower case, without
 /// accents, every run of spaces or line breaks one space.
 String normalizeText(String text) => normalizeName(text.replaceAll(RegExp(r'\s+'), ' '));
 
-/// One keyword of a rule, ready to match a normalised text.
+/// One term of a line, ready to match a normalised text.
 class Keyword {
   /// Throws a [FormatException] for an invalid regular expression.
   factory Keyword(String keyword) {
@@ -50,107 +59,134 @@ class Keyword {
 
   bool get isRegex => _regex != null;
 
-  /// Whether this keyword is in [normalized], a text from [normalizeText].
+  /// Whether this term is in [normalized], a text from [normalizeText].
   bool matches(String normalized) => _regex?.hasMatch(normalized) ?? normalized.contains(_plain!);
 
-  /// The form two keywords are the same under.
+  /// The form two terms are the same under.
   String get key => _regex == null ? _plain! : '$regexKeywordPrefix${_regex.pattern}';
 }
 
-/// A mapping rule of a year: when all its keywords are in the raw text of a
-/// line, it proposes its target and its period.
+/// One line of a rule: its terms, joined by [andWord], each required
+/// anywhere in the text. A line without [andWord] is one term, matched as
+/// a whole.
+class RuleLine {
+  /// Throws a [FormatException] for an invalid regular expression or a line
+  /// without any term.
+  factory RuleLine(String line) {
+    final byKey = <String, Keyword>{};
+    for (final part in line.trim().split(_andSeparator)) {
+      if (part.trim().isEmpty) continue;
+      final keyword = Keyword(part);
+      byKey[keyword.key] = keyword;
+    }
+    if (byKey.isEmpty) throw const FormatException('empty line');
+    return RuleLine._(line.trim(), byKey.values.toList());
+  }
+
+  RuleLine._(this.text, this.terms);
+
+  final String text;
+
+  /// Distinct terms: the same term twice counts once.
+  final List<Keyword> terms;
+
+  /// The number of terms: between rules, the line with the most wins.
+  int get weight => terms.length;
+
+  bool matches(String normalized) => terms.every((k) => k.matches(normalized));
+}
+
+/// Whether [line] can be a line of a rule: at least one term, and every
+/// regular expression (`re:…`) valid.
+bool isValidRuleLine(String line) {
+  try {
+    RuleLine(line);
+    return true;
+  } on FormatException {
+    return false;
+  }
+}
+
+/// The lines of [text] as typed in a form, one per line, empty ones left
+/// out.
+List<String> ruleLinesOf(String text) => [
+  for (final line in text.split('\n'))
+    if (line.trim().isNotEmpty) line.trim(),
+];
+
+/// A mapping rule of a year: when one of its lines matches the raw text of
+/// a line to validate, it proposes its target, for the payment date.
 class MappingRule extends Equatable {
   MappingRule({
     required this.id,
     required this.year,
-    required List<String> keywords,
+    required List<String> lines,
     this.targetCategoryId,
     this.targetAccountId,
-    this.periodModel,
-    this.periodMonths,
-  }) : keywords = List.unmodifiable(keywords),
-       _compiled = _compile(keywords);
+  }) : lines = List.unmodifiable(lines),
+       _compiled = _compile(lines);
 
   final String id;
   final int year;
 
   /// As written, at least one.
-  final List<String> keywords;
+  final List<String> lines;
   final String? targetCategoryId;
   final String? targetAccountId;
-  final PeriodModel? periodModel;
-  final int? periodMonths;
 
-  /// The keywords that compile, without duplicates; a rule received from
-  /// another device with an invalid expression simply never matches.
-  final List<Keyword>? _compiled;
+  /// The lines that compile; a rule received from another device with an
+  /// invalid expression keeps its other lines.
+  final List<RuleLine> _compiled;
 
-  static List<Keyword>? _compile(List<String> keywords) {
-    try {
-      final byKey = <String, Keyword>{};
-      for (final k in keywords) {
-        final keyword = Keyword(k);
-        byKey[keyword.key] = keyword;
-      }
-      return byKey.isEmpty ? null : byKey.values.toList();
-    } on FormatException {
-      return null;
-    }
-  }
+  static List<RuleLine> _compile(List<String> lines) => [
+    for (final line in lines)
+      if (isValidRuleLine(line)) RuleLine(line),
+  ];
 
   bool get isTransfer => targetAccountId != null;
 
-  /// The number of distinct keywords: the rule with the most wins.
-  int get weight => _compiled?.length ?? 0;
+  /// The weight of the rule for [normalized] (a text from [normalizeText]):
+  /// the number of terms of its heaviest matching line, 0 when no line
+  /// matches.
+  int weightFor(String normalized) {
+    var weight = 0;
+    for (final line in _compiled) {
+      if (line.weight > weight && line.matches(normalized)) weight = line.weight;
+    }
+    return weight;
+  }
 
-  /// Whether every keyword is in [normalized] (a text from [normalizeText]).
-  bool matches(String normalized) => _compiled != null && _compiled.every((k) => k.matches(normalized));
+  bool matches(String normalized) => weightFor(normalized) > 0;
 
-  /// What the rule proposes, compared between rules of equal weight:
-  /// the same target and the same period model are no conflict.
-  (String?, String?, PeriodModel?, int?) get result => (
-    targetCategoryId,
-    targetAccountId,
-    isTransfer ? null : periodModel,
-    isTransfer || !(periodModel?.takesMonths ?? false) ? null : periodMonths,
-  );
+  /// What the rule proposes, compared between rules of equal weight: the
+  /// same target is no conflict.
+  (String?, String?) get result => (targetCategoryId, targetAccountId);
 
   @override
-  List<Object?> get props => [id, year, keywords, targetCategoryId, targetAccountId, periodModel, periodMonths];
+  List<Object?> get props => [id, year, lines, targetCategoryId, targetAccountId];
 }
 
 /// What the user enters to create or modify a rule.
 class RuleDraft {
-  const RuleDraft({
-    required this.year,
-    required this.keywords,
-    this.targetCategoryId,
-    this.targetAccountId,
-    this.periodModel,
-    this.periodMonths,
-  });
+  const RuleDraft({required this.year, required this.lines, this.targetCategoryId, this.targetAccountId});
 
   factory RuleDraft.of(MappingRule rule) => RuleDraft(
     year: rule.year,
-    keywords: rule.keywords,
+    lines: rule.lines,
     targetCategoryId: rule.targetCategoryId,
     targetAccountId: rule.targetAccountId,
-    periodModel: rule.periodModel,
-    periodMonths: rule.periodMonths,
   );
 
   final int year;
-  final List<String> keywords;
+  final List<String> lines;
   final String? targetCategoryId;
   final String? targetAccountId;
-  final PeriodModel? periodModel;
-  final int? periodMonths;
 }
 
-String encodeKeywords(List<String> keywords) => jsonEncode(keywords);
+String encodeRuleLines(List<String> lines) => jsonEncode(lines);
 
-/// The keywords of their JSON form, or null if it is not a list of strings.
-List<String>? decodeKeywords(Object? value) {
+/// The strings of their JSON form, or null if it is not a list of strings.
+List<String>? decodeRuleLines(Object? value) {
   if (value is! String) return null;
   try {
     final list = jsonDecode(value);
@@ -161,14 +197,21 @@ List<String>? decodeKeywords(Object? value) {
   }
 }
 
+/// The line that keywords written before lines existed, all required, read
+/// as.
+String legacyRuleLine(List<String> keywords) => [
+  for (final k in keywords)
+    if (k.trim().isNotEmpty) k.trim(),
+].join(' $andWord ');
+
 /// Identifier of the copy, in [year], of the rule [sourceId]: computed like
 /// the copies of categories, which rules follow.
 String copiedRuleId(String sourceId, int year) => derivedId('rule-copy/$sourceId/$year');
 
-/// The keyword « Créer une règle » starts with for a line whose bank text is
+/// The line « Créer une règle » starts with for a transaction whose bank text is
 /// [rawText] and whose description is [description]: always a keyword found
 /// in that text as rules read it, so that the rule classifies at least that
-/// line as long as its keywords are kept.
+/// transaction as long as this line is kept.
 ///
 /// The description is usually the short label: lines of the bank text
 /// joined by spaces, generic lines (a card number, an IBAN) left out between

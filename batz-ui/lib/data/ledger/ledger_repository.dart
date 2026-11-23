@@ -11,7 +11,6 @@ import '../../domain/ledger/redistribution.dart';
 import '../../domain/ledger/rule.dart';
 import '../../domain/ledger/share_classification.dart';
 import '../../domain/ledger/statement.dart';
-import '../../domain/period_model.dart';
 import '../../domain/ledger/transaction.dart';
 import '../../domain/modules/electricity.dart';
 import '../../domain/modules/module_records.dart';
@@ -298,27 +297,23 @@ class LedgerRepository {
     );
   }
 
-  /// A rule needs a year, a list of keywords and one target. An unknown
-  /// period model (written by a newer version) makes it unreadable.
+  /// A rule needs a year, at least one line and one target. A rule written
+  /// before lines existed has keywords, all required: they read as one line
+  /// `a ET b`.
   static MappingRule? _rule(Map<String, Object?> row) {
     final year = row['year'];
-    final keywords = decodeKeywords(row['keywords']);
+    final legacy = decodeRuleLines(row['keywords']);
+    final lines = decodeRuleLines(row['lines']) ?? [if (legacy != null) legacyRuleLine(legacy)];
     final category = row['target_category_id'];
     final account = row['target_account_id'];
-    final model = row['period_model'];
-    final parsedModel = _enum(PeriodModel.values, model);
-    final months = row['period_months'];
-    if (year is! int || keywords == null || keywords.isEmpty) return null;
+    if (year is! int || lines.every((line) => line.trim().isEmpty)) return null;
     if ((category is String) == (account is String)) return null;
-    if (model != null && parsedModel == null) return null;
     return MappingRule(
       id: row['id']! as String,
       year: year,
-      keywords: keywords,
+      lines: lines,
       targetCategoryId: category as String?,
       targetAccountId: account as String?,
-      periodModel: parsedModel,
-      periodMonths: months is int ? months : null,
     );
   }
 

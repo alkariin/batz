@@ -199,10 +199,8 @@ void main() {
       (await h.ledger()).importStatement('bank', january.statement, fingerprint: january.fingerprint).modification,
     );
     await h.apply(
-      (l) => l.createRule(
-        'savings',
-        const RuleDraft(year: 2026, keywords: ['compte épargne'], targetAccountId: 'savings'),
-      ),
+      (l) =>
+          l.createRule('savings', const RuleDraft(year: 2026, lines: ['compte épargne'], targetAccountId: 'savings')),
     );
     final ledger = await declare('savings', d(2026, 1, 1), 300000);
 

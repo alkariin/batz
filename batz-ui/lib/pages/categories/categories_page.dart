@@ -6,11 +6,16 @@ import '../../domain/ids.dart';
 import '../../domain/ledger/category.dart';
 import '../../domain/ledger/issues.dart';
 import '../../domain/ledger/ledger.dart';
+import '../../domain/ledger/rule.dart';
 import '../../l10n/app_localizations.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
+import '../validation/rule_form_page.dart';
+import '../validation/rules_help.dart';
 
-/// Plus > Catégories: the tree of one year, and the creation of the trees.
+/// Plus > Catégories et règles: the tree of one year, each category with
+/// the mapping rules that classify in it, then the transfer rules and the
+/// rules whose target can no longer be used; and the creation of the trees.
 class CategoriesPage extends StatefulWidget {
   const CategoriesPage({super.key, this.initialYear});
 
@@ -43,6 +48,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
           appBar: AppBar(
             title: Text(l.categoriesTitle),
             actions: [
+              const RulesHelpButton(),
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: DropdownButton<int>(
@@ -67,21 +73,95 @@ class _CategoriesPageState extends State<CategoriesPage> {
             children: [
               if (tree == null)
                 _NoTree(year: _year, ledger: ledger)
-              else
+              else ...[
                 ..._TreeView(
                   tree: tree,
+                  ledger: ledger,
                   duplicates: {
                     for (final issue in ledger.issues)
                       if (issue is DuplicateCategoryName && issue.year == _year)
                         for (final c in issue.categories) c.id,
                   },
                 ).tiles(context),
+                ..._transferSection(context, ledger),
+                ..._unusableSection(context, ledger),
+              ],
               ..._detachedSection(context, ledger, tree),
             ],
           ),
         );
       },
     );
+  }
+
+  /// « Transferts »: the transfer rules of the year whose account can be
+  /// used, under the name of their account, and the button that adds one.
+  List<Widget> _transferSection(BuildContext context, Ledger ledger) {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final unusable = {for (final r in ledger.unusableRules) r.id};
+    final rules = [
+      for (final r in ledger.rulesOf(_year))
+        if (r.isTransfer && !unusable.contains(r.id)) r,
+    ];
+    return [
+      const Divider(),
+      ListTile(
+        title: Text(l.categoriesTransfers, style: theme.textTheme.titleMedium),
+        subtitle: Text(l.categoriesTransfersHint),
+      ),
+      for (final account in ledger.sortedAccounts)
+        if (rules.any((r) => r.targetAccountId == account.id)) ...[
+          ListTile(
+            key: ValueKey('transferRules-${account.id}'),
+            dense: true,
+            contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 4),
+            title: Text(account.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+          ),
+          for (final rule in rules)
+            if (rule.targetAccountId == account.id) _ruleTile(context, rule, depth: 1),
+        ],
+      Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: TextButton.icon(
+            key: const Key('addTransferRule'),
+            icon: const Icon(Icons.add),
+            label: Text(l.categoriesAddTransferRule),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<bool>(
+                builder: (_) => RuleFormPage(
+                  year: _year,
+                  initial: RuleDraft(year: _year, lines: const []),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  /// The rules of the year whose category or account can no longer be
+  /// used: they propose nothing until they get a target again.
+  List<Widget> _unusableSection(BuildContext context, Ledger ledger) {
+    final rules = [
+      for (final r in ledger.unusableRules)
+        if (r.year == _year) r,
+    ];
+    if (rules.isEmpty) return const [];
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return [
+      const Divider(),
+      ListTile(
+        leading: Icon(Icons.warning_amber_outlined, color: theme.colorScheme.error),
+        title: Text(l.categoriesUnusableRules, style: theme.textTheme.titleMedium),
+        subtitle: Text(l.categoriesUnusableRulesHint),
+      ),
+      for (final rule in rules) _ruleTile(context, rule, depth: 1, chooseTarget: true),
+    ];
   }
 
   /// « À replacer »: the detached categories of the year, each with the
@@ -187,24 +267,49 @@ class _NoTree extends StatelessWidget {
   }
 }
 
-enum _Action { addChild, rename, move, up, down, delete }
+enum _Action { addRule, addChild, rename, move, up, down, delete }
+
+/// One rule, under its category or its account: its lines, one per line;
+/// a tap opens it.
+Widget _ruleTile(BuildContext context, MappingRule rule, {required int depth, bool chooseTarget = false}) => ListTile(
+  key: ValueKey('rule-${rule.id}'),
+  dense: true,
+  contentPadding: EdgeInsetsDirectional.only(start: 16.0 + 24.0 * depth, end: 16),
+  leading: const Icon(Icons.rule, size: 18),
+  minLeadingWidth: 18,
+  title: Text(rule.lines.join('\n')),
+  onTap: () => Navigator.of(context).push(
+    MaterialPageRoute<bool>(
+      builder: (_) => RuleFormPage(year: rule.year, rule: rule, chooseTarget: chooseTarget),
+    ),
+  ),
+);
 
 class _TreeView {
-  const _TreeView({required this.tree, this.duplicates = const {}});
+  _TreeView({required this.tree, required this.ledger, this.duplicates = const {}});
 
   final CategoryTree tree;
+  final Ledger ledger;
 
   /// Categories whose name another category of the year also has, after a
   /// merge.
   final Set<String> duplicates;
 
+  /// The menu of each category, opened by its button or by a tap on the
+  /// category.
+  final _menus = <String, GlobalKey<PopupMenuButtonState<_Action>>>{};
+
   List<Widget> tiles(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return [
-      for (final category in tree.ordered)
+    final tiles = <Widget>[];
+    for (final category in tree.ordered) {
+      final menu = _menus[category.id] = GlobalKey<PopupMenuButtonState<_Action>>();
+      final depth = tree.depthOf(category.id);
+      final assignable = tree.canHoldTransactions(category.id);
+      tiles.add(
         ListTile(
           key: ValueKey(category.id),
-          contentPadding: EdgeInsetsDirectional.only(start: 16.0 + 24.0 * tree.depthOf(category.id), end: 4),
+          contentPadding: EdgeInsetsDirectional.only(start: 16.0 + 24.0 * depth, end: 4),
           title: Text(category.name, style: category.isTopLevel ? const TextStyle(fontWeight: FontWeight.w600) : null),
           leading: duplicates.contains(category.id)
               ? Icon(Icons.warning_amber_outlined, color: Theme.of(context).colorScheme.error)
@@ -214,10 +319,17 @@ class _TreeView {
               : category.isTopLevel
               ? Text(natureText(l, category.nature!))
               : null,
+          onTap: () => menu.currentState?.showButtonMenu(),
           trailing: PopupMenuButton<_Action>(
-            key: Key('categoryMenu-${category.name}'),
+            key: menu,
             onSelected: (action) => _run(context, category, action),
             itemBuilder: (_) => [
+              if (assignable)
+                PopupMenuItem(
+                  key: Key('categoryAddRule-${category.name}'),
+                  value: _Action.addRule,
+                  child: Text(l.categoryAddRule),
+                ),
               PopupMenuItem(value: _Action.addChild, child: Text(l.categoryAddChild)),
               PopupMenuItem(value: _Action.rename, child: Text(l.categoryRename)),
               PopupMenuItem(value: _Action.move, child: Text(l.categoryMove)),
@@ -225,14 +337,35 @@ class _TreeView {
               PopupMenuItem(value: _Action.down, child: Text(l.categoryMoveDown)),
               PopupMenuItem(value: _Action.delete, child: Text(l.delete)),
             ],
+            child: Padding(
+              key: Key('categoryMenu-${category.name}'),
+              padding: const EdgeInsets.all(12),
+              child: const Icon(Icons.more_vert),
+            ),
           ),
         ),
-    ];
+      );
+      if (assignable) {
+        for (final rule in ledger.rulesOfCategory(category.year, category.id)) {
+          tiles.add(_ruleTile(context, rule, depth: depth + 1));
+        }
+      }
+    }
+    return tiles;
   }
 
   Future<void> _run(BuildContext context, Category category, _Action action) async {
     final l = AppLocalizations.of(context);
     switch (action) {
+      case _Action.addRule:
+        await Navigator.of(context).push(
+          MaterialPageRoute<bool>(
+            builder: (_) => RuleFormPage(
+              year: category.year,
+              initial: RuleDraft(year: category.year, lines: const [], targetCategoryId: category.id),
+            ),
+          ),
+        );
       case _Action.addChild:
         final name = await _askName(context, l.categoryAddChild, '');
         if (name == null || !context.mounted) return;
@@ -264,7 +397,10 @@ class _TreeView {
         final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            content: Text(l.categoryDeleteConfirm(category.name)),
+            content: Text(switch (ledger.rulesOfCategory(category.year, category.id).length) {
+              0 => l.categoryDeleteConfirm(category.name),
+              final count => l.categoryDeleteWithRules(category.name, count),
+            }),
             actions: [
               TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l.cancel)),
               TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l.delete)),

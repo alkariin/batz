@@ -1,7 +1,6 @@
 import '../calendar_date.dart';
 import '../journal/journal_entry.dart';
 import '../modules/module_records.dart';
-import '../period_model.dart';
 import 'account.dart';
 import 'balance.dart';
 import 'category.dart';
@@ -297,13 +296,11 @@ class Ledger {
     for (final rule in rulesOf(source)) {
       for (final field in {
         RuleFields.year: year,
-        RuleFields.keywords: encodeKeywords(rule.keywords),
+        RuleFields.lines: encodeRuleLines(rule.lines),
         RuleFields.targetCategoryId: rule.targetCategoryId == null
             ? null
             : copiedCategoryId(rule.targetCategoryId!, year),
         RuleFields.targetAccountId: rule.targetAccountId,
-        RuleFields.periodModel: rule.periodModel?.name,
-        RuleFields.periodMonths: rule.periodMonths,
       }.entries) {
         changes.add(FieldChange(RuleFields.entity, copiedRuleId(rule.id, year), field.key, field.value));
       }
@@ -407,18 +404,21 @@ class Ledger {
     return changes.isEmpty ? null : Modification(changes);
   }
 
-  /// Deletes [id]: refused while it has children, or while transactions,
-  /// mapping rules or redistribution rules use it, with their number.
+  /// Deletes [id], with the mapping rules that classify in it: refused
+  /// while it has children, or while transactions or redistribution rules
+  /// use it, with their number.
   Modification removeCategory(String id) {
     final category = _category(id);
     if (trees[category.year]!.hasChildren(id)) throw const LedgerException(LedgerError.categoryHasChildren);
     final used = transactionsUsingCategory(id);
     if (used > 0) throw LedgerException(LedgerError.categoryInUse, count: used);
-    final targeting = rules.values.where((r) => r.targetCategoryId == id).length;
-    if (targeting > 0) throw LedgerException(LedgerError.categoryUsedByRules, count: targeting);
     final redistributing = redistributions.values.where((r) => r.sourceId == id || r.targetId == id).length;
     if (redistributing > 0) throw LedgerException(LedgerError.categoryUsedByRedistributions, count: redistributing);
-    return Modification.delete(CategoryFields.entity, id);
+    return Modification([
+      FieldChange(CategoryFields.entity, id, deletedField, true),
+      for (final rule in rules.values)
+        if (rule.targetCategoryId == id) FieldChange(RuleFields.entity, rule.id, deletedField, true),
+    ]);
   }
 
   /// The number of transactions classified in [categoryId].
@@ -918,20 +918,27 @@ class Ledger {
 
   // ------------------------------------------------------------------- rules
 
-  /// The mapping rules of [year], by first keyword.
+  /// The mapping rules of [year], by their lines.
   List<MappingRule> rulesOf(int year) =>
       [
         for (final r in rules.values)
           if (r.year == year) r,
       ]..sort((a, b) {
-        final byKeyword = normalizeText(a.keywords.join(' ')).compareTo(normalizeText(b.keywords.join(' ')));
-        return byKeyword != 0 ? byKeyword : a.id.compareTo(b.id);
+        final byLines = normalizeText(a.lines.join(' ')).compareTo(normalizeText(b.lines.join(' ')));
+        return byLines != 0 ? byLines : a.id.compareTo(b.id);
       });
 
-  /// What [rule] classifies a payment of [payment] as, or null when its
-  /// target can no longer be used: a category that is deleted, detached, a
-  /// group or not of its year's tree; an account that is gone, archived or
-  /// detailed.
+  /// The mapping rules of [year] that classify in [categoryId], by their
+  /// lines.
+  List<MappingRule> rulesOfCategory(int year, String categoryId) => [
+    for (final r in rulesOf(year))
+      if (r.targetCategoryId == categoryId) r,
+  ];
+
+  /// What [rule] classifies a payment of [payment] as, for the payment
+  /// date, or null when its target can no longer be used: a category that
+  /// is deleted, detached, a group or not of its year's tree; an account
+  /// that is gone, archived or detailed.
   Classification? ruleClassification(MappingRule rule, CalendarDate payment) {
     if (rule.targetAccountId case final accountId?) {
       final account = accounts[accountId];
@@ -941,12 +948,7 @@ class Ledger {
     final categoryId = rule.targetCategoryId;
     final tree = trees[rule.year];
     if (categoryId == null || tree == null || !tree.canHoldTransactions(categoryId)) return null;
-    if ((rule.periodModel?.takesMonths ?? false) &&
-        (rule.periodMonths == null || rule.periodMonths! < 1 || rule.periodMonths! > maxPeriodMonths)) {
-      return null;
-    }
-    final (start, end) = periodFor(rule.periodModel, payment, months: rule.periodMonths);
-    return Classification.category(categoryId, periodStart: start, periodEnd: end);
+    return Classification.category(categoryId, periodStart: payment, periodEnd: payment);
   }
 
   /// Rules whose target can no longer be used: they propose nothing and are
@@ -998,8 +1000,8 @@ class Ledger {
   }
 
   /// Creates the rule [id] of [RuleDraft.year]. Refused without a tree for
-  /// the year, without a keyword, with an invalid regular expression, without
-  /// a usable target, or with a number of months out of range.
+  /// the year, without a line, with an invalid regular expression, or
+  /// without a usable target.
   Modification createRule(String id, RuleDraft draft) => Modification.set(RuleFields.entity, id, _ruleFields(draft));
 
   /// Modifies the rule [id]: only the rule is written, the lines to validate
@@ -1019,13 +1021,13 @@ class Ledger {
   Map<String, Object?> _ruleFields(RuleDraft draft, {MappingRule? existing}) {
     final tree = trees[draft.year];
     if (tree == null) throw const LedgerException(LedgerError.noTree);
-    final keywords = [
-      for (final k in draft.keywords)
-        if (k.trim().isNotEmpty) k.trim(),
+    final lines = [
+      for (final line in draft.lines)
+        if (line.trim().isNotEmpty) line.trim(),
     ];
-    if (keywords.isEmpty) throw const LedgerException(LedgerError.ruleKeywordsRequired);
-    for (final keyword in keywords) {
-      if (!isValidKeyword(keyword)) throw const LedgerException(LedgerError.ruleKeywordInvalid);
+    if (lines.isEmpty) throw const LedgerException(LedgerError.ruleKeywordsRequired);
+    for (final line in lines) {
+      if (!isValidRuleLine(line)) throw const LedgerException(LedgerError.ruleKeywordInvalid);
     }
     final category = draft.targetCategoryId, accountId = draft.targetAccountId;
     if ((category == null) == (accountId == null)) throw const LedgerException(LedgerError.ruleTargetRequired);
@@ -1039,18 +1041,13 @@ class Ledger {
       if (account.archived && !unchanged) throw const LedgerException(LedgerError.archivedAccount);
       if (account.isDetailed) throw const LedgerException(LedgerError.detailedAccountManual);
     }
-    final model = accountId == null ? draft.periodModel : null;
-    final months = model?.takesMonths ?? false ? draft.periodMonths : null;
-    if ((model?.takesMonths ?? false) && (months == null || months < 1 || months > maxPeriodMonths)) {
-      throw const LedgerException(LedgerError.rulePeriodInvalid);
-    }
     return {
       RuleFields.year: draft.year,
-      RuleFields.keywords: encodeKeywords(keywords),
+      RuleFields.lines: encodeRuleLines(lines),
+      // A rule written before lines existed leaves its keywords behind.
+      if (existing != null) RuleFields.keywords: null,
       RuleFields.targetCategoryId: category,
       RuleFields.targetAccountId: accountId,
-      RuleFields.periodModel: model?.name,
-      RuleFields.periodMonths: months,
     };
   }
 
@@ -1058,19 +1055,17 @@ class Ledger {
   /// once created (or once [replacing] is modified so): those it would
   /// propose, alone or with rules of the same result.
   int linesClassifiedBy(RuleDraft draft, {String? replacing}) {
-    final List<String> keywords = [
-      for (final k in draft.keywords)
-        if (k.trim().isNotEmpty && isValidKeyword(k)) k.trim(),
+    final lines = [
+      for (final line in draft.lines)
+        if (isValidRuleLine(line)) line.trim(),
     ];
-    if (keywords.isEmpty) return 0;
+    if (lines.isEmpty) return 0;
     final candidate = MappingRule(
       id: replacing ?? '~draft',
       year: draft.year,
-      keywords: keywords,
+      lines: lines,
       targetCategoryId: draft.targetCategoryId,
       targetAccountId: draft.targetAccountId,
-      periodModel: draft.targetAccountId == null ? draft.periodModel : null,
-      periodMonths: draft.targetAccountId == null ? draft.periodMonths : null,
     );
     final others = [
       for (final r in rulesOf(draft.year))
@@ -1225,17 +1220,6 @@ class AccountRemoval {
 /// Where a line stands in the validation; only « validated » is stored, the
 /// other two are deduced from the rules.
 enum ValidationState { toComplete, proposed, validated }
-
-/// Whether [keyword] can be a keyword of a rule: a regular expression
-/// (`re:…`) must be valid.
-bool isValidKeyword(String keyword) {
-  try {
-    Keyword(keyword);
-    return true;
-  } on FormatException {
-    return false;
-  }
-}
 
 /// The statuses the transactions list filters on.
 enum StatusFilter { toValidate, toComplete, proposed, validated }
