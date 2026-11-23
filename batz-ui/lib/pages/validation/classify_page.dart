@@ -11,9 +11,11 @@ import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
 import '../debts/debt_links.dart';
 import '../../domain/ledger/debt.dart';
+import '../../domain/ids.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 import '../refunds/refund_target_page.dart';
+import '../transactions/split_editor.dart';
 import 'rule_form_page.dart';
 import 'validation_texts.dart';
 
@@ -21,9 +23,10 @@ import 'validation_texts.dart';
 /// validation.
 enum _Mode { category, transfer, refund }
 
-/// Classifies one imported line: a category of its year and a period, a
-/// transfer with another account, or, for money that came in, a refund attached
-/// to an expense; its description and note. Validating it writes the
+/// Classifies one imported line: a category of its year and a period (or
+/// several, each with its amount and period, when it is split), a transfer
+/// with another account, or, for money that came in, a refund attached to
+/// an expense; its description and note. Validating it writes the
 /// classification; for a proposed line it is the correction of the proposal. «
 /// Créer une règle » starts from it.
 class ClassifyPage extends StatefulWidget {
@@ -46,13 +49,72 @@ class _ClassifyPageState extends State<ClassifyPage> {
   String? _expenseLineId;
   var _initialised = false;
 
+  /// The lines of a split classification, the main one first; empty while
+  /// the line goes to one category.
+  final _splitLines = <SplitLineEdit>[];
+
+  bool get _split => _splitLines.isNotEmpty;
+
+  /// The line a classification in one category keeps: the imported line's
+  /// own, or the one left when a split line is brought back to one.
+  late String _mainLineId;
+
   @override
   void dispose() {
     _start.dispose();
     _end.dispose();
     _description.dispose();
     _note.dispose();
+    for (final line in _splitLines) {
+      line.dispose();
+    }
     super.dispose();
+  }
+
+  /// Splits the line: its category and period become the first line, a
+  /// second line starts over the same period.
+  void _startSplit(LedgerTransaction t) {
+    final start = DateField.read(_start) ?? t.date, end = DateField.read(_end) ?? start;
+    setState(() {
+      _splitLines.addAll([
+        SplitLineEdit(id: _mainLineId, categoryId: _categoryId, start: start, end: end),
+        SplitLineEdit(id: newId(), start: start, end: end),
+      ]);
+    });
+  }
+
+  void _addLine(LedgerTransaction t) {
+    final first = _splitLines.first;
+    setState(() {
+      _splitLines.add(
+        SplitLineEdit(
+          id: newId(),
+          start: DateField.read(first.start) ?? t.date,
+          end: DateField.read(first.end) ?? t.date,
+        ),
+      );
+    });
+  }
+
+  /// Removes the line [index]; with one line left, the line goes to one
+  /// category again, that line's.
+  void _removeLine(int index) {
+    final removed = [_splitLines.removeAt(index)];
+    if (_splitLines.length == 1) {
+      final last = _splitLines.removeLast();
+      removed.add(last);
+      _categoryId = last.categoryId;
+      _mainLineId = last.id;
+      _start.text = last.start.text;
+      _end.text = last.end.text;
+    }
+    setState(() {});
+    // Their fields leave the screen with this frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      for (final line in removed) {
+        line.dispose();
+      }
+    });
   }
 
   /// Starts from the stored classification of a validated line, or from the
@@ -61,6 +123,8 @@ class _ClassifyPageState extends State<ClassifyPage> {
     _initialised = true;
     _description.text = t.description;
     _note.text = t.note;
+    _mainLineId = t.line?.id ?? Ledger.fallbackLineId(t.id);
+    if (t.isValidated && !t.isTransfer && t.isSplit) _splitLines.addAll(SplitLineEdit.of(t));
     final Classification? current = t.isValidated
         ? (t.isTransfer
               ? Classification.transfer(t.counterpartAccountId!)
@@ -91,11 +155,21 @@ class _ClassifyPageState extends State<ClassifyPage> {
       }
       return Classification.transfer(_accountId!);
     }
+    if (_split) {
+      final lines = splitDrafts(context, _splitLines, t.amount.abs());
+      return lines == null ? null : Classification.split(lines);
+    }
     if (_categoryId == null) {
       showMessage(context, l.classifyChooseCategory);
       return null;
     }
     final start = DateField.read(_start) ?? t.date, end = DateField.read(_end) ?? start;
+    // A split line brought back to one category keeps the line left.
+    if (t.isSplit) {
+      return Classification.split([
+        LineDraft(id: _mainLineId, categoryId: _categoryId!, cents: t.amount.abs(), periodStart: start, periodEnd: end),
+      ]);
+    }
     return Classification.category(_categoryId!, periodStart: start, periodEnd: end);
   }
 
@@ -142,7 +216,7 @@ class _ClassifyPageState extends State<ClassifyPage> {
             year: t.date.year,
             lines: [?keyword],
             // Mapping rules never attach a refund.
-            targetCategoryId: _mode == _Mode.category ? _categoryId : null,
+            targetCategoryId: _mode == _Mode.category ? (_split ? _splitLines.first.categoryId : _categoryId) : null,
             targetAccountId: _mode == _Mode.transfer ? _accountId : null,
           ),
         ),
@@ -158,7 +232,8 @@ class _ClassifyPageState extends State<ClassifyPage> {
     if (t == null) return Scaffold(appBar: AppBar(title: Text(l.classifyTitle)));
     if (!_initialised) _initialise(ledger, t);
     final theme = Theme.of(context);
-    final categories = ledger.trees[t.date.year]?.assignable ?? const [];
+    final tree = ledger.trees[t.date.year];
+    final categories = tree?.assignable ?? const [];
     final accounts = [
       for (final a in ledger.sortedAccounts)
         if (!a.isDetailed && a.id != t.accountId && (!a.archived || a.id == t.counterpartAccountId)) a,
@@ -209,7 +284,7 @@ class _ClassifyPageState extends State<ClassifyPage> {
           if (_mode == _Mode.refund) ...[
             Text(l.refundExpense, style: theme.textTheme.labelMedium),
             if (ledger.linesById[_expenseLineId] case final expense?)
-              expenseTile(context, ledger, expense.transaction, key: const Key('classifyExpense'))
+              expenseTile(context, ledger, expense, key: const Key('classifyExpense'))
             else
               ListTile(contentPadding: EdgeInsets.zero, title: Text(l.refundExpenseMissing)),
             OutlinedButton.icon(
@@ -224,6 +299,15 @@ class _ClassifyPageState extends State<ClassifyPage> {
             ),
             const SizedBox(height: 8),
             Text(l.refundHint, style: theme.textTheme.bodySmall),
+          ] else if (_mode == _Mode.category && _split) ...[
+            SplitEditor(
+              lines: _splitLines,
+              tree: tree!,
+              totalCents: t.amount.abs(),
+              onChanged: () => setState(() {}),
+              onAdd: () => _addLine(t),
+              onRemove: _removeLine,
+            ),
           ] else if (_mode == _Mode.category) ...[
             DropdownButtonFormField<String>(
               key: const Key('classifyCategory'),
@@ -244,6 +328,15 @@ class _ClassifyPageState extends State<ClassifyPage> {
                   child: DateField(controller: _end, label: l.periodEnd, fieldKey: const Key('classifyEnd')),
                 ),
               ],
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                key: const Key('classifySplit'),
+                icon: const Icon(Icons.call_split),
+                label: Text(l.splitAction),
+                onPressed: categories.isEmpty ? null : () => _startSplit(t),
+              ),
             ),
           ] else ...[
             DropdownButtonFormField<String>(

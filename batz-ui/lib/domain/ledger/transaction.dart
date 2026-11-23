@@ -23,8 +23,8 @@ abstract final class TransactionFields {
 }
 
 /// Journal entity and fields of a transaction line: its category and the
-/// period it concerns. The model allows several lines per transaction; the
-/// app manages one.
+/// period it concerns. A transaction has one line, or several when the user
+/// splits it between categories; its lines add up to its amount.
 abstract final class LineFields {
   static const entity = 'transactionLine';
   static const transactionId = 'transactionId';
@@ -131,7 +131,11 @@ class LedgerTransaction extends Equatable {
 
   bool get isValidated => status == TransactionStatus.validated;
 
-  /// The line the app manages.
+  /// Split between several categories: more than one line.
+  bool get isSplit => lines.length > 1;
+
+  /// The main line: the only one, or the largest of a split transaction
+  /// (the ledger keeps the lines by amount, largest first).
   TransactionLine? get line => lines.isEmpty ? null : lines.first;
 
   LedgerTransaction withLines(List<TransactionLine> lines) => LedgerTransaction(
@@ -180,6 +184,7 @@ class EntryDraft {
     this.periodStart,
     this.periodEnd,
     this.refundedLineId,
+    this.lines = const [],
   });
 
   final String accountId;
@@ -203,6 +208,27 @@ class EntryDraft {
   /// The line of the expense this entry refunds: it must be money coming
   /// in; its period is then its payment date.
   final String? refundedLineId;
+
+  /// The lines of a split entry, when given: they replace [categoryId] and
+  /// the period, add up to [cents], and cannot refund an expense.
+  final List<LineDraft> lines;
+}
+
+/// A line the user enters for a transaction split between categories: its
+/// category, its amount without sign (the transaction's sign applies) and
+/// the period it concerns (the payment date when null). [id] is the line's
+/// own, kept when the transaction is modified, or a new one.
+class LineDraft extends Equatable {
+  const LineDraft({required this.id, required this.categoryId, required this.cents, this.periodStart, this.periodEnd});
+
+  final String id;
+  final String categoryId;
+  final int cents;
+  final CalendarDate? periodStart;
+  final CalendarDate? periodEnd;
+
+  @override
+  List<Object?> get props => [id, categoryId, cents, periodStart, periodEnd];
 }
 
 /// What the user enters for a transfer between two accounts.

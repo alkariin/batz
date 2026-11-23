@@ -829,6 +829,66 @@ abstract class AppLocalizations {
   /// **'La fin de la période précède son début.'**
   String get errorPeriodInvalid;
 
+  /// No description provided for @errorSplitLineAmountInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque ligne de la ventilation doit avoir un montant supérieur à zéro.'**
+  String get errorSplitLineAmountInvalid;
+
+  /// No description provided for @errorSplitSumMismatch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les lignes de la ventilation doivent faire ensemble le montant de la transaction.'**
+  String get errorSplitSumMismatch;
+
+  /// No description provided for @errorSplitRefund.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un remboursement rattaché à une dépense ne se ventile pas.'**
+  String get errorSplitRefund;
+
+  /// No description provided for @splitAction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ventiler'**
+  String get splitAction;
+
+  /// No description provided for @splitTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ventilation'**
+  String get splitTitle;
+
+  /// No description provided for @splitHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque ligne a sa catégorie, son montant et sa période ; la première reçoit le reste du montant.'**
+  String get splitHint;
+
+  /// No description provided for @splitRest.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reste'**
+  String get splitRest;
+
+  /// No description provided for @splitAddLine.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une ligne'**
+  String get splitAddLine;
+
+  /// No description provided for @splitRemoveLine.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer la ligne'**
+  String get splitRemoveLine;
+
+  /// No description provided for @splitOverTotal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les autres lignes dépassent le montant de la transaction.'**
+  String get splitOverTotal;
+
   /// No description provided for @errorSameAccount.
   ///
   /// In fr, this message translates to:
@@ -2531,6 +2591,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Aucune dépense validée trouvée.'**
   String get refundNoExpense;
+
+  /// No description provided for @refundSplitOf.
+  ///
+  /// In fr, this message translates to:
+  /// **'ventilée, sur {total}'**
+  String refundSplitOf(String total);
 
   /// No description provided for @refundExpenseMissing.
   ///

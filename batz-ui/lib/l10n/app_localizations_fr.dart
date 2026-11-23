@@ -447,6 +447,38 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errorPeriodInvalid => 'La fin de la période précède son début.';
 
   @override
+  String get errorSplitLineAmountInvalid => 'Chaque ligne de la ventilation doit avoir un montant supérieur à zéro.';
+
+  @override
+  String get errorSplitSumMismatch =>
+      'Les lignes de la ventilation doivent faire ensemble le montant de la transaction.';
+
+  @override
+  String get errorSplitRefund => 'Un remboursement rattaché à une dépense ne se ventile pas.';
+
+  @override
+  String get splitAction => 'Ventiler';
+
+  @override
+  String get splitTitle => 'Ventilation';
+
+  @override
+  String get splitHint =>
+      'Chaque ligne a sa catégorie, son montant et sa période ; la première reçoit le reste du montant.';
+
+  @override
+  String get splitRest => 'Reste';
+
+  @override
+  String get splitAddLine => 'Ajouter une ligne';
+
+  @override
+  String get splitRemoveLine => 'Retirer la ligne';
+
+  @override
+  String get splitOverTotal => 'Les autres lignes dépassent le montant de la transaction.';
+
+  @override
   String get errorSameAccount => 'Choisissez deux comptes différents.';
 
   @override
@@ -1519,6 +1551,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get refundNoExpense => 'Aucune dépense validée trouvée.';
+
+  @override
+  String refundSplitOf(String total) {
+    return 'ventilée, sur $total';
+  }
 
   @override
   String get refundExpenseMissing => 'Choisissez la dépense remboursée.';

@@ -2,24 +2,43 @@ import 'package:equatable/equatable.dart';
 
 import '../calendar_date.dart';
 import 'rule.dart';
+import 'transaction.dart';
 
-/// How a line is classified: in a category with a period, or as a transfer
-/// with another account (which has no category and no period).
+/// How a line is classified: in a category with a period, as a transfer
+/// with another account (which has no category and no period), or split
+/// between several categories, each line with its amount and period (only
+/// the user splits: rules never do).
 class Classification extends Equatable {
   const Classification.category(this.categoryId, {required this.periodStart, required this.periodEnd})
-    : counterpartAccountId = null;
+    : counterpartAccountId = null,
+      lines = const [];
 
-  const Classification.transfer(this.counterpartAccountId) : categoryId = null, periodStart = null, periodEnd = null;
+  const Classification.transfer(this.counterpartAccountId)
+    : categoryId = null,
+      periodStart = null,
+      periodEnd = null,
+      lines = const [];
+
+  const Classification.split(this.lines)
+    : categoryId = null,
+      counterpartAccountId = null,
+      periodStart = null,
+      periodEnd = null;
 
   final String? categoryId;
   final String? counterpartAccountId;
   final CalendarDate? periodStart;
   final CalendarDate? periodEnd;
 
+  /// The lines of a split classification, adding up to the amount.
+  final List<LineDraft> lines;
+
   bool get isTransfer => counterpartAccountId != null;
 
+  bool get isSplit => lines.isNotEmpty;
+
   @override
-  List<Object?> get props => [categoryId, counterpartAccountId, periodStart, periodEnd];
+  List<Object?> get props => [categoryId, counterpartAccountId, periodStart, periodEnd, lines];
 }
 
 /// What the rules of its year say of a line to validate: computed at

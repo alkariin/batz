@@ -24,6 +24,11 @@ enum LedgerError {
   periodInvalid,
   sameAccount,
 
+  // A transaction split between categories.
+  splitLineAmountInvalid,
+  splitSumMismatch,
+  splitRefund,
+
   // Import of a statement.
   accountNotDetailed,
   statementOtherFormat,

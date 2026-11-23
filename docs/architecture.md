@@ -177,7 +177,8 @@ for every page.
 - **Transactions**: amounts are signed integer cents; the type (expense,
   refund, income, transfer) follows from the counterpart account, the nature
   of the category and the sign. A transfer is one record on the departure
-  account, with no line.
+  account, with no line. An expense or an income has one line, or one per
+  category when it is split; its lines add up to its amount.
 - **Allocation**: `allocate` spreads an amount over the months of a period;
   each month weighs its covered days over its days as an exact fraction, the
   shares are rounded to the cent and the last one takes the remainder.

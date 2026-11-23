@@ -284,8 +284,8 @@ void main() {
       LedgerError.refundNotInflow,
     );
     expect(refusal(() => ledger.attachRefund('gift', 'visit-line')), isNull);
-    expect(ledger.refundTargets('').map((t) => t.id).toSet(), {'visit', 'spent'});
-    expect(ledger.refundTargets('300.00').map((t) => t.id), ['visit']);
+    expect(ledger.refundTargets('').map((e) => e.transaction.id).toSet(), {'visit', 'spent'});
+    expect(ledger.refundTargets('300.00').map((e) => e.transaction.id), ['visit']);
   });
 
   test('a chain made by two devices has no effect: a link leads to an expense or does not hold', () async {

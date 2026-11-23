@@ -185,7 +185,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
     final kind = ledger.kindOf(t);
     // Seen from the arrival account, a transfer brings money in.
     final amount = t.isTransfer && accountId == t.counterpartAccountId ? -t.amount : t.amount;
-    final category = ledger.categoryOf(t);
+    final categories = categoriesText(ledger, t);
     return ListTile(
       leading: Icon(_icon(kind)),
       title: Text(titleText(l, ledger, t)),
@@ -198,7 +198,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
               ledger.validationStateOf(t) == ValidationState.proposed ? StatusFilter.proposed : StatusFilter.toComplete,
             ),
           kindText(l, kind),
-          if (category != null && t.description.isNotEmpty) category.name,
+          if (categories != null && t.description.isNotEmpty) categories,
           accountsText(l, ledger, t),
         ].join(' · '),
       ),

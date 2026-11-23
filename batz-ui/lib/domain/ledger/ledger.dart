@@ -20,8 +20,8 @@ import 'transaction.dart';
 class Ledger {
   /// [categories] that do not form a consistent tree are kept apart, as
   /// detached categories (see [CategoryForest.build]).
-  /// [lines] are attached to their transaction; a line whose transaction is
-  /// absent is left out.
+  /// [lines] are attached to their transaction, largest amount first; a
+  /// line whose transaction is absent is left out.
   /// [deletedStatementIds] are the statements deleted from the journal: one
   /// imported again must bring its records back explicitly.
   Ledger({
@@ -85,9 +85,14 @@ class Ledger {
       (byTransaction[line.transactionId] ??= []).add(line);
     }
     return {
-      for (final t in transactions)
-        t.id: t.withLines([...t.lines, ...?byTransaction[t.id]]..sort((a, b) => a.id.compareTo(b.id))),
+      for (final t in transactions) t.id: t.withLines([...t.lines, ...?byTransaction[t.id]]..sort(_largestFirst)),
     };
+  }
+
+  /// The main line of a split transaction comes first.
+  static int _largestFirst(TransactionLine a, TransactionLine b) {
+    final byAmount = b.amount.abs().compareTo(a.amount.abs());
+    return byAmount != 0 ? byAmount : a.id.compareTo(b.id);
   }
 
   static final empty = Ledger();
@@ -518,11 +523,12 @@ class Ledger {
   };
 
   /// [normalized] is a normalised category name, or the empty string for
-  /// the unclassified lines (no category, transfers excluded).
+  /// the unclassified lines (no category, transfers excluded). A split
+  /// transaction is in each category of its lines.
   bool _inCategory(LedgerTransaction t, String normalized) {
-    final category = categoryOf(t);
-    if (normalized.isEmpty) return category == null && kindOf(t) != TransactionKind.transfer;
-    return category != null && normalizeName(category.name) == normalized;
+    final categories = categoriesOf(t);
+    if (normalized.isEmpty) return categories.isEmpty && kindOf(t) != TransactionKind.transfer;
+    return categories.any((c) => normalizeName(c.name) == normalized);
   }
 
   bool _matchesWords(LedgerTransaction t, List<String> words) {
@@ -531,7 +537,7 @@ class Ledger {
         t.description,
         t.note,
         t.rawText ?? '',
-        categoryOf(t)?.name ?? '',
+        for (final category in categoriesOf(t)) category.name,
         accounts[t.accountId]?.name ?? '',
         accounts[t.counterpartAccountId]?.name ?? '',
         _amountText(t.amount),
@@ -579,8 +585,8 @@ class Ledger {
     };
   }
 
-  /// The category of the line of [transaction], if it is one of the tree of
-  /// its payment year.
+  /// The category of the main line of [transaction], if it is one of the
+  /// tree of its payment year.
   ///
   /// For a line to validate, the category the rules propose. For a refund
   /// attached to an expense, while the link holds, the category of the
@@ -594,6 +600,21 @@ class Ledger {
     final id = transaction.isValidated ? transaction.line?.categoryId : proposalOf(transaction)?.categoryId;
     final category = categories[id];
     return category != null && category.year == transaction.date.year ? category : null;
+  }
+
+  /// The categories of [transaction], each once, in the order of its lines:
+  /// that of [categoryOf], or for a split transaction those of all its
+  /// lines that are in the tree of its payment year.
+  List<Category> categoriesOf(LedgerTransaction transaction) {
+    if (!transaction.isValidated || !transaction.isSplit) return [?categoryOf(transaction)];
+    final result = <Category>[];
+    for (final line in transaction.lines) {
+      final category = categories[line.categoryId];
+      if (category != null && category.year == transaction.date.year && !result.contains(category)) {
+        result.add(category);
+      }
+    }
+    return result;
   }
 
   // ----------------------------------------------------------------- refunds
@@ -680,7 +701,7 @@ class Ledger {
     if (existing.isTransfer) throw const LedgerException(LedgerError.unknownTransaction);
     _checkManualAccount(draft.accountId, transfer: false, allowArchived: draft.accountId == existing.accountId);
     return Modification([
-      ..._entryChanges(id, existing.line?.id ?? fallbackLineId(id), draft, existing: existing.line),
+      ..._entryChanges(id, existing.line?.id ?? fallbackLineId(id), draft, existing: existing),
       ...treeChangesFor(draft.date.year),
     ]);
   }
@@ -688,10 +709,28 @@ class Ledger {
   /// The identifier of the line of a transaction that has lost its line.
   static String fallbackLineId(String transactionId) => '$transactionId-line';
 
-  List<FieldChange> _entryChanges(String id, String lineId, EntryDraft draft, {TransactionLine? existing}) {
+  /// The fields of the entry [id] and of its line [lineId], or of its
+  /// [EntryDraft.lines] when it is split; the lines of [existing] left out
+  /// are deleted.
+  List<FieldChange> _entryChanges(String id, String lineId, EntryDraft draft, {LedgerTransaction? existing}) {
     if (draft.cents <= 0) throw const LedgerException(LedgerError.amountRequired);
     final tree = treeOrPreview(draft.date.year);
     final refunded = draft.refundedLineId;
+    final amount = signedAmount(draft.cents, draft.direction);
+    final transactionChanges = [
+      for (final field in {
+        TransactionFields.accountId: draft.accountId,
+        TransactionFields.date: draft.date.encode(),
+        TransactionFields.amount: amount,
+        TransactionFields.description: draft.description.trim(),
+        TransactionFields.note: draft.note.trim(),
+      }.entries)
+        FieldChange(TransactionFields.entity, id, field.key, field.value),
+    ];
+    if (draft.lines.isNotEmpty) {
+      if (refunded != null) throw const LedgerException(LedgerError.splitRefund);
+      return [...transactionChanges, ..._splitChanges(id, tree, draft.date, amount, draft.lines, existing: existing)];
+    }
     final String? categoryId;
     final CalendarDate start, end;
     if (refunded == null) {
@@ -713,27 +752,77 @@ class Ledger {
       categoryId = ownRefundCategory(draft.date.year, expense.line.categoryId, draft.categoryId);
       start = end = draft.date;
     }
-    final amount = signedAmount(draft.cents, draft.direction);
     return [
-      for (final field in {
-        TransactionFields.accountId: draft.accountId,
-        TransactionFields.date: draft.date.encode(),
-        TransactionFields.amount: amount,
-        TransactionFields.description: draft.description.trim(),
-        TransactionFields.note: draft.note.trim(),
-      }.entries)
-        FieldChange(TransactionFields.entity, id, field.key, field.value),
+      ...transactionChanges,
       for (final field in {
         LineFields.transactionId: id,
         LineFields.categoryId: categoryId,
         LineFields.amount: amount,
         LineFields.periodStart: start.encode(),
         LineFields.periodEnd: end.encode(),
-        if (refunded != null || existing?.refundedLineId != null) LineFields.refundedLineId: refunded,
+        if (refunded != null || existing?.line?.refundedLineId != null) LineFields.refundedLineId: refunded,
       }.entries)
         FieldChange(LineFields.entity, lineId, field.key, field.value),
+      // A split transaction brought back to one line.
+      ..._otherLinesDeleted(existing, lineId),
     ];
   }
+
+  /// The lines of the transaction [id], of signed [amount], split as
+  /// [lines]: each in a category of [tree] that can hold transactions, for
+  /// an amount above zero, over a valid period (the payment [date] when it
+  /// has none); together, the amount. The lines of [existing] left out are
+  /// deleted; a line new to the transaction is brought back if it was
+  /// deleted. No line keeps a link to an expense: a refund attached to one
+  /// is not split.
+  List<FieldChange> _splitChanges(
+    String id,
+    CategoryTree tree,
+    CalendarDate date,
+    int amount,
+    List<LineDraft> lines, {
+    required LedgerTransaction? existing,
+  }) {
+    if ({for (final line in lines) line.id}.length != lines.length) {
+      throw ArgumentError('Two lines of the split have the same identifier');
+    }
+    final current = {for (final line in existing?.lines ?? const <TransactionLine>[]) line.id: line};
+    final changes = <FieldChange>[];
+    var total = 0;
+    for (final line in lines) {
+      if (line.cents <= 0) throw const LedgerException(LedgerError.splitLineAmountInvalid);
+      if (!tree.canHoldTransactions(line.categoryId)) throw const LedgerException(LedgerError.categoryNotAssignable);
+      final start = line.periodStart ?? date;
+      final end = line.periodEnd ?? (line.periodStart == null ? date : start);
+      if (end.isBefore(start)) throw const LedgerException(LedgerError.periodInvalid);
+      total += line.cents;
+      final previous = current[line.id];
+      for (final field in {
+        LineFields.transactionId: id,
+        LineFields.categoryId: line.categoryId,
+        LineFields.amount: amount < 0 ? -line.cents : line.cents,
+        LineFields.periodStart: start.encode(),
+        LineFields.periodEnd: end.encode(),
+        if (previous == null) deletedField: false,
+        if (previous == null || previous.refundedLineId != null) LineFields.refundedLineId: null,
+      }.entries) {
+        changes.add(FieldChange(LineFields.entity, line.id, field.key, field.value));
+      }
+    }
+    if (total != amount.abs()) throw const LedgerException(LedgerError.splitSumMismatch);
+    final kept = {for (final line in lines) line.id};
+    return [
+      ...changes,
+      for (final line in current.values)
+        if (!kept.contains(line.id)) FieldChange(LineFields.entity, line.id, deletedField, true),
+    ];
+  }
+
+  /// Deletes the lines of [transaction] other than [lineId].
+  static List<FieldChange> _otherLinesDeleted(LedgerTransaction? transaction, String lineId) => [
+    for (final line in transaction?.lines ?? const <TransactionLine>[])
+      if (line.id != lineId) FieldChange(LineFields.entity, line.id, deletedField, true),
+  ];
 
   /// Records a transfer: one transaction on the account the money leaves,
   /// with the receiving account as counterpart, and no category. Like any
@@ -1193,8 +1282,17 @@ class Ledger {
       }
       return changes;
     }
-    final categoryId = c.categoryId!;
     final tree = trees[t.date.year];
+    if (c.isSplit) {
+      if (tree == null) throw const LedgerException(LedgerError.categoryNotAssignable);
+      return [
+        ...changes,
+        if (t.counterpartAccountId != null)
+          FieldChange(TransactionFields.entity, t.id, TransactionFields.counterpartAccountId, null),
+        ..._splitChanges(t.id, tree, t.date, t.amount, c.lines, existing: t),
+      ];
+    }
+    final categoryId = c.categoryId!;
     if (tree == null || !tree.canHoldTransactions(categoryId)) {
       throw const LedgerException(LedgerError.categoryNotAssignable);
     }
@@ -1218,7 +1316,8 @@ class Ledger {
     }.entries) {
       changes.add(FieldChange(LineFields.entity, lineId, field.key, field.value));
     }
-    return changes;
+    // A split line brought back to one category.
+    return [...changes, ..._otherLinesDeleted(t, lineId)];
   }
 
   static int _nextPosition(Iterable<Category> siblings) =>

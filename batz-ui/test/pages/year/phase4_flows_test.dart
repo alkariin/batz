@@ -101,8 +101,8 @@ void main() {
     await settle(tester);
     await tester.enterText(find.byKey(const Key('refundSearch')), 'grand magasin');
     await tester.pumpAndSettle();
-    expect(find.byKey(ValueKey('refundTarget-${credit.id}')), findsNothing, reason: 'money that came in');
-    await tester.tap(find.byKey(ValueKey('refundTarget-${purchase.id}')));
+    expect(find.byKey(ValueKey('refundTarget-${credit.id}-line')), findsNothing, reason: 'money that came in');
+    await tester.tap(find.byKey(ValueKey('refundTarget-${purchase.id}-line')));
     await settle(tester);
     expect(find.byKey(const Key('classifyExpense')), findsOneWidget);
     await tester.tap(find.byKey(const Key('classifyValidate')));

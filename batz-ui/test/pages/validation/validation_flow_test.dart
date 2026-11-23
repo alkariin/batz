@@ -256,4 +256,40 @@ void main() {
     expect(find.text('Règles sans cible utilisable'), findsOneWidget);
     expect(find.text('compte épargne'), findsOneWidget);
   });
+
+  testWidgets('a line to complete is split at validation: the first line takes the rest of the bank amount', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.tap(find.byKey(const Key('taskLinesToValidate')));
+    await settle(tester);
+    final epicerie = (await ledger(tester)).linesToValidate.firstWhere((t) => t.rawText!.contains('Épicerie du Coin'));
+    await showLine(tester, epicerie.id);
+    await tester.tap(find.byKey(ValueKey('toComplete-${epicerie.id}')));
+    await settle(tester);
+
+    await pick(tester, const Key('classifyCategory'), 'Nourriture');
+    await tester.ensureVisible(find.byKey(const Key('classifySplit')));
+    await tester.tap(find.byKey(const Key('classifySplit')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('splitCategory-1')));
+    await pick(tester, const Key('splitCategory-1'), 'Loyer · dépenses');
+    await tester.enterText(find.byKey(const Key('splitAmount-1')), '1');
+    await tester.pumpAndSettle();
+    final cents = epicerie.amount.abs();
+    expect(
+      tester.widget<Text>(find.byKey(const Key('splitRest'))).data,
+      '${(cents - 100) ~/ 100}.${((cents - 100) % 100).toString().padLeft(2, '0')}',
+    );
+    await tester.ensureVisible(find.byKey(const Key('classifyValidate')));
+    await tester.tap(find.byKey(const Key('classifyValidate')));
+    await settle(tester);
+
+    final t = (await ledger(tester)).transactions[epicerie.id]!;
+    expect(t.isValidated, isTrue);
+    expect(
+      [for (final line in t.lines) (line.id, line.categoryId, line.amount)],
+      [(Ledger.fallbackLineId(epicerie.id), 'food', -(cents - 100)), (t.lines.last.id, 'rent', -100)],
+    );
+  });
 }

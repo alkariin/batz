@@ -78,6 +78,38 @@ propose a transfer counts nowhere, like any transfer.
 | Paid this year for other years | 1'400 | 0 |
 | Paid in other years for this year | 0 | 1'400 |
 
+### Split transactions
+
+« Ventiler », on a manual expense or income and on an imported line being
+validated, splits the transaction between categories. Each line has its
+category, its amount and its period, and counts as a transaction of its own
+in both views; the lines add up to the amount of the transaction. Rules
+never split: a split is entered by hand.
+
+- The **first line takes the rest**: the other lines are typed, the first
+  gets what they leave of the amount, which must stay above zero. A new
+  line starts over the period of the first one; lines over the payment date
+  follow it when it changes.
+- Lines take the sign of the transaction and may mix natures (a salary with
+  a refund of expenses); the **main line**, the largest, gives the type
+  shown. An imported line keeps its own line identifier for the first line,
+  the one its answers to shares were given for.
+- Each line keeps its identifier when the transaction is modified, so that
+  refunds, kWh and answers stay attached; a line removed is deleted, and
+  removing all but one brings the transaction back to one category.
+- The list shows the categories joined by « + »; the category filter and
+  the search find the transaction by any of them; the detail lists the
+  lines and adds their shares month by month.
+- A **refund** can be attached to each line of a split expense (the picker
+  lists the lines apart), and the expense counts them all in its net cost.
+  A refund attached to an expense is not split: attaching a split
+  transaction brings it back to one line, and a split repayment of a debt
+  stays as it is. A debt that came from a split expense is refunded to its
+  largest expense line.
+
+**Example.** 120 at the supermarket, split 100 in « Nourriture » and 20 in
+« Entretien ménage » for May and June: May shows −100 and −10, June −10.
+
 ### Lines of the view
 
 For one year and one view, every line shows twelve monthly amounts and
