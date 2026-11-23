@@ -281,7 +281,8 @@ extension DebtOperations on Ledger {
   /// Records that [transactionId] repaid the debt [debtId]: the debt is
   /// checked [today], received on the date of the transaction. When it is
   /// owed to me and comes from an expense, the transaction is attached to
-  /// that expense as its refund, unless it already refunds another one; a
+  /// that expense as its refund (to the largest expense line of a split
+  /// one), unless it already refunds another one or the user split it; a
   /// line to validate is validated by it. Refused, with its reason: an
   /// unknown debt or transaction, a debt already repaid, a transfer, money
   /// that goes the wrong way.
@@ -292,12 +293,9 @@ extension DebtOperations on Ledger {
     if (debt.repaid) throw const LedgerException(LedgerError.debtAlreadyRepaid);
     if (t.isValidated && t.isTransfer) throw const LedgerException(LedgerError.debtTransactionIsTransfer);
     if (!debtsRepayableBy(t).contains(debt)) throw const LedgerException(LedgerError.debtRepaymentDirection);
-    final source = transactions[debt.sourceTransactionId]?.line;
-    final attach =
-        debt.direction == DebtDirection.owedToMe &&
-        source != null &&
-        isExpenseLine(transactions[debt.sourceTransactionId]!, source) &&
-        expenseOf(t) == null;
+    final sourceTransaction = transactions[debt.sourceTransactionId];
+    final source = sourceTransaction?.lines.where((line) => isExpenseLine(sourceTransaction, line)).firstOrNull;
+    final attach = debt.direction == DebtDirection.owedToMe && source != null && expenseOf(t) == null && !t.isSplit;
     return Modification([
       for (final field in {
         DebtFields.repaid: true,

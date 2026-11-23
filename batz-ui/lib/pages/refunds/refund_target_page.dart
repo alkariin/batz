@@ -3,15 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/ledger/ledger.dart';
 import '../../domain/ledger/refund.dart';
-import '../../domain/ledger/transaction.dart';
 import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
 import '../ledger_cubit.dart';
 import '../transactions/transaction_texts.dart';
 
 /// Finds the expense a refund is attached to: validated expenses of any
-/// account and any year, by text and by amount. Returns the identifier of
-/// its line.
+/// account and any year, by text and by amount, each line of a split
+/// expense apart. Returns the identifier of the line.
 class RefundTargetPage extends StatefulWidget {
   const RefundTargetPage({super.key, this.excludeTransactionId});
 
@@ -36,8 +35,8 @@ class _RefundTargetPageState extends State<RefundTargetPage> {
     final l = AppLocalizations.of(context);
     final ledger = context.watch<LedgerCubit>().state.ledger;
     final expenses = [
-      for (final t in ledger.refundTargets(_search.text))
-        if (t.id != widget.excludeTransactionId) t,
+      for (final expense in ledger.refundTargets(_search.text))
+        if (expense.transaction.id != widget.excludeTransactionId) expense,
     ].take(200).toList();
     return Scaffold(
       appBar: AppBar(title: Text(l.refundPick)),
@@ -66,8 +65,8 @@ class _RefundTargetPageState extends State<RefundTargetPage> {
                       context,
                       ledger,
                       expenses[i],
-                      key: ValueKey('refundTarget-${expenses[i].id}'),
-                      onTap: () => Navigator.of(context).pop(expenses[i].line!.id),
+                      key: ValueKey('refundTarget-${expenses[i].line.id}'),
+                      onTap: () => Navigator.of(context).pop(expenses[i].line.id),
                     ),
                   ),
           ),
@@ -77,9 +76,13 @@ class _RefundTargetPageState extends State<RefundTargetPage> {
   }
 }
 
-/// An expense in a few words: description, date, category, account, amount.
-Widget expenseTile(BuildContext context, Ledger ledger, LedgerTransaction t, {Key? key, VoidCallback? onTap}) {
+/// An expense line in a few words: description, date, category, account,
+/// amount; for a line of a split expense, its own category and amount, then
+/// the amount of the whole expense.
+Widget expenseTile(BuildContext context, Ledger ledger, LineOf expense, {Key? key, VoidCallback? onTap}) {
   final l = AppLocalizations.of(context);
+  final (:line, transaction: t) = expense;
+  final category = ledger.categories[line.categoryId];
   return ListTile(
     key: key,
     leading: const Icon(Icons.south_east),
@@ -87,11 +90,12 @@ Widget expenseTile(BuildContext context, Ledger ledger, LedgerTransaction t, {Ke
     subtitle: Text(
       [
         formatDate(t.date.toDateTime()),
-        if (ledger.categoryOf(t) case final category?) category.name,
+        ?category?.name,
         accountsText(l, ledger, t),
+        if (t.isSplit) l.refundSplitOf(formatAmount(t.amount)),
       ].join(' · '),
     ),
-    trailing: Text(formatAmount(t.amount)),
+    trailing: Text(formatAmount(line.amount)),
     onTap: onTap,
   );
 }

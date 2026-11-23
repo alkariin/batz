@@ -235,6 +235,18 @@ negative amount is allocated as its opposite then negated. Month arithmetic
 clamps as `java.time` does (one month from 31 January ends on 27 February).
 Every other rounding (redistribution, debts, taxes, ratios) is the same.
 
+### Split transactions: every line written, by its identifier
+
+A split adds no field: a transaction holds one `transactionLine` per
+category, and the views already counted each line. The draft carries every
+line with its identifier, so a modification rewrites the lines it keeps and
+deletes the others, and what refers to a line (refund, kWh, answer, trip
+sheet) stays attached. The domain refuses lines that do not add up to the
+amount. The ledger keeps lines largest first: the first, the main line,
+gives the type; an imported line keeps `<transaction>-line` for its first
+line. A refund line holds one link, so a refund is never split and
+attaching one deletes its other lines. Rules never propose a split.
+
 ## Computed views
 
 ### One calculation for both annual views

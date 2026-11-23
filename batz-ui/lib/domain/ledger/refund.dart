@@ -14,7 +14,8 @@ extension RefundOperations on Ledger {
   /// imported line to validate is validated by it. The line keeps a category
   /// of its own, the one of the same name as the expense's in the tree of
   /// its payment year when there is one, and its payment date as period:
-  /// they serve if the link breaks.
+  /// they serve if the link breaks. A refund is not split: its main line
+  /// takes the whole amount, its other lines are deleted.
   Modification attachRefund(String transactionId, String expenseLineId) {
     final t = transactions[transactionId];
     if (t == null) throw const LedgerException(LedgerError.unknownTransaction);
@@ -46,6 +47,8 @@ extension RefundOperations on Ledger {
         if (line == null) deletedField: false,
       }.entries)
         FieldChange(LineFields.entity, lineId, field.key, field.value),
+      for (final other in t.lines)
+        if (other.id != lineId) FieldChange(LineFields.entity, other.id, deletedField, true),
     ]);
   }
 
@@ -71,10 +74,16 @@ extension RefundOperations on Ledger {
     return Modification.set(LineFields.entity, line.id, {LineFields.refundedLineId: null});
   }
 
-  /// The refunds attached to the line of [expense] whose link holds, by
+  /// The refunds attached to the lines of [expense] whose link holds, by
   /// date.
-  List<LedgerTransaction> refundsOf(LedgerTransaction expense) =>
-      expense.line == null ? const [] : refundsByExpenseLine[expense.line!.id] ?? const [];
+  List<LedgerTransaction> refundsOf(LedgerTransaction expense) {
+    if (!expense.isSplit) return expense.line == null ? const [] : refundsByExpenseLine[expense.line!.id] ?? const [];
+    final refunds = {for (final line in expense.lines) ...?refundsByExpenseLine[line.id]}.toList();
+    return refunds..sort((a, b) {
+      final byDate = a.date.compareTo(b.date);
+      return byDate != 0 ? byDate : a.id.compareTo(b.id);
+    });
+  }
 
   /// The net cost of [expense]: its amount plus its refunds (negative for a
   /// cost).
@@ -87,13 +96,14 @@ extension RefundOperations on Ledger {
     return line == null ? null : refundedExpenseOf(transaction, line);
   }
 
-  /// The validated expenses a refund can be attached to, found by [text]
-  /// (words of the description, the note, the bank text, the category, the
-  /// accounts or the amount, as the transactions list searches), most
-  /// recent first.
-  List<LedgerTransaction> refundTargets(String text) => [
+  /// The validated expense lines a refund can be attached to, found by
+  /// [text] (words of the description, the note, the bank text, the
+  /// category, the accounts or the amount, as the transactions list
+  /// searches), most recent first; each line of a split expense apart.
+  List<LineOf> refundTargets(String text) => [
     for (final t in search(TransactionQuery(text: text)))
-      if (t.line != null && isExpenseLine(t, t.line!)) t,
+      for (final line in t.lines)
+        if (isExpenseLine(t, line)) (line: line, transaction: t),
   ];
 
   /// The validated refunds whose link no longer leads to a validated
