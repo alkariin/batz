@@ -16,7 +16,6 @@ import 'package:batz/domain/modules/settings.dart';
 import 'package:batz/domain/modules/subscriptions.dart';
 import 'package:batz/domain/modules/taxes.dart';
 import 'package:batz/domain/modules/vacations.dart';
-import 'package:batz/domain/period_model.dart';
 
 CalendarDate _d(int year, int month, int day) => CalendarDate(year, month, day);
 
@@ -116,18 +115,11 @@ Ledger exportExampleLedger() {
       MappingRule(
         id: 'rule-restaurant',
         year: 2026,
-        keywords: const ['AUBERGE', r're:du\s+lac'],
+        lines: const [r'AUBERGE ET re:du\s+lac', 'restaurant du port'],
         targetCategoryId: 'cat-restaurant',
       ),
-      MappingRule(id: 'rule-saving', year: 2026, keywords: const ['=VIREMENT'], targetAccountId: 'acc-savings'),
-      MappingRule(
-        id: 'rule-rent',
-        year: 2026,
-        keywords: const ['LOYER'],
-        targetCategoryId: 'cat-rent',
-        periodModel: PeriodModel.monthsAfter,
-        periodMonths: 12,
-      ),
+      MappingRule(id: 'rule-saving', year: 2026, lines: const ['=VIREMENT'], targetAccountId: 'acc-savings'),
+      MappingRule(id: 'rule-rent', year: 2026, lines: const ['LOYER'], targetCategoryId: 'cat-rent'),
     ],
     redistributions: const [
       RedistributionRule(

@@ -33,8 +33,7 @@ void main() {
       (await h.ledger()).importStatement('bank', january.statement, fingerprint: january.fingerprint).modification,
     );
     await h.apply(
-      (l) =>
-          l.createRule('food', const RuleDraft(year: 2026, keywords: ['épicerie du coin'], targetCategoryId: 'food')),
+      (l) => l.createRule('food', const RuleDraft(year: 2026, lines: ['épicerie du coin'], targetCategoryId: 'food')),
     );
   });
   tearDown(() => h.close());

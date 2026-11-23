@@ -11,7 +11,6 @@ import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/domain/modules/settings.dart';
 import 'package:batz/domain/modules/subscriptions.dart';
 import 'package:batz/domain/modules/taxes.dart';
-import 'package:batz/domain/period_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// What [schema] leaves out of the journal described by [tables]: each
@@ -112,7 +111,6 @@ void main() {
     covers(ExportLabels.natures, CategoryNature.values);
     covers(ExportLabels.statuses, TransactionStatus.values);
     covers(ExportLabels.kinds, TransactionKind.values);
-    covers(ExportLabels.periodModels, PeriodModel.values);
     covers(ExportLabels.debtDirections, DebtDirection.values);
     covers(ExportLabels.taxes, TaxKind.values);
     covers(ExportLabels.frequencies, TrancheFrequency.values);

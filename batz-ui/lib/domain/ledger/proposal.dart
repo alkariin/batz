@@ -72,20 +72,21 @@ class UnusableRule extends RuleOutcome {
   List<Object?> get props => [rule];
 }
 
-/// The outcome of [rules] for a line of raw text [rawText]: the rules that
-/// match and have the most keywords win. [classify] turns the winning rule
+/// The outcome of [rules] for a line of raw text [rawText]: the rules whose
+/// matching line has the most terms win. [classify] turns the winning rule
 /// into its classification, or null when its target is unusable.
 RuleOutcome outcomeOf(String rawText, Iterable<MappingRule> rules, Classification? Function(MappingRule) classify) {
   final text = normalizeText(rawText);
   var best = 0;
   final winners = <MappingRule>[];
   for (final rule in rules) {
-    if (!rule.matches(text)) continue;
-    if (rule.weight > best) {
-      best = rule.weight;
+    final weight = rule.weightFor(text);
+    if (weight == 0) continue;
+    if (weight > best) {
+      best = weight;
       winners.clear();
     }
-    if (rule.weight == best) winners.add(rule);
+    if (weight == best) winners.add(rule);
   }
   if (winners.isEmpty) return const NoRule();
   winners.sort((a, b) => a.id.compareTo(b.id));

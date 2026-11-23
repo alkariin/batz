@@ -12,7 +12,6 @@ import 'package:batz/domain/ledger/ledger_exception.dart';
 import 'package:batz/domain/ledger/proposal.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/statement.dart';
-import 'package:batz/domain/period_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/csv_reader.dart';
@@ -41,7 +40,7 @@ String expectedCell(ExportColumn column, Object? raw) {
     ExportKind.flag => raw == 1 ? 'oui' : 'non',
     ExportKind.integer => '$raw',
     ExportKind.label => column.labels![raw as String]!,
-    ExportKind.keywords => text((jsonDecode(raw as String) as List).join('\n')),
+    ExportKind.ruleLines => text((jsonDecode(raw as String) as List).join('\n')),
   };
 }
 
@@ -93,20 +92,14 @@ Future<void> _importAndRules(LedgerHarness h, Random r) async {
   await h.apply(
     (l) => l.createRule(
       'rule-a',
-      const RuleDraft(
-        year: 2026,
-        keywords: ['-REMISE', 'achat'],
-        targetCategoryId: 'food',
-        periodModel: PeriodModel.monthsAfter,
-        periodMonths: 3,
-      ),
+      const RuleDraft(year: 2026, lines: ['-REMISE ET achat', 'magasin du coin'], targetCategoryId: 'food'),
     ),
   );
   await h.apply(
-    (l) => l.createRule('rule-b', const RuleDraft(year: 2026, keywords: ['@caisse'], targetAccountId: 'cash')),
+    (l) => l.createRule('rule-b', const RuleDraft(year: 2026, lines: ['@caisse'], targetAccountId: 'cash')),
   );
   await h.apply(
-    (l) => l.createRule('rule-c', const RuleDraft(year: 2026, keywords: ['magasin'], targetCategoryId: 'rent')),
+    (l) => l.createRule('rule-c', const RuleDraft(year: 2026, lines: ['magasin'], targetCategoryId: 'rent')),
   );
   await h.apply((l) => l.deleteRule('rule-c'));
   for (final rank in [0, 1, 2]) {

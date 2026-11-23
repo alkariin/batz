@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:batz/domain/journal/hlc.dart';
 import 'package:batz/domain/journal/journal_entry.dart';
+import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/pages/categories/categories_page.dart';
 import 'package:batz/pages/ledger_cubit.dart';
@@ -15,7 +16,7 @@ import '../accounts/accounts_page_test.dart' show pumpApp, settle;
 Future<void> openCategories(WidgetTester tester) async {
   await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Plus')));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Catégories'));
+  await tester.tap(find.byKey(const Key('moreCategories')));
   await tester.pumpAndSettle();
 }
 
@@ -111,5 +112,77 @@ void main() {
     expect(find.byKey(const Key('categoryMenu-Logement')), findsOneWidget);
     expect(find.byKey(const Key('categoryMenu-Nourriture')), findsOneWidget);
     expect(find.byKey(const Key('categoryMenu-Loyer')), findsOneWidget);
+  });
+
+  testWidgets('rules: a tap on a category opens its menu, a rule added there shows under it; transfers and help', (
+    tester,
+  ) async {
+    final services = await pumpApp(tester);
+    final year = DateTime.now().year;
+    await tester.runAsync(() async {
+      var ledger = await services.ledger.load();
+      await services.ledger.write(ledger.createTree(year));
+      ledger = await services.ledger.load();
+      await services.ledger.write(
+        ledger.addCategory(
+          'food',
+          year: year,
+          name: 'Nourriture',
+          parentId: defaultGroupId(year, CategoryNature.expense),
+        ),
+      );
+      ledger = await services.ledger.load();
+      await services.ledger.write(
+        ledger.createAccount('cash', const AccountDraft(name: 'Espèces', type: AccountType.cash)),
+      );
+    });
+    unawaited(tester.element(find.byType(AppShell)).read<LedgerCubit>().load());
+    await settle(tester);
+    await openCategories(tester);
+
+    // A tap on the category itself opens the same menu as its button.
+    await tester.tap(find.text('Nourriture'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ajouter une sous-catégorie'), findsOneWidget);
+    await tester.tap(find.text('Ajouter une règle'));
+    await tester.pumpAndSettle();
+    expect(find.text('Classe dans « Nourriture »'), findsOneWidget, reason: 'the rule belongs to its category');
+    expect(find.byKey(const Key('ruleCategory')), findsNothing);
+    await tester.enterText(find.byKey(const Key('ruleKeywords')), 'migros\ncoop ET pronto');
+    await tester.tap(find.byKey(const Key('ruleSave')));
+    await settle(tester);
+    expect(find.text('migros\ncoop ET pronto'), findsOneWidget, reason: 'under its category, one line each');
+
+    // The help explains OU and ET.
+    await tester.tap(find.byKey(const Key('rulesHelp')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('joignez-les par ET en majuscules'), findsOneWidget);
+    await tester.tap(find.text('Fermer'));
+    await tester.pumpAndSettle();
+
+    // A transfer rule chooses its account and shows under it.
+    await tester.scrollUntilVisible(find.byKey(const Key('addTransferRule')), 200);
+    await tester.tap(find.byKey(const Key('addTransferRule')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('ruleKeywords')), 'retrait bancomat');
+    await tester.tap(find.byKey(const Key('ruleAccount')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Espèces').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('ruleSave')));
+    await settle(tester);
+    expect(find.byKey(const ValueKey('transferRules-cash')), findsOneWidget);
+    expect(find.text('retrait bancomat'), findsOneWidget);
+
+    // Deleting the category says its rules go with it.
+    await menu(tester, 'Nourriture', 'Supprimer');
+    expect(find.text('Supprimer la catégorie « Nourriture » et sa règle ?'), findsOneWidget);
+    await tester.tap(find.text('Supprimer').last);
+    await settle(tester);
+    expect(find.text('migros\ncoop ET pronto'), findsNothing);
+    final ledger = await tester.runAsync(services.ledger.load);
+    expect(ledger!.rules.values.map((r) => r.lines), [
+      ['retrait bancomat'],
+    ]);
   });
 }

@@ -189,8 +189,7 @@ void main() {
       await server.stop();
       // Offline, on device A: a rule, its proposals confirmed, a line classified.
       await a.device.ledger.apply(
-        (l) =>
-            l.createRule('food', const RuleDraft(year: 2026, keywords: ['épicerie du coin'], targetCategoryId: 'food')),
+        (l) => l.createRule('food', const RuleDraft(year: 2026, lines: ['épicerie du coin'], targetCategoryId: 'food')),
       );
       var ledger = await a.device.ledger.ledger();
       for (final m in ledger.confirmProposals([for (final t in ledger.linesToValidate) t.id])) {

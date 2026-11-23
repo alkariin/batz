@@ -37,6 +37,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cancel => 'Annuler';
 
   @override
+  String get close => 'Fermer';
+
+  @override
   String get confirm => 'Confirmer';
 
   @override
@@ -249,7 +252,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errorUnknownAccount => 'Ce compte n\'existe plus.';
 
   @override
-  String get categoriesTitle => 'Catégories';
+  String get categoriesTitle => 'Catégories et règles';
+
+  @override
+  String get categoriesTransfers => 'Transferts';
+
+  @override
+  String get categoriesTransfersHint => 'Règles qui marquent une ligne comme transfert vers un compte.';
+
+  @override
+  String get categoriesAddTransferRule => 'Ajouter une règle de transfert';
+
+  @override
+  String get categoriesUnusableRules => 'Règles sans cible utilisable';
+
+  @override
+  String get categoriesUnusableRulesHint =>
+      'Leur catégorie ou leur compte n\'est plus utilisable : elles ne proposent rien.';
 
   @override
   String get categoriesYear => 'Année';
@@ -299,6 +318,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get categoryMoveDown => 'Descendre';
 
   @override
+  String get categoryAddRule => 'Ajouter une règle';
+
+  @override
   String categoryMoveTitle(String name) {
     return 'Déplacer « $name » vers';
   }
@@ -311,6 +333,12 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String categoryDeleteConfirm(String name) {
     return 'Supprimer la catégorie « $name » ?';
+  }
+
+  @override
+  String categoryDeleteWithRules(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'ses $count règles', one: 'sa règle');
+    return 'Supprimer la catégorie « $name » et $_temp0 ?';
   }
 
   @override
@@ -461,27 +489,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errorUnknownRule => 'Cette règle n\'existe plus.';
 
   @override
-  String get errorRuleKeywordsRequired => 'Indiquez au moins un mot-clé.';
+  String get errorRuleKeywordsRequired => 'Indiquez au moins une ligne.';
 
   @override
-  String get errorRuleKeywordInvalid => 'Expression régulière invalide : corrigez le mot-clé qui commence par « re: ».';
+  String get errorRuleKeywordInvalid => 'Expression régulière invalide : corrigez le terme qui commence par « re: ».';
 
   @override
   String get errorRuleTargetRequired => 'Choisissez une catégorie ou un compte de transfert.';
-
-  @override
-  String get errorRulePeriodInvalid => 'Indiquez un nombre de mois entre 1 et 120.';
-
-  @override
-  String errorCategoryUsedByRules(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count règles visent',
-      one: 'une règle vise',
-    );
-    return 'Suppression refusée : $_temp0 cette catégorie.';
-  }
 
   @override
   String get errorUnknownRedistribution => 'Cette règle de redistribution n\'existe plus.';
@@ -1087,31 +1101,35 @@ class AppLocalizationsFr extends AppLocalizations {
   String get classifyChooseAccount => 'Choisissez un compte.';
 
   @override
-  String get rulesMenu => 'Règles de classement';
-
-  @override
-  String rulesTitle(int year) {
-    return 'Règles $year';
-  }
-
-  @override
-  String get rulesEmpty => 'Aucune règle pour cette année.';
-
-  @override
-  String get rulesNoTree => 'Cette année n\'a pas encore d\'arbre de catégories.';
-
-  @override
   String get ruleNew => 'Nouvelle règle';
 
   @override
   String get ruleEdit => 'Modifier la règle';
 
   @override
-  String get ruleKeywords => 'Mots-clés, un par ligne';
+  String ruleFor(String target) {
+    return 'Classe dans « $target »';
+  }
+
+  @override
+  String get rulesOr => ' OU ';
+
+  @override
+  String get rulesHelp => 'Aide sur les règles';
+
+  @override
+  String get rulesHelpTitle => 'Règles de classement';
+
+  @override
+  String get rulesHelpBody =>
+      'Une règle classe les lignes importées encore à valider dans sa catégorie, ou comme transfert vers un compte. Elle lit le texte de la banque, jamais la description.\n\nChaque ligne de la règle est une possibilité : la règle s\'applique dès qu\'une de ses lignes est trouvée dans le texte (OU).\n\nPour exiger plusieurs termes qui ne se suivent pas, joignez-les par ET en majuscules : « coop ET pronto » demande « coop » et « pronto », n\'importe où dans le texte. Sans ET, la ligne est cherchée telle quelle, mots collés.\n\nLes majuscules, les accents et les espaces répétés ne comptent pas. « re: » au début d\'un terme en fait une expression régulière, par exemple « re:migros|coop ».\n\nQuand plusieurs règles s\'appliquent, celle dont la ligne trouvée a le plus de termes gagne. À égalité entre deux cibles, la ligne reste « à compléter ».\n\nLa période proposée est toujours la date du paiement. Une règle créée, modifiée ou supprimée ne change que les lignes encore à valider.';
+
+  @override
+  String get ruleKeywords => 'Lignes de la règle';
 
   @override
   String get ruleKeywordsHint =>
-      'Tous sont requis, sans tenir compte des majuscules, des accents ni des espaces. « re: » au début d\'un mot-clé pour une expression régulière.';
+      'Une ligne trouvée suffit. « ET » en majuscules entre deux termes : les deux sont requis, n\'importe où dans le texte.';
 
   @override
   String ruleKeywordInvalid(String keyword) {
@@ -1120,33 +1138,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ruleTarget => 'Cible';
-
-  @override
-  String get rulePeriod => 'Période';
-
-  @override
-  String get rulePeriodNone => 'Date du paiement';
-
-  @override
-  String get rulePeriodPreviousMonth => 'Mois précédent';
-
-  @override
-  String get rulePeriodNextMonth => 'Mois suivant';
-
-  @override
-  String get rulePeriodMonthsAfter => 'N mois après le paiement';
-
-  @override
-  String get rulePeriodMonthsBefore => 'N mois avant le paiement';
-
-  @override
-  String get rulePeriodCurrentYear => 'Année civile en cours';
-
-  @override
-  String get rulePeriodPreviousYear => 'Année civile précédente';
-
-  @override
-  String get ruleMonths => 'Nombre de mois';
 
   @override
   String ruleMatches(int count) {

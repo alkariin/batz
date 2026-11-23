@@ -1,5 +1,5 @@
-﻿Année;Mots-clés;Catégorie cible;Compte cible;Modèle de période;Mois;id;idCatégorieCible;idCompteCible
-2026;'=VIREMENT;;Épargne;;;rule-saving;;acc-savings
-2026;"AUBERGE
-re:du\s+lac";Quotidien > Restaurant;;;;rule-restaurant;cat-restaurant;
-2026;LOYER;Logement > Loyer;;N mois après le paiement;12;rule-rent;cat-rent;
+﻿Année;Lignes;Catégorie cible;Compte cible;id;idCatégorieCible;idCompteCible
+2026;'=VIREMENT;;Épargne;rule-saving;;acc-savings
+2026;"AUBERGE ET re:du\s+lac
+restaurant du port";Quotidien > Restaurant;;rule-restaurant;cat-restaurant;
+2026;LOYER;Logement > Loyer;;rule-rent;cat-rent;

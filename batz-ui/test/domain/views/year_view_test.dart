@@ -6,7 +6,6 @@ import 'package:batz/domain/ledger/refund.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/statement.dart';
 import 'package:batz/domain/ledger/transaction.dart';
-import 'package:batz/domain/period_model.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -88,7 +87,7 @@ void main() {
 
   group('unclassified', () {
     test('lines to validate without a proposal count at their payment date in both views, outside income and '
-        'expenses; proposed lines count as proposed, period included', () async {
+        'expenses; proposed lines count as proposed, at their payment date', () async {
       final january = fixtureStatement('2026-01');
       await h.repository.write(
         (await h.ledger()).importStatement('bank', january.statement, fingerprint: january.fingerprint).modification,
@@ -96,17 +95,11 @@ void main() {
       await h.apply(
         (l) => l.createRule(
           'groceries',
-          const RuleDraft(
-            year: 2026,
-            keywords: ['épicerie du coin'],
-            targetCategoryId: 'food',
-            periodModel: PeriodModel.nextMonth,
-          ),
+          const RuleDraft(year: 2026, lines: ['épicerie du coin'], targetCategoryId: 'food'),
         ),
       );
       await h.apply(
-        (l) =>
-            l.createRule('savings', const RuleDraft(year: 2026, keywords: ['compte épargne'], targetAccountId: 'cash')),
+        (l) => l.createRule('savings', const RuleDraft(year: 2026, lines: ['compte épargne'], targetAccountId: 'cash')),
       );
       final ledger = await h.ledger();
       final lines = ledger.linesOf(statementId('bank', january.fingerprint));
@@ -121,7 +114,7 @@ void main() {
         expect(view.linesToValidate, lines.length - 1, reason: 'the proposed transfer counts nowhere');
       }
       expect(ledger.views.of(2026, ViewKind.cash)!.categories['food']!.month(1), groceries);
-      expect(ledger.views.of(2026, ViewKind.economic)!.categories['food']!.month(2), groceries, reason: 'next month');
+      expect(ledger.views.of(2026, ViewKind.economic)!.categories['food']!.month(1), groceries, reason: 'payment date');
     });
 
     test('a validated line whose category is no longer in the tree of its payment year is unclassified', () async {

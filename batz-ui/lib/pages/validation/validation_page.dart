@@ -114,7 +114,7 @@ class ValidationPage extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     l.validationConflict(
-                      rules.map((r) => '« ${keywordsText(r)} » → ${ruleTargetText(l, ledger, r)}').join(' ; '),
+                      rules.map((r) => '« ${keywordsText(l, r)} » → ${ruleTargetText(l, ledger, r)}').join(' ; '),
                     ),
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
@@ -123,7 +123,7 @@ class ValidationPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    l.validationUnusable(keywordsText(rule)),
+                    l.validationUnusable(keywordsText(l, rule)),
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
                 ),
@@ -142,7 +142,7 @@ class ValidationPage extends StatelessWidget {
       title: Text(t.description.isEmpty ? (t.rawText ?? '') : t.description),
       subtitle: Text(
         '${formatDate(t.date.toDateTime())} · ${classificationText(l, ledger, p.classification)}\n'
-        '${l.validationRule(keywordsText(p.rule))}',
+        '${l.validationRule(keywordsText(l, p.rule))}',
       ),
       isThreeLine: true,
       trailing: Text(formatAmount(t.amount), style: Theme.of(context).textTheme.titleSmall),

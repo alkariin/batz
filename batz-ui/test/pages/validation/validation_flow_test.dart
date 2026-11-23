@@ -187,13 +187,13 @@ void main() {
       await tester.tap(find.byType(BackButton).last);
       await settle(tester);
 
-      // The rules of the year, in Plus.
+      // The rules of the year, under their category in Plus.
       await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Plus')));
       await settle(tester);
-      await tester.tap(find.text('Règles de classement'));
+      await tester.tap(find.byKey(const Key('moreCategories')));
       await settle(tester);
+      await tester.scrollUntilVisible(find.text('épicerie du coin'), 200);
       expect(find.text('épicerie du coin'), findsOneWidget);
-      expect(find.text('Nourriture · Date du paiement'), findsOneWidget);
     },
   );
 
@@ -213,7 +213,7 @@ void main() {
     await tester.pumpAndSettle();
     await write(
       tester,
-      (l) => l.createRule('bread', const RuleDraft(year: 2026, keywords: ['boulangerie'], targetCategoryId: 'food')),
+      (l) => l.createRule('bread', const RuleDraft(year: 2026, lines: ['boulangerie'], targetCategoryId: 'food')),
     );
     await settle(tester);
     await tester.tap(find.byKey(const Key('filterStatus')));
@@ -230,15 +230,15 @@ void main() {
     await open(tester);
     await write(
       tester,
-      (l) => l.createRule('a', const RuleDraft(year: 2026, keywords: ['épicerie'], targetCategoryId: 'food')),
+      (l) => l.createRule('a', const RuleDraft(year: 2026, lines: ['épicerie'], targetCategoryId: 'food')),
     );
     await write(
       tester,
-      (l) => l.createRule('b', const RuleDraft(year: 2026, keywords: ['coin'], targetCategoryId: 'rent')),
+      (l) => l.createRule('b', const RuleDraft(year: 2026, lines: ['coin'], targetCategoryId: 'rent')),
     );
     await write(
       tester,
-      (l) => l.createRule('c', const RuleDraft(year: 2026, keywords: ['compte épargne'], targetAccountId: 'savings')),
+      (l) => l.createRule('c', const RuleDraft(year: 2026, lines: ['compte épargne'], targetAccountId: 'savings')),
     );
     await write(tester, (l) => l.removeAccount('savings').modification);
     await settle(tester);
@@ -252,6 +252,8 @@ void main() {
     await settle(tester);
     await tester.tap(find.text('Une règle de 2026 ne propose plus rien'));
     await settle(tester);
-    expect(find.textContaining('Cible inutilisable'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('compte épargne'), 200);
+    expect(find.text('Règles sans cible utilisable'), findsOneWidget);
+    expect(find.text('compte épargne'), findsOneWidget);
   });
 }

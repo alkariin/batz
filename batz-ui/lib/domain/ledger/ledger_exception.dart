@@ -41,8 +41,6 @@ enum LedgerError {
   ruleKeywordsRequired,
   ruleKeywordInvalid,
   ruleTargetRequired,
-  rulePeriodInvalid,
-  categoryUsedByRules,
 
   // Redistribution rules.
   unknownRedistribution,

@@ -69,7 +69,7 @@ void main() {
       final ledger = await h.apply(
         (l) => l.createRule(
           'groceries',
-          const RuleDraft(year: 2026, keywords: ['épicerie du coin'], targetCategoryId: 'food'),
+          const RuleDraft(year: 2026, lines: ['épicerie du coin'], targetCategoryId: 'food'),
         ),
       );
       for (final kind in ViewKind.values) {

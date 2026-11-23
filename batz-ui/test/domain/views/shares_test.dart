@@ -2,18 +2,14 @@ import 'package:batz/domain/journal/journal_entry.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/ledger_exception.dart';
-import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/share_classification.dart';
-import 'package:batz/domain/ledger/statement.dart';
 import 'package:batz/domain/ledger/transaction.dart';
-import 'package:batz/domain/period_model.dart';
 import 'package:batz/domain/views/share_operations.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/ledger_fixture.dart';
 import '../../support/ledger_harness.dart';
-import '../../support/statements.dart';
 import '../../support/view_checks.dart';
 
 LedgerError? refusal(void Function() build) {
@@ -266,38 +262,6 @@ void main() {
     expect(ledger.views.of(2027, ViewKind.cash)!.toClassify[CategoryNature.expense]!.month(1), 3000);
     await h.apply((l) => l.classifyShares(2027, ['l5'], food2027));
     expect((await h.ledger()).views.of(2027, ViewKind.cash)!.totalOf(food2027), 3000);
-  });
-
-  test('a line to validate asks too, under the identifier its line will have; validated, the answer holds', () async {
-    final january = fixtureStatement('2026-01');
-    await h.repository.write(
-      (await h.ledger()).importStatement('bank', january.statement, fingerprint: january.fingerprint).modification,
-    );
-    await h.apply(
-      (l) => l.createRule(
-        'insurance',
-        const RuleDraft(
-          year: 2026,
-          keywords: ['assurance fictive'],
-          targetCategoryId: 'food',
-          periodModel: PeriodModel.monthsAfter,
-          periodMonths: 12,
-        ),
-      ),
-    );
-    var ledger = await h.ledger();
-    final insurance = ledger
-        .linesOf(statementId('bank', january.fingerprint))
-        .singleWhere((t) => t.rawText!.contains('Assurance Fictive'));
-    final lineId = Ledger.fallbackLineId(insurance.id);
-    expect(ledger.views.pendingShares.single.shares.map((s) => s.lineId), containsAll(['l1', lineId]));
-    await h.apply((l) => l.classifyShares(2027, [lineId], food2027));
-    final proposal = (await h.ledger()).proposalOf(insurance)!;
-    await h.apply((l) => l.classify(insurance.id, proposal));
-    ledger = await h.ledger();
-    expect(ledger.transactions[insurance.id]!.line!.id, lineId);
-    expect(ledger.views.answerOf(lineId, 2027), isNotNull);
-    expect(ledger.views.pendingShares.single.shares.map((s) => s.lineId), ['l1']);
   });
 
   test('two devices answering the same question write the same record: one answer wins on both', () async {

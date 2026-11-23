@@ -49,7 +49,7 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Catégories'));
+    await tester.tap(find.byKey(const Key('moreCategories')));
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining("Créer l'arbre"));
     await settle(tester);

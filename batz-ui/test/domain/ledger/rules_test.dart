@@ -8,7 +8,6 @@ import 'package:batz/domain/ledger/proposal.dart';
 import 'package:batz/domain/ledger/rule.dart';
 import 'package:batz/domain/ledger/statement.dart';
 import 'package:batz/domain/ledger/transaction.dart';
-import 'package:batz/domain/period_model.dart';
 import 'package:batz/domain/views/year_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -18,15 +17,8 @@ import '../../support/statements.dart';
 
 final january = fixtureStatement('2026-01');
 
-RuleDraft rule(List<String> keywords, {String? category, String? account, PeriodModel? model, int? months}) =>
-    RuleDraft(
-      year: 2026,
-      keywords: keywords,
-      targetCategoryId: category,
-      targetAccountId: account,
-      periodModel: model,
-      periodMonths: months,
-    );
+RuleDraft rule(List<String> lines, {String? category, String? account}) =>
+    RuleDraft(year: 2026, lines: lines, targetCategoryId: category, targetAccountId: account);
 
 LedgerError? refusal(void Function() build) {
   try {
@@ -68,12 +60,53 @@ void main() {
   });
   tearDown(() => h.close());
 
-  group('keywords', () {
-    test('every keyword is required', () async {
-      await h.apply((l) => l.createRule('r1', rule(['épicerie', 'boulangerie'], category: 'food')));
+  group('lines', () {
+    test('one line found is enough; the terms of a line joined by ET are all required, anywhere', () async {
+      await h.apply((l) => l.createRule('r1', rule(['épicerie ET boulangerie'], category: 'food')));
       expect(await outcomeOfFirst('Épicerie du Coin'), const NoRule());
-      await h.apply((l) => l.updateRule('r1', rule(['épicerie', 'coin'], category: 'food')));
+      await h.apply((l) => l.updateRule('r1', rule(['coin ET épicerie'], category: 'food')));
+      expect(await outcomeOfFirst('Épicerie du Coin'), isA<Proposed>(), reason: 'in any order, not side by side');
+      await h.apply((l) => l.updateRule('r1', rule(['boulangerie', 'épicerie du coin'], category: 'food')));
+      expect(await outcomeOfFirst('Épicerie du Coin'), isA<Proposed>(), reason: 'lines are alternatives');
+      await h.apply((l) => l.updateRule('r1', rule(['épicerie coin'], category: 'food')));
+      expect(await outcomeOfFirst('Épicerie du Coin'), const NoRule(), reason: 'without ET, the words follow');
+    });
+
+    test('ET joins terms only in capitals, between spaces: « et » is a word of the text', () {
+      final line = RuleLine('Bar et Café ET re:\\d+ET');
+      expect(line.terms.map((t) => t.text), ['Bar et Café', r're:\d+ET']);
+      expect(line.matches(normalizeText('BAR ET CAFE 12et')), isTrue);
+      expect(RuleLine(' ET coin').terms.map((t) => t.text), ['ET coin'], reason: 'nothing before it: a word');
+      expect(isValidRuleLine('coin ET  ET '), isTrue, reason: 'empty terms are left out');
+      expect(isValidRuleLine('  '), isFalse);
+    });
+
+    test('a rule written as keywords, before lines existed, reads as one line of required terms', () async {
+      expect(legacyRuleLine(['gérance', ' bail ', '']), 'gérance ET bail');
+      await h.repository.write(
+        Modification.set(RuleFields.entity, 'old', {
+          RuleFields.year: 2026,
+          RuleFields.keywords: encodeRuleLines(['épicerie', 'boulangerie']),
+          RuleFields.targetCategoryId: 'food',
+        }),
+      );
+      var ledger = await h.ledger();
+      expect(ledger.rules['old']!.lines, ['épicerie ET boulangerie']);
+      expect(await outcomeOfFirst('Épicerie du Coin'), const NoRule(), reason: 'still all required');
+
+      // Modified, it is written as lines and its keywords are cleared.
+      await h.apply((l) => l.updateRule('old', rule(['épicerie', 'boulangerie'], category: 'food')));
+      ledger = await h.ledger();
+      expect(ledger.rules['old']!.lines, ['épicerie', 'boulangerie']);
+      expect((await h.tables(['rules']))['rules']!.single['keywords'], isNull);
       expect(await outcomeOfFirst('Épicerie du Coin'), isA<Proposed>());
+    });
+
+    test('deleting a category deletes the rules that classify in it', () async {
+      await h.apply((l) => l.createRule('food', rule(['épicerie'], category: 'food')));
+      await h.apply((l) => l.createRule('car', rule(['station'], category: 'car')));
+      await h.apply((l) => l.removeCategory('car'));
+      expect((await h.ledger()).rules.keys, ['food']);
     });
 
     test('without regard to case, accents and repeated spaces, across the lines of the text', () async {
@@ -91,11 +124,15 @@ void main() {
       for (final line in await linesWith('Épicerie du Coin')) {
         expect(ledger.proposals[line.id], isA<Proposed>(), reason: line.rawText);
       }
-      expect(isValidKeyword('re:(unclosed'), isFalse);
-      expect(isValidKeyword('re:'), isFalse);
-      expect(isValidKeyword('(plain text is never an expression'), isTrue);
+      expect(isValidRuleLine('re:(unclosed'), isFalse);
+      expect(isValidRuleLine('re:'), isFalse);
+      expect(isValidRuleLine('(plain text is never an expression'), isTrue);
       expect(
         refusal(() => ledger.createRule('r2', rule(['re:[a-', 'coin'], category: 'food'))),
+        LedgerError.ruleKeywordInvalid,
+      );
+      expect(
+        refusal(() => ledger.createRule('r2', rule(['coin ET re:[a-'], category: 'food'))),
         LedgerError.ruleKeywordInvalid,
       );
     });
@@ -112,27 +149,32 @@ void main() {
       await h.apply((l) => l.updateImportedDetails(line.id, description: 'Courses de la semaine', note: ''));
       await h.apply((l) => l.createRule('r1', rule(['courses'], category: 'food')));
       expect((await h.ledger()).proposals[line.id], const NoRule(), reason: 'the description is not read');
-      await h.apply((l) => l.updateRule('r1', rule(['carte no xxxx0000', 'coin'], category: 'food')));
+      await h.apply((l) => l.updateRule('r1', rule(['carte no xxxx0000 ET coin'], category: 'food')));
       expect((await h.ledger()).proposals[line.id], isA<Proposed>(), reason: 'generic lines of the raw text are read');
     });
 
-    test('at least one keyword; the same keyword twice counts once', () async {
+    test('at least one line; the same term twice in a line counts once', () async {
       final ledger = await h.ledger();
       expect(
         refusal(() => ledger.createRule('r1', rule(['  ', ''], category: 'food'))),
         LedgerError.ruleKeywordsRequired,
       );
       expect(
-        MappingRule(id: 'x', year: 2026, keywords: ['Coin', 'COIN', ' coin '], targetCategoryId: 'food').weight,
+        MappingRule(
+          id: 'x',
+          year: 2026,
+          lines: ['Coin ET COIN ET  coin '],
+          targetCategoryId: 'food',
+        ).weightFor(normalizeText('coin')),
         1,
       );
     });
   });
 
   group('priority', () {
-    test('the rule with the most keywords wins', () async {
-      await h.apply((l) => l.createRule('one', rule(['épicerie'], category: 'food')));
-      await h.apply((l) => l.createRule('two', rule(['épicerie', 'coin'], category: 'car')));
+    test('the rule whose matching line has the most terms wins', () async {
+      await h.apply((l) => l.createRule('one', rule(['épicerie', 'coin ET station ET service'], category: 'food')));
+      await h.apply((l) => l.createRule('two', rule(['épicerie ET coin'], category: 'car')));
       final outcome = await outcomeOfFirst('Épicerie du Coin');
       expect(outcome, isA<Proposed>().having((p) => p.rule.id, 'rule', 'two'));
       expect((outcome as Proposed).classification.categoryId, 'car');
@@ -148,35 +190,20 @@ void main() {
       expect(ledger.validationStateOf(line), ValidationState.toComplete);
     });
 
-    test('a tie of the same target and period model is no conflict', () async {
-      await h.apply((l) => l.createRule('b', rule(['épicerie'], category: 'food', model: PeriodModel.currentYear)));
-      await h.apply((l) => l.createRule('a', rule(['coin'], category: 'food', model: PeriodModel.currentYear)));
+    test('a tie of the same target is no conflict', () async {
+      await h.apply((l) => l.createRule('b', rule(['épicerie'], category: 'food')));
+      await h.apply((l) => l.createRule('a', rule(['coin'], category: 'food')));
       expect(await outcomeOfFirst('Épicerie du Coin'), isA<Proposed>().having((p) => p.rule.id, 'rule', 'a'));
-
-      // The same target with another period model is a conflict.
-      await h.apply((l) => l.updateRule('a', rule(['coin'], category: 'food', model: PeriodModel.previousYear)));
-      expect(await outcomeOfFirst('Épicerie du Coin'), isA<Conflict>());
-      // And so is another number of months.
-      await h.apply(
-        (l) => l.updateRule('a', rule(['coin'], category: 'food', model: PeriodModel.monthsAfter, months: 3)),
-      );
-      await h.apply(
-        (l) => l.updateRule('b', rule(['épicerie'], category: 'food', model: PeriodModel.monthsAfter, months: 4)),
-      );
-      expect(await outcomeOfFirst('Épicerie du Coin'), isA<Conflict>());
     });
   });
 
   group('proposals', () {
-    test('the period of a proposal follows the period model of its rule', () async {
-      await h.apply((l) => l.createRule('rent', rule(['gérance'], category: 'rent', model: PeriodModel.nextMonth)));
+    test('a proposal is for the payment date', () async {
+      await h.apply((l) => l.createRule('rent', rule(['gérance'], category: 'rent')));
       final line = (await linesWith('Gérance')).single;
       final p = (await h.ledger()).proposals[line.id]! as Proposed;
       expect(line.date, CalendarDate(2026, 1, 5));
-      expect(
-        (p.classification.periodStart, p.classification.periodEnd),
-        (CalendarDate(2026, 2, 1), CalendarDate(2026, 2, 28)),
-      );
+      expect((p.classification.periodStart, p.classification.periodEnd), (line.date, line.date));
     });
 
     test(
@@ -237,7 +264,7 @@ void main() {
       expect(ledger.linesClassifiedBy(rule(['épicerie du coin'], category: 'food')), 5);
       expect(ledger.linesClassifiedBy(rule(['épicerie du coin', 're:[invalid'], category: 'food')), 5);
       expect(ledger.linesClassifiedBy(rule(['inexistant'], category: 'food')), 0);
-      await h.apply((l) => l.createRule('two', rule(['épicerie', 'coin'], category: 'car')));
+      await h.apply((l) => l.createRule('two', rule(['épicerie ET coin'], category: 'car')));
       expect(
         (await h.ledger()).linesClassifiedBy(rule(['épicerie du coin'], category: 'food')),
         0,
@@ -325,8 +352,8 @@ void main() {
         for (final t in all) {
           final keyword = suggestedKeyword(t.description, t.rawText!);
           expect(keyword, isNotNull, reason: t.rawText);
-          final draft = RuleDraft(year: 2026, keywords: [keyword!], targetCategoryId: 'food');
-          final probe = MappingRule(id: 'probe', year: 2026, keywords: [keyword], targetCategoryId: 'food');
+          final draft = RuleDraft(year: 2026, lines: [keyword!], targetCategoryId: 'food');
+          final probe = MappingRule(id: 'probe', year: 2026, lines: [keyword], targetCategoryId: 'food');
           expect(
             outcomeOf(t.rawText!, [probe], (r) => ledger.ruleClassification(r, t.date)),
             isA<Proposed>(),
@@ -391,9 +418,7 @@ void main() {
 
     test('the proposals are confirmed in one modification, the lines to complete left out', () async {
       await h.apply((l) => l.createRule('food', rule(['épicerie du coin'], category: 'food')));
-      await h.apply(
-        (l) => l.createRule('bakery', rule(['boulangerie'], category: 'food', model: PeriodModel.currentYear)),
-      );
+      await h.apply((l) => l.createRule('bakery', rule(['boulangerie'], category: 'food')));
       final ledger = await h.ledger();
       final ids = [for (final t in ledger.linesToValidate) t.id];
       final modifications = ledger.confirmProposals(ids);
@@ -406,7 +431,7 @@ void main() {
         expect(t.line!.categoryId, 'food');
       }
       final bread = after.transactions[(await linesWith('Boulangerie')).first.id]!;
-      expect((bread.line!.periodStart, bread.line!.periodEnd), (CalendarDate(2026, 1, 1), CalendarDate(2026, 12, 31)));
+      expect((bread.line!.periodStart, bread.line!.periodEnd), (bread.date, bread.date));
       expect(after.linesToValidate, hasLength(27 - validated.length));
       expect(after.confirmProposals([for (final t in after.linesToValidate) t.id]), isEmpty);
     });
@@ -461,17 +486,6 @@ void main() {
   });
 
   group('unusable targets', () {
-    test('a category targeted by a rule cannot be deleted', () async {
-      await h.apply((l) => l.createRule('food', rule(['épicerie'], category: 'food')));
-      final ledger = await h.ledger();
-      expect(
-        () => ledger.removeCategory('food'),
-        throwsA(
-          isA<LedgerException>().having((e) => (e.error, e.count), 'error', (LedgerError.categoryUsedByRules, 1)),
-        ),
-      );
-    });
-
     test('a rule whose category is deleted, detached or became a group, or whose account is archived, proposes nothing and is listed', () async {
       await h.apply((l) => l.createRule('food', rule(['épicerie'], category: 'food')));
       await h.apply((l) => l.createRule('car', rule(['station service'], category: 'car')));
@@ -497,9 +511,9 @@ void main() {
       expect(ledger.validationStateOf((await linesWith('Gérance')).single), ValidationState.toComplete);
     });
 
-    test('an unusable rule still wins over a rule with fewer keywords: the line is to complete', () async {
+    test('an unusable rule still wins over a rule with fewer terms: the line is to complete', () async {
       await h.apply((l) => l.createRule('weak', rule(['épicerie'], category: 'rent')));
-      await h.apply((l) => l.createRule('strong', rule(['épicerie', 'coin'], account: 'savings')));
+      await h.apply((l) => l.createRule('strong', rule(['épicerie ET coin'], account: 'savings')));
       await h.apply((l) => l.removeAccount('savings').modification);
       expect(await outcomeOfFirst('Épicerie du Coin'), isA<UnusableRule>().having((u) => u.rule.id, 'rule', 'strong'));
     });
@@ -517,26 +531,14 @@ void main() {
         LedgerError.ruleTargetRequired,
       );
       expect(
-        refusal(() => ledger.createRule('r', rule(['x'], category: 'food', model: PeriodModel.monthsAfter))),
-        LedgerError.rulePeriodInvalid,
-      );
-      expect(
-        refusal(
-          () => ledger.createRule('r', rule(['x'], category: 'food', model: PeriodModel.monthsAfter, months: 121)),
-        ),
-        LedgerError.rulePeriodInvalid,
-      );
-      expect(
-        refusal(() => ledger.createRule('r', const RuleDraft(year: 2030, keywords: ['x'], targetCategoryId: 'food'))),
+        refusal(() => ledger.createRule('r', const RuleDraft(year: 2030, lines: ['x'], targetCategoryId: 'food'))),
         LedgerError.noTree,
       );
     });
   });
 
   test('the rules follow the copy of the tree, with computed identifiers and transposed targets', () async {
-    await h.apply(
-      (l) => l.createRule('food', rule(['épicerie'], category: 'food', model: PeriodModel.monthsAfter, months: 2)),
-    );
+    await h.apply((l) => l.createRule('food', rule(['épicerie', 'coin ET marché'], category: 'food')));
     await h.apply((l) => l.createRule('savings', rule(['compte épargne'], account: 'savings')));
     await h.apply((l) => l.createTree(2027));
     final ledger = await h.ledger();
@@ -545,8 +547,7 @@ void main() {
     final food = ledger.rules[copiedRuleId('food', 2027)]!;
     expect(food.targetCategoryId, copiedCategoryId('food', 2027));
     expect(ledger.trees[2027]!.byId[food.targetCategoryId]!.name, 'Nourriture');
-    expect(food.keywords, ['épicerie']);
-    expect((food.periodModel, food.periodMonths), (PeriodModel.monthsAfter, 2));
+    expect(food.lines, ['épicerie', 'coin ET marché']);
     expect(ledger.rules[copiedRuleId('savings', 2027)]!.targetAccountId, 'savings');
     expect(ledger.unusableRules, isEmpty);
     expect(

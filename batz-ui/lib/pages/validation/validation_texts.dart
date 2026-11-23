@@ -1,12 +1,11 @@
 import '../../domain/ledger/ledger.dart';
 import '../../domain/ledger/proposal.dart';
 import '../../domain/ledger/rule.dart';
-import '../../domain/period_model.dart';
 import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
 
-/// The keywords of [rule], as the user wrote them.
-String keywordsText(MappingRule rule) => rule.keywords.join(', ');
+/// The lines of [rule], as the user wrote them, joined by « OU ».
+String keywordsText(AppLocalizations l, MappingRule rule) => rule.lines.join(l.rulesOr);
 
 /// Where [rule] classifies: its category, or the account of the transfer.
 String ruleTargetText(AppLocalizations l, Ledger ledger, MappingRule rule) {
@@ -16,16 +15,6 @@ String ruleTargetText(AppLocalizations l, Ledger ledger, MappingRule rule) {
   final category = ledger.categories[rule.targetCategoryId];
   return category?.name ?? '?';
 }
-
-String periodModelText(AppLocalizations l, PeriodModel? model, int? months) => switch (model) {
-  null => l.rulePeriodNone,
-  PeriodModel.previousMonth => l.rulePeriodPreviousMonth,
-  PeriodModel.nextMonth => l.rulePeriodNextMonth,
-  PeriodModel.monthsAfter => l.rulePeriodMonthsAfter.replaceFirst('N', '${months ?? 'N'}'),
-  PeriodModel.monthsBefore => l.rulePeriodMonthsBefore.replaceFirst('N', '${months ?? 'N'}'),
-  PeriodModel.currentYear => l.rulePeriodCurrentYear,
-  PeriodModel.previousYear => l.rulePeriodPreviousYear,
-};
 
 /// A classification in a few words: the category and its period, or the
 /// transfer.
