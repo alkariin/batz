@@ -29,11 +29,14 @@ class CategoriesPage extends StatefulWidget {
 class _CategoriesPageState extends State<CategoriesPage> {
   late int _year = widget.initialYear ?? CalendarDate.today().year;
 
-  /// The years offered: those with a tree, the current one, and the next
-  /// one after the last tree, whose tree can be created by hand.
+  /// The years offered: those with a tree, the current one, and the years
+  /// just before the first tree and just after the last, whose tree can be
+  /// created by hand.
   List<int> _years(Ledger ledger) {
     final years = {...ledger.yearsWithTree, ...ledger.forest.yearsWithDetached, CalendarDate.today().year, _year};
-    if (ledger.yearsWithTree.isNotEmpty) years.add(ledger.yearsWithTree.last + 1);
+    if (ledger.yearsWithTree.isNotEmpty) {
+      years.addAll([ledger.yearsWithTree.first - 1, ledger.yearsWithTree.last + 1]);
+    }
     return years.toList()..sort();
   }
 
