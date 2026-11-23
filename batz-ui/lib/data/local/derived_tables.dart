@@ -251,6 +251,7 @@ final balancesTable = DerivedTable(
     BalanceFields.accountId: const DerivedColumn.text('account_id'),
     BalanceFields.date: const DerivedColumn.text('date'),
     BalanceFields.amount: const DerivedColumn.integer('amount'),
+    BalanceFields.note: const DerivedColumn.text('note'),
   },
 );
 

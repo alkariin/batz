@@ -44,13 +44,20 @@ class AccountPage extends StatelessWidget {
       final ledger = cubit.state.ledger;
       modification = switch (result) {
         _Delete() => ledger.deleteBalance(existing!.id),
-        _Save(:final date, :final amount) when existing != null => ledger.updateBalance(
+        _Save(:final date, :final amount, :final note) when existing != null => ledger.updateBalance(
           existing.id,
           date,
           amount,
+          note: note,
           today: today,
         ),
-        _Save(:final date, :final amount) => ledger.declareBalance(accountId, date, amount, today: today),
+        _Save(:final date, :final amount, :final note) => ledger.declareBalance(
+          accountId,
+          date,
+          amount,
+          note: note,
+          today: today,
+        ),
       };
     } on LedgerException catch (e) {
       showMessage(context, ledgerErrorText(l, e));
@@ -170,6 +177,7 @@ class AccountPage extends StatelessWidget {
             for (final ignored in balances.ignored)
               ListTile(
                 title: Text(_date(ignored.date)),
+                subtitle: ignored.note.isEmpty ? null : Text(ignored.note),
                 trailing: Text(formatAmount(ignored.amount)),
                 onTap: () => _declare(context, existing: ignored),
               ),
@@ -221,6 +229,8 @@ class _StepCard extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (point.declared?.note case final note? when note.isNotEmpty)
+              Text(note, key: ValueKey('balanceNote-$key'), style: theme.textTheme.bodyMedium),
             if (point.statement != null) Text(l.accountStatementPoint),
             if (step.expected == null)
               Text(l.accountFirstBalance)
@@ -290,10 +300,11 @@ sealed class _BalanceInput {
 }
 
 class _Save extends _BalanceInput {
-  const _Save(this.date, this.amount);
+  const _Save(this.date, this.amount, this.note);
 
   final CalendarDate date;
   final int amount;
+  final String note;
 }
 
 class _Delete extends _BalanceInput {
@@ -316,12 +327,14 @@ class _BalanceDialogState extends State<_BalanceDialog> {
     text: widget.existing == null ? '' : formatAmount(widget.existing!.amount),
   );
   late final _date = TextEditingController(text: DateField.text(widget.existing?.date ?? widget.today));
+  late final _note = TextEditingController(text: widget.existing?.note);
   String? _error;
 
   @override
   void dispose() {
     _amount.dispose();
     _date.dispose();
+    _note.dispose();
     super.dispose();
   }
 
@@ -331,7 +344,7 @@ class _BalanceDialogState extends State<_BalanceDialog> {
       setState(() => _error = AppLocalizations.of(context).accountBalanceInvalid);
       return;
     }
-    Navigator.of(context).pop(_Save(date, amount));
+    Navigator.of(context).pop(_Save(date, amount, _note.text));
   }
 
   Future<void> _delete() async {
@@ -366,6 +379,15 @@ class _BalanceDialogState extends State<_BalanceDialog> {
           ),
           const SizedBox(height: 8),
           DateField(controller: _date, label: l.accountDeclareDate, fieldKey: const Key('balanceDate')),
+          const SizedBox(height: 8),
+          TextField(
+            key: const Key('balanceNote'),
+            controller: _note,
+            minLines: 1,
+            maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(labelText: l.fieldNote),
+          ),
         ],
       ),
       actions: [

@@ -236,6 +236,7 @@ final Map<String, ExportedEntity> exportSchema = {
       BalanceFields.accountId: ExportColumn('idCompte', _id),
       BalanceFields.date: ExportColumn('Date', _date),
       BalanceFields.amount: ExportColumn('Montant', _amount),
+      BalanceFields.note: ExportColumn('Note', _text),
     },
   ),
   StatementFields.entity: ExportedEntity(

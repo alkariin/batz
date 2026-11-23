@@ -342,6 +342,20 @@ void main() {
     expect(wealth.at(d(2026, 11, 21)).withoutBalance.map((a) => a.id), ['bank', 'private', 'cash']);
   });
 
+  test('a declared balance keeps its note, through a modification and a change of date', () async {
+    final today = d(2026, 11, 21);
+    await seedLedger(h);
+    var ledger = await h.apply(
+      (l) => l.declareBalance('private', d(2026, 6, 30), 5000, note: '  Relevé de juin ', today: today),
+    );
+    final id = balanceId('private', d(2026, 6, 30));
+    expect(ledger.declaredBalances[id]!.note, 'Relevé de juin');
+    ledger = await h.apply((l) => l.updateBalance(id, d(2026, 7, 1), 5100, note: 'Relevé corrigé', today: today));
+    final moved = ledger.declaredBalances[balanceId('private', d(2026, 7, 1))]!;
+    expect((moved.amount, moved.note), (5100, 'Relevé corrigé'));
+    expect(ledger.declaredBalances.containsKey(id), isFalse);
+  });
+
   test('the accounts follow the order chosen by the user; their types group in the order of their first account', () {
     final today = d(2026, 11, 21);
     final ledger = Ledger(

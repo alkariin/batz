@@ -81,7 +81,13 @@ Ledger exportExampleLedger() {
     ],
     balances: [
       DeclaredBalance(id: 'bal-1', accountId: 'acc-savings', date: _d(2025, 12, 31), amount: 1000000),
-      DeclaredBalance(id: 'bal-2', accountId: 'acc-savings', date: _d(2026, 12, 31), amount: 1500000),
+      DeclaredBalance(
+        id: 'bal-2',
+        accountId: 'acc-savings',
+        date: _d(2026, 12, 31),
+        amount: 1500000,
+        note: 'Relevé annuel; intérêts compris',
+      ),
       DeclaredBalance(id: 'bal-3', accountId: 'acc-old', date: _d(2026, 1, 31), amount: 0),
     ],
     statements: [

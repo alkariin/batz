@@ -16,19 +16,29 @@ abstract final class BalanceFields {
 
   /// Signed, in cents: a balance can be negative (a loan).
   static const amount = 'amount';
+
+  /// A free text: where the figure comes from, what it includes.
+  static const note = 'note';
 }
 
 /// The balance of [accountId] at the end of [date], as the user declared it.
 class DeclaredBalance extends Equatable {
-  const DeclaredBalance({required this.id, required this.accountId, required this.date, required this.amount});
+  const DeclaredBalance({
+    required this.id,
+    required this.accountId,
+    required this.date,
+    required this.amount,
+    this.note = '',
+  });
 
   final String id;
   final String accountId;
   final CalendarDate date;
   final int amount;
+  final String note;
 
   @override
-  List<Object?> get props => [id, accountId, date, amount];
+  List<Object?> get props => [id, accountId, date, amount, note];
 }
 
 /// Identifier of the balance of [accountId] on [date]: computed, so that
@@ -46,29 +56,43 @@ extension BalanceOperations on Ledger {
       if (b.accountId == accountId) b,
   ]..sort((a, b) => a.date.compareTo(b.date));
 
-  /// Declares that [accountId] holds [amount] at the end of [date]. A
-  /// balance already declared that day is replaced. Refused, with its
-  /// reason: an unknown account; the detailed account, whose statements
+  /// Declares that [accountId] holds [amount] at the end of [date], with
+  /// [note]. A balance already declared that day is replaced. Refused, with
+  /// its reason: an unknown account; the detailed account, whose statements
   /// give the balance; a debts account, which has no balance of its own; a
   /// date after [today]. An archived account accepts one: declaring 0 takes
   /// it out of the wealth.
-  Modification declareBalance(String accountId, CalendarDate date, int amount, {required CalendarDate today}) {
+  Modification declareBalance(
+    String accountId,
+    CalendarDate date,
+    int amount, {
+    String note = '',
+    required CalendarDate today,
+  }) {
     _checkBalance(accountId, date, today);
     return Modification.set(BalanceFields.entity, balanceId(accountId, date), {
       BalanceFields.accountId: accountId,
       BalanceFields.date: date.encode(),
       BalanceFields.amount: amount,
+      BalanceFields.note: note.trim(),
       // A balance deleted that day comes back.
       deletedField: false,
     });
   }
 
-  /// Modifies the declared balance [id]: its amount, and its date, which
-  /// moves it to the balance of the new day (replaced if there is one).
-  Modification updateBalance(String id, CalendarDate date, int amount, {required CalendarDate today}) {
+  /// Modifies the declared balance [id]: its amount, its note, and its
+  /// date, which moves it to the balance of the new day (replaced if there
+  /// is one).
+  Modification updateBalance(
+    String id,
+    CalendarDate date,
+    int amount, {
+    String note = '',
+    required CalendarDate today,
+  }) {
     final existing = declaredBalances[id];
     if (existing == null) throw const LedgerException(LedgerError.unknownBalance);
-    final declared = declareBalance(existing.accountId, date, amount, today: today);
+    final declared = declareBalance(existing.accountId, date, amount, note: note, today: today);
     if (date == existing.date) return declared;
     return Modification([...declared.changes, FieldChange(BalanceFields.entity, id, deletedField, true)]);
   }
