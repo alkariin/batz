@@ -181,15 +181,15 @@ func TestProtocolAndAppVersion(t *testing.T) {
 	req.Protocol = 2
 	_, err := s.Exchange(t.Context(), phone, req)
 	assert.ErrorIs(t, err, application.ErrProtocolUnsupported)
-	for _, v := range []string{"0.6.0", "0.5.0", "0.4.1", "0.4.0", "0.3.0", "0.2.0", "0.0.9", "", "dev"} {
+	for _, v := range []string{"0.8.0-alpha", "0.7.0", "0.6.0", "0.5.0", "0.4.1", "0.3.0", "0.0.9", "", "dev"} {
 		req = request(nil, nil)
 		req.AppVersion = v
 		_, err = s.Exchange(t.Context(), phone, req)
 		assert.ErrorIs(t, err, application.ErrAppTooOld, v)
 	}
-	// 0.7.0 is still accepted by the server 0.8.0-alpha, which adds nothing to
-	// the journal; the suffix of 0.8.0-alpha does not count.
-	for _, v := range []string{"0.7.0", "0.8.0-alpha", "v0.8.0-alpha", "0.8.1-alpha", "1.0.0"} {
+	// The server 0.9.0-alpha needs the app 0.9.0, whose fields of the journal
+	// are new; the suffix of 0.9.0-alpha does not count.
+	for _, v := range []string{"0.9.0", "0.9.0-alpha", "v0.9.0-alpha", "0.9.1-alpha", "1.0.0"} {
 		req = request(nil, nil)
 		req.AppVersion = v
 		_, err = s.Exchange(t.Context(), phone, req)
