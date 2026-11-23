@@ -211,12 +211,14 @@ void main() {
     );
     await tester.enterText(find.byKey(const Key('balanceAmount')), "10'800");
     await tester.enterText(find.byKey(const Key('balanceDate')), '30.06.2026');
+    await tester.enterText(find.byKey(const Key('balanceNote')), 'Relevé semestriel, intérêts compris');
     await tester.tap(find.byKey(const Key('saveBalance')));
     await settle(tester);
     expect(find.text('Variation de valeur : +300.00'), findsOneWidget);
     expect(text(tester, 'accountBalance'), "10'800.00");
     final id = balanceId('savings', CalendarDate(2026, 6, 30));
     expect(text(tester, 'balanceVariation-$id'), 'Variation +300.00');
+    expect(text(tester, 'balanceNote-$id'), 'Relevé semestriel, intérêts compris');
 
     // A date to come is refused, with its reason.
     await tester.tap(find.byKey(const Key('declareBalance')));
@@ -232,6 +234,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(ValueKey('editBalance-$id')));
     await tester.pumpAndSettle();
+    expect(
+      tester.widget<TextField>(find.byKey(const Key('balanceNote'))).controller!.text,
+      'Relevé semestriel, intérêts compris',
+    );
     await tester.enterText(find.byKey(const Key('balanceAmount')), "10'450");
     await tester.tap(find.byKey(const Key('saveBalance')));
     await settle(tester);

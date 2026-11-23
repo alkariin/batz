@@ -260,7 +260,13 @@ class LedgerRepository {
     final date = CalendarDate.tryParse(row['date'] is String ? row['date']! as String : null);
     final amount = row['amount'];
     if (accountId == null || date == null || amount is! int) return null;
-    return DeclaredBalance(id: row['id']! as String, accountId: accountId, date: date, amount: amount);
+    return DeclaredBalance(
+      id: row['id']! as String,
+      accountId: accountId,
+      date: date,
+      amount: amount,
+      note: row['note'] is String ? row['note']! as String : '',
+    );
   }
 
   /// An answer needs its line, its year, the category chosen and the

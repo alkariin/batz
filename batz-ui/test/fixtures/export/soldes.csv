@@ -1,4 +1,4 @@
-﻿Compte;Date;Montant;id;idCompte
-Ancien compte;2026-01-31;0.00;bal-3;acc-old
-Épargne;2025-12-31;10000.00;bal-1;acc-savings
-Épargne;2026-12-31;15000.00;bal-2;acc-savings
+﻿Compte;Date;Montant;Note;id;idCompte
+Ancien compte;2026-01-31;0.00;;bal-3;acc-old
+Épargne;2025-12-31;10000.00;;bal-1;acc-savings
+Épargne;2026-12-31;15000.00;"Relevé annuel; intérêts compris";bal-2;acc-savings

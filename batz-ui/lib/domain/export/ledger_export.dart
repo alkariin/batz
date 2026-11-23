@@ -32,7 +32,7 @@ class ExportFile {
 /// identifiers at the end.
 abstract final class ExportHeaders {
   static const accounts = ['Nom', 'Type', "Format d'import", 'Archivé', 'Déclaré aux impôts', 'Position', 'id'];
-  static const balances = ['Compte', 'Date', 'Montant', 'id', 'idCompte'];
+  static const balances = ['Compte', 'Date', 'Montant', 'Note', 'id', 'idCompte'];
   static const statements = [
     'Compte',
     'Format',
@@ -304,7 +304,14 @@ class _Exporter {
       );
     return [
       for (final b in balances)
-        [_accountName(b.accountId), DateCell(b.date), AmountCell(b.amount), PlainCell(b.id), PlainCell(b.accountId)],
+        [
+          _accountName(b.accountId),
+          DateCell(b.date),
+          AmountCell(b.amount),
+          TextCell(b.note),
+          PlainCell(b.id),
+          PlainCell(b.accountId),
+        ],
     ];
   }
 
