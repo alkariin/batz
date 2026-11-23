@@ -1,6 +1,6 @@
 /// Version of this app, kept equal to `version` in pubspec.yaml (a test
 /// checks it). The server tells the oldest app version it accepts.
-const appVersion = '0.9.0-alpha';
+const appVersion = '0.10.0-alpha';
 
 /// Compares two versions such as `0.1.0`, `v1.2` or `v0.1.0-3-gabc1234`
 /// (anything after the numbers is ignored). Returns null if either cannot be

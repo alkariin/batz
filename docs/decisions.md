@@ -391,7 +391,10 @@ pre-releases, which Obtainium skips; see [deployment.md](deployment.md).
 
 The server's minimum app version rises when a version adds journal entities
 or fields that change what is shown: an older app would keep them unapplied
-and show other totals. It is 0.9.0: 0.9.0-alpha adds rule lines, fixed
+and show other totals. It also rises when an older app would break what a
+version writes. It is 0.10.0: 0.10.0-alpha splits transactions, and an app
+0.9 modifying a split transaction would rewrite its main line with the
+whole amount and keep the others. 0.9.0-alpha had added rule lines, fixed
 amounts of redistribution, account positions and their tax flag, notes of
 balances and the links of debts; an app 0.8 would read a rule without
 keywords as unusable and a fixed amount as a rule without percentage.
