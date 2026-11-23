@@ -193,6 +193,8 @@ Ledger exportExampleLedger() {
         eventDate: _d(2026, 3, 14),
         description: 'Repas; "chez Léa"',
         enteredOn: _d(2026, 3, 15),
+        sourceTransactionId: 'tx-hotel',
+        refundTransactionId: 'tx-refund',
       ),
       Debt(
         id: 'debt-loan',

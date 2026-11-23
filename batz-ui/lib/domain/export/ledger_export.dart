@@ -110,14 +110,16 @@ abstract final class ExportHeaders {
     'Pourcentage',
     'Total',
     "Date de l'événement",
-    'Date de la facture',
+    'Date de la transaction de la facture',
     'Date de la demande',
-    'Date de réception',
+    'Date de la transaction du remboursement',
     'Description',
     'Remboursée',
     'Saisie le',
     'Cochée le',
     'id',
+    'idTransactionFacture',
+    'idTransactionRemboursement',
   ];
   static const salarySheets = ['Année', 'Brut', 'Net', 'id'];
   static const salaryDeductions = ['Année', 'Rang', 'Libellé', 'Montant', 'id', 'idFiche'];
@@ -497,6 +499,8 @@ class _Exporter {
           DateCell(d.enteredOn),
           _date(d.checkedOn),
           PlainCell(d.id),
+          _id(d.sourceTransactionId),
+          _id(d.refundTransactionId),
         ],
     ];
   }

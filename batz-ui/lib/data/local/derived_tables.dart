@@ -271,6 +271,8 @@ final debtsTable = DerivedTable(
     DebtFields.repaid: const DerivedColumn.integer('repaid'),
     DebtFields.enteredOn: const DerivedColumn.text('entered_on'),
     DebtFields.checkedOn: const DerivedColumn.text('checked_on'),
+    DebtFields.sourceTransactionId: const DerivedColumn.text('source_transaction_id'),
+    DebtFields.refundTransactionId: const DerivedColumn.text('refund_transaction_id'),
   },
 );
 

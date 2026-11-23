@@ -7,6 +7,7 @@ import '../../domain/ledger/refund.dart';
 import '../../domain/ledger/transaction.dart';
 import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
+import '../debts/debt_links.dart';
 import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 import '../refunds/refund_target_page.dart';
@@ -90,6 +91,7 @@ class TransactionDetailPage extends StatelessWidget {
               '${formatDate(period.periodStart.toDateTime())} – ${formatDate(period.periodEnd.toDateTime())}',
             ),
           ..._refund(context, ledger, t),
+          ...transactionDebts(context, ledger, t),
           if (shares != null) ...[
             const Divider(),
             ListTile(title: Text(l.detailYearTotals, style: theme.textTheme.titleMedium)),

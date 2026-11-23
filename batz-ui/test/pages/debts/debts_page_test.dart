@@ -1,10 +1,17 @@
+import 'dart:async';
+
 import 'package:batz/app.dart';
 import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/ledger/account.dart';
+import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/debt.dart';
+import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/pages/debts/debts_page.dart';
+import 'package:batz/pages/ledger_cubit.dart';
+import 'package:batz/pages/shell.dart';
 import 'package:batz/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/services.dart';
@@ -158,7 +165,7 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('saveDebt')));
     await tester.tap(find.byKey(const Key('saveDebt')));
     await settle(tester);
-    expect(find.text("La date de réception ne peut pas précéder la date de l'événement."), findsOneWidget);
+    expect(find.text("La date du remboursement ne peut pas précéder la date de l'événement."), findsOneWidget);
     await tester.enterText(find.byKey(const Key('debtReceivedDate')), '');
     await tester.ensureVisible(find.byKey(const Key('saveDebt')));
     await tester.tap(find.byKey(const Key('saveDebt')));
@@ -168,5 +175,94 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await settle(tester);
     expect(text(tester, 'wealthDebts'), '-80.00');
+  });
+
+  testWidgets('a debt created from a dinner paid for two, then repaid by the transfer of the friend: the repayment '
+      'becomes the refund of the dinner', (tester) async {
+    await start(tester);
+    await tester.runAsync(() async {
+      var ledger = await services.ledger.load();
+      await services.ledger.write(
+        ledger.createAccount('cash', const AccountDraft(name: 'Espèces', type: AccountType.cash)),
+      );
+      ledger = await services.ledger.load();
+      await services.ledger.write(ledger.createTree(2026));
+      ledger = await services.ledger.load();
+      await services.ledger.write(
+        ledger.addCategory(
+          'food',
+          year: 2026,
+          name: 'Restaurant',
+          parentId: defaultGroupId(2026, CategoryNature.expense),
+        ),
+      );
+      for (final (id, cents, direction, description, day) in [
+        ('dinner', 12000, Direction.outflow, 'Souper au restaurant', 10),
+        ('back', 6000, Direction.inflow, 'Virement de Alex', 15),
+      ]) {
+        ledger = await services.ledger.load();
+        await services.ledger.write(
+          ledger.recordEntry(
+            id,
+            '$id-line',
+            EntryDraft(
+              accountId: 'cash',
+              date: CalendarDate(2026, 11, day),
+              cents: cents,
+              direction: direction,
+              categoryId: 'food',
+              description: description,
+            ),
+          ),
+        );
+      }
+    });
+    unawaited(tester.element(find.byType(AppShell)).read<LedgerCubit>().load());
+    await settle(tester);
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Transactions')));
+    await settle(tester);
+
+    // The dinner gives rise to the debt: the form starts from it.
+    await tester.tap(find.text('Souper au restaurant'));
+    await settle(tester);
+    await tester.scrollUntilVisible(find.byKey(const Key('createDebt')), 200);
+    await tester.tap(find.byKey(const Key('createDebt')));
+    await settle(tester);
+    expect(tester.widget<TextField>(find.byKey(const Key('debtAmount'))).controller!.text, '120.00');
+    expect(tester.widget<TextField>(find.byKey(const Key('debtEventDate'))).controller!.text, '10.11.2026');
+    expect(find.text('Date de la transaction de la facture : 10.11.2026'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('debtPerson')), 'Alex');
+    await tester.enterText(find.byKey(const Key('debtPercent')), '50');
+    await tester.tap(find.byKey(const Key('saveDebt')));
+    await settle(tester);
+    expect(find.text('Alex · 60.00'), findsOneWidget);
+    expect(find.textContaining('née de cette transaction'), findsOneWidget);
+    final debt = (await debts(tester)).single;
+    expect((debt.sourceTransactionId, debt.invoiceDate, debt.total), ('dinner', CalendarDate(2026, 11, 10), 6000));
+    await back(tester);
+
+    // The transfer of the friend repays it.
+    await tester.tap(find.text('Virement de Alex'));
+    await settle(tester);
+    await tester.scrollUntilVisible(find.byKey(const Key('repayDebt')), 200);
+    await tester.tap(find.byKey(const Key('repayDebt')));
+    await settle(tester);
+    expect(find.text('Quelle dette cette transaction rembourse-t-elle ?'), findsOneWidget);
+    await tester.tap(find.byKey(ValueKey('repayable-${debt.id}')));
+    await settle(tester);
+    expect(find.text('Dette de Alex remboursée par cette transaction.'), findsOneWidget);
+    expect(find.byKey(const Key('refundedExpense')), findsOneWidget, reason: 'the refund of the dinner');
+    final repaid = (await debts(tester)).single;
+    expect(
+      (repaid.repaid, repaid.receivedDate, repaid.refundTransactionId),
+      (true, CalendarDate(2026, 11, 15), 'back'),
+    );
+
+    // The debt shows both transactions.
+    await tester.scrollUntilVisible(find.byKey(ValueKey('linkedDebt-${debt.id}')), 200);
+    await tester.tap(find.byKey(ValueKey('linkedDebt-${debt.id}')));
+    await settle(tester);
+    expect(find.byKey(const Key('debtSourceTransaction')), findsOneWidget);
+    expect(find.text('Date de la transaction du remboursement : 15.11.2026'), findsOneWidget);
   });
 }

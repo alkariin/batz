@@ -1636,7 +1636,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errorDebtPercentInvalid => 'Indiquez un pourcentage entre 0.01 et 100, avec deux décimales au plus.';
 
   @override
-  String get errorDebtReceivedBeforeEvent => 'La date de réception ne peut pas précéder la date de l\'événement.';
+  String get errorDebtAlreadyRepaid => 'Cette dette est déjà remboursée.';
+
+  @override
+  String get errorDebtTransactionIsTransfer => 'Un transfert ne peut pas être lié à une dette.';
+
+  @override
+  String get errorDebtRepaymentDirection =>
+      'Une dette qu\'on me doit se rembourse par une entrée d\'argent, une dette que je dois par une sortie.';
+
+  @override
+  String get errorDebtReceivedBeforeEvent => 'La date du remboursement ne peut pas précéder la date de l\'événement.';
 
   @override
   String get errorDebtSplitOutOfTotal =>
@@ -1863,7 +1873,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get debtsEmpty =>
-      'Aucune dette. Une dette compte dans la fortune du jour de l\'événement à la veille de sa réception.';
+      'Aucune dette. Une dette compte dans la fortune du jour de l\'événement à la veille de son remboursement. Elle peut aussi naître d\'une transaction, depuis l\'écran de celle-ci.';
 
   @override
   String get debtsOpen => 'Ouvertes';
@@ -1910,13 +1920,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get debtEventDate => 'Date de l\'événement';
 
   @override
-  String get debtInvoiceDate => 'Date de la facture';
+  String get debtInvoiceDate => 'Date de la transaction de la facture';
 
   @override
   String get debtRequestDate => 'Date de la demande';
 
   @override
-  String get debtReceivedDate => 'Date de réception';
+  String get debtReceivedDate => 'Date de la transaction du remboursement';
 
   @override
   String get debtDescription => 'Description';
@@ -1926,7 +1936,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get debtDatesHint =>
-      'Sans date d\'événement, la dette compte du jour de sa saisie ; remboursée sans date de réception, jusqu\'à la veille du jour où elle est cochée.';
+      'Sans date d\'événement, la dette compte du jour de sa saisie ; remboursée sans date de remboursement, jusqu\'à la veille du jour où elle est cochée.';
 
   @override
   String get debtInvalidDate => 'Date invalide : jj.mm.aaaa, ou laissez vide.';
@@ -1938,14 +1948,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String debtReceivedOn(String date) {
-    return 'reçue le $date';
+    return 'remboursée le $date';
   }
 
   @override
   String get debtCheckTitle => 'Dette remboursée';
 
   @override
-  String get debtCheckHint => 'La dette cesse de compter dans la fortune le jour de sa réception.';
+  String get debtCheckHint => 'La dette cesse de compter dans la fortune le jour de son remboursement.';
 
   @override
   String get debtCheck => 'Cocher remboursée';
@@ -1979,6 +1989,26 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get debtDeleted => 'Dette supprimée.';
+
+  @override
+  String get debtFromThis => 'née de cette transaction';
+
+  @override
+  String get debtRepaidByThis => 'remboursée par cette transaction';
+
+  @override
+  String get debtCreateFromTransaction => 'Créer une dette';
+
+  @override
+  String get debtRepayWithTransaction => 'Rembourse une dette';
+
+  @override
+  String get debtRepayTitle => 'Quelle dette cette transaction rembourse-t-elle ?';
+
+  @override
+  String debtRepaidDone(String person) {
+    return 'Dette de $person remboursée par cette transaction.';
+  }
 
   @override
   String get accountDebtsOpen => 'Voir le tableau des dettes';

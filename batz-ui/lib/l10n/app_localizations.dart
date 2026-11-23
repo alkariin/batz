@@ -2712,10 +2712,28 @@ abstract class AppLocalizations {
   /// **'Indiquez un pourcentage entre 0.01 et 100, avec deux décimales au plus.'**
   String get errorDebtPercentInvalid;
 
+  /// No description provided for @errorDebtAlreadyRepaid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette dette est déjà remboursée.'**
+  String get errorDebtAlreadyRepaid;
+
+  /// No description provided for @errorDebtTransactionIsTransfer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un transfert ne peut pas être lié à une dette.'**
+  String get errorDebtTransactionIsTransfer;
+
+  /// No description provided for @errorDebtRepaymentDirection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une dette qu\'on me doit se rembourse par une entrée d\'argent, une dette que je dois par une sortie.'**
+  String get errorDebtRepaymentDirection;
+
   /// No description provided for @errorDebtReceivedBeforeEvent.
   ///
   /// In fr, this message translates to:
-  /// **'La date de réception ne peut pas précéder la date de l\'événement.'**
+  /// **'La date du remboursement ne peut pas précéder la date de l\'événement.'**
   String get errorDebtReceivedBeforeEvent;
 
   /// No description provided for @errorDebtSplitOutOfTotal.
@@ -3087,7 +3105,7 @@ abstract class AppLocalizations {
   /// No description provided for @debtsEmpty.
   ///
   /// In fr, this message translates to:
-  /// **'Aucune dette. Une dette compte dans la fortune du jour de l\'événement à la veille de sa réception.'**
+  /// **'Aucune dette. Une dette compte dans la fortune du jour de l\'événement à la veille de son remboursement. Elle peut aussi naître d\'une transaction, depuis l\'écran de celle-ci.'**
   String get debtsEmpty;
 
   /// No description provided for @debtsOpen.
@@ -3177,7 +3195,7 @@ abstract class AppLocalizations {
   /// No description provided for @debtInvoiceDate.
   ///
   /// In fr, this message translates to:
-  /// **'Date de la facture'**
+  /// **'Date de la transaction de la facture'**
   String get debtInvoiceDate;
 
   /// No description provided for @debtRequestDate.
@@ -3189,7 +3207,7 @@ abstract class AppLocalizations {
   /// No description provided for @debtReceivedDate.
   ///
   /// In fr, this message translates to:
-  /// **'Date de réception'**
+  /// **'Date de la transaction du remboursement'**
   String get debtReceivedDate;
 
   /// No description provided for @debtDescription.
@@ -3207,7 +3225,7 @@ abstract class AppLocalizations {
   /// No description provided for @debtDatesHint.
   ///
   /// In fr, this message translates to:
-  /// **'Sans date d\'événement, la dette compte du jour de sa saisie ; remboursée sans date de réception, jusqu\'à la veille du jour où elle est cochée.'**
+  /// **'Sans date d\'événement, la dette compte du jour de sa saisie ; remboursée sans date de remboursement, jusqu\'à la veille du jour où elle est cochée.'**
   String get debtDatesHint;
 
   /// No description provided for @debtInvalidDate.
@@ -3225,7 +3243,7 @@ abstract class AppLocalizations {
   /// No description provided for @debtReceivedOn.
   ///
   /// In fr, this message translates to:
-  /// **'reçue le {date}'**
+  /// **'remboursée le {date}'**
   String debtReceivedOn(String date);
 
   /// No description provided for @debtCheckTitle.
@@ -3237,7 +3255,7 @@ abstract class AppLocalizations {
   /// No description provided for @debtCheckHint.
   ///
   /// In fr, this message translates to:
-  /// **'La dette cesse de compter dans la fortune le jour de sa réception.'**
+  /// **'La dette cesse de compter dans la fortune le jour de son remboursement.'**
   String get debtCheckHint;
 
   /// No description provided for @debtCheck.
@@ -3293,6 +3311,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Dette supprimée.'**
   String get debtDeleted;
+
+  /// No description provided for @debtFromThis.
+  ///
+  /// In fr, this message translates to:
+  /// **'née de cette transaction'**
+  String get debtFromThis;
+
+  /// No description provided for @debtRepaidByThis.
+  ///
+  /// In fr, this message translates to:
+  /// **'remboursée par cette transaction'**
+  String get debtRepaidByThis;
+
+  /// No description provided for @debtCreateFromTransaction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer une dette'**
+  String get debtCreateFromTransaction;
+
+  /// No description provided for @debtRepayWithTransaction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rembourse une dette'**
+  String get debtRepayWithTransaction;
+
+  /// No description provided for @debtRepayTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quelle dette cette transaction rembourse-t-elle ?'**
+  String get debtRepayTitle;
+
+  /// No description provided for @debtRepaidDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dette de {person} remboursée par cette transaction.'**
+  String debtRepaidDone(String person);
 
   /// No description provided for @accountDebtsOpen.
   ///

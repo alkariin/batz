@@ -4,6 +4,8 @@ import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/ledger/debt.dart';
 import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/ledger_exception.dart';
+import 'package:batz/domain/ledger/refund.dart';
+import 'package:batz/domain/ledger/transaction.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/ledger_fixture.dart';
@@ -22,6 +24,7 @@ DebtDraft debt({
   CalendarDate? received,
   String description = '',
   bool repaid = false,
+  String? source,
 }) => DebtDraft(
   direction: direction,
   person: person,
@@ -33,6 +36,7 @@ DebtDraft debt({
   receivedDate: received,
   description: description,
   repaid: repaid,
+  sourceTransactionId: source,
 );
 
 void main() {
@@ -301,5 +305,99 @@ void main() {
     final ledger = await a.ledger();
     expect({for (final debt in ledger.debts.values) debt.id: debt.total}, {'d': 4000, 'from-a': 7000, 'from-b': 6000});
     expect(await a.tables(['debts']), await b.tables(['debts']));
+  });
+
+  group('debts and transactions', () {
+    // A dinner of 120.00 paid for two on 10 March: Alex owes half, and pays
+    // it back on 2 April.
+    setUp(() async {
+      await seedLedger(h);
+      await h.apply((l) => l.recordEntry('dinner', 'dinner-line', entry(cents: 12000, date: d(2026, 3, 10))));
+      await h.apply(
+        (l) => l.recordEntry('back', 'back-line', entry(cents: 6000, direction: Direction.inflow, date: d(2026, 4, 2))),
+      );
+    });
+
+    test(
+      'a debt created from a transaction keeps the link; its date of invoice is the date of the transaction',
+      () async {
+        var ledger = await create(
+          'alex',
+          debt(amount: 12000, basisPoints: 5000, source: 'dinner', invoice: d(2026, 1, 1)),
+          today: d(2026, 3, 12),
+        );
+        final alex = ledger.debts['alex']!;
+        expect((alex.sourceTransactionId, alex.invoiceDate, alex.total), ('dinner', d(2026, 3, 10), 6000));
+        expect(ledger.debtsFrom('dinner'), [alex]);
+        expect(
+          () => ledger.createDebt('x', debt(source: 'none'), today: d(2026, 3, 12)),
+          throwsLedger(LedgerError.unknownTransaction),
+        );
+        ledger = await h.apply((l) => l.recordTransfer('move', transfer(date: d(2026, 3, 11))));
+        expect(
+          () => ledger.createDebt('x', debt(source: 'move'), today: d(2026, 3, 12)),
+          throwsLedger(LedgerError.debtTransactionIsTransfer),
+        );
+      },
+    );
+
+    test('the transaction that repays a debt owed to me checks it, received on its date, and becomes the refund of '
+        'the expense the debt came from', () async {
+      await create(
+        'alex',
+        debt(amount: 12000, basisPoints: 5000, source: 'dinner', event: d(2026, 3, 10)),
+        today: d(2026, 3, 12),
+      );
+      var ledger = await h.ledger();
+      final back = ledger.transactions['back']!;
+      expect(ledger.debtsRepayableBy(back).map((d) => d.id), ['alex']);
+      expect(ledger.debtsRepayableBy(ledger.transactions['dinner']!), isEmpty, reason: 'money that left');
+      expect(ledger.openDebtsAt(d(2026, 4, 1)), 6000);
+
+      ledger = await h.apply((l) => l.repayDebt('alex', 'back', today: d(2026, 4, 5)));
+      final alex = ledger.debts['alex']!;
+      expect(
+        (alex.repaid, alex.receivedDate, alex.checkedOn, alex.refundTransactionId),
+        (true, d(2026, 4, 2), d(2026, 4, 5), 'back'),
+      );
+      expect(ledger.openDebtsAt(d(2026, 4, 1)), 6000);
+      expect(ledger.openDebtsAt(d(2026, 4, 2)), 0, reason: 'repaid on the date of the transaction');
+      expect(ledger.debtsRepaidBy('back'), [alex]);
+      expect(ledger.expenseOf(ledger.transactions['back']!)?.transaction.id, 'dinner');
+      expect(ledger.netCostOf(ledger.transactions['dinner']!), -6000);
+      expect(() => ledger.repayDebt('alex', 'back', today: d(2026, 4, 5)), throwsLedger(LedgerError.debtAlreadyRepaid));
+
+      // Unchecked, it no longer is repaid by the transaction, which stays the
+      // refund of the dinner until it is detached.
+      ledger = await h.apply((l) => l.uncheckDebt('alex'));
+      expect(ledger.debts['alex']!.refundTransactionId, isNull);
+      expect(ledger.expenseOf(ledger.transactions['back']!)?.transaction.id, 'dinner');
+    });
+
+    test('a debt I owe is repaid by money that leaves, without any refund; the wrong direction is refused', () async {
+      await create('me', debt(direction: DebtDirection.iOwe, amount: 3000), today: d(2026, 3, 12));
+      await create('them', debt(amount: 3000), today: d(2026, 3, 12));
+      var ledger = await h.ledger();
+      expect(
+        () => ledger.repayDebt('me', 'back', today: d(2026, 4, 5)),
+        throwsLedger(LedgerError.debtRepaymentDirection),
+      );
+      expect(ledger.debtsRepayableBy(ledger.transactions['dinner']!).map((d) => d.id), ['me']);
+      ledger = await h.apply((l) => l.repayDebt('me', 'dinner', today: d(2026, 4, 5)));
+      expect((ledger.debts['me']!.repaid, ledger.debts['me']!.receivedDate), (true, d(2026, 3, 10)));
+      expect(ledger.transactions['dinner']!.line!.refundedLineId, isNull);
+      // A debt owed to me without a source: checked, nothing attached.
+      ledger = await h.apply((l) => l.repayDebt('them', 'back', today: d(2026, 4, 5)));
+      expect(ledger.expenseOf(ledger.transactions['back']!), isNull);
+      // A modification that unchecks it clears the link too.
+      ledger = await h.apply((l) => l.updateDebt('them', debt(amount: 3000), today: d(2026, 4, 6)));
+      expect((ledger.debts['them']!.repaid, ledger.debts['them']!.refundTransactionId), (false, null));
+    });
+
+    test('splitting a debt keeps its links on both parts', () async {
+      await create('alex', debt(amount: 6000, source: 'dinner'), today: d(2026, 3, 12));
+      final ledger = await h.apply((l) => l.splitDebt('alex', 'alex-2', 2000));
+      expect(ledger.debtsFrom('dinner').map((d) => d.id).toSet(), {'alex', 'alex-2'});
+    });
   });
 }
