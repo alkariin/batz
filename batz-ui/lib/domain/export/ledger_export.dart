@@ -11,6 +11,7 @@ import '../ledger/category.dart';
 import '../ledger/ledger.dart';
 import '../ledger/transaction.dart';
 import '../modules/settings.dart';
+import '../modules/monthly_tasks.dart';
 import '../modules/subscriptions.dart';
 import '../modules/taxes.dart';
 import '../modules/vacations.dart';
@@ -154,6 +155,7 @@ abstract final class ExportHeaders {
   ];
   static const subscriptions = ['Abonnement', 'Note', 'Montant', 'Fréquence', 'Début', 'Fin', 'id', 'idAbonnement'];
   static const moduleSettings = ['Module', 'Nom de la catégorie liée', 'Nom choisi', 'id'];
+  static const monthlyTasks = ['Tâche', 'Compte lié', 'Depuis', 'Ordre', 'Mois', 'Cochée', 'id', 'idTâche', 'idCompte'];
 
   static const byFile = {
     ExportFiles.accounts: accounts,
@@ -173,10 +175,11 @@ abstract final class ExportHeaders {
     ExportFiles.electricity: electricity,
     ExportFiles.subscriptions: subscriptions,
     ExportFiles.moduleSettings: moduleSettings,
+    ExportFiles.monthlyTasks: monthlyTasks,
   };
 }
 
-/// The seventeen CSV files of an export of [ledger], in the order of
+/// The eighteen CSV files of an export of [ledger], in the order of
 /// [ExportFiles.all].
 List<ExportFile> exportFiles(Ledger ledger) => _Exporter(ledger).files();
 
@@ -208,6 +211,7 @@ class _Exporter {
     _file(ExportFiles.electricity, _electricity()),
     _file(ExportFiles.subscriptions, _subscriptions()),
     _file(ExportFiles.moduleSettings, _moduleSettings()),
+    _file(ExportFiles.monthlyTasks, _monthlyTasks()),
   ];
 
   ExportFile _file(String name, List<List<Cell?>> rows) => ExportFile(name, ExportHeaders.byFile[name]!, rows);
@@ -696,4 +700,31 @@ class _Exporter {
         ];
       }(),
   ];
+
+  /// One row per box the user checked or unchecked, by month; a task without
+  /// box has one row. The boxes the imports check are computed: not here.
+  List<List<Cell?>> _monthlyTasks() {
+    final checks = <String, List<MonthlyCheck>>{};
+    for (final c in ledger.modules.monthlyChecks.values) {
+      (checks[c.taskId] ??= []).add(c);
+    }
+    final rows = <List<Cell?>>[];
+    for (final task in ledger.monthlyTasks) {
+      final boxes = [...?checks[task.id]]..sort((a, b) => _compare(['${a.month}', a.id], ['${b.month}', b.id]));
+      for (final c in boxes.isEmpty ? const <MonthlyCheck?>[null] : boxes) {
+        rows.add([
+          TextCell(task.name),
+          _accountName(task.accountId),
+          TextCell('${task.since}'),
+          IntCell(task.position),
+          c == null ? null : TextCell('${c.month}'),
+          c == null ? null : FlagCell(c.done),
+          _id(c?.id),
+          PlainCell(task.id),
+          _id(task.accountId),
+        ]);
+      }
+    }
+    return rows;
+  }
 }

@@ -168,7 +168,7 @@ void main() {
       // ignore: avoid_print
       print('modules: $moduleTimes ms');
 
-      // The export, its seventeen files and its ZIP, on a ledger just
+      // The export, its eighteen files and its ZIP, on a ledger just
       // loaded.
       final exports = <int>[];
       for (var run = 0; run < 10; run++) {
@@ -176,7 +176,7 @@ void main() {
         final watch = Stopwatch()..start();
         final archive = buildExportArchive(fresh, date: _today, appVersion: appVersion);
         exports.add(watch.elapsedMilliseconds);
-        expect((archive.csvFiles, archive.transactions), (17, fresh.transactions.length));
+        expect((archive.csvFiles, archive.transactions), (18, fresh.transactions.length));
       }
       // ignore: avoid_print
       print('export: $exports ms');

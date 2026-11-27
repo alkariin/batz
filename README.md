@@ -40,6 +40,9 @@ PostFinance and the CSV exports of Neon, in Swiss francs.
 - **Modules.** The annual salary sheet, a flow diagram from the gross salary
   to the taxes, the expenses and the savings, taxes by fiscal year, trips,
   electricity with its kWh, subscriptions ([modules](docs/features.md#modules)).
+- **Monthly follow-up.** Your own list of what to do each month, a box per
+  task and month; the imports check theirs, the home screen shows the month
+  to finish ([monthly follow-up](docs/features.md#monthly-follow-up)).
 - **Synchronisation.** Every device holds all the data and works offline.
   Modifications made on several devices combine field by field through the
   server; a lost device is revoked, a lost server is rebuilt from any device
@@ -88,6 +91,8 @@ copy of the data, so a lost server is rebuilt from any of them.
    cash), with its date. Come back once or twice a year.
 5. « Année » shows the year as it fills; « Plus › Analyses » holds the
    modules.
+6. « Suivi mensuel », on the home screen: write what you do each month; the
+   card then shows the month to finish.
 
 ## Documentation
 

@@ -1,4 +1,4 @@
-// The ZIP of the export: the seventeen CSV files and LISEZMOI.txt, its dated
+// The ZIP of the export: the eighteen CSV files and LISEZMOI.txt, its dated
 // name, read back by the library and by another tool.
 import 'dart:convert';
 import 'dart:io';
@@ -19,10 +19,10 @@ void main() {
   test('a dated name, the number of files and of transactions', () {
     expect(archive.fileName, 'batz-export-2026-11-21.zip');
     expect(exportFileName(CalendarDate(2027, 1, 5)), 'batz-export-2027-01-05.zip');
-    expect((archive.csvFiles, archive.transactions), (17, 9));
+    expect((archive.csvFiles, archive.transactions), (18, 9));
   });
 
-  test('the library reads it back: the seventeen CSV files then LISEZMOI.txt, each as written', () {
+  test('the library reads it back: the eighteen CSV files then LISEZMOI.txt, each as written', () {
     final decoded = ZipDecoder().decodeBytes(archive.bytes, verify: true);
     expect(decoded.files.map((f) => f.name), [...ExportFiles.all, readmeFileName]);
     final files = exportFiles(ledger);
@@ -47,7 +47,7 @@ void main() {
     ]) {
       expect(lines.where((l) => RegExp('^  ${RegExp.escape(name)} +$rows\$').hasMatch(l)), hasLength(1), reason: name);
     }
-    expect(lines.where((l) => RegExp(r'^  \S+\.csv +\d+$').hasMatch(l)), hasLength(17));
+    expect(lines.where((l) => RegExp(r'^  \S+\.csv +\d+$').hasMatch(l)), hasLength(18));
     expect(text, contains("n'est pas chiffré"));
     expect(text, contains('séparateur point-virgule'));
     expect(text, contains('1234.50'));

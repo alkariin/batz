@@ -1944,6 +1944,180 @@ abstract class AppLocalizations {
   /// **'Confirmer les propositions ({count})'**
   String validationConfirm(int count);
 
+  /// No description provided for @monthlyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi mensuel'**
+  String get monthlyTitle;
+
+  /// No description provided for @monthlyMonthNames.
+  ///
+  /// In fr, this message translates to:
+  /// **'janvier,février,mars,avril,mai,juin,juillet,août,septembre,octobre,novembre,décembre'**
+  String get monthlyMonthNames;
+
+  /// No description provided for @monthlyEdit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier les tâches'**
+  String get monthlyEdit;
+
+  /// No description provided for @monthlyEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune tâche mensuelle : définissez ce que vous faites chaque mois (importer les relevés, saisir les espèces, mettre à jour les dettes…).'**
+  String get monthlyEmpty;
+
+  /// No description provided for @monthlySuggest.
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposer une liste'**
+  String get monthlySuggest;
+
+  /// No description provided for @monthlySuggestImport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Importer {account}'**
+  String monthlySuggestImport(String account);
+
+  /// No description provided for @monthlySuggestCash.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisir les transactions en espèces'**
+  String get monthlySuggestCash;
+
+  /// No description provided for @monthlySuggestDebts.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre à jour les dettes'**
+  String get monthlySuggestDebts;
+
+  /// No description provided for @monthlyProgress.
+  ///
+  /// In fr, this message translates to:
+  /// **'{done} sur {total}'**
+  String monthlyProgress(int done, int total);
+
+  /// No description provided for @monthlyComplete.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminé'**
+  String get monthlyComplete;
+
+  /// No description provided for @monthlyCurrent.
+  ///
+  /// In fr, this message translates to:
+  /// **'{month}, en cours'**
+  String monthlyCurrent(String month);
+
+  /// No description provided for @monthlyImported.
+  ///
+  /// In fr, this message translates to:
+  /// **'Importé jusqu\'au {date}'**
+  String monthlyImported(String date);
+
+  /// No description provided for @monthlyNotImported.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore importé'**
+  String get monthlyNotImported;
+
+  /// No description provided for @monthlyAll.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les mois'**
+  String get monthlyAll;
+
+  /// No description provided for @monthlyTaskNew.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle tâche'**
+  String get monthlyTaskNew;
+
+  /// No description provided for @monthlyTaskEdit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier la tâche'**
+  String get monthlyTaskEdit;
+
+  /// No description provided for @monthlyTaskName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tâche'**
+  String get monthlyTaskName;
+
+  /// No description provided for @monthlyTaskAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cochée par'**
+  String get monthlyTaskAccount;
+
+  /// No description provided for @monthlyTaskByHand.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moi, à la main'**
+  String get monthlyTaskByHand;
+
+  /// No description provided for @monthlyTaskByImports.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les imports de {account}'**
+  String monthlyTaskByImports(String account);
+
+  /// No description provided for @monthlyTaskAccountHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cochée seule pour un mois dès que les imports de ce compte couvrent son dernier jour.'**
+  String get monthlyTaskAccountHint;
+
+  /// No description provided for @monthlyTaskSince.
+  ///
+  /// In fr, this message translates to:
+  /// **'Depuis'**
+  String get monthlyTaskSince;
+
+  /// No description provided for @monthlyTaskSinceMonth.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mois'**
+  String get monthlyTaskSinceMonth;
+
+  /// No description provided for @monthlyTaskSinceYear.
+  ///
+  /// In fr, this message translates to:
+  /// **'Année'**
+  String get monthlyTaskSinceYear;
+
+  /// No description provided for @monthlyTaskSummary.
+  ///
+  /// In fr, this message translates to:
+  /// **'Depuis {month} · {by}'**
+  String monthlyTaskSummary(String month, String by);
+
+  /// No description provided for @monthlyTaskDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la tâche « {name} » et ses coches ?'**
+  String monthlyTaskDeleteConfirm(String name);
+
+  /// No description provided for @monthlyTaskDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tâche supprimée.'**
+  String get monthlyTaskDeleted;
+
+  /// No description provided for @errorUnknownMonthlyTask.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette tâche n\'existe plus.'**
+  String get errorUnknownMonthlyTask;
+
+  /// No description provided for @errorMonthlyTaskAccountNotDetailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls les imports d\'un compte détaillé peuvent cocher une tâche.'**
+  String get errorMonthlyTaskAccountNotDetailed;
+
   /// No description provided for @validationConfirmOne.
   ///
   /// In fr, this message translates to:

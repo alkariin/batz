@@ -8,6 +8,7 @@ import '../../domain/ledger/share_classification.dart';
 import '../../domain/ledger/statement.dart';
 import '../../domain/ledger/transaction.dart';
 import '../../domain/modules/electricity.dart';
+import '../../domain/modules/monthly_tasks.dart';
 import '../../domain/modules/salary.dart';
 import '../../domain/modules/settings.dart';
 import '../../domain/modules/subscriptions.dart';
@@ -130,6 +131,8 @@ final List<DerivedTable> appDerivedTables = [
   electricityReadingsTable,
   subscriptionsTable,
   tranchesTable,
+  monthlyTasksTable,
+  monthlyChecksTable,
 ];
 
 final accountsTable = DerivedTable(
@@ -367,5 +370,26 @@ final tranchesTable = DerivedTable(
     TrancheFields.frequency: const DerivedColumn.text('frequency'),
     TrancheFields.start: const DerivedColumn.text('start'),
     TrancheFields.end: const DerivedColumn.text('end_date'),
+  },
+);
+
+final monthlyTasksTable = DerivedTable(
+  entity: MonthlyTaskFields.entity,
+  table: 'monthly_tasks',
+  columns: {
+    MonthlyTaskFields.name: const DerivedColumn.text('name'),
+    MonthlyTaskFields.position: const DerivedColumn.integer('position'),
+    MonthlyTaskFields.accountId: const DerivedColumn.text('account_id'),
+    MonthlyTaskFields.since: const DerivedColumn.text('since'),
+  },
+);
+
+final monthlyChecksTable = DerivedTable(
+  entity: MonthlyCheckFields.entity,
+  table: 'monthly_checks',
+  columns: {
+    MonthlyCheckFields.taskId: const DerivedColumn.text('task_id'),
+    MonthlyCheckFields.month: const DerivedColumn.text('month'),
+    MonthlyCheckFields.done: const DerivedColumn.integer('done'),
   },
 );

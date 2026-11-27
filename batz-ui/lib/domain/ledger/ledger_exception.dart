@@ -90,6 +90,8 @@ enum LedgerError {
   debtSplitOutOfTotal,
 
   // Modules.
+  unknownMonthlyTask,
+  monthlyTaskAccountNotDetailed,
   moduleCategoryRequired,
   unknownSalarySheet,
   salaryGrossRequired,

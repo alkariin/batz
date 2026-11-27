@@ -1123,6 +1123,110 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get monthlyTitle => 'Suivi mensuel';
+
+  @override
+  String get monthlyMonthNames =>
+      'janvier,février,mars,avril,mai,juin,juillet,août,septembre,octobre,novembre,décembre';
+
+  @override
+  String get monthlyEdit => 'Modifier les tâches';
+
+  @override
+  String get monthlyEmpty =>
+      'Aucune tâche mensuelle : définissez ce que vous faites chaque mois (importer les relevés, saisir les espèces, mettre à jour les dettes…).';
+
+  @override
+  String get monthlySuggest => 'Proposer une liste';
+
+  @override
+  String monthlySuggestImport(String account) {
+    return 'Importer $account';
+  }
+
+  @override
+  String get monthlySuggestCash => 'Saisir les transactions en espèces';
+
+  @override
+  String get monthlySuggestDebts => 'Mettre à jour les dettes';
+
+  @override
+  String monthlyProgress(int done, int total) {
+    return '$done sur $total';
+  }
+
+  @override
+  String get monthlyComplete => 'Terminé';
+
+  @override
+  String monthlyCurrent(String month) {
+    return '$month, en cours';
+  }
+
+  @override
+  String monthlyImported(String date) {
+    return 'Importé jusqu\'au $date';
+  }
+
+  @override
+  String get monthlyNotImported => 'Pas encore importé';
+
+  @override
+  String get monthlyAll => 'Tous les mois';
+
+  @override
+  String get monthlyTaskNew => 'Nouvelle tâche';
+
+  @override
+  String get monthlyTaskEdit => 'Modifier la tâche';
+
+  @override
+  String get monthlyTaskName => 'Tâche';
+
+  @override
+  String get monthlyTaskAccount => 'Cochée par';
+
+  @override
+  String get monthlyTaskByHand => 'Moi, à la main';
+
+  @override
+  String monthlyTaskByImports(String account) {
+    return 'Les imports de $account';
+  }
+
+  @override
+  String get monthlyTaskAccountHint =>
+      'Cochée seule pour un mois dès que les imports de ce compte couvrent son dernier jour.';
+
+  @override
+  String get monthlyTaskSince => 'Depuis';
+
+  @override
+  String get monthlyTaskSinceMonth => 'Mois';
+
+  @override
+  String get monthlyTaskSinceYear => 'Année';
+
+  @override
+  String monthlyTaskSummary(String month, String by) {
+    return 'Depuis $month · $by';
+  }
+
+  @override
+  String monthlyTaskDeleteConfirm(String name) {
+    return 'Supprimer la tâche « $name » et ses coches ?';
+  }
+
+  @override
+  String get monthlyTaskDeleted => 'Tâche supprimée.';
+
+  @override
+  String get errorUnknownMonthlyTask => 'Cette tâche n\'existe plus.';
+
+  @override
+  String get errorMonthlyTaskAccountNotDetailed => 'Seuls les imports d\'un compte détaillé peuvent cocher une tâche.';
+
+  @override
   String get validationConfirmOne => 'Valider cette proposition';
 
   @override

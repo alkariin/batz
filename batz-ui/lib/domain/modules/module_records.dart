@@ -1,4 +1,5 @@
 import 'electricity.dart';
+import 'monthly_tasks.dart';
 import 'salary.dart';
 import 'settings.dart';
 import 'subscriptions.dart';
@@ -18,7 +19,11 @@ class ModuleRecords {
     Iterable<ElectricityReading> electricityReadings = const [],
     Iterable<Subscription> subscriptions = const [],
     Iterable<Tranche> tranches = const [],
+    Iterable<MonthlyTask> monthlyTasks = const [],
+    Iterable<MonthlyCheck> monthlyChecks = const [],
   }) : subscriptions = _subscriptions(subscriptions, tranches),
+       monthlyTasks = {for (final t in monthlyTasks) t.id: t},
+       monthlyChecks = {for (final c in monthlyChecks) c.id: c},
        tripSheets = {for (final t in tripSheets) t.id: t},
        electricityReadings = {for (final r in electricityReadings) r.lineId: r},
        settings = {for (final s in settings) s.module: s},
@@ -78,4 +83,9 @@ class ModuleRecords {
 
   /// The subscriptions and their tranches, by identifier.
   final Map<String, Subscription> subscriptions;
+
+  /// The tasks of the monthly follow-up, and the boxes the user checked or
+  /// unchecked, by identifier.
+  final Map<String, MonthlyTask> monthlyTasks;
+  final Map<String, MonthlyCheck> monthlyChecks;
 }

@@ -79,7 +79,7 @@ void main() {
     expect(files.saved.keys, ['batz-export-2026-11-21.zip']);
     expect(
       tester.widget<Text>(find.byKey(const Key('exportOutcome'))).data,
-      'Export enregistré : 17 fichiers CSV et LISEZMOI.txt, 4 transactions.',
+      'Export enregistré : 18 fichiers CSV et LISEZMOI.txt, 4 transactions.',
     );
     final zip = ZipDecoder().decodeBytes(files.saved.values.single, verify: true);
     expect(zip.files.map((f) => f.name), [...ExportFiles.all, readmeFileName]);

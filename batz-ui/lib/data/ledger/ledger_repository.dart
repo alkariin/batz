@@ -13,6 +13,7 @@ import '../../domain/ledger/share_classification.dart';
 import '../../domain/ledger/statement.dart';
 import '../../domain/ledger/transaction.dart';
 import '../../domain/modules/electricity.dart';
+import '../../domain/modules/monthly_tasks.dart';
 import '../../domain/modules/module_records.dart';
 import '../../domain/modules/salary.dart';
 import '../../domain/modules/settings.dart';
@@ -88,16 +89,22 @@ class LedgerRepository {
 
   /// What the user entered in the modules.
   Future<ModuleRecords> _modules() async {
-    final (settings, sheets, deductions, taxYears, taxLines, trips, readings, subscriptions, tranches) = await (
-      _rows(moduleSettingsTable, _moduleSetting),
-      _rows(salarySheetsTable, _salarySheet),
-      _rows(salaryDeductionsTable, _salaryDeduction),
-      _rows(taxYearsTable, _taxYear),
-      _rows(taxLinesTable, _taxLine),
-      _rows(tripSheetsTable, _tripSheet),
-      _rows(electricityReadingsTable, _electricityReading),
-      _rows(subscriptionsTable, _subscription),
-      _rows(tranchesTable, _tranche),
+    final (
+      (settings, sheets, deductions, taxYears, taxLines, trips, readings, subscriptions, tranches),
+      (tasks, checks),
+    ) = await (
+      (
+        _rows(moduleSettingsTable, _moduleSetting),
+        _rows(salarySheetsTable, _salarySheet),
+        _rows(salaryDeductionsTable, _salaryDeduction),
+        _rows(taxYearsTable, _taxYear),
+        _rows(taxLinesTable, _taxLine),
+        _rows(tripSheetsTable, _tripSheet),
+        _rows(electricityReadingsTable, _electricityReading),
+        _rows(subscriptionsTable, _subscription),
+        _rows(tranchesTable, _tranche),
+      ).wait,
+      (_rows(monthlyTasksTable, _monthlyTask), _rows(monthlyChecksTable, _monthlyCheck)).wait,
     ).wait;
     return ModuleRecords(
       settings: settings,
@@ -109,7 +116,31 @@ class LedgerRepository {
       electricityReadings: readings,
       subscriptions: subscriptions,
       tranches: tranches,
+      monthlyTasks: tasks,
+      monthlyChecks: checks,
     );
+  }
+
+  /// A task of the monthly follow-up needs a name and the month it starts.
+  static MonthlyTask? _monthlyTask(Map<String, Object?> row) {
+    final name = _string(row['name']);
+    final since = parseYearMonth(row['since']);
+    if (name == null || since == null) return null;
+    return MonthlyTask(
+      id: row['id']! as String,
+      name: name,
+      position: row['position'] is int ? row['position']! as int : 0,
+      since: since,
+      accountId: _string(row['account_id']),
+    );
+  }
+
+  /// A box needs its task and its month.
+  static MonthlyCheck? _monthlyCheck(Map<String, Object?> row) {
+    final taskId = _string(row['task_id']);
+    final month = parseYearMonth(row['month']);
+    if (taskId == null || month == null) return null;
+    return MonthlyCheck(id: row['id']! as String, taskId: taskId, month: month, done: row['done'] == 1);
   }
 
   /// A subscription needs a name.

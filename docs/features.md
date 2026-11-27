@@ -1,7 +1,8 @@
 # Features
 
 How the app computes and shows what the user entered: the classification
-rules, the annual view, the wealth, the modules and the export. How the data are stored and synchronised
+rules, the annual view, the wealth, the modules, the monthly follow-up and
+the export. How the data are stored and synchronised
 is in [architecture](architecture.md).
 
 Only what the user enters or imports is stored. Every figure below is
@@ -679,6 +680,41 @@ it had no end. The tranches of a subscription do not overlap.
   not over, and costs what that tranche costs. Then come those **to come**,
   then those **ended**. The **totals** add the costs of the current ones.
 
+## Monthly follow-up
+
+What is done and what is left to do, month by month: import the statements,
+enter the cash, update the debts… The user writes the list once (the card
+« Suivi mensuel » of the home screen, then its screen of the months), the
+app keeps a box per task and per month. Code:
+`batz-ui/lib/domain/modules/monthly_tasks.dart`.
+
+- A **task** has a name, a place in the list, the first month it applies to
+  (« Depuis ») and, if the user wants, a detailed account that checks it.
+  Without tasks, the screen proposes a list: one import per detailed
+  account, the cash, the debts, from the current month; its records have
+  computed identifiers, so the list proposed on two devices is one list.
+- **Who checks a box.** The user, on the home screen or on the screen of the
+  months; or, for a task linked to an account, the imports of that account,
+  as soon as they cover the last day of the month: the end of its latest
+  statement (PostFinance: the statement of the month), or the day of its
+  latest import (Neon: an export imported after the end of the month,
+  whose balance was checked that day). A box checked by the imports cannot
+  be unchecked; until then, the user may check it by hand.
+- **The months** run from the first month a task applies to up to the
+  current one; each holds the tasks that apply to it. The home screen shows
+  the month to finish: the oldest past month with a task to do, or else the
+  current month, « en cours ». The screen of the months lists them all, the
+  most recent first, a finished month folded.
+- Only the boxes the user touched are stored, one record per task and
+  month, its identifier computed from both: two devices checking the same
+  box write one record. Deleting a task deletes its boxes.
+
+**Example.** « Importer PostFinance » is linked to the account PostFinance,
+« Saisir les espèces » and « Trier le casier, mettre à jour les dettes »
+are checked by hand. On 3 December, November shows 0 of 3; the statement
+of November imported, 1 of 3; the two other boxes checked, November is
+done and the home screen shows December, « en cours ».
+
 ## Export
 
 Everything entered or imported, as a ZIP of CSV files a spreadsheet opens:
@@ -704,12 +740,14 @@ the expected files of an example ledger are in `batz-ui/test/fixtures/export/`.
 Everything entered or imported, in its state of the day: accounts, declared
 balances, statements, the category tree of each year, mapping and
 redistribution rules, transactions and their lines, the answers for carried
-shares, debts, and what is entered in the modules.
+shares, debts, what is entered in the modules, and the tasks of the
+monthly follow-up with the boxes the user touched.
 
 Not exported:
 
 - what the app computes: the annual view, the wealth, its curve, the flow
-  diagram, the proposals of the rules for the lines to validate;
+  diagram, the proposals of the rules for the lines to validate, the boxes
+  of the monthly follow-up that imports check;
 - the history of the modifications, and what was deleted;
 - the original PDF statements (they stay on the server);
 - the pairing with the server and the choices of the device.
@@ -752,7 +790,7 @@ says the same in French.
 
 ### Files
 
-Seventeen CSV files, always present (a file without data holds its headers),
+Eighteen CSV files, always present (a file without data holds its headers),
 and `LISEZMOI.txt`: the date of the export, the version of the app, the
 number of transactions, each file with its number of rows, what is left out,
 the format, how to open a file in Excel, and a pointer to this section.
@@ -776,6 +814,7 @@ the format, how to open a file in Excel, and a pointer to this section.
 | `electricite.csv` | line that carries kWh | Date de paiement; Description; Début de période; Fin de période; Montant; kWh; id; idLigne; idTransaction |
 | `abonnements.csv` | tranche of a subscription | Abonnement; Note; Montant; Fréquence; Début; Fin; id; idAbonnement |
 | `reglages-modules.csv` | module | Module; Nom de la catégorie liée; Nom choisi; id |
+| `suivi-mensuel.csv` | box checked or unchecked by the user (a task without box: one row) | Tâche; Compte lié; Depuis; Ordre; Mois; Cochée; id; idTâche; idCompte |
 
 Notes:
 

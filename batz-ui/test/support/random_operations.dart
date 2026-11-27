@@ -15,7 +15,9 @@ import 'package:batz/domain/ledger/ledger_exception.dart';
 import 'package:batz/domain/ledger/redistribution.dart';
 import 'package:batz/domain/ledger/refund.dart';
 import 'package:batz/domain/ledger/transaction.dart';
+import 'package:batz/domain/allocation.dart';
 import 'package:batz/domain/modules/electricity.dart';
+import 'package:batz/domain/modules/monthly_tasks.dart';
 import 'package:batz/domain/modules/salary.dart';
 import 'package:batz/domain/modules/settings.dart';
 import 'package:batz/domain/modules/subscriptions.dart';
@@ -45,6 +47,8 @@ Modification? randomOperation(Ledger l, Random r, String id) {
   if (r.nextInt(100) < 10) return _phase5Operation(l, r, id);
   // Module settings and entries, now and then.
   if (r.nextInt(100) < 10) return _phase6Operation(l, r, id);
+  // The monthly follow-up, now and then.
+  if (r.nextInt(100) < 5) return _monthlyOperation(l, r, id);
 
   // Weighted: mostly entries and their corrections, like real use.
   final roll = r.nextInt(100);
@@ -335,6 +339,28 @@ Modification? _phase6Operation(Ledger l, Random r, String id) {
         _ => l.deleteSubscription(subscription.id),
       };
   }
+}
+
+/// Tasks of the monthly follow-up and their boxes.
+Modification? _monthlyOperation(Ledger l, Random r, String id) {
+  final tasks = l.monthlyTasks;
+  final detailed = [
+    for (final a in l.accounts.values)
+      if (a.isDetailed) a.id,
+  ]..sort();
+  MonthlyTaskDraft draft() => MonthlyTaskDraft(
+    name: _pick(r, ['Importer', 'Espèces', 'Dettes', '=casier']),
+    since: YearMonth(2026, 1 + r.nextInt(12)),
+    accountId: detailed.isNotEmpty && r.nextBool() ? _pick(r, detailed) : null,
+  );
+  if (tasks.isEmpty || r.nextInt(4) == 0) return l.createMonthlyTask('task-$id', draft());
+  final task = _pick(r, tasks);
+  return switch (r.nextInt(6)) {
+    0 => l.updateMonthlyTask(task.id, draft()),
+    1 => l.moveMonthlyTask(task.id, r.nextBool() ? 1 : -1),
+    2 => l.deleteMonthlyTask(task.id),
+    _ => l.setMonthlyCheck(task.id, YearMonth(2026, 1 + r.nextInt(12)), done: r.nextInt(4) != 0),
+  };
 }
 
 extension on AccountDraft {

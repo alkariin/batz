@@ -82,7 +82,7 @@ void main() {
   });
 
   test('each field goes to a column of its file, and the identifiers are at the end', () {
-    expect(ExportFiles.all, hasLength(17));
+    expect(ExportFiles.all, hasLength(18));
     expect(ExportHeaders.byFile.keys, ExportFiles.all);
     for (final MapEntry(key: entity, value: exported) in exportSchema.entries) {
       final headers = ExportHeaders.byFile[exported.file]!;

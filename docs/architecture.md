@@ -161,6 +161,7 @@ use plain SQLite.
 | `tripSheet` | `trip_sheets` | lineId (absent for a manual line), place, days, date, amount |
 | `electricityReading` | `electricity_readings` | lineId, wh |
 | `subscription`, `subscriptionTranche` | `subscriptions`, `subscription_tranches` | name, note; subscriptionId, amount, frequency, start, end |
+| `monthlyTask`, `monthlyCheck` | `monthly_tasks`, `monthly_checks` | name, position, accountId, since (`2026-11`); taskId, month, done (identifier computed from the task and the month) |
 
 `LedgerRepository` reads every table into an immutable `Ledger`, leaving out
 records that are incomplete or hold a value the version cannot read. Each

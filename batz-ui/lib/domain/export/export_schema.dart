@@ -17,6 +17,7 @@ import '../ledger/transaction.dart';
 import '../modules/electricity.dart';
 import '../modules/salary.dart';
 import '../modules/settings.dart';
+import '../modules/monthly_tasks.dart';
 import '../modules/subscriptions.dart';
 import '../modules/taxes.dart';
 import '../modules/vacations.dart';
@@ -40,6 +41,7 @@ abstract final class ExportFiles {
   static const electricity = 'electricite.csv';
   static const subscriptions = 'abonnements.csv';
   static const moduleSettings = 'reglages-modules.csv';
+  static const monthlyTasks = 'suivi-mensuel.csv';
 
   static const all = [
     accounts,
@@ -59,6 +61,7 @@ abstract final class ExportFiles {
     electricity,
     subscriptions,
     moduleSettings,
+    monthlyTasks,
   ];
 }
 
@@ -453,6 +456,25 @@ final Map<String, ExportedEntity> exportSchema = {
         labels: ExportLabels.byName(ExportLabels.modules),
       ),
       ModuleSettingFields.categoryName: const ExportColumn('Nom de la catégorie liée', _text),
+    },
+  ),
+  MonthlyTaskFields.entity: const ExportedEntity(
+    file: ExportFiles.monthlyTasks,
+    idColumn: 'idTâche',
+    fields: {
+      MonthlyTaskFields.name: ExportColumn('Tâche', _text),
+      MonthlyTaskFields.since: ExportColumn('Depuis', _text),
+      MonthlyTaskFields.position: ExportColumn('Ordre', ExportKind.integer),
+      MonthlyTaskFields.accountId: ExportColumn('idCompte', _id),
+    },
+  ),
+  MonthlyCheckFields.entity: const ExportedEntity(
+    file: ExportFiles.monthlyTasks,
+    idColumn: 'id',
+    fields: {
+      MonthlyCheckFields.taskId: ExportColumn('idTâche', _id),
+      MonthlyCheckFields.month: ExportColumn('Mois', _text),
+      MonthlyCheckFields.done: ExportColumn('Cochée', ExportKind.flag),
     },
   ),
 };

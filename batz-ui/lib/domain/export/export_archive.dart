@@ -1,4 +1,4 @@
-/// The ZIP of an export: the seventeen CSV files and a `LISEZMOI.txt`, built
+/// The ZIP of an export: the eighteen CSV files and a `LISEZMOI.txt`, built
 /// in memory and handed to the save dialog. Nothing is written anywhere else,
 /// and nothing to the journal.
 library;

@@ -297,6 +297,17 @@ allocation as the payment. Fixed amounts come before percentages, which
 apply to what remains, so a source never changes sign. Refunds give nothing:
 a refund of the rent pays no charges.
 
+### Monthly follow-up: boxes stored only when touched
+
+A task linked to a detailed account is checked by its imports, computed at
+each load from the end of its latest statement, so importing writes no box
+and deleting a statement unchecks again. Only the boxes the user touched are
+stored, under an identifier computed from the task and the month (two
+devices write one record); a task applies from a month of its own, so a task
+added later leaves the earlier months finished. A box stays checkable by
+hand on a linked task (a month without statement), never uncheckable once
+the imports checked it.
+
 ### Accounts: a position written on the first move
 
 `position` is absent until the user moves an account; then every account of
