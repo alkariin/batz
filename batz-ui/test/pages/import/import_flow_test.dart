@@ -79,6 +79,18 @@ class FakeFiles implements FileAccess {
     saved[fileName] = bytes;
     return true;
   }
+
+  @override
+  Future<PickedFile?> pickDocument() async => null;
+
+  @override
+  Future<bool> saveDocument(String fileName, Uint8List bytes) async => false;
+
+  @override
+  Future<bool> openDocument(String fileName, Uint8List bytes) async => false;
+
+  @override
+  Future<bool> openLink(String url) async => false;
 }
 
 void main() {

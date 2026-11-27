@@ -68,7 +68,7 @@ void main() {
     expect(ledgerB.transactions.length, ledgerA.transactions.length);
     final filesA = {for (final f in exportFiles(ledgerA)) f.name: f.bytes};
     final filesB = {for (final f in exportFiles(ledgerB)) f.name: f.bytes};
-    expect(filesA, hasLength(18));
+    expect(filesA, hasLength(21));
     expect(filesB, filesA, reason: 'the same CSV files on both devices');
 
     // Exporting writes no entry to the journal: the journal is the same
@@ -93,6 +93,6 @@ void main() {
     for (final MapEntry(key: name, value: bytes) in filesA.entries) {
       expect(offlineZip.findFile(name)!.content, bytes, reason: name);
     }
-    expect((offline.csvFiles, offline.transactions), (18, ledgerA.transactions.length));
+    expect((offline.csvFiles, offline.transactions), (21, ledgerA.transactions.length));
   }, timeout: const Timeout(Duration(minutes: 3)));
 }

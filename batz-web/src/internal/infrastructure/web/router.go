@@ -30,10 +30,18 @@ type Health struct {
 	// ImportFormats are the statement formats the server reads: an app
 	// tells from their absence that the server is too old to import.
 	ImportFormats []string
+	// Documents tells that the server keeps documents (since 0.11.0).
+	Documents bool
 }
 
 // NewRouter wires the routes.
-func NewRouter(devices *application.Devices, sync *application.Sync, imports *application.Imports, health Health) *gin.Engine {
+func NewRouter(
+	devices *application.Devices,
+	sync *application.Sync,
+	imports *application.Imports,
+	documents *application.Documents,
+	health Health,
+) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -46,6 +54,7 @@ func NewRouter(devices *application.Devices, sync *application.Sync, imports *ap
 			"minAppVersion": health.MinAppVersion,
 			"syncProtocol":  journal.Protocol,
 			"importFormats": health.ImportFormats,
+			"documents":     health.Documents,
 		})
 	})
 
@@ -64,6 +73,10 @@ func NewRouter(devices *application.Devices, sync *application.Sync, imports *ap
 	i := &importHandler{imports: imports}
 	api.POST("/imports", limitBody(MaxImportBytes), authenticate(devices), i.importStatement)
 	api.GET("/imports/:fingerprint/pdf", authenticate(devices), i.pdf)
+
+	d := &documentHandler{documents: documents}
+	api.POST("/documents", limitBody(MaxDocumentBytes), authenticate(devices), d.store)
+	api.GET("/documents/:fingerprint", authenticate(devices), d.read)
 	return r
 }
 

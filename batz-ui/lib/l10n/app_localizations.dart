@@ -1944,6 +1944,378 @@ abstract class AppLocalizations {
   /// **'Confirmer les propositions ({count})'**
   String validationConfirm(int count);
 
+  /// No description provided for @insurancesTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Assurances'**
+  String get insurancesTitle;
+
+  /// No description provided for @insurancesMenuHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contrats, polices et liens de chaque assurance, tranche par tranche.'**
+  String get insurancesMenuHint;
+
+  /// No description provided for @insurancesEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune assurance. Ajoutez-en une avec le bouton +.'**
+  String get insurancesEmpty;
+
+  /// No description provided for @insuranceNew.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle assurance'**
+  String get insuranceNew;
+
+  /// No description provided for @insuranceName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Assurance'**
+  String get insuranceName;
+
+  /// No description provided for @insuranceNameHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Maladie, RC ménage, voiture…'**
+  String get insuranceNameHint;
+
+  /// No description provided for @insuranceRename.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renommer'**
+  String get insuranceRename;
+
+  /// No description provided for @insuranceDelete.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer l\'assurance'**
+  String get insuranceDelete;
+
+  /// No description provided for @insuranceDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer l\'assurance « {name} », ses tranches, leurs documents et leurs liens ?'**
+  String insuranceDeleteConfirm(String name);
+
+  /// No description provided for @insuranceDeleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Assurance supprimée.'**
+  String get insuranceDeleted;
+
+  /// No description provided for @insuranceActiveSince.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours depuis le {date}'**
+  String insuranceActiveSince(String date);
+
+  /// No description provided for @insuranceActiveUntil.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours, du {start} au {end}'**
+  String insuranceActiveUntil(String start, String end);
+
+  /// No description provided for @insuranceNoActive.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune tranche en cours'**
+  String get insuranceNoActive;
+
+  /// No description provided for @insuranceDocumentsCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{aucun document} =1{un document} other{{count} documents}}'**
+  String insuranceDocumentsCount(int count);
+
+  /// No description provided for @insuranceTrancheTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Du {start}'**
+  String insuranceTrancheTitle(String start);
+
+  /// No description provided for @insuranceTrancheTitleEnd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Du {start} au {end}'**
+  String insuranceTrancheTitleEnd(String start, String end);
+
+  /// No description provided for @insuranceTrancheActive.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours'**
+  String get insuranceTrancheActive;
+
+  /// No description provided for @insuranceTrancheNew.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle tranche'**
+  String get insuranceTrancheNew;
+
+  /// No description provided for @insuranceTrancheEdit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier la tranche'**
+  String get insuranceTrancheEdit;
+
+  /// No description provided for @insuranceTrancheDelete.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la tranche'**
+  String get insuranceTrancheDelete;
+
+  /// No description provided for @insuranceTrancheDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer cette tranche, ses documents et ses liens ?'**
+  String get insuranceTrancheDeleteConfirm;
+
+  /// No description provided for @insuranceTrancheStart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Début'**
+  String get insuranceTrancheStart;
+
+  /// No description provided for @insuranceTrancheEnd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fin (facultative)'**
+  String get insuranceTrancheEnd;
+
+  /// No description provided for @insuranceTrancheHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une nouvelle tranche ferme la veille de son début celle qui n\'avait pas de fin.'**
+  String get insuranceTrancheHint;
+
+  /// No description provided for @insuranceNote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Note'**
+  String get insuranceNote;
+
+  /// No description provided for @insuranceNoteEdit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier la note'**
+  String get insuranceNoteEdit;
+
+  /// No description provided for @insuranceNoNote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune note.'**
+  String get insuranceNoNote;
+
+  /// No description provided for @insuranceOthers.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Afficher l\'autre tranche} other{Afficher les {count} autres tranches}}'**
+  String insuranceOthers(int count);
+
+  /// No description provided for @insuranceOthersHide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Masquer les autres tranches'**
+  String get insuranceOthersHide;
+
+  /// No description provided for @insuranceDocuments.
+  ///
+  /// In fr, this message translates to:
+  /// **'Documents'**
+  String get insuranceDocuments;
+
+  /// No description provided for @insuranceDocumentAdd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un document'**
+  String get insuranceDocumentAdd;
+
+  /// No description provided for @insuranceDocumentAdding.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi du document au serveur…'**
+  String get insuranceDocumentAdding;
+
+  /// No description provided for @insuranceDocumentAdded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Document ajouté.'**
+  String get insuranceDocumentAdded;
+
+  /// No description provided for @insuranceDocumentKind.
+  ///
+  /// In fr, this message translates to:
+  /// **'Genre'**
+  String get insuranceDocumentKind;
+
+  /// No description provided for @insuranceDocumentName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get insuranceDocumentName;
+
+  /// No description provided for @insuranceDocumentContract.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contrat'**
+  String get insuranceDocumentContract;
+
+  /// No description provided for @insuranceDocumentPolicy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Police'**
+  String get insuranceDocumentPolicy;
+
+  /// No description provided for @insuranceDocumentOther.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get insuranceDocumentOther;
+
+  /// No description provided for @insuranceDocumentOpen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir'**
+  String get insuranceDocumentOpen;
+
+  /// No description provided for @insuranceDocumentSave.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer sous…'**
+  String get insuranceDocumentSave;
+
+  /// No description provided for @insuranceDocumentSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Document enregistré.'**
+  String get insuranceDocumentSaved;
+
+  /// No description provided for @insuranceDocumentEdit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier'**
+  String get insuranceDocumentEdit;
+
+  /// No description provided for @insuranceDocumentDelete.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer'**
+  String get insuranceDocumentDelete;
+
+  /// No description provided for @insuranceDocumentDeleteConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer le document « {name} » ? Le serveur en garde le fichier.'**
+  String insuranceDocumentDeleteConfirm(String name);
+
+  /// No description provided for @insuranceDocumentCannotOpen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune application de cet appareil n\'ouvre ce document : enregistrez-le.'**
+  String get insuranceDocumentCannotOpen;
+
+  /// No description provided for @insuranceLinks.
+  ///
+  /// In fr, this message translates to:
+  /// **'Liens'**
+  String get insuranceLinks;
+
+  /// No description provided for @insuranceLinkAdd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un lien'**
+  String get insuranceLinkAdd;
+
+  /// No description provided for @insuranceLinkLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Libellé (facultatif)'**
+  String get insuranceLinkLabel;
+
+  /// No description provided for @insuranceLinkUrl.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse'**
+  String get insuranceLinkUrl;
+
+  /// No description provided for @insuranceLinkEdit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier'**
+  String get insuranceLinkEdit;
+
+  /// No description provided for @insuranceLinkDelete.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer'**
+  String get insuranceLinkDelete;
+
+  /// No description provided for @insuranceLinkCannotOpen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce lien ne s\'ouvre pas sur cet appareil.'**
+  String get insuranceLinkCannotOpen;
+
+  /// No description provided for @documentNotPaired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les documents passent par le serveur : associez-en un dans Plus › Serveur.'**
+  String get documentNotPaired;
+
+  /// No description provided for @documentUnreachable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur ne répond pas : à la maison, le serveur allumé, réessayez.'**
+  String get documentUnreachable;
+
+  /// No description provided for @documentServerChanged.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur a changé de certificat : associez-le à nouveau.'**
+  String get documentServerChanged;
+
+  /// No description provided for @documentServerTooOld.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le serveur est trop ancien pour garder des documents : mettez-le à jour.'**
+  String get documentServerTooOld;
+
+  /// No description provided for @documentTooLarge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce fichier dépasse 25 Mo.'**
+  String get documentTooLarge;
+
+  /// No description provided for @documentEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce fichier est vide.'**
+  String get documentEmpty;
+
+  /// No description provided for @documentMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce document n\'est pas encore sur cet appareil : synchronisez à la maison, le serveur allumé.'**
+  String get documentMissing;
+
+  /// No description provided for @errorUnknownInsurance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette assurance, tranche, ce document ou ce lien n\'existe plus.'**
+  String get errorUnknownInsurance;
+
+  /// No description provided for @errorInsuranceDocumentInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce document n\'est pas valable.'**
+  String get errorInsuranceDocumentInvalid;
+
+  /// No description provided for @errorInsuranceLinkInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse invalide : elle commence par https:// ou http://.'**
+  String get errorInsuranceLinkInvalid;
+
   /// No description provided for @monthlyTitle.
   ///
   /// In fr, this message translates to:

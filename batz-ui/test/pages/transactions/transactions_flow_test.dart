@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../accounts/accounts_page_test.dart' show createAccount, openAccounts, pumpApp, settle;
+import '../accounts/accounts_page_test.dart' show createAccount, openAccounts, pumpApp, settle, tapInList;
 import '../categories/categories_page_test.dart' show addChild;
 
 Finder tab(String label) => find.descendant(of: find.byType(NavigationBar), matching: find.text(label));
@@ -49,7 +49,7 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('moreCategories')));
+    await tapInList(tester, find.byKey(const Key('moreCategories')));
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining("Créer l'arbre"));
     await settle(tester);

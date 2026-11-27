@@ -1,4 +1,5 @@
 import 'package:batz/data/device_lock.dart';
+import 'package:batz/data/documents/documents.dart';
 import 'package:batz/data/local/database.dart';
 import 'package:batz/data/local/journal.dart';
 import 'package:batz/data/files.dart';
@@ -14,6 +15,7 @@ Future<AppServices> testServices({
   MemorySecretStore? secrets,
   TransportFactory? syncTransport,
   ImportTransportFactory? importTransport,
+  DocumentTransportFactory? documentTransport,
   FileAccess? files,
   CalendarDate Function()? today,
   DeviceLock? deviceLock,
@@ -26,6 +28,7 @@ Future<AppServices> testServices({
     secrets: secrets ?? MemorySecretStore(),
     syncTransport: syncTransport,
     importTransport: importTransport,
+    documentTransport: documentTransport,
     files: files,
     today: today ?? CalendarDate.today,
     deviceLock: deviceLock,

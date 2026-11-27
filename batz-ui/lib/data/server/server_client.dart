@@ -55,7 +55,13 @@ class ServerUnreachableException implements Exception {
 }
 
 class Health {
-  Health({required this.version, required this.minAppVersion, this.syncProtocol, this.importFormats});
+  Health({
+    required this.version,
+    required this.minAppVersion,
+    this.syncProtocol,
+    this.importFormats,
+    this.documents = false,
+  });
   final String version;
   final String minAppVersion;
 
@@ -66,6 +72,9 @@ class Health {
   /// The statement formats the server reads; null for a server older than
   /// the import (before 0.4.0).
   final List<String>? importFormats;
+
+  /// Whether the server keeps documents (since 0.11.0).
+  final bool documents;
 }
 
 /// What the import needs from the server (docs/api.md).
@@ -79,6 +88,19 @@ abstract interface class ImportTransport {
   /// The original file of the statement of [fingerprint], or null when the
   /// server does not hold it (it was rebuilt).
   Future<Uint8List?> statementPdf(String fingerprint);
+}
+
+/// What the documents need from the server (docs/api.md).
+abstract interface class DocumentTransport {
+  Future<Health> health();
+
+  /// Sends a document; the server keeps it and answers with its
+  /// fingerprint.
+  Future<String> uploadDocument(Uint8List file);
+
+  /// The document of [fingerprint], or null when the server does not hold
+  /// it.
+  Future<Uint8List?> document(String fingerprint);
 }
 
 class PairingResult {
@@ -117,7 +139,7 @@ class ServerDevice {
 }
 
 /// Thin HTTP client of the batz-web API (docs/api.md).
-class ServerClient implements SyncTransport, ImportTransport {
+class ServerClient implements SyncTransport, ImportTransport, DocumentTransport {
   /// [pin] is the certificate fingerprint to require; without it the first
   /// certificate seen is accepted and reported to [onCertificate].
   ServerClient(this.baseUrl, {this.pin, this.onCertificate, String? deviceKey})
@@ -153,7 +175,37 @@ class ServerClient implements SyncTransport, ImportTransport {
       minAppVersion: body['minAppVersion'] as String,
       syncProtocol: body['syncProtocol'] as int?,
       importFormats: formats is List ? formats.whereType<String>().toList() : null,
+      documents: body['documents'] == true,
     );
+  }
+
+  /// Sends a document as the raw body of `POST /api/v1/documents`.
+  @override
+  Future<String> uploadDocument(Uint8List file) async {
+    final body = await _send(
+      'POST',
+      '/api/v1/documents',
+      data: file,
+      contentType: 'application/octet-stream',
+      timeout: const Duration(seconds: 120),
+    );
+    return (body! as Map<String, dynamic>)['fingerprint'] as String;
+  }
+
+  @override
+  Future<Uint8List?> document(String fingerprint) async {
+    try {
+      final body = await _send(
+        'GET',
+        '/api/v1/documents/${Uri.encodeComponent(fingerprint)}',
+        responseType: ResponseType.bytes,
+        timeout: const Duration(seconds: 120),
+      );
+      return Uint8List.fromList(body! as List<int>);
+    } on ServerException catch (e) {
+      if (e.code == 'DOCUMENT_NOT_FOUND') return null;
+      rethrow;
+    }
   }
 
   /// Sends a statement file as the raw body of `POST /api/v1/imports`.

@@ -186,8 +186,9 @@ void main() {
         for (final row in file.rows) {
           final value = row[exported.idColumn]!;
           if (value.isEmpty && mayBeEmpty) continue;
-          // A subscription without tranche, a task without box: one row.
-          if ({ExportFiles.subscriptions, ExportFiles.monthlyTasks}.contains(exported.file) &&
+          // A subscription or an insurance without tranche, a task without
+          // box: one row.
+          if ({ExportFiles.subscriptions, ExportFiles.monthlyTasks, ExportFiles.insurances}.contains(exported.file) &&
               exported.idColumn == 'id' &&
               value.isEmpty) {
             continue;

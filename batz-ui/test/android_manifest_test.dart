@@ -56,4 +56,16 @@ void main() {
     // Screenshots stay possible: the window is not marked secure.
     expect(activity, isNot(contains('FLAG_SECURE')));
   });
+
+  // open_filex asks for the media and the storage of the phone; the app only
+  // opens files it wrote in its own cache.
+  test('no access to the photos, videos, music or storage of the phone', () {
+    for (final permission in ['READ_EXTERNAL_STORAGE', 'READ_MEDIA_IMAGES', 'READ_MEDIA_VIDEO', 'READ_MEDIA_AUDIO']) {
+      expect(
+        manifest,
+        contains('<uses-permission android:name="android.permission.$permission" tools:node="remove"/>'),
+        reason: permission,
+      );
+    }
+  });
 }

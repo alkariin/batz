@@ -24,10 +24,19 @@ Future<void> settle(WidgetTester tester) async {
   }
 }
 
+/// Brings [finder], an entry of the list of the screen, to its middle,
+/// clear of the navigation bar, and taps it.
+Future<void> tapInList(WidgetTester tester, Finder finder) async {
+  await tester.scrollUntilVisible(finder, 200);
+  await Scrollable.ensureVisible(tester.element(finder), alignment: 0.5);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+}
+
 Future<void> openAccounts(WidgetTester tester) async {
   await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Plus')));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Comptes'));
+  await tapInList(tester, find.text('Comptes'));
   await tester.pumpAndSettle();
 }
 

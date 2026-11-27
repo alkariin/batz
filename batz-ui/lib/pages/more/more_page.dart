@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../accounts/accounts_page.dart';
 import '../categories/categories_page.dart';
 import '../export/export_page.dart';
+import '../modules/insurances_page.dart';
 import '../modules/electricity_page.dart';
 import '../modules/salary_page.dart';
 import '../modules/subscriptions_page.dart';
@@ -67,6 +68,14 @@ class MorePage extends StatelessWidget {
             subtitle: Text(l.subscriptionsMenuHint),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SubscriptionsPage())),
+          ),
+          ListTile(
+            key: const Key('moreInsurances'),
+            leading: const Icon(Icons.shield_outlined),
+            title: Text(l.insurancesTitle),
+            subtitle: Text(l.insurancesMenuHint),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const InsurancesPage())),
           ),
           const Divider(),
           _Section(l.moreSettings),

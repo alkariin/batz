@@ -58,6 +58,34 @@ func TestStatementFiles(t *testing.T) {
 	assert.ErrorIs(t, err, application.ErrPDFNotFound)
 }
 
+func TestDocumentFiles(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "documents")
+	files := NewDocumentFiles(dir)
+	file := []byte("a scanned policy")
+	fp := application.Fingerprint(file)
+	has, err := files.Has(fp)
+	require.NoError(t, err)
+	assert.False(t, has)
+	_, err = files.Read(fp)
+	assert.ErrorIs(t, err, application.ErrDocumentNotFound)
+
+	require.NoError(t, files.Save(fp, file))
+	has, err = files.Has(fp)
+	require.NoError(t, err)
+	assert.True(t, has)
+	read, err := files.Read(fp)
+	require.NoError(t, err)
+	assert.Equal(t, file, read)
+	entries, err := os.ReadDir(dir)
+	require.NoError(t, err)
+	require.Len(t, entries, 1, "no temporary file left")
+	assert.Equal(t, fp, entries[0].Name())
+
+	assert.Error(t, files.Save("../escape", file))
+	_, err = files.Read("../batz")
+	assert.ErrorIs(t, err, application.ErrDocumentNotFound)
+}
+
 func TestBackupsCopyTheDatabaseAndKeepTheLatest(t *testing.T) {
 	dir := t.TempDir()
 	db, err := Open(filepath.Join(dir, "batz.db"))

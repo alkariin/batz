@@ -56,15 +56,21 @@ func (s *StatementFiles) Save(fingerprint string, file []byte) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(s.dir, 0o700); err != nil {
+	return writeAtomically(s.dir, path, file)
+}
+
+// writeAtomically writes data to path through a temporary file of dir,
+// synchronised then renamed.
+func writeAtomically(dir, path string, data []byte) error {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
 	}
-	tmp, err := os.CreateTemp(s.dir, ".incoming-*")
+	tmp, err := os.CreateTemp(dir, ".incoming-*")
 	if err != nil {
 		return err
 	}
 	defer os.Remove(tmp.Name()) //nolint:errcheck // gone after the rename
-	if _, err := tmp.Write(file); err != nil {
+	if _, err := tmp.Write(data); err != nil {
 		tmp.Close()
 		return err
 	}

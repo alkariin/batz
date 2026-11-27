@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'domain/modules/insurances.dart';
 import 'helpers/theme.dart';
 import 'l10n/app_localizations.dart';
 import 'pages/ledger_cubit.dart';
@@ -36,6 +37,7 @@ class BatzApp extends StatelessWidget {
                 store: services.syncStore,
                 transport: services.syncTransport,
                 onReceived: ledger.load,
+                onSynced: () => services.documents.fetchMissing(ledger.state.ledger.insuranceFingerprints),
               )..start();
             },
             lazy: false,

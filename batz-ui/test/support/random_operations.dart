@@ -17,6 +17,7 @@ import 'package:batz/domain/ledger/refund.dart';
 import 'package:batz/domain/ledger/transaction.dart';
 import 'package:batz/domain/allocation.dart';
 import 'package:batz/domain/modules/electricity.dart';
+import 'package:batz/domain/modules/insurances.dart';
 import 'package:batz/domain/modules/monthly_tasks.dart';
 import 'package:batz/domain/modules/salary.dart';
 import 'package:batz/domain/modules/settings.dart';
@@ -49,6 +50,8 @@ Modification? randomOperation(Ledger l, Random r, String id) {
   if (r.nextInt(100) < 10) return _phase6Operation(l, r, id);
   // The monthly follow-up, now and then.
   if (r.nextInt(100) < 5) return _monthlyOperation(l, r, id);
+  // Insurances, now and then.
+  if (r.nextInt(100) < 5) return _insuranceOperation(l, r, id);
 
   // Weighted: mostly entries and their corrections, like real use.
   final roll = r.nextInt(100);
@@ -339,6 +342,65 @@ Modification? _phase6Operation(Ledger l, Random r, String id) {
         _ => l.deleteSubscription(subscription.id),
       };
   }
+}
+
+/// Insurances, their tranches, documents and links.
+Modification? _insuranceOperation(Ledger l, Random r, String id) {
+  final insurances = l.insurances;
+  final tranches = [for (final i in insurances) ...i.tranches];
+  final documents = [for (final t in tranches) ...t.documents];
+  final links = [for (final t in tranches) ...t.links];
+  InsuranceTrancheDraft tranche() => InsuranceTrancheDraft(
+    start: CalendarDate(2020 + r.nextInt(8), 1 + r.nextInt(12), 1),
+    end: r.nextBool() ? CalendarDate(2030, 12, 31) : null,
+    note: _pick(r, ['', 'Franchise 300', '=note']),
+  );
+  if (insurances.isEmpty || r.nextInt(4) == 0) {
+    return l.createInsurance('ins-$id', 'itr-$id', name: _pick(r, ['Maladie', 'RC ménage', '']), first: tranche());
+  }
+  final insurance = _pick(r, insurances);
+  switch (r.nextInt(10)) {
+    case 0:
+      return l.renameInsurance(insurance.id, _pick(r, ['Voiture', 'Vie']));
+    case 1:
+      return l.deleteInsurance(insurance.id);
+    case 2:
+      return l.addInsuranceTranche(insurance.id, 'itr-$id', tranche());
+    case 3 when tranches.isNotEmpty:
+      return l.updateInsuranceTranche(_pick(r, tranches).id, tranche());
+    case 4 when tranches.isNotEmpty:
+      return l.deleteInsuranceTranche(_pick(r, tranches).id);
+    case 5 || 6 when tranches.isNotEmpty:
+      return l.addInsuranceDocument(
+        _pick(r, tranches).id,
+        'doc-$id',
+        InsuranceDocumentDraft(
+          kind: _pick(r, InsuranceDocumentKind.values),
+          name: _pick(r, ['Police 2026', 'Contrat', '-scan']),
+          fingerprint: r.nextInt(1 << 30).toRadixString(16).padLeft(64, 'a'),
+          size: 1 + r.nextInt(1000000),
+          mediaType: _pick(r, ['application/pdf', 'image/jpeg']),
+        ),
+      );
+    case 7 when documents.isNotEmpty:
+      final d = _pick(r, documents);
+      return r.nextBool()
+          ? l.deleteInsuranceDocument(d.id)
+          : l.updateInsuranceDocument(d.id, kind: _pick(r, InsuranceDocumentKind.values), name: 'Renommé');
+    case 8 when tranches.isNotEmpty:
+      return l.addInsuranceLink(
+        _pick(r, tranches).id,
+        'lnk-$id',
+        label: _pick(r, ['Portail', '']),
+        url: 'https://assurance.example/$id',
+      );
+    case 9 when links.isNotEmpty:
+      final link = _pick(r, links);
+      return r.nextBool()
+          ? l.deleteInsuranceLink(link.id)
+          : l.updateInsuranceLink(link.id, label: 'Espace client', url: link.url);
+  }
+  return null;
 }
 
 /// Tasks of the monthly follow-up and their boxes.

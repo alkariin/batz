@@ -27,7 +27,7 @@ void main() {
     }
   }
 
-  test('the eighteen files, in their order', () {
+  test('the twenty-one files, in their order', () {
     expect(files.map((f) => f.name), ExportFiles.all);
   });
 

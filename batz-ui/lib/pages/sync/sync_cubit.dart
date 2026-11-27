@@ -120,6 +120,7 @@ class SyncCubit extends Cubit<SyncState> {
     required this._store,
     TransportFactory? transport,
     this._onReceived,
+    this._onSynced,
     this.debounce = const Duration(seconds: 3),
     this.period = const Duration(minutes: 5),
   }) : _transport = transport ?? _client,
@@ -135,6 +136,11 @@ class SyncCubit extends Cubit<SyncState> {
 
   /// Reloads the screens after an exchange that received entries.
   final Future<void> Function()? _onReceived;
+
+  /// Runs after every exchange that went to its end, once the screens are
+  /// reloaded: the documents missing on the device are downloaded. A
+  /// failure there is no failure of the exchange, and is not shown.
+  final Future<void> Function()? _onSynced;
 
   /// Delay between a modification and the exchange that sends it.
   final Duration debounce;
@@ -277,6 +283,7 @@ class SyncCubit extends Cubit<SyncState> {
     emit(state.copyWith(status: SyncStatus.syncing));
     final transport = _transport(pairing);
     var received = false;
+    var synced = false;
     try {
       final report = replace
           ? await _engine.replace(transport, pairingId: pairing.deviceId)
@@ -293,6 +300,7 @@ class SyncCubit extends Cubit<SyncState> {
         ),
       );
       received = report.receivedEntries > 0 || report.replaced;
+      synced = true;
     } catch (error) {
       final memory = await _store.read(pairing.deviceId);
       final pending = await _journal.pendingFor(memory?.known ?? KnownState.empty);
@@ -309,6 +317,13 @@ class SyncCubit extends Cubit<SyncState> {
         await _onReceived?.call();
       } catch (error, stackTrace) {
         if (!isClosed) addError(error, stackTrace);
+      }
+    }
+    if (synced && !isClosed) {
+      try {
+        await _onSynced?.call();
+      } catch (_) {
+        // Tried again at the next exchange.
       }
     }
   }

@@ -11,6 +11,7 @@ import '../ledger/category.dart';
 import '../ledger/ledger.dart';
 import '../ledger/transaction.dart';
 import '../modules/settings.dart';
+import '../modules/insurances.dart';
 import '../modules/monthly_tasks.dart';
 import '../modules/subscriptions.dart';
 import '../modules/taxes.dart';
@@ -156,6 +157,19 @@ abstract final class ExportHeaders {
   static const subscriptions = ['Abonnement', 'Note', 'Montant', 'Fréquence', 'Début', 'Fin', 'id', 'idAbonnement'];
   static const moduleSettings = ['Module', 'Nom de la catégorie liée', 'Nom choisi', 'id'];
   static const monthlyTasks = ['Tâche', 'Compte lié', 'Depuis', 'Ordre', 'Mois', 'Cochée', 'id', 'idTâche', 'idCompte'];
+  static const insurances = ['Assurance', 'Début', 'Fin', 'Note', 'id', 'idAssurance'];
+  static const insuranceDocuments = [
+    'Assurance',
+    'Début de la tranche',
+    'Genre',
+    'Nom',
+    'Type',
+    'Taille (octets)',
+    'Empreinte du fichier',
+    'id',
+    'idTranche',
+  ];
+  static const insuranceLinks = ['Assurance', 'Début de la tranche', 'Libellé', 'Lien', 'id', 'idTranche'];
 
   static const byFile = {
     ExportFiles.accounts: accounts,
@@ -176,10 +190,13 @@ abstract final class ExportHeaders {
     ExportFiles.subscriptions: subscriptions,
     ExportFiles.moduleSettings: moduleSettings,
     ExportFiles.monthlyTasks: monthlyTasks,
+    ExportFiles.insurances: insurances,
+    ExportFiles.insuranceDocuments: insuranceDocuments,
+    ExportFiles.insuranceLinks: insuranceLinks,
   };
 }
 
-/// The eighteen CSV files of an export of [ledger], in the order of
+/// The twenty-one CSV files of an export of [ledger], in the order of
 /// [ExportFiles.all].
 List<ExportFile> exportFiles(Ledger ledger) => _Exporter(ledger).files();
 
@@ -212,6 +229,9 @@ class _Exporter {
     _file(ExportFiles.subscriptions, _subscriptions()),
     _file(ExportFiles.moduleSettings, _moduleSettings()),
     _file(ExportFiles.monthlyTasks, _monthlyTasks()),
+    _file(ExportFiles.insurances, _insurances()),
+    _file(ExportFiles.insuranceDocuments, _insuranceDocuments()),
+    _file(ExportFiles.insuranceLinks, _insuranceLinks()),
   ];
 
   ExportFile _file(String name, List<List<Cell?>> rows) => ExportFile(name, ExportHeaders.byFile[name]!, rows);
@@ -727,4 +747,43 @@ class _Exporter {
     }
     return rows;
   }
+
+  /// One row per tranche; an insurance without tranche has one row.
+  List<List<Cell?>> _insurances() => [
+    for (final i in ledger.insurances)
+      for (final t in i.tranches.isEmpty ? const <InsuranceTranche?>[null] : i.tranches)
+        [
+          TextCell(i.name),
+          _date(t?.start),
+          _date(t?.end),
+          t == null ? null : TextCell(t.note),
+          _id(t?.id),
+          PlainCell(i.id),
+        ],
+  ];
+
+  /// One row per document: what describes it; its file is not in the export.
+  List<List<Cell?>> _insuranceDocuments() => [
+    for (final i in ledger.insurances)
+      for (final t in i.tranches)
+        for (final d in t.documents)
+          [
+            TextCell(i.name),
+            _date(t.start),
+            PlainCell(ExportLabels.documentKinds[d.kind]!),
+            TextCell(d.name),
+            TextCell(d.mediaType),
+            IntCell(d.size),
+            PlainCell(d.fingerprint),
+            PlainCell(d.id),
+            PlainCell(t.id),
+          ],
+  ];
+
+  List<List<Cell?>> _insuranceLinks() => [
+    for (final i in ledger.insurances)
+      for (final t in i.tranches)
+        for (final l in t.links)
+          [TextCell(i.name), _date(t.start), TextCell(l.label), TextCell(l.url), PlainCell(l.id), PlainCell(t.id)],
+  ];
 }

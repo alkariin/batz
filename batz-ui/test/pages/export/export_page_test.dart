@@ -40,6 +40,18 @@ class SaveDialog implements FileAccess {
     if (accept) saved[fileName] = bytes;
     return accept;
   }
+
+  @override
+  Future<PickedFile?> pickDocument() async => null;
+
+  @override
+  Future<bool> saveDocument(String fileName, Uint8List bytes) async => false;
+
+  @override
+  Future<bool> openDocument(String fileName, Uint8List bytes) async => false;
+
+  @override
+  Future<bool> openLink(String url) async => false;
 }
 
 void main() {
@@ -79,7 +91,7 @@ void main() {
     expect(files.saved.keys, ['batz-export-2026-11-21.zip']);
     expect(
       tester.widget<Text>(find.byKey(const Key('exportOutcome'))).data,
-      'Export enregistré : 18 fichiers CSV et LISEZMOI.txt, 4 transactions.',
+      'Export enregistré : 21 fichiers CSV et LISEZMOI.txt, 4 transactions.',
     );
     final zip = ZipDecoder().decodeBytes(files.saved.values.single, verify: true);
     expect(zip.files.map((f) => f.name), [...ExportFiles.all, readmeFileName]);

@@ -1,4 +1,5 @@
 import 'electricity.dart';
+import 'insurances.dart';
 import 'monthly_tasks.dart';
 import 'salary.dart';
 import 'settings.dart';
@@ -21,7 +22,12 @@ class ModuleRecords {
     Iterable<Tranche> tranches = const [],
     Iterable<MonthlyTask> monthlyTasks = const [],
     Iterable<MonthlyCheck> monthlyChecks = const [],
+    Iterable<Insurance> insurances = const [],
+    Iterable<InsuranceTranche> insuranceTranches = const [],
+    Iterable<InsuranceDocument> insuranceDocuments = const [],
+    Iterable<InsuranceLink> insuranceLinks = const [],
   }) : subscriptions = _subscriptions(subscriptions, tranches),
+       insurances = _insurances(insurances, insuranceTranches, insuranceDocuments, insuranceLinks),
        monthlyTasks = {for (final t in monthlyTasks) t.id: t},
        monthlyChecks = {for (final c in monthlyChecks) c.id: c},
        tripSheets = {for (final t in tripSheets) t.id: t},
@@ -40,6 +46,33 @@ class ModuleRecords {
     }
     return {
       for (final s in subscriptions) s.id: s.withTranches([...s.tranches, ...?bySubscription[s.id]]),
+    };
+  }
+
+  /// The insurances by identifier, each with its tranches and their
+  /// documents and links; what lost its parent is left out.
+  static Map<String, Insurance> _insurances(
+    Iterable<Insurance> insurances,
+    Iterable<InsuranceTranche> tranches,
+    Iterable<InsuranceDocument> documents,
+    Iterable<InsuranceLink> links,
+  ) {
+    final documentsByTranche = <String, List<InsuranceDocument>>{};
+    for (final d in documents) {
+      (documentsByTranche[d.trancheId] ??= []).add(d);
+    }
+    final linksByTranche = <String, List<InsuranceLink>>{};
+    for (final l in links) {
+      (linksByTranche[l.trancheId] ??= []).add(l);
+    }
+    final byInsurance = <String, List<InsuranceTranche>>{};
+    for (final t in tranches) {
+      (byInsurance[t.insuranceId] ??= []).add(
+        t.withContent([...t.documents, ...?documentsByTranche[t.id]], [...t.links, ...?linksByTranche[t.id]]),
+      );
+    }
+    return {
+      for (final i in insurances) i.id: i.withTranches([...i.tranches, ...?byInsurance[i.id]]),
     };
   }
 
@@ -88,4 +121,8 @@ class ModuleRecords {
   /// unchecked, by identifier.
   final Map<String, MonthlyTask> monthlyTasks;
   final Map<String, MonthlyCheck> monthlyChecks;
+
+  /// The insurances, each with its tranches and their documents and links,
+  /// by identifier.
+  final Map<String, Insurance> insurances;
 }

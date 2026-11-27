@@ -489,7 +489,7 @@ The table of 2025 shows 15'000.00 of accounts added (the private account and
 ## Modules
 
 The screens made to measure: salary sheet, flow diagram, taxes, vacations,
-electricity and subscriptions. The debts, the seventh module, are under
+electricity, subscriptions and insurances. The debts, the seventh module, are under
 [Debts](#debts). Code: `batz-ui/lib/domain/modules/` (one file per module),
 screens in `batz-ui/lib/pages/modules/`.
 
@@ -680,6 +680,35 @@ it had no end. The tranches of a subscription do not overlap.
   not over, and costs what that tranche costs. Then come those **to come**,
   then those **ended**. The **totals** add the costs of the current ones.
 
+### Insurances
+
+« Plus › Assurances ». Informative, linked to nothing else: each insurance
+the user names (« Maladie », « RC ménage », « Voiture »…) has tranches, a
+period of its contract each, from a start to an optional end; adding one
+closes the previous tranche the day before, if it had no end, and the
+tranches of an insurance do not overlap. Each tranche holds:
+
+- **documents**: a PDF or a picture, of the kind « Contrat », « Police » or
+  « Autre », with a name. Adding one sends the file to the server, so the
+  server must be reachable (at home); each device then keeps a copy, so a
+  document opens offline, with the app of the system that shows it, or is
+  saved elsewhere. Code: `batz-ui/lib/data/documents/`.
+- **links**: an address (`https://…`) with an optional label, opened in the
+  browser;
+- **a note**.
+
+The tranche **in force** is the one that covers today; the screen of an
+insurance shows it, and folds the others until asked for. The list of the
+insurances shows each one's tranche in force and its number of documents.
+
+**The files.** The server keeps each file under its fingerprint
+(`documents/` of its data directory) and knows nothing else of it; the
+journal holds what describes it (tranche, kind, name, fingerprint, size,
+type). After every exchange that goes to its end, a device downloads the
+files it lacks into a table of its local database (encrypted on Android);
+a file still missing is downloaded when opened. Deleting a document keeps
+its file on the server.
+
 ## Monthly follow-up
 
 What is done and what is left to do, month by month: import the statements,
@@ -740,8 +769,9 @@ the expected files of an example ledger are in `batz-ui/test/fixtures/export/`.
 Everything entered or imported, in its state of the day: accounts, declared
 balances, statements, the category tree of each year, mapping and
 redistribution rules, transactions and their lines, the answers for carried
-shares, debts, what is entered in the modules, and the tasks of the
-monthly follow-up with the boxes the user touched.
+shares, debts, what is entered in the modules, the insurances with what
+describes their documents, and the tasks of the monthly follow-up with the
+boxes the user touched.
 
 Not exported:
 
@@ -749,7 +779,8 @@ Not exported:
   diagram, the proposals of the rules for the lines to validate, the boxes
   of the monthly follow-up that imports check;
 - the history of the modifications, and what was deleted;
-- the original PDF statements (they stay on the server);
+- the original statements and the files of the documents of the
+  insurances (they stay on the server, and the documents on the devices);
 - the pairing with the server and the choices of the device.
 
 A few computed values are written all the same, so that a row reads on its
@@ -790,7 +821,7 @@ says the same in French.
 
 ### Files
 
-Eighteen CSV files, always present (a file without data holds its headers),
+Twenty-one CSV files, always present (a file without data holds its headers),
 and `LISEZMOI.txt`: the date of the export, the version of the app, the
 number of transactions, each file with its number of rows, what is left out,
 the format, how to open a file in Excel, and a pointer to this section.
@@ -814,6 +845,9 @@ the format, how to open a file in Excel, and a pointer to this section.
 | `electricite.csv` | line that carries kWh | Date de paiement; Description; Début de période; Fin de période; Montant; kWh; id; idLigne; idTransaction |
 | `abonnements.csv` | tranche of a subscription | Abonnement; Note; Montant; Fréquence; Début; Fin; id; idAbonnement |
 | `reglages-modules.csv` | module | Module; Nom de la catégorie liée; Nom choisi; id |
+| `assurances.csv` | tranche of an insurance (an insurance without tranche: one row) | Assurance; Début; Fin; Note; id; idAssurance |
+| `assurances-documents.csv` | document of a tranche | Assurance; Début de la tranche; Genre; Nom; Type; Taille (octets); Empreinte du fichier; id; idTranche |
+| `assurances-liens.csv` | link of a tranche | Assurance; Début de la tranche; Libellé; Lien; id; idTranche |
 | `suivi-mensuel.csv` | box checked or unchecked by the user (a task without box: one row) | Tâche; Compte lié; Depuis; Ordre; Mois; Cochée; id; idTâche; idCompte |
 
 Notes:

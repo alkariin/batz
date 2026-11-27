@@ -10,7 +10,7 @@ attached to each GitHub release.
 
 | Variable | Default (image) | Meaning |
 |---|---|---|
-| `BATZ_DATA_DIR` | `/data` | Database (paired devices and the reference copy of the journal), TLS certificate, original statement files (`statements/`) and dated copies of the database (`backups/`). Back this up. |
+| `BATZ_DATA_DIR` | `/data` | Database (paired devices and the reference copy of the journal), TLS certificate, original statement files (`statements/`), documents of the insurances (`documents/`) and dated copies of the database (`backups/`). Back this up. |
 | `BATZ_PORT` | `8443` | HTTPS port. |
 | `BATZ_BACKUPS` | `12` | Dated copies of the database kept in `backups/`, one written before each new statement file (1 to 1000). |
 

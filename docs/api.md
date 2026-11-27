@@ -38,11 +38,14 @@ for humans.
 | 413 | `SYNC_PAGE_TOO_LARGE` | More than 10 000 entries, or a body over 32 MiB. |
 | 400 | `SYNC_PAGE_INVALID` | A malformed entry, known state or `since`; entries not sorted, sent twice, or not after `since`. The whole page is refused. |
 | 409 | `SYNC_STATE_CHANGED` | The page continues from more than the server holds (`since`); start again from the server's state. |
-| 422 | `IMPORT_UNREADABLE` | The file is not a PDF pdftotext can read. |
-| 422 | `IMPORT_UNKNOWN_FORMAT` | The PDF is no statement in a format the server knows. |
+| 422 | `IMPORT_UNREADABLE` | The file is a PDF pdftotext cannot read. |
+| 422 | `IMPORT_UNKNOWN_FORMAT` | The file is no statement in a format the server knows (a PostFinance PDF, a Neon CSV). |
 | 422 | `IMPORT_INCONSISTENT` | The statement fails a check, named in `check`: `layout`, `currency`, `period`, `runningBalance`, `totals`, `closingBalance`. |
 | 413 | `IMPORT_TOO_LARGE` | A statement file over 10 MiB. |
 | 404 | `IMPORT_PDF_NOT_FOUND` | The server holds no original file with that fingerprint (never sent, or the server was rebuilt). |
+| 400 | `DOCUMENT_EMPTY` | A document of no byte. |
+| 413 | `DOCUMENT_TOO_LARGE` | A document over 25 MiB. |
+| 404 | `DOCUMENT_NOT_FOUND` | The server holds no document with that fingerprint. |
 | 404 | `NOT_FOUND` | No such route. |
 | 500 | `INTERNAL` | Unexpected failure, logged by the server. |
 
@@ -51,7 +54,7 @@ for humans.
 No authentication.
 
 ```json
-{ "status": "ok", "version": "v0.8.0-alpha", "minAppVersion": "0.7.0", "syncProtocol": 1, "importFormats": ["postfinance", "neon"] }
+{ "status": "ok", "version": "v0.8.0-alpha", "minAppVersion": "0.7.0", "syncProtocol": 1, "importFormats": ["postfinance", "neon"], "documents": true }
 ```
 
 | Field | Meaning |
@@ -60,6 +63,7 @@ No authentication.
 | `minAppVersion` | The oldest app version the server works with. |
 | `syncProtocol` | The version of the exchange protocol it speaks (absent before 0.3.0). |
 | `importFormats` | The statement formats it reads (absent before 0.4.0; `neon` since 0.11.0). |
+| `documents` | Whether it keeps documents (absent before 0.11.0). |
 
 The app checks them before synchronising and importing, and says why it
 refuses ([protocol](architecture.md#protocol)).
@@ -248,3 +252,25 @@ Refusals: `422` with `IMPORT_UNREADABLE`, `IMPORT_UNKNOWN_FORMAT` or
 The original file of a statement, as `application/pdf`, or as
 `text/csv; charset=utf-8` for an export (the route keeps its name);
 `404 IMPORT_PDF_NOT_FOUND` when the server does not hold it.
+
+## `POST /api/v1/documents`
+
+Sends a document of the insurances: the file is the raw request body, 25
+MiB at most. The server keeps it under its fingerprint and knows nothing
+else of it: the journal says what it is attached to.
+
+Response `201` (a file the server did not hold) or `200` (the same file
+again: nothing written):
+
+```json
+{ "fingerprint": "5f01af3b…", "size": 120345 }
+```
+
+Refusals: `400 DOCUMENT_EMPTY`, `413 DOCUMENT_TOO_LARGE`. The logs hold the
+size and the start of the fingerprint, never the content.
+
+## `GET /api/v1/documents/{fingerprint}`
+
+The document, as `application/octet-stream` (the app knows its type);
+`404 DOCUMENT_NOT_FOUND` when the server does not hold it (never sent, or
+the server was rebuilt).

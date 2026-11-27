@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/fake_device_lock.dart';
 import '../../support/services.dart';
+import '../accounts/accounts_page_test.dart' show tapInList;
 
 final _lockScreen = find.byKey(const Key('lockScreen'));
 final _unlockButton = find.byKey(const Key('unlockButton'));
@@ -115,7 +116,7 @@ void main() {
     // A form, half filled: Plus › Comptes › new account.
     await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Plus')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Comptes'));
+    await tapInList(tester, find.text('Comptes'));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Nouveau compte'));
     await tester.pumpAndSettle();

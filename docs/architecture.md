@@ -11,7 +11,7 @@ the technical choices in [decisions](decisions.md).
 | Part | Does | Does not |
 |---|---|---|
 | App (`batz-ui`) | Every calculation, on a full local copy of the data. | Depend on the server to work. |
-| Server (`batz-web`) | Pair devices; keep the reference copy of the change journal; extract and check statements (PDF) and exports (CSV), keep the original files. | Interpret the journal, decide what is imported, or compute anything accounting-related. |
+| Server (`batz-web`) | Pair devices; keep the reference copy of the change journal; extract and check statements (PDF) and exports (CSV), keep the original files and the documents. | Interpret the journal, decide what is imported, or compute anything accounting-related. |
 
 The server is on the home network only and runs at weekends; the app needs
 it only to synchronise and to import statements.
@@ -45,7 +45,8 @@ batz-web/src
   and `BATZ_BACKUPS` (`12`), read once by `config.Load`.
 - **Data directory**, the only state to back up: `batz.db` (SQLite, WAL),
   `tls/server.crt` and `tls/server.key`, `statements/<fingerprint>.pdf` or
-  `.csv` (the original files) and `backups/batz-<time>.db` (dated copies of the database).
+  `.csv` (the original files), `documents/<fingerprint>` (the documents of
+  the insurances) and `backups/batz-<time>.db` (dated copies of the database).
 - **Migrations** are embedded in the binary (`go:embed`) and applied at start
   by golang-migrate: an image carries exactly the schema of its version.
 - **HTTPS only**, with no plain HTTP listener: the certificate (ECDSA P-256,
@@ -161,6 +162,8 @@ use plain SQLite.
 | `tripSheet` | `trip_sheets` | lineId (absent for a manual line), place, days, date, amount |
 | `electricityReading` | `electricity_readings` | lineId, wh |
 | `subscription`, `subscriptionTranche` | `subscriptions`, `subscription_tranches` | name, note; subscriptionId, amount, frequency, start, end |
+| `insurance`, `insuranceTranche` | `insurances`, `insurance_tranches` | name; insuranceId, start, end, note |
+| `insuranceDocument`, `insuranceLink` | `insurance_documents`, `insurance_links` | trancheId, kind (`contract`, `policy`, `other`), name, fingerprint, size, mediaType; trancheId, label, url |
 | `monthlyTask`, `monthlyCheck` | `monthly_tasks`, `monthly_checks` | name, position, accountId, since (`2026-11`); taskId, month, done (identifier computed from the task and the month) |
 
 `LedgerRepository` reads every table into an immutable `Ledger`, leaving out
@@ -195,6 +198,27 @@ and `linesNamed`, and never classify again) and the export (`exportFiles`,
 `buildExportArchive`) are computed from the `Ledger` when a screen needs
 them; only what the user enters is stored. What they compute is in
 [features](features.md).
+
+### Documents
+
+The files of the documents of the insurances do not go through the journal,
+which holds only scalars, and stay out of the derived tables:
+
+- **Adding** one sends it to the server (`POST /api/v1/documents`), which
+  keeps it under its fingerprint and nothing else; then the app keeps it in
+  `document_files` (fingerprint, bytes), a table of the local database
+  created at first use, encrypted on Android with the rest, never
+  synchronised, and writes the record that describes it. Without a server
+  reachable, nothing is added.
+- **After every exchange** that goes to its end, `SyncCubit` calls
+  `Documents.fetchMissing`: the files the journal names and the device
+  lacks are downloaded (`GET /api/v1/documents/{fingerprint}`), checked
+  against their fingerprint and kept; a failure waits for the next exchange.
+  A file still missing is downloaded when opened.
+- **Opening** writes the file in the temporary folder of the app and hands
+  it to the system (`open_filex`: on Android through its FileProvider, the
+  permissions it asks for removed from the manifest); links open in the
+  browser (`url_launcher`).
 
 ## Pairing and certificate pinning
 

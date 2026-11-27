@@ -39,7 +39,8 @@ import (
 // Files and directories of the data directory.
 const (
 	dbFile        = "batz.db"
-	statementsDir = "statements" // original PDF files, named by fingerprint
+	statementsDir = "statements" // original statement files, named by fingerprint
+	documentsDir  = "documents"  // documents of the apps (insurances), named by fingerprint
 	backupsDir    = "backups"    // dated copies of the database
 )
 
@@ -176,10 +177,12 @@ func serve(cfg config.Config) error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	router := web.NewRouter(devices, sync, imports, web.Health{
+	documents := application.NewDocuments(persistence.NewDocumentFiles(filepath.Join(cfg.DataDir, documentsDir)))
+	router := web.NewRouter(devices, sync, imports, documents, web.Health{
 		Version:       version.Version,
 		MinAppVersion: version.MinAppVersion,
 		ImportFormats: extractor.Formats(),
+		Documents:     true,
 	})
 	err = web.Serve(ctx, web.NewServer(router, cert), ln)
 	slog.Info("batz-web stopped")

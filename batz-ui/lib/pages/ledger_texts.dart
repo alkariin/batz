@@ -64,6 +64,9 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.statementNoNewLines => l.errorStatementNoNewLines,
   LedgerError.unknownMonthlyTask => l.errorUnknownMonthlyTask,
   LedgerError.monthlyTaskAccountNotDetailed => l.errorMonthlyTaskAccountNotDetailed,
+  LedgerError.unknownInsurance => l.errorUnknownInsurance,
+  LedgerError.insuranceDocumentInvalid => l.errorInsuranceDocumentInvalid,
+  LedgerError.insuranceLinkInvalid => l.errorInsuranceLinkInvalid,
   LedgerError.statementLinesBeforeFirst => switch (e) {
     StatementRefusedException(:final foundStart?, :final expectedStart?) => l.errorStatementLinesBeforeFirst(
       formatDate(foundStart.toDateTime()),

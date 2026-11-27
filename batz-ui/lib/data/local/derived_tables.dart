@@ -8,6 +8,7 @@ import '../../domain/ledger/share_classification.dart';
 import '../../domain/ledger/statement.dart';
 import '../../domain/ledger/transaction.dart';
 import '../../domain/modules/electricity.dart';
+import '../../domain/modules/insurances.dart';
 import '../../domain/modules/monthly_tasks.dart';
 import '../../domain/modules/salary.dart';
 import '../../domain/modules/settings.dart';
@@ -133,6 +134,10 @@ final List<DerivedTable> appDerivedTables = [
   tranchesTable,
   monthlyTasksTable,
   monthlyChecksTable,
+  insurancesTable,
+  insuranceTranchesTable,
+  insuranceDocumentsTable,
+  insuranceLinksTable,
 ];
 
 final accountsTable = DerivedTable(
@@ -391,5 +396,45 @@ final monthlyChecksTable = DerivedTable(
     MonthlyCheckFields.taskId: const DerivedColumn.text('task_id'),
     MonthlyCheckFields.month: const DerivedColumn.text('month'),
     MonthlyCheckFields.done: const DerivedColumn.integer('done'),
+  },
+);
+
+final insurancesTable = DerivedTable(
+  entity: InsuranceFields.entity,
+  table: 'insurances',
+  columns: {InsuranceFields.name: const DerivedColumn.text('name')},
+);
+
+final insuranceTranchesTable = DerivedTable(
+  entity: InsuranceTrancheFields.entity,
+  table: 'insurance_tranches',
+  columns: {
+    InsuranceTrancheFields.insuranceId: const DerivedColumn.text('insurance_id'),
+    InsuranceTrancheFields.start: const DerivedColumn.text('start'),
+    InsuranceTrancheFields.end: const DerivedColumn.text('end_date'),
+    InsuranceTrancheFields.note: const DerivedColumn.text('note'),
+  },
+);
+
+final insuranceDocumentsTable = DerivedTable(
+  entity: InsuranceDocumentFields.entity,
+  table: 'insurance_documents',
+  columns: {
+    InsuranceDocumentFields.trancheId: const DerivedColumn.text('tranche_id'),
+    InsuranceDocumentFields.kind: const DerivedColumn.text('kind'),
+    InsuranceDocumentFields.name: const DerivedColumn.text('name'),
+    InsuranceDocumentFields.fingerprint: const DerivedColumn.text('fingerprint'),
+    InsuranceDocumentFields.size: const DerivedColumn.integer('size'),
+    InsuranceDocumentFields.mediaType: const DerivedColumn.text('media_type'),
+  },
+);
+
+final insuranceLinksTable = DerivedTable(
+  entity: InsuranceLinkFields.entity,
+  table: 'insurance_links',
+  columns: {
+    InsuranceLinkFields.trancheId: const DerivedColumn.text('tranche_id'),
+    InsuranceLinkFields.label: const DerivedColumn.text('label'),
+    InsuranceLinkFields.url: const DerivedColumn.text('url'),
   },
 );

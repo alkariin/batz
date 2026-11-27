@@ -11,12 +11,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../accounts/accounts_page_test.dart' show pumpApp, settle;
+import '../accounts/accounts_page_test.dart' show pumpApp, settle, tapInList;
 
 Future<void> openCategories(WidgetTester tester) async {
   await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Plus')));
   await tester.pumpAndSettle();
-  await tester.tap(find.byKey(const Key('moreCategories')));
+  await tapInList(tester, find.byKey(const Key('moreCategories')));
   await tester.pumpAndSettle();
 }
 

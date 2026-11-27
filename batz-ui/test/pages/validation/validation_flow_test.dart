@@ -15,7 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/services.dart';
 import '../../support/statements.dart';
-import '../accounts/accounts_page_test.dart' show settle;
+import '../accounts/accounts_page_test.dart' show settle, tapInList;
 
 void main() {
   final january = fixtureStatement('2026-01');
@@ -192,7 +192,7 @@ void main() {
       // The rules of the year, under their category in Plus.
       await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Plus')));
       await settle(tester);
-      await tester.tap(find.byKey(const Key('moreCategories')));
+      await tapInList(tester, find.byKey(const Key('moreCategories')));
       await settle(tester);
       await tester.scrollUntilVisible(find.text('épicerie du coin'), 200);
       expect(find.text('épicerie du coin'), findsOneWidget);

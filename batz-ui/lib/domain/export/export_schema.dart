@@ -17,6 +17,7 @@ import '../ledger/transaction.dart';
 import '../modules/electricity.dart';
 import '../modules/salary.dart';
 import '../modules/settings.dart';
+import '../modules/insurances.dart';
 import '../modules/monthly_tasks.dart';
 import '../modules/subscriptions.dart';
 import '../modules/taxes.dart';
@@ -42,6 +43,9 @@ abstract final class ExportFiles {
   static const subscriptions = 'abonnements.csv';
   static const moduleSettings = 'reglages-modules.csv';
   static const monthlyTasks = 'suivi-mensuel.csv';
+  static const insurances = 'assurances.csv';
+  static const insuranceDocuments = 'assurances-documents.csv';
+  static const insuranceLinks = 'assurances-liens.csv';
 
   static const all = [
     accounts,
@@ -62,6 +66,9 @@ abstract final class ExportFiles {
     subscriptions,
     moduleSettings,
     monthlyTasks,
+    insurances,
+    insuranceDocuments,
+    insuranceLinks,
   ];
 }
 
@@ -109,6 +116,12 @@ abstract final class ExportLabels {
   };
 
   static const frequencies = {TrancheFrequency.monthly: 'mensuel', TrancheFrequency.yearly: 'annuel'};
+
+  static const documentKinds = {
+    InsuranceDocumentKind.contract: 'contrat',
+    InsuranceDocumentKind.policy: 'police',
+    InsuranceDocumentKind.other: 'autre',
+  };
 
   static const modules = {
     ModuleKind.salary: 'Fiche salaire',
@@ -475,6 +488,46 @@ final Map<String, ExportedEntity> exportSchema = {
       MonthlyCheckFields.taskId: ExportColumn('idTâche', _id),
       MonthlyCheckFields.month: ExportColumn('Mois', _text),
       MonthlyCheckFields.done: ExportColumn('Cochée', ExportKind.flag),
+    },
+  ),
+  InsuranceFields.entity: const ExportedEntity(
+    file: ExportFiles.insurances,
+    idColumn: 'idAssurance',
+    fields: {InsuranceFields.name: ExportColumn('Assurance', _text)},
+  ),
+  InsuranceTrancheFields.entity: const ExportedEntity(
+    file: ExportFiles.insurances,
+    idColumn: 'id',
+    fields: {
+      InsuranceTrancheFields.insuranceId: ExportColumn('idAssurance', _id),
+      InsuranceTrancheFields.start: ExportColumn('Début', _date),
+      InsuranceTrancheFields.end: ExportColumn('Fin', _date),
+      InsuranceTrancheFields.note: ExportColumn('Note', _text),
+    },
+  ),
+  InsuranceDocumentFields.entity: ExportedEntity(
+    file: ExportFiles.insuranceDocuments,
+    idColumn: 'id',
+    fields: {
+      InsuranceDocumentFields.trancheId: const ExportColumn('idTranche', _id),
+      InsuranceDocumentFields.kind: ExportColumn(
+        'Genre',
+        ExportKind.label,
+        labels: ExportLabels.byName(ExportLabels.documentKinds),
+      ),
+      InsuranceDocumentFields.name: const ExportColumn('Nom', _text),
+      InsuranceDocumentFields.mediaType: const ExportColumn('Type', _text),
+      InsuranceDocumentFields.size: const ExportColumn('Taille (octets)', ExportKind.integer),
+      InsuranceDocumentFields.fingerprint: const ExportColumn('Empreinte du fichier', _id),
+    },
+  ),
+  InsuranceLinkFields.entity: const ExportedEntity(
+    file: ExportFiles.insuranceLinks,
+    idColumn: 'id',
+    fields: {
+      InsuranceLinkFields.trancheId: ExportColumn('idTranche', _id),
+      InsuranceLinkFields.label: ExportColumn('Libellé', _text),
+      InsuranceLinkFields.url: ExportColumn('Lien', _text),
     },
   ),
 };

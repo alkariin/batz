@@ -297,6 +297,26 @@ allocation as the payment. Fixed amounts come before percentages, which
 apply to what remains, so a source never changes sign. Refunds give nothing:
 a refund of the rent pays no charges.
 
+### Documents: on the server, copied on every device
+
+The journal holds scalars; a file in it would weigh on every exchange and
+stay in its history. The server keeps the files under their fingerprint, as
+it keeps the original statements; every device keeps a copy in a table of
+its local database (encrypted on Android), downloaded after each exchange,
+because the server is only on at home and not always: a document must open
+on the phone away from home. Adding a document needs the server; nothing
+is uploaded later. A document deleted keeps its file on the server, which
+does not read the journal.
+
+### Opening a document: `open_filex`, without its permissions
+
+`url_launcher` opens links everywhere and files on the desktops, but not a
+file on Android, which needs a FileProvider: `open_filex` 5.0.0 brings one.
+It also declares the access to the storage and to the photos, videos and
+music of the phone; the app opens only files it wrote in its own temporary
+folder, so the manifest removes them (`tools:node="remove"`), and a test
+keeps them out.
+
 ### Monthly follow-up: boxes stored only when touched
 
 A task linked to a detailed account is checked by its imports, computed at

@@ -92,6 +92,9 @@ enum LedgerError {
   // Modules.
   unknownMonthlyTask,
   monthlyTaskAccountNotDetailed,
+  unknownInsurance,
+  insuranceDocumentInvalid,
+  insuranceLinkInvalid,
   moduleCategoryRequired,
   unknownSalarySheet,
   salaryGrossRequired,

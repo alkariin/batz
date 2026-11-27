@@ -13,6 +13,7 @@ import '../../domain/ledger/share_classification.dart';
 import '../../domain/ledger/statement.dart';
 import '../../domain/ledger/transaction.dart';
 import '../../domain/modules/electricity.dart';
+import '../../domain/modules/insurances.dart';
 import '../../domain/modules/monthly_tasks.dart';
 import '../../domain/modules/module_records.dart';
 import '../../domain/modules/salary.dart';
@@ -91,7 +92,7 @@ class LedgerRepository {
   Future<ModuleRecords> _modules() async {
     final (
       (settings, sheets, deductions, taxYears, taxLines, trips, readings, subscriptions, tranches),
-      (tasks, checks),
+      (tasks, checks, insurances, insuranceTranches, insuranceDocuments, insuranceLinks),
     ) = await (
       (
         _rows(moduleSettingsTable, _moduleSetting),
@@ -104,7 +105,14 @@ class LedgerRepository {
         _rows(subscriptionsTable, _subscription),
         _rows(tranchesTable, _tranche),
       ).wait,
-      (_rows(monthlyTasksTable, _monthlyTask), _rows(monthlyChecksTable, _monthlyCheck)).wait,
+      (
+        _rows(monthlyTasksTable, _monthlyTask),
+        _rows(monthlyChecksTable, _monthlyCheck),
+        _rows(insurancesTable, _insurance),
+        _rows(insuranceTranchesTable, _insuranceTranche),
+        _rows(insuranceDocumentsTable, _insuranceDocument),
+        _rows(insuranceLinksTable, _insuranceLink),
+      ).wait,
     ).wait;
     return ModuleRecords(
       settings: settings,
@@ -118,7 +126,60 @@ class LedgerRepository {
       tranches: tranches,
       monthlyTasks: tasks,
       monthlyChecks: checks,
+      insurances: insurances,
+      insuranceTranches: insuranceTranches,
+      insuranceDocuments: insuranceDocuments,
+      insuranceLinks: insuranceLinks,
     );
+  }
+
+  /// An insurance needs a name.
+  static Insurance? _insurance(Map<String, Object?> row) {
+    final name = _string(row['name']);
+    if (name == null) return null;
+    return Insurance(id: row['id']! as String, name: name);
+  }
+
+  /// A tranche needs its insurance and a start; its end is optional.
+  static InsuranceTranche? _insuranceTranche(Map<String, Object?> row) {
+    final insuranceId = _string(row['insurance_id']);
+    final start = _date(row['start']);
+    if (insuranceId == null || start == null) return null;
+    return InsuranceTranche(
+      id: row['id']! as String,
+      insuranceId: insuranceId,
+      start: start,
+      end: _date(row['end_date']),
+      note: row['note'] is String ? row['note']! as String : '',
+    );
+  }
+
+  /// A document needs its tranche, a known kind, a name, the fingerprint and
+  /// the size of its file.
+  static InsuranceDocument? _insuranceDocument(Map<String, Object?> row) {
+    final trancheId = _string(row['tranche_id']);
+    final kind = _enum(InsuranceDocumentKind.values, row['kind']);
+    final name = _string(row['name']);
+    final fingerprint = _string(row['fingerprint']);
+    final size = row['size'];
+    if (trancheId == null || kind == null || name == null || fingerprint == null || size is! int) return null;
+    return InsuranceDocument(
+      id: row['id']! as String,
+      trancheId: trancheId,
+      kind: kind,
+      name: name,
+      fingerprint: fingerprint,
+      size: size,
+      mediaType: _string(row['media_type']) ?? 'application/octet-stream',
+    );
+  }
+
+  /// A link needs its tranche and an address.
+  static InsuranceLink? _insuranceLink(Map<String, Object?> row) {
+    final trancheId = _string(row['tranche_id']);
+    final url = _string(row['url']);
+    if (trancheId == null || url == null) return null;
+    return InsuranceLink(id: row['id']! as String, trancheId: trancheId, label: _string(row['label']) ?? url, url: url);
   }
 
   /// A task of the monthly follow-up needs a name and the month it starts.

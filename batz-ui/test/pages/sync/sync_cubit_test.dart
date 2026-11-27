@@ -46,7 +46,12 @@ void main() {
     await server.close();
   });
 
-  SyncCubit cubit({int debounce = 3000, int period = 300000, Future<void> Function()? onReceived}) {
+  SyncCubit cubit({
+    int debounce = 3000,
+    int period = 300000,
+    Future<void> Function()? onReceived,
+    Future<void> Function()? onSynced,
+  }) {
     final c = SyncCubit(
       server: ServerRepository(secrets),
       journal: device.journal,
@@ -54,6 +59,7 @@ void main() {
       store: SyncStore(device.db),
       transport: (_) => fake,
       onReceived: onReceived ?? () async => reloads++,
+      onSynced: onSynced,
       debounce: Duration(milliseconds: debounce),
       period: Duration(milliseconds: period),
     );
@@ -105,6 +111,21 @@ void main() {
     expect(c.state.error, isNull);
     expect(c.state.lastSync, isNotNull);
     expect((await device.notes()).keys, containsAll(['mine', 'theirs']));
+  });
+
+  test('after every exchange gone to its end, the documents are fetched; a failure there is no error', () async {
+    var fetches = 0;
+    final c = cubit(
+      onSynced: () async {
+        fetches++;
+        throw StateError('the server keeps no documents');
+      },
+    );
+    await c.start();
+    expect((c.state.status, c.state.error, fetches), (SyncStatus.upToDate, null, 1));
+    fake.failNext = ServerUnreachableException('off');
+    await c.sync(manual: true);
+    expect((c.state.status, fetches), (SyncStatus.offline, 1), reason: 'not after a failed exchange');
   });
 
   test('a server out of reach gives the offline status, no error, and counts what waits', () async {

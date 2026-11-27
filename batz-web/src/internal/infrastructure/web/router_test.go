@@ -26,7 +26,9 @@ type fixture struct {
 	imports *application.Imports
 	backups *persistence.Backups
 	handler http.Handler
-	now     time.Time
+	// documentsDir holds the documents the apps send.
+	documentsDir string
+	now          time.Time
 }
 
 func newFixture(t *testing.T) *fixture {
@@ -43,7 +45,11 @@ func newFixture(t *testing.T) *fixture {
 		return f.now
 	})
 	f.imports = application.NewImports(extraction.New(), persistence.NewStatementFiles(filepath.Join(dir, "statements")), f.backups)
-	f.handler = NewRouter(f.devices, sync, f.imports, Health{Version: "v9.9.9", MinAppVersion: "0.1.0", ImportFormats: []string{"postfinance", "neon"}})
+	f.documentsDir = filepath.Join(dir, "documents")
+	documents := application.NewDocuments(persistence.NewDocumentFiles(f.documentsDir))
+	f.handler = NewRouter(f.devices, sync, f.imports, documents, Health{
+		Version: "v9.9.9", MinAppVersion: "0.1.0", ImportFormats: []string{"postfinance", "neon"}, Documents: true,
+	})
 	return f
 }
 
@@ -95,6 +101,7 @@ func TestHealthz(t *testing.T) {
 	assert.Equal(t, map[string]any{
 		"status": "ok", "version": "v9.9.9", "minAppVersion": "0.1.0", "syncProtocol": float64(1),
 		"importFormats": []any{"postfinance", "neon"},
+		"documents":     true,
 	}, body)
 }
 

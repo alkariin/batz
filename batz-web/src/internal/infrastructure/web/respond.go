@@ -39,6 +39,10 @@ const (
 	CodeImportInconsistent  = statement.CodeInconsistent
 	CodeImportTooLarge      = "IMPORT_TOO_LARGE"
 	CodeImportPDFNotFound   = "IMPORT_PDF_NOT_FOUND"
+
+	CodeDocumentTooLarge = "DOCUMENT_TOO_LARGE"
+	CodeDocumentEmpty    = "DOCUMENT_EMPTY"
+	CodeDocumentNotFound = "DOCUMENT_NOT_FOUND"
 )
 
 // ErrorBody is the JSON body of every error response. Check names the
@@ -82,6 +86,10 @@ func fail(c *gin.Context, err error) {
 		abort(c, http.StatusConflict, CodeSyncStateChanged, err.Error())
 	case errors.Is(err, application.ErrPDFNotFound):
 		abort(c, http.StatusNotFound, CodeImportPDFNotFound, err.Error())
+	case errors.Is(err, application.ErrDocumentNotFound):
+		abort(c, http.StatusNotFound, CodeDocumentNotFound, err.Error())
+	case errors.Is(err, application.ErrDocumentEmpty):
+		abort(c, http.StatusBadRequest, CodeDocumentEmpty, err.Error())
 	default:
 		slog.Error("request failed", "method", c.Request.Method, "path", c.FullPath(), "error", err)
 		abort(c, http.StatusInternalServerError, CodeInternal, "internal error")

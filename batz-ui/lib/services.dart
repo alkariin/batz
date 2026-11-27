@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 import 'data/device_lock.dart';
+import 'data/documents/document_store.dart';
+import 'data/documents/documents.dart';
 import 'data/files.dart';
 import 'data/ledger/ledger_repository.dart';
 import 'data/local/database.dart';
@@ -25,6 +27,7 @@ class AppServices {
     required this.secrets,
     this.syncTransport,
     this.importTransport,
+    DocumentTransportFactory? documentTransport,
     FileAccess? files,
     this.today = CalendarDate.today,
     this.deviceLock,
@@ -32,6 +35,7 @@ class AppServices {
   }) : server = ServerRepository(secrets),
        files = files ?? SystemFileAccess(),
        ledger = LedgerRepository(database, journal),
+       documents = Documents(DocumentStore(database), ServerRepository(secrets), transport: documentTransport),
        preferences = PreferencesStore(database),
        syncStore = SyncStore(database) {
     syncEngine = SyncEngine(journal, syncStore);
@@ -75,6 +79,10 @@ class AppServices {
 
   /// The system dialogs that pick and save files.
   final FileAccess files;
+
+  /// The files of the documents of the insurances: on the server and copied
+  /// here.
+  final Documents documents;
 
   /// Today on this device's calendar: the day balances may be declared up
   /// to, debts are entered and checked, and the wealth is seen. Tests set

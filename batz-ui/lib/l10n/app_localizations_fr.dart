@@ -1123,6 +1123,222 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get insurancesTitle => 'Assurances';
+
+  @override
+  String get insurancesMenuHint => 'Contrats, polices et liens de chaque assurance, tranche par tranche.';
+
+  @override
+  String get insurancesEmpty => 'Aucune assurance. Ajoutez-en une avec le bouton +.';
+
+  @override
+  String get insuranceNew => 'Nouvelle assurance';
+
+  @override
+  String get insuranceName => 'Assurance';
+
+  @override
+  String get insuranceNameHint => 'Maladie, RC ménage, voiture…';
+
+  @override
+  String get insuranceRename => 'Renommer';
+
+  @override
+  String get insuranceDelete => 'Supprimer l\'assurance';
+
+  @override
+  String insuranceDeleteConfirm(String name) {
+    return 'Supprimer l\'assurance « $name », ses tranches, leurs documents et leurs liens ?';
+  }
+
+  @override
+  String get insuranceDeleted => 'Assurance supprimée.';
+
+  @override
+  String insuranceActiveSince(String date) {
+    return 'En cours depuis le $date';
+  }
+
+  @override
+  String insuranceActiveUntil(String start, String end) {
+    return 'En cours, du $start au $end';
+  }
+
+  @override
+  String get insuranceNoActive => 'Aucune tranche en cours';
+
+  @override
+  String insuranceDocumentsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count documents',
+      one: 'un document',
+      zero: 'aucun document',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String insuranceTrancheTitle(String start) {
+    return 'Du $start';
+  }
+
+  @override
+  String insuranceTrancheTitleEnd(String start, String end) {
+    return 'Du $start au $end';
+  }
+
+  @override
+  String get insuranceTrancheActive => 'En cours';
+
+  @override
+  String get insuranceTrancheNew => 'Nouvelle tranche';
+
+  @override
+  String get insuranceTrancheEdit => 'Modifier la tranche';
+
+  @override
+  String get insuranceTrancheDelete => 'Supprimer la tranche';
+
+  @override
+  String get insuranceTrancheDeleteConfirm => 'Supprimer cette tranche, ses documents et ses liens ?';
+
+  @override
+  String get insuranceTrancheStart => 'Début';
+
+  @override
+  String get insuranceTrancheEnd => 'Fin (facultative)';
+
+  @override
+  String get insuranceTrancheHint => 'Une nouvelle tranche ferme la veille de son début celle qui n\'avait pas de fin.';
+
+  @override
+  String get insuranceNote => 'Note';
+
+  @override
+  String get insuranceNoteEdit => 'Modifier la note';
+
+  @override
+  String get insuranceNoNote => 'Aucune note.';
+
+  @override
+  String insuranceOthers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Afficher les $count autres tranches',
+      one: 'Afficher l\'autre tranche',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get insuranceOthersHide => 'Masquer les autres tranches';
+
+  @override
+  String get insuranceDocuments => 'Documents';
+
+  @override
+  String get insuranceDocumentAdd => 'Ajouter un document';
+
+  @override
+  String get insuranceDocumentAdding => 'Envoi du document au serveur…';
+
+  @override
+  String get insuranceDocumentAdded => 'Document ajouté.';
+
+  @override
+  String get insuranceDocumentKind => 'Genre';
+
+  @override
+  String get insuranceDocumentName => 'Nom';
+
+  @override
+  String get insuranceDocumentContract => 'Contrat';
+
+  @override
+  String get insuranceDocumentPolicy => 'Police';
+
+  @override
+  String get insuranceDocumentOther => 'Autre';
+
+  @override
+  String get insuranceDocumentOpen => 'Ouvrir';
+
+  @override
+  String get insuranceDocumentSave => 'Enregistrer sous…';
+
+  @override
+  String get insuranceDocumentSaved => 'Document enregistré.';
+
+  @override
+  String get insuranceDocumentEdit => 'Modifier';
+
+  @override
+  String get insuranceDocumentDelete => 'Supprimer';
+
+  @override
+  String insuranceDocumentDeleteConfirm(String name) {
+    return 'Supprimer le document « $name » ? Le serveur en garde le fichier.';
+  }
+
+  @override
+  String get insuranceDocumentCannotOpen => 'Aucune application de cet appareil n\'ouvre ce document : enregistrez-le.';
+
+  @override
+  String get insuranceLinks => 'Liens';
+
+  @override
+  String get insuranceLinkAdd => 'Ajouter un lien';
+
+  @override
+  String get insuranceLinkLabel => 'Libellé (facultatif)';
+
+  @override
+  String get insuranceLinkUrl => 'Adresse';
+
+  @override
+  String get insuranceLinkEdit => 'Modifier';
+
+  @override
+  String get insuranceLinkDelete => 'Supprimer';
+
+  @override
+  String get insuranceLinkCannotOpen => 'Ce lien ne s\'ouvre pas sur cet appareil.';
+
+  @override
+  String get documentNotPaired => 'Les documents passent par le serveur : associez-en un dans Plus › Serveur.';
+
+  @override
+  String get documentUnreachable => 'Le serveur ne répond pas : à la maison, le serveur allumé, réessayez.';
+
+  @override
+  String get documentServerChanged => 'Le serveur a changé de certificat : associez-le à nouveau.';
+
+  @override
+  String get documentServerTooOld => 'Le serveur est trop ancien pour garder des documents : mettez-le à jour.';
+
+  @override
+  String get documentTooLarge => 'Ce fichier dépasse 25 Mo.';
+
+  @override
+  String get documentEmpty => 'Ce fichier est vide.';
+
+  @override
+  String get documentMissing =>
+      'Ce document n\'est pas encore sur cet appareil : synchronisez à la maison, le serveur allumé.';
+
+  @override
+  String get errorUnknownInsurance => 'Cette assurance, tranche, ce document ou ce lien n\'existe plus.';
+
+  @override
+  String get errorInsuranceDocumentInvalid => 'Ce document n\'est pas valable.';
+
+  @override
+  String get errorInsuranceLinkInvalid => 'Adresse invalide : elle commence par https:// ou http://.';
+
+  @override
   String get monthlyTitle => 'Suivi mensuel';
 
   @override
