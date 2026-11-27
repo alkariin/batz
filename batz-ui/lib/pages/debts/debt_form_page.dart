@@ -21,12 +21,16 @@ import '../transactions/transaction_texts.dart';
 /// starts from it and keeps the link: its date of invoice is the date of the
 /// transaction. A debt repaid by a transaction shows it, with its date.
 class DebtFormPage extends StatefulWidget {
-  const DebtFormPage({super.key, this.debt, this.source});
+  const DebtFormPage({super.key, this.debt, this.source, this.description});
 
   final Debt? debt;
 
   /// The transaction a new debt comes from.
   final LedgerTransaction? source;
+
+  /// The description a new debt starts from, when it is not that of
+  /// [source]: the one typed for a line being validated.
+  final String? description;
 
   @override
   State<DebtFormPage> createState() => _DebtFormPageState();
@@ -51,7 +55,9 @@ class _DebtFormPageState extends State<DebtFormPage> {
   late final _invoice = _dateController(widget.debt?.invoiceDate ?? widget.source?.date);
   late final _request = _dateController(widget.debt?.requestDate);
   late final _received = _dateController(widget.debt?.receivedDate);
-  late final _description = TextEditingController(text: widget.debt?.description ?? widget.source?.description);
+  late final _description = TextEditingController(
+    text: widget.debt?.description ?? widget.description ?? widget.source?.description,
+  );
   late bool _repaid = widget.debt?.repaid ?? false;
   String? _dateError;
 

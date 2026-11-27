@@ -13,11 +13,12 @@ import '../ledger_texts.dart';
 import 'debt_form_page.dart';
 
 /// One debt in a few words: its person and total, its direction and state.
-Widget debtTile(BuildContext context, Debt debt, {required String relation}) {
+Widget debtTile(BuildContext context, Debt debt, {required String relation, EdgeInsetsGeometry? contentPadding}) {
   final l = AppLocalizations.of(context);
   return ListTile(
     key: ValueKey('linkedDebt-${debt.id}'),
     dense: true,
+    contentPadding: contentPadding,
     leading: const Icon(Icons.handshake_outlined),
     title: Text('${debt.person} · ${formatAmount(debt.total)}'),
     subtitle: Text(

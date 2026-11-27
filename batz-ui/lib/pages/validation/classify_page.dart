@@ -9,6 +9,7 @@ import '../../domain/ledger/rule.dart';
 import '../../domain/ledger/transaction.dart';
 import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
+import '../debts/debt_form_page.dart';
 import '../debts/debt_links.dart';
 import '../../domain/ledger/debt.dart';
 import '../../domain/ids.dart';
@@ -28,7 +29,7 @@ enum _Mode { category, transfer, refund }
 /// with another account, or, for money that came in, a refund attached to
 /// an expense; its description and note. Validating it writes the
 /// classification; for a proposed line it is the correction of the proposal. «
-/// Créer une règle » starts from it.
+/// Créer une règle » starts from it, and so does a debt it gives rise to.
 class ClassifyPage extends StatefulWidget {
   const ClassifyPage({super.key, required this.transactionId});
 
@@ -376,11 +377,49 @@ class _ClassifyPageState extends State<ClassifyPage> {
             label: Text(l.classifyCreateRule),
             onPressed: () => _createRule(t),
           ),
+          ..._debts(context, ledger, t),
+        ],
+      ),
+    );
+  }
+
+  /// The debts of the line: those it gave rise to, which can be created
+  /// here before it is validated, and those it repaid.
+  List<Widget> _debts(BuildContext context, Ledger ledger, LedgerTransaction t) {
+    final l = AppLocalizations.of(context);
+    final from = ledger.debtsFrom(t.id), repaid = ledger.debtsRepaidBy(t.id);
+    final repayable = ledger.debtsRepayableBy(t);
+    // A transfer gives rise to no debt.
+    final canCreate = _mode != _Mode.transfer;
+    if (!canCreate && from.isEmpty && repaid.isEmpty && repayable.isEmpty) return const [];
+    return [
+      const SizedBox(height: 16),
+      const Divider(),
+      Text(l.debtsTitle, style: Theme.of(context).textTheme.titleMedium),
+      for (final debt in from) debtTile(context, debt, relation: l.debtFromThis, contentPadding: EdgeInsets.zero),
+      for (final debt in repaid) debtTile(context, debt, relation: l.debtRepaidByThis, contentPadding: EdgeInsets.zero),
+      const SizedBox(height: 8),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          if (canCreate)
+            OutlinedButton.icon(
+              key: const Key('classifyCreateDebt'),
+              icon: const Icon(Icons.add),
+              label: Text(l.debtCreateFromTransaction),
+              // The debt starts from the description typed so far; the line
+              // stays to validate until it is.
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => DebtFormPage(source: t, description: _description.text),
+                ),
+              ),
+            ),
           // A line that repays a debt: once linked, a refund of the expense
           // the debt came from is validated with it; otherwise it is
           // classified here as usual.
-          if (ledger.debtsRepayableBy(t).isNotEmpty) ...[
-            const SizedBox(height: 8),
+          if (repayable.isNotEmpty)
             OutlinedButton.icon(
               key: const Key('classifyRepayDebt'),
               icon: const Icon(Icons.done_all),
@@ -393,9 +432,8 @@ class _ClassifyPageState extends State<ClassifyPage> {
                 }
               },
             ),
-          ],
         ],
       ),
-    );
+    ];
   }
 }

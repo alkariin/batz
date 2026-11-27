@@ -328,10 +328,12 @@ and of the transaction of the repayment, a description and whether it is
 repaid; the app also records the days it was entered and checked.
 
 - **From a transaction**: « Créer une dette » on the screen of a
-  transaction (not a transfer) starts a debt from it: « on me doit » for
-  money that left, « je dois » for money that came in, its amount, its
-  description, its date as the date of the event. The debt keeps the link;
-  its date of invoice is the date of the transaction.
+  transaction (not a transfer), or of a line being validated (not as a
+  transfer), starts a debt from it: « on me doit » for money that left,
+  « je dois » for money that came in, its amount, its description (for a
+  line being validated, the one typed so far), its date as the date of the
+  event. The debt keeps the link; its date of invoice is the date of the
+  transaction. A line being validated stays to validate until it is.
 - **Repaid by a transaction**: « Rembourse une dette » on the screen of a
   transaction, or of a line being validated, lists the open debts it can
   repay (owed to me for money that came in, owed by me for money that went

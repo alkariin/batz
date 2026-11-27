@@ -2,8 +2,10 @@ import 'package:batz/app.dart';
 import 'package:batz/domain/journal/journal_entry.dart';
 import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/category.dart';
+import 'package:batz/domain/ledger/debt.dart';
 import 'package:batz/domain/ledger/ledger.dart';
 import 'package:batz/domain/ledger/rule.dart';
+import 'package:batz/helpers/formats.dart';
 import 'package:batz/pages/ledger_cubit.dart';
 import 'package:batz/pages/shell.dart';
 import 'package:batz/services.dart';
@@ -320,5 +322,59 @@ void main() {
     final confirmed = after.transactions[bread.first]!;
     expect((confirmed.isValidated, confirmed.line?.categoryId), (true, 'food'));
     expect([for (final id in bread.skip(1)) after.transactions[id]!.isValidated], [false, false]);
+  });
+
+  testWidgets('a debt is created from a line being validated: it keeps the link, the line is validated after it', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.tap(find.byKey(const Key('taskLinesToValidate')));
+    await settle(tester);
+    final epicerie = (await ledger(tester)).linesToValidate.firstWhere((t) => t.rawText!.contains('Épicerie du Coin'));
+    await showLine(tester, epicerie.id);
+    await tester.tap(find.byKey(ValueKey('toComplete-${epicerie.id}')));
+    await settle(tester);
+    await pick(tester, const Key('classifyCategory'), 'Nourriture');
+    await tester.enterText(find.byKey(const Key('classifyDescription')), 'Courses pour Alex');
+
+    // A transfer gives rise to no debt.
+    await tester.tap(find.text('Transfert'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('classifyCreateDebt')), findsNothing);
+    await tester.tap(find.text('Catégorie').first);
+    await tester.pumpAndSettle();
+
+    // The debt starts from the line and the description typed.
+    await tester.ensureVisible(find.byKey(const Key('classifyCreateDebt')));
+    await tester.tap(find.byKey(const Key('classifyCreateDebt')));
+    await settle(tester);
+    final cents = epicerie.amount.abs();
+    expect(tester.widget<TextField>(find.byKey(const Key('debtAmount'))).controller!.text, formatAmount(cents));
+    expect(tester.widget<TextField>(find.byKey(const Key('debtDescription'))).controller!.text, 'Courses pour Alex');
+    await tester.enterText(find.byKey(const Key('debtPerson')), 'Alex');
+    await tester.ensureVisible(find.byKey(const Key('saveDebt')));
+    await tester.tap(find.byKey(const Key('saveDebt')));
+    await settle(tester);
+
+    // Back on the line, still to validate, which shows its debt.
+    expect(find.byKey(const Key('classifyRawText')), findsOneWidget);
+    var current = await ledger(tester);
+    final debt = current.debts.values.single;
+    expect(
+      (debt.sourceTransactionId, debt.direction, debt.total, debt.invoiceDate),
+      (epicerie.id, DebtDirection.owedToMe, cents, epicerie.date),
+    );
+    expect(current.transactions[epicerie.id]!.isValidated, isFalse);
+    await tester.ensureVisible(find.byKey(ValueKey('linkedDebt-${debt.id}')));
+    expect(find.text('Alex · ${formatAmount(cents)}'), findsOneWidget);
+
+    // The classification chosen before the debt is kept.
+    await tester.ensureVisible(find.byKey(const Key('classifyValidate')));
+    await tester.tap(find.byKey(const Key('classifyValidate')));
+    await settle(tester);
+    current = await ledger(tester);
+    final t = current.transactions[epicerie.id]!;
+    expect((t.isValidated, t.line?.categoryId, t.description), (true, 'food', 'Courses pour Alex'));
+    expect(current.debtsFrom(epicerie.id), [debt]);
   });
 }
