@@ -12,12 +12,13 @@ class PickedFile {
 
 /// Choosing and saving files through the system dialogs.
 abstract interface class FileAccess {
-  /// Lets the user pick a PDF file; null when cancelled.
-  Future<PickedFile?> pickPdf();
-
-  /// Lets the user save [bytes] as a PDF named [fileName]; false when
+  /// Lets the user pick a statement: a PDF or a CSV export; null when
   /// cancelled.
-  Future<bool> savePdf(String fileName, Uint8List bytes);
+  Future<PickedFile?> pickStatement();
+
+  /// Lets the user save [bytes], the original file of a statement (PDF or
+  /// CSV, after the extension of [fileName]); false when cancelled.
+  Future<bool> saveStatement(String fileName, Uint8List bytes);
 
   /// Lets the user save [bytes] as a ZIP named [fileName] (an export);
   /// false when cancelled, and then nothing is written.
@@ -29,15 +30,20 @@ abstract interface class FileAccess {
 /// dialogs on Windows.
 class SystemFileAccess implements FileAccess {
   @override
-  Future<PickedFile?> pickPdf() async {
-    final file = await FilePicker.pickFile(type: FileType.custom, allowedExtensions: const ['pdf']);
+  Future<PickedFile?> pickStatement() async {
+    final file = await FilePicker.pickFile(type: FileType.custom, allowedExtensions: const ['pdf', 'csv']);
     if (file == null) return null;
     return PickedFile(file.name, await file.readAsBytes());
   }
 
   @override
-  Future<bool> savePdf(String fileName, Uint8List bytes) async =>
-      await FilePicker.saveFile(fileName: fileName, bytes: bytes, mimeType: 'application/pdf') != null;
+  Future<bool> saveStatement(String fileName, Uint8List bytes) async =>
+      await FilePicker.saveFile(
+        fileName: fileName,
+        bytes: bytes,
+        mimeType: fileName.endsWith('.csv') ? 'text/csv' : 'application/pdf',
+      ) !=
+      null;
 
   @override
   Future<bool> saveZip(String fileName, Uint8List bytes) async =>

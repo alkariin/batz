@@ -18,8 +18,8 @@ func ptr(n int64) *int64 { return &n }
 func valid() Statement {
 	return Statement{
 		Format: "postfinance", IBAN: "CH0090000000123456789", Currency: "CHF",
-		PeriodStart: d(1), PeriodEnd: d(31), OpeningBalance: 100000, ClosingBalance: 105000,
-		TotalCredits: 20000, TotalDebits: 15000,
+		PeriodStart: d(1), PeriodEnd: d(31), OpeningBalance: ptr(100000), ClosingBalance: ptr(105000),
+		TotalCredits: ptr(20000), TotalDebits: ptr(15000),
 		Lines: []Line{
 			{Date: d(2), Amount: -5000},
 			{Date: d(2), Amount: -10000, Balance: ptr(85000)},
@@ -42,8 +42,23 @@ func check(t *testing.T, s Statement) string {
 func TestAConsistentStatementPasses(t *testing.T) {
 	assert.NoError(t, valid().Check())
 	empty := valid()
-	empty.Lines, empty.TotalCredits, empty.TotalDebits, empty.ClosingBalance = nil, 0, 0, 100000
+	empty.Lines, empty.TotalCredits, empty.TotalDebits, empty.ClosingBalance = nil, ptr(0), ptr(0), ptr(100000)
 	assert.NoError(t, empty.Check(), "a month without movement")
+}
+
+// An export of transactions prints no balance and no total: only the
+// currency and the period are checked.
+func TestAStatementWithoutBalancesChecksItsPeriod(t *testing.T) {
+	s := valid()
+	s.OpeningBalance, s.ClosingBalance, s.TotalCredits, s.TotalDebits = nil, nil, nil, nil
+	s.Lines[1].Balance, s.Lines[2].Balance = nil, nil
+	assert.NoError(t, s.Check())
+	s.Lines[2].Date = Date{2026, time.April, 1}
+	assert.Equal(t, CheckPeriod, check(t, s))
+
+	half := valid()
+	half.ClosingBalance = nil
+	assert.Equal(t, CheckLayout, check(t, half), "one balance without the other")
 }
 
 func TestEachCheck(t *testing.T) {
@@ -51,8 +66,8 @@ func TestEachCheck(t *testing.T) {
 		CheckCurrency:       func(s *Statement) { s.Currency = "EUR" },
 		CheckPeriod:         func(s *Statement) { s.Lines[2].Date = Date{2026, time.April, 1} },
 		CheckRunningBalance: func(s *Statement) { s.Lines[1].Balance = ptr(85001) },
-		CheckTotals:         func(s *Statement) { s.TotalDebits = 15001 },
-		CheckClosingBalance: func(s *Statement) { s.ClosingBalance = 105001 },
+		CheckTotals:         func(s *Statement) { s.TotalDebits = ptr(15001) },
+		CheckClosingBalance: func(s *Statement) { s.ClosingBalance = ptr(105001) },
 	}
 	for want, corrupt := range cases {
 		t.Run(want, func(t *testing.T) {

@@ -247,6 +247,9 @@ class Balances {
     final movements = <String, List<Movement>>{};
     for (final t in ledger.transactions.values) {
       (movements[t.accountId] ??= []).add(Movement(t, t.amount, arrival: false));
+      // The two lines of a transfer between detailed accounts each count on
+      // their own account: neither arrives on the other.
+      if (ledger.transferPairs.containsKey(t.id)) continue;
       if (counterpartOf(t) case final counterpart?) {
         (movements[counterpart] ??= []).add(Movement(t, -t.amount, arrival: true));
       }

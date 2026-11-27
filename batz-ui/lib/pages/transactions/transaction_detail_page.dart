@@ -5,6 +5,7 @@ import '../../domain/allocation.dart';
 import '../../domain/ledger/ledger.dart';
 import '../../domain/ledger/refund.dart';
 import '../../domain/ledger/transaction.dart';
+import '../../domain/ledger/transfer_pairs.dart';
 import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
 import '../debts/debt_links.dart';
@@ -86,6 +87,7 @@ class TransactionDetailPage extends StatelessWidget {
           row(l.fieldDate, formatDate(t.date.toDateTime())),
           row(l.fieldAccount, accountsText(l, ledger, t)),
           row(l.detailType, kindText(l, ledger.kindOf(t))),
+          ..._pair(context, ledger, t),
           if (!t.isSplit)
             if (ledger.categoryOf(t) case final category?) row(l.fieldCategory, category.name),
           if (t.description.isNotEmpty) row(l.fieldDescription, t.description),
@@ -135,6 +137,38 @@ class TransactionDetailPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// The line of the other account of a transfer between imported
+  /// accounts, or that it is missing.
+  List<Widget> _pair(BuildContext context, Ledger ledger, LedgerTransaction t) {
+    final l = AppLocalizations.of(context);
+    if (ledger.pairedLineOf(t) case final other?) {
+      return [
+        ListTile(
+          key: const Key('pairedLine'),
+          dense: true,
+          leading: const Icon(Icons.link),
+          title: Text(l.pairedTitle),
+          subtitle: Text(
+            '${ledger.accounts[other.accountId]?.name ?? '?'} · ${formatDate(other.date.toDateTime())} · '
+            '${formatAmount(other.amount)}',
+          ),
+          onTap: () =>
+              Navigator.of(context)
+                  .push(MaterialPageRoute<void>(builder: (_) => TransactionDetailPage(transactionId: other.id))),
+        ),
+      ];
+    }
+    if (!ledger.unpairedTransfers.contains(t)) return const [];
+    return [
+      ListTile(
+        key: const Key('pairedMissing'),
+        dense: true,
+        leading: Icon(Icons.link_off, color: Theme.of(context).colorScheme.error),
+        title: Text(l.pairedMissing(ledger.accounts[t.counterpartAccountId]?.name ?? '?', pairWindowDays)),
+      ),
+    ];
   }
 
   /// The shares of every line, added up month by month, in order.

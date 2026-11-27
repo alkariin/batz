@@ -29,10 +29,10 @@ class SaveDialog implements FileAccess {
   var asked = 0;
 
   @override
-  Future<PickedFile?> pickPdf() async => null;
+  Future<PickedFile?> pickStatement() async => null;
 
   @override
-  Future<bool> savePdf(String fileName, Uint8List bytes) async => false;
+  Future<bool> saveStatement(String fileName, Uint8List bytes) async => false;
 
   @override
   Future<bool> saveZip(String fileName, Uint8List bytes) async {

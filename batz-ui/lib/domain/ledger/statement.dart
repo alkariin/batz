@@ -15,12 +15,19 @@ abstract final class StatementFields {
   static const openingBalance = 'openingBalance';
   static const closingBalance = 'closingBalance';
 
-  /// SHA-256 of the PDF file: the server keeps the file under it.
+  /// SHA-256 of the file: the server keeps the file under it.
   static const fingerprint = 'fingerprint';
 }
 
 /// A statement imported into a detailed account. Its lines are the
 /// transactions whose `statementId` is its identifier.
+///
+/// The import of an export without balances (Neon) is one too: its lines
+/// are those the export brought that no earlier export had; its period runs
+/// from the day after the previous import (from its first line for the
+/// first one) to the day of the import; its closing balance is the one the
+/// user typed, its opening one the closing balance of the previous import
+/// (for the first one, the balance typed less the lines).
 class Statement extends Equatable {
   const Statement({
     required this.id,
@@ -70,7 +77,15 @@ String statementId(String accountId, String fingerprint) => derivedId('statement
 /// Identifier of the transaction of line [rank] (from 0) of a statement.
 String importedTransactionId(String statementId, int rank) => derivedId('statement-line/$statementId/$rank');
 
-/// What the server read in a statement file (`POST /api/v1/imports`).
+/// Identifier of a line of an export without balances: computed from the
+/// account, the date, the amount and the raw text of the line, and its rank
+/// among the identical lines of the file ([occurrence], from 0), so that an
+/// export that overlaps an earlier one brings only its new lines.
+String exportedTransactionId(String accountId, CalendarDate date, int amount, String rawText, int occurrence) =>
+    derivedId('export-line/$accountId/${date.encode()}/$amount/$occurrence/$rawText');
+
+/// What the server read in a statement file (`POST /api/v1/imports`). An
+/// export without balances (Neon) has neither balances nor totals.
 class ExtractedStatement {
   const ExtractedStatement({
     required this.format,
@@ -78,10 +93,10 @@ class ExtractedStatement {
     required this.currency,
     required this.periodStart,
     required this.periodEnd,
-    required this.openingBalance,
-    required this.closingBalance,
-    required this.totalCredits,
-    required this.totalDebits,
+    this.openingBalance,
+    this.closingBalance,
+    this.totalCredits,
+    this.totalDebits,
     required this.lines,
   });
 
@@ -90,10 +105,10 @@ class ExtractedStatement {
   final String currency;
   final CalendarDate periodStart;
   final CalendarDate periodEnd;
-  final int openingBalance;
-  final int closingBalance;
-  final int totalCredits;
-  final int totalDebits;
+  final int? openingBalance;
+  final int? closingBalance;
+  final int? totalCredits;
+  final int? totalDebits;
   final List<ExtractedLine> lines;
 }
 
@@ -122,6 +137,22 @@ class ExtractedLine {
 
   /// The balance the statement prints after this line, if any.
   final int? balance;
+}
+
+/// What an export without balances would bring, before the user types the
+/// balance (`Ledger.previewImport`).
+class ImportPreview {
+  const ImportPreview({required this.newLines, required this.first, this.previousClosing});
+
+  /// The lines no earlier import of the account holds.
+  final int newLines;
+
+  /// The first import of the account: the balance typed sets its starting
+  /// balance.
+  final bool first;
+
+  /// The balance of the latest import, before the new lines.
+  final int? previousClosing;
 }
 
 /// The outcome of `Ledger.importStatement`: the modification to write, and

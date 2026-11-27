@@ -76,6 +76,38 @@ func TestImportAStatement(t *testing.T) {
 	assert.Equal(t, 2, f.backupCount())
 }
 
+// A Neon export: no balance nor total in the answer; the file is kept as
+// CSV and comes back as such.
+func TestImportAnExport(t *testing.T) {
+	f := newFixture(t)
+	_, key := f.pair("Phone")
+	export, err := os.ReadFile(filepath.Join("..", "extraction", "neon", "testdata", "2026-export.csv"))
+	require.NoError(t, err)
+
+	w := f.send(key, export)
+	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+	var body struct {
+		Statement map[string]any `json:"statement"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	assert.Equal(t, "neon", body.Statement["format"])
+	assert.Equal(t, "2026-01-05", body.Statement["periodStart"])
+	assert.Len(t, body.Statement["lines"], 6)
+	for _, field := range []string{"openingBalance", "closingBalance", "totalCredits", "totalDebits"} {
+		assert.NotContains(t, body.Statement, field)
+	}
+	assert.Equal(t, 1, f.backupCount())
+
+	r := httptest.NewRequest("GET", "/api/v1/imports/"+application.Fingerprint(export)+"/pdf", nil)
+	r.Header.Set("Authorization", "Bearer "+key)
+	got := httptest.NewRecorder()
+	f.handler.ServeHTTP(got, r)
+	require.Equal(t, http.StatusOK, got.Code)
+	assert.Equal(t, "text/csv; charset=utf-8", got.Header().Get("Content-Type"))
+	assert.Contains(t, got.Header().Get("Content-Disposition"), ".csv")
+	assert.Equal(t, export, got.Body.Bytes())
+}
+
 func TestTheServerKeeps12CopiesOfItsDatabase(t *testing.T) {
 	f := newFixture(t)
 	_, key := f.pair("Phone")
@@ -106,9 +138,15 @@ func TestRefusedStatements(t *testing.T) {
 		assert.Equal(t, want[1], body.Check, name)
 		assert.NotEmpty(t, body.Message, name)
 	}
-	w := f.send(key, []byte("plain text, no PDF"))
+	w := f.send(key, []byte("%PDF-1.4 but no PDF"))
 	assert.Equal(t, http.StatusUnprocessableEntity, w.Code)
 	assert.Contains(t, w.Body.String(), `"code":"IMPORT_UNREADABLE"`)
+	w = f.send(key, []byte("plain text, neither a PDF nor an export"))
+	assert.Equal(t, http.StatusUnprocessableEntity, w.Code)
+	assert.Contains(t, w.Body.String(), `"code":"IMPORT_UNKNOWN_FORMAT"`)
+	w = f.send(key, []byte(`"Date";"Amount";"Original amount";"Original currency";"Description";"Subject"`+"\n"+`"2026-03-01";"abc";"";"";"Shop";""`+"\n"))
+	assert.Equal(t, http.StatusUnprocessableEntity, w.Code)
+	assert.Contains(t, w.Body.String(), `"check":"layout"`, "an export that cannot be read")
 	assert.Equal(t, 0, f.backupCount(), "a refused statement is neither kept nor backed up")
 }
 

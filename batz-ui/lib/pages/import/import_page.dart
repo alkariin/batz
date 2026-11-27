@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/ledger/account.dart';
+import '../../domain/ledger/statement.dart';
 import '../../helpers/formats.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services.dart';
@@ -13,8 +14,9 @@ import 'import_cubit.dart';
 import 'statements_page.dart';
 
 /// Transactions › Importer un relevé: synchronisation, choice of the
-/// account and of the PDF, the server's reading and checks, the app's
-/// checks, then the result or the reason of the refusal.
+/// account and of the file (a PDF statement, a CSV export), the server's
+/// reading and checks, the balance typed for an export, the app's checks,
+/// then the result or the reason of the refusal.
 class ImportPage extends StatelessWidget {
   const ImportPage({super.key});
 
@@ -27,6 +29,7 @@ class ImportPage extends StatelessWidget {
         ledger: context.read<LedgerCubit>(),
         server: services.server,
         transport: services.importTransport,
+        today: services.today,
       )..start(),
       child: const _ImportView(),
     );
@@ -49,8 +52,11 @@ class _ImportViewState extends State<_ImportView> {
     return Scaffold(
       appBar: AppBar(title: Text(l.importTitle)),
       body: BlocConsumer<ImportCubit, ImportState>(
-        listenWhen: (previous, current) => current.step == ImportStep.confirmFirst && previous.step != current.step,
-        listener: (context, state) => _confirmFirst(context, state),
+        listenWhen: (previous, current) =>
+            (current.step == ImportStep.confirmFirst || current.step == ImportStep.askBalance) &&
+            previous.step != current.step,
+        listener: (context, state) =>
+            state.step == ImportStep.confirmFirst ? _confirmFirst(context, state) : _askBalance(context, state),
         builder: (context, state) => switch (state.step) {
           ImportStep.syncing => _progress(l.importSyncing),
           ImportStep.notReady => _notReady(context, state),
@@ -101,7 +107,7 @@ class _ImportViewState extends State<_ImportView> {
       return Padding(padding: const EdgeInsets.all(16), child: Text(l.importNoDetailedAccount));
     }
     final account = accounts.firstWhere((a) => a.id == _accountId, orElse: () => accounts.first);
-    final busy = state.step == ImportStep.sending || state.step == ImportStep.confirmFirst;
+    final busy = const {ImportStep.sending, ImportStep.confirmFirst, ImportStep.askBalance}.contains(state.step);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -138,7 +144,7 @@ class _ImportViewState extends State<_ImportView> {
 
   Future<void> _choose(BuildContext context, Account account) async {
     final cubit = context.read<ImportCubit>();
-    final file = await context.read<AppServices>().files.pickPdf();
+    final file = await context.read<AppServices>().files.pickStatement();
     if (file == null) return;
     await cubit.importFile(account.id, file.bytes);
   }
@@ -200,7 +206,10 @@ class _ImportViewState extends State<_ImportView> {
       builder: (context) => AlertDialog(
         title: Text(l.importFirstTitle),
         content: Text(
-          l.importFirstBody(formatAmount(statement.openingBalance), formatDate(statement.periodStart.toDateTime())),
+          l.importFirstBody(
+            formatAmount(statement.openingBalance ?? 0),
+            formatDate(statement.periodStart.toDateTime()),
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l.cancel)),
@@ -213,6 +222,81 @@ class _ImportViewState extends State<_ImportView> {
     } else {
       cubit.again();
     }
+  }
+}
+
+/// Asks the balance of the account for an export without balances.
+Future<void> _askBalance(BuildContext context, ImportState state) async {
+  final cubit = context.read<ImportCubit>();
+  final balance = await showDialog<int>(
+    context: context,
+    builder: (_) => _BalanceDialog(preview: state.preview!),
+  );
+  if (balance != null) {
+    await cubit.confirmBalance(balance);
+  } else {
+    cubit.again();
+  }
+}
+
+/// The balance the bank shows now: the new lines must lead to it.
+class _BalanceDialog extends StatefulWidget {
+  const _BalanceDialog({required this.preview});
+
+  final ImportPreview preview;
+
+  @override
+  State<_BalanceDialog> createState() => _BalanceDialogState();
+}
+
+class _BalanceDialogState extends State<_BalanceDialog> {
+  final _balance = TextEditingController();
+  String? _error;
+
+  @override
+  void dispose() {
+    _balance.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final cents = parseAmount(_balance.text);
+    if (cents == null) {
+      setState(() => _error = AppLocalizations.of(context).importBalanceInvalid);
+      return;
+    }
+    Navigator.of(context).pop(cents);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final preview = widget.preview;
+    return AlertDialog(
+      title: Text(l.importBalanceTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.importBalanceLines(preview.newLines), key: const Key('importBalanceLines')),
+          const SizedBox(height: 8),
+          Text(preview.first ? l.importBalanceFirstHint : l.importBalanceNextHint),
+          const SizedBox(height: 8),
+          TextField(
+            key: const Key('importBalance'),
+            controller: _balance,
+            autofocus: true,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+            decoration: InputDecoration(labelText: l.importBalanceField, errorText: _error),
+            onSubmitted: (_) => _submit(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l.cancel)),
+        FilledButton(key: const Key('importBalanceConfirm'), onPressed: _submit, child: Text(l.importFirstConfirm)),
+      ],
+    );
   }
 }
 

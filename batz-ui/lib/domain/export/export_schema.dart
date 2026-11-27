@@ -82,7 +82,7 @@ abstract final class ExportLabels {
     AccountType.other: 'Autre',
   };
 
-  static const importFormats = {ImportFormat.postfinance: 'PostFinance'};
+  static const importFormats = {ImportFormat.postfinance: 'PostFinance', ImportFormat.neon: 'Neon'};
 
   static const natures = {CategoryNature.income: 'revenus', CategoryNature.expense: 'dépenses'};
 

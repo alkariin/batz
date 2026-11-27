@@ -24,7 +24,7 @@ class AccountFormPage extends StatefulWidget {
 class _AccountFormPageState extends State<AccountFormPage> {
   late final _name = TextEditingController(text: widget.account?.name);
   late AccountType _type = widget.account?.type ?? AccountType.privateAccount;
-  late bool _import = widget.account?.isDetailed ?? false;
+  late ImportFormat? _importFormat = widget.account?.importFormat;
   late bool _archived = widget.account?.archived ?? false;
   late bool _declared = widget.account?.declared ?? false;
 
@@ -38,7 +38,7 @@ class _AccountFormPageState extends State<AccountFormPage> {
     final draft = AccountDraft(
       name: _name.text,
       type: _type,
-      importFormat: _import ? ImportFormat.postfinance : null,
+      importFormat: _importFormat,
       archived: _archived,
       declared: _declared,
     );
@@ -112,14 +112,24 @@ class _AccountFormPageState extends State<AccountFormPage> {
             ],
             onChanged: (type) => setState(() => _type = type ?? _type),
           ),
-          const SizedBox(height: 8),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l.accountImport),
-            subtitle: Text(l.accountImportHint),
-            value: _import,
-            onChanged: (value) => setState(() => _import = value),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<ImportFormat?>(
+            key: const Key('accountImport'),
+            initialValue: _importFormat,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: l.accountImport,
+              helperText: _importFormat == null ? null : l.accountImportHint,
+              helperMaxLines: 2,
+            ),
+            items: [
+              DropdownMenuItem(child: Text(l.accountImportNone)),
+              DropdownMenuItem(value: ImportFormat.postfinance, child: Text(l.accountImportPostfinance)),
+              DropdownMenuItem(value: ImportFormat.neon, child: Text(l.accountImportNeon)),
+            ],
+            onChanged: (format) => setState(() => _importFormat = format),
           ),
+          const SizedBox(height: 8),
           SwitchListTile(
             key: const Key('accountDeclared'),
             contentPadding: EdgeInsets.zero,

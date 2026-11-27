@@ -8,6 +8,7 @@ import '../../data/server/certificate.dart';
 import '../../data/server/import_protocol.dart';
 import '../../data/server/server_client.dart';
 import '../../data/server/server_repository.dart';
+import '../../domain/calendar_date.dart';
 import '../../domain/ledger/ledger.dart';
 import '../../domain/ledger/ledger_exception.dart';
 import '../../domain/ledger/statement.dart';
@@ -33,6 +34,10 @@ enum ImportStep {
 
   /// The first statement of the account: the user confirms it.
   confirmFirst,
+
+  /// An export without balances: the user types the balance of the
+  /// account (see [ImportState.preview]).
+  askBalance,
 
   /// The statement is imported: see [ImportState.result].
   done,
@@ -74,18 +79,22 @@ class ImportResult extends Equatable {
 }
 
 class ImportState extends Equatable {
-  const ImportState(this.step, {this.syncStatus, this.refusal, this.pending, this.result});
+  const ImportState(this.step, {this.syncStatus, this.refusal, this.pending, this.preview, this.result});
 
   final ImportStep step;
   final SyncStatus? syncStatus;
   final ImportRefusal? refusal;
 
-  /// For [ImportStep.confirmFirst]: what the server read.
+  /// For [ImportStep.confirmFirst] and [ImportStep.askBalance]: what the
+  /// server read.
   final PendingImport? pending;
+
+  /// For [ImportStep.askBalance]: what the export would bring.
+  final ImportPreview? preview;
   final ImportResult? result;
 
   @override
-  List<Object?> get props => [step, syncStatus, refusal, pending, result];
+  List<Object?> get props => [step, syncStatus, refusal, pending, preview?.newLines, result];
 }
 
 /// A statement read by the server, waiting for the user's confirmation.
@@ -106,11 +115,19 @@ typedef ImportTransportFactory = ImportTransport Function(Pairing pairing);
 /// The import of a statement: it starts with a synchronisation; the server
 /// reads and checks the file; the app checks the continuity from its
 /// journal and writes the statement and its lines in one modification,
-/// after a confirmation for the first statement of an account.
+/// after a confirmation for the first statement of an account. For an
+/// export without balances, the user types the balance of the account
+/// instead, which the new lines must lead to.
 class ImportCubit extends Cubit<ImportState> {
-  ImportCubit({required this._sync, required this._ledger, required this._server, ImportTransportFactory? transport})
-    : _transport = transport ?? _client,
-      super(const ImportState(ImportStep.syncing));
+  ImportCubit({
+    required this._sync,
+    required this._ledger,
+    required this._server,
+    ImportTransportFactory? transport,
+    CalendarDate Function()? today,
+  }) : _transport = transport ?? _client,
+       _today = today ?? CalendarDate.today,
+       super(const ImportState(ImportStep.syncing));
 
   static ImportTransport _client(Pairing p) => ServerClient(p.address, pin: p.fingerprint, deviceKey: p.deviceKey);
 
@@ -118,6 +135,7 @@ class ImportCubit extends Cubit<ImportState> {
   final LedgerCubit _ledger;
   final ServerRepository _server;
   final ImportTransportFactory _transport;
+  final CalendarDate Function() _today;
 
   /// Synchronises first: without a server reached and an exchange gone to
   /// its end, the import does not start, and says why.
@@ -182,7 +200,31 @@ class ImportCubit extends Cubit<ImportState> {
     } finally {
       if (transport case final ServerClient client) client.close();
     }
-    await _integrate(PendingImport(accountId, response), confirmed: false);
+    final pending = PendingImport(accountId, response);
+    if (!account!.importFormat!.printsBalances) {
+      try {
+        final preview = _ledger.state.ledger.previewImport(
+          accountId,
+          response.statement,
+          fingerprint: response.fingerprint,
+          today: _today(),
+        );
+        emit(ImportState(ImportStep.askBalance, pending: pending, preview: preview));
+      } on LedgerException catch (e) {
+        emit(ImportState(ImportStep.refused, refusal: ImportRefusal.ledger(e)));
+      }
+      return;
+    }
+    await _integrate(pending, confirmed: false);
+  }
+
+  /// The user typed the balance of the account for the export: the new lines
+  /// are imported if they lead to it (for the first import, it sets the
+  /// starting balance).
+  Future<void> confirmBalance(int balance) async {
+    final pending = state.pending;
+    if (state.step != ImportStep.askBalance || pending == null) return;
+    await _integrate(pending, confirmed: true, balance: balance);
   }
 
   /// The user confirmed the first statement of the account.
@@ -195,7 +237,7 @@ class ImportCubit extends Cubit<ImportState> {
   /// Back to the choice of a file, after a refusal or an import.
   void again() => emit(const ImportState(ImportStep.ready));
 
-  Future<void> _integrate(PendingImport pending, {required bool confirmed}) async {
+  Future<void> _integrate(PendingImport pending, {required bool confirmed, int? balance}) async {
     // Checked against the ledger as it is now: it may have changed while the
     // server was reading, or while the user was deciding.
     final StatementImport import;
@@ -204,6 +246,8 @@ class ImportCubit extends Cubit<ImportState> {
         pending.accountId,
         pending.response.statement,
         fingerprint: pending.response.fingerprint,
+        closingBalance: balance,
+        today: _today(),
       );
     } on LedgerException catch (e) {
       emit(ImportState(ImportStep.refused, refusal: ImportRefusal.ledger(e)));

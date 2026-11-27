@@ -136,14 +136,15 @@ class ValidationPage extends StatelessWidget {
 
   Widget _proposed(BuildContext context, Ledger ledger, LedgerTransaction t) {
     final l = AppLocalizations.of(context);
-    final p = ledger.proposals[t.id]! as Proposed;
+    final (classification, source) = switch (ledger.proposals[t.id]) {
+      Proposed(:final classification, :final rule) => (classification, l.validationRule(keywordsText(l, rule))),
+      PairedTransfer(:final classification, :final otherId) => (classification, pairedText(l, ledger, otherId)),
+      _ => throw StateError('not proposed'),
+    };
     return ListTile(
       key: ValueKey('proposed-${t.id}'),
       title: Text(t.description.isEmpty ? (t.rawText ?? '') : t.description),
-      subtitle: Text(
-        '${formatDate(t.date.toDateTime())} · ${classificationText(l, ledger, p.classification)}\n'
-        '${l.validationRule(keywordsText(l, p.rule))}',
-      ),
+      subtitle: Text('${formatDate(t.date.toDateTime())} · ${classificationText(l, ledger, classification)}\n$source'),
       isThreeLine: true,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,

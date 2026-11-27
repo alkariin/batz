@@ -1,6 +1,9 @@
 import 'dart:typed_data';
 
+import 'dart:io';
+
 import 'package:batz/data/server/server_client.dart';
+import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/ledger_exception.dart';
@@ -32,8 +35,11 @@ class ImportingDevice {
       debounce: const Duration(hours: 1),
       period: const Duration(hours: 1),
     );
-    imports = ImportCubit(sync: sync, ledger: ledger, server: device.server);
+    imports = ImportCubit(sync: sync, ledger: ledger, server: device.server, today: () => today);
   }
+
+  /// The day of the imports.
+  CalendarDate today = CalendarDate.today();
 
   final SimDevice device;
   late final LedgerCubit ledger;
@@ -239,8 +245,51 @@ void main() {
     final other = ServerClient(q.address, pin: q.fingerprint, deviceKey: q.deviceKey);
     addTearDown(other.close);
     expect(await other.statementPdf(jan.fingerprint), isNull);
-    expect((await other.health()).importFormats, ['postfinance']);
+    expect((await other.health()).importFormats, ['postfinance', 'neon']);
   });
+
+  test(
+    'Neon exports go through the server: the first sets the balance, the next one brings only its new lines',
+    () async {
+      final server = await LocalServer.start();
+      addTearDown(server.stop);
+      final a = await pairedDevice(server, 'Ordinateur', createAccount: true);
+      addTearDown(a.close);
+      await a.device.ledger.apply(
+        (l) => l.createAccount(
+          'neon',
+          const AccountDraft(name: 'Neon', type: AccountType.privateAccount, importFormat: ImportFormat.neon),
+        ),
+      );
+      await a.start();
+      const testdata = '../batz-web/src/internal/infrastructure/extraction/neon/testdata';
+      Future<ImportState> import(String name, int balance) async {
+        await a.imports.importFile('neon', File('$testdata/$name').readAsBytesSync());
+        if (a.imports.state.step == ImportStep.askBalance) await a.imports.confirmBalance(balance);
+        return a.imports.state;
+      }
+
+      a.today = CalendarDate(2026, 3, 15);
+      expect((await import('2026-export.csv', 120000)).step, ImportStep.done);
+      expect(a.imports.state.result!.lines, 6);
+
+      a.today = CalendarDate(2026, 3, 29);
+      await a.imports.importFile('neon', File('$testdata/2026-export-later.csv').readAsBytesSync());
+      expect(a.imports.state.step, ImportStep.askBalance);
+      expect(a.imports.state.preview!.newLines, 2);
+      await a.imports.confirmBalance(116000);
+      expect(a.imports.state.refusal?.ledger?.error, LedgerError.statementBalanceMismatch);
+
+      expect((await import('2026-export-later.csv', 116150)).step, ImportStep.done);
+      final ledger = await a.device.ledger.ledger();
+      expect(ledger.transactions.values.where((t) => t.accountId == 'neon'), hasLength(8));
+      expect(ledger.statementsOf('neon').map((s) => s.closingBalance), [120000, 116150]);
+
+      // A Neon export sent to the PostFinance account is refused.
+      await a.imports.importFile('bank', File('$testdata/2026-export-later.csv').readAsBytesSync());
+      expect(a.imports.state.refusal?.ledger?.error, LedgerError.statementOtherFormat);
+    },
+  );
 }
 
 /// The PDF of a statement of the test set.

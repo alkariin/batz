@@ -13,16 +13,17 @@ import (
 )
 
 // StatementExtractor reads a statement file and checks its consistency; see
-// postfinance.Extractor.
+// extraction.Extractor.
 type StatementExtractor interface {
-	Extract(ctx context.Context, pdf []byte) (statement.Statement, error)
+	Extract(ctx context.Context, file []byte) (statement.Statement, error)
 }
 
-// StatementFiles keeps the original PDF files, under their fingerprint.
+// StatementFiles keeps the original files (PDF statements, CSV exports),
+// under their fingerprint.
 type StatementFiles interface {
 	Has(fingerprint string) (bool, error)
 	// Save stores the file; when it returns, the file is complete.
-	Save(fingerprint string, pdf []byte) error
+	Save(fingerprint string, file []byte) error
 	// Read returns ErrPDFNotFound when there is no such file.
 	Read(fingerprint string) ([]byte, error)
 }
@@ -34,7 +35,7 @@ type DatabaseBackups interface {
 }
 
 var (
-	// ErrPDFNotFound means the server holds no original PDF with that
+	// ErrPDFNotFound means the server holds no original file with that
 	// fingerprint: it was never sent, or the server was rebuilt.
 	ErrPDFNotFound = errors.New("no original PDF with this fingerprint")
 
@@ -74,14 +75,14 @@ func NewImports(extractor StatementExtractor, files StatementFiles, backups Data
 	return &Imports{extractor: extractor, files: files, backups: backups}
 }
 
-// Import extracts and checks pdf. A refused statement returns the error of
+// Import extracts and checks file. A refused statement returns the error of
 // the extraction (statement.Refusal tells its code) and nothing is kept. An
 // accepted one the server did not hold yet is kept under its fingerprint,
 // after a copy of the database; sending the same file again gives the same
 // answer and writes nothing.
-func (i *Imports) Import(ctx context.Context, pdf []byte) (ImportResult, error) {
-	fingerprint := Fingerprint(pdf)
-	st, err := i.extractor.Extract(ctx, pdf)
+func (i *Imports) Import(ctx context.Context, file []byte) (ImportResult, error) {
+	fingerprint := Fingerprint(file)
+	st, err := i.extractor.Extract(ctx, file)
 	if err != nil {
 		return ImportResult{}, err
 	}
@@ -97,7 +98,7 @@ func (i *Imports) Import(ctx context.Context, pdf []byte) (ImportResult, error) 
 		if err := i.backups.Backup(ctx); err != nil {
 			return ImportResult{}, fmt.Errorf("back up the database: %w", err)
 		}
-		if err := i.files.Save(fingerprint, pdf); err != nil {
+		if err := i.files.Save(fingerprint, file); err != nil {
 			return ImportResult{}, fmt.Errorf("store the statement file: %w", err)
 		}
 	}

@@ -58,21 +58,28 @@ type Line struct {
 	Balance *int64 `json:"balance,omitempty"`
 }
 
-// Statement is what a statement file says.
+// Statement is what a statement file says. A format that prints no
+// balances (an export of transactions) leaves them, and the totals, out:
+// the app checks such a file against a balance the user types.
 type Statement struct {
 	Format string `json:"format"`
-	// IBAN is the account's, without spaces.
-	IBAN           string `json:"iban"`
-	Currency       string `json:"currency"`
-	PeriodStart    Date   `json:"periodStart"`
-	PeriodEnd      Date   `json:"periodEnd"`
-	OpeningBalance int64  `json:"openingBalance"`
-	ClosingBalance int64  `json:"closingBalance"`
-	// TotalCredits and TotalDebits are the totals printed, both positive.
-	TotalCredits int64  `json:"totalCredits"`
-	TotalDebits  int64  `json:"totalDebits"`
+	// IBAN is the account's, without spaces; empty when the file has none.
+	IBAN        string `json:"iban"`
+	Currency    string `json:"currency"`
+	PeriodStart Date   `json:"periodStart"`
+	PeriodEnd   Date   `json:"periodEnd"`
+	// OpeningBalance and ClosingBalance are both set, or both nil.
+	OpeningBalance *int64 `json:"openingBalance,omitempty"`
+	ClosingBalance *int64 `json:"closingBalance,omitempty"`
+	// TotalCredits and TotalDebits are the totals printed, both positive;
+	// both set, or both nil.
+	TotalCredits *int64 `json:"totalCredits,omitempty"`
+	TotalDebits  *int64 `json:"totalDebits,omitempty"`
 	Lines        []Line `json:"lines"`
 }
+
+// Amount returns a pointer to c, for the optional fields of a Statement.
+func Amount(c int64) *int64 { return &c }
 
 // The checks a statement must pass; an InconsistentError names the one that
 // failed.
@@ -99,10 +106,10 @@ const (
 const Currency = "CHF"
 
 var (
-	// ErrUnreadable means the file is not a PDF that can be read.
+	// ErrUnreadable means the file is a PDF that cannot be read.
 	ErrUnreadable = errors.New("the file is not a readable PDF")
-	// ErrUnknownFormat means the file is a PDF, but no statement in a format
-	// the server knows.
+	// ErrUnknownFormat means the file is no statement in a format the server
+	// knows.
 	ErrUnknownFormat = errors.New("the file is not a statement in a known format")
 )
 
@@ -123,7 +130,8 @@ func inconsistent(check, format string, args ...any) error {
 }
 
 // Check verifies the internal consistency of s, in this order: currency,
-// period, balances printed in its course, totals, closing balance. It
+// period, balances printed in its course, totals, closing balance. The
+// checks of balances and totals apply when the format prints them. It
 // returns the first failure as an *InconsistentError.
 func (s Statement) Check() error {
 	if s.Currency != Currency {
@@ -142,8 +150,13 @@ func (s Statement) Check() error {
 				i+1, l.Date, i, s.Lines[i-1].Date)
 		}
 	}
-	running := s.OpeningBalance
-	var credits, debits int64
+	if (s.OpeningBalance == nil) != (s.ClosingBalance == nil) || (s.TotalCredits == nil) != (s.TotalDebits == nil) {
+		return inconsistent(CheckLayout, "a balance or a total is missing")
+	}
+	var running, credits, debits int64
+	if s.OpeningBalance != nil {
+		running = *s.OpeningBalance
+	}
 	for i, l := range s.Lines {
 		running += l.Amount
 		if l.Amount > 0 {
@@ -151,18 +164,18 @@ func (s Statement) Check() error {
 		} else {
 			debits -= l.Amount
 		}
-		if l.Balance != nil && *l.Balance != running {
+		if s.OpeningBalance != nil && l.Balance != nil && *l.Balance != running {
 			return inconsistent(CheckRunningBalance, "balance printed after line %d is %s, the movements give %s",
 				i+1, Cents(*l.Balance), Cents(running))
 		}
 	}
-	if credits != s.TotalCredits || debits != s.TotalDebits {
+	if s.TotalCredits != nil && (credits != *s.TotalCredits || debits != *s.TotalDebits) {
 		return inconsistent(CheckTotals, "printed totals: credits %s, debits %s; the movements give credits %s, debits %s",
-			Cents(s.TotalCredits), Cents(s.TotalDebits), Cents(credits), Cents(debits))
+			Cents(*s.TotalCredits), Cents(*s.TotalDebits), Cents(credits), Cents(debits))
 	}
-	if running != s.ClosingBalance {
+	if s.ClosingBalance != nil && running != *s.ClosingBalance {
 		return inconsistent(CheckClosingBalance, "opening balance %s plus the movements gives %s, the closing balance is %s",
-			Cents(s.OpeningBalance), Cents(running), Cents(s.ClosingBalance))
+			Cents(*s.OpeningBalance), Cents(running), Cents(*s.ClosingBalance))
 	}
 	return nil
 }

@@ -3,7 +3,8 @@
 Personal accounting for one person: where the money goes, what each year
 really costs, and how net worth evolves.
 
-batz imports the monthly PDF statement of the bank, proposes a category for
+batz imports the statements of the bank (monthly PDF statements, CSV exports
+of transactions), proposes a category for
 each line from rules you write once, and keeps two views of every payment:
 the day it was paid, and the period it is for. It runs fully offline on
 Android, Windows and Ubuntu; a small server on your home network reads the
@@ -12,17 +13,20 @@ home, and there is no account to create.
 
 **Status: alpha** (version 0.10.0-alpha). Everything planned for version 1.0
 is there; the version number will follow once it has been used for a while.
-The screens are in French; the bank statements read are those of
-PostFinance, in Swiss francs.
+The screens are in French; the statements read are the PDF statements of
+PostFinance and the CSV exports of Neon, in Swiss francs.
 
 ## What it does
 
-- **Import and validation.** The statement of the month is sent to the
-  server, which reads and checks it; its lines arrive « à valider », already
-  classified by your mapping rules (lines of keywords, each line an
-  alternative, under the category or account they classify in). Confirm the
-  proposals one by one or in bulk, complete the rest, create a rule or a debt from a line. Validation works offline,
-  on the phone.
+- **Import and validation.** The statement of the month (or an export of the
+  year so far, of which only the new lines are imported, checked against the
+  balance the bank shows) is sent to the server, which reads and checks it;
+  its lines arrive « à valider », already classified by your mapping rules
+  (lines of keywords, each line an alternative, under the category or account
+  they classify in). A transfer between two imported accounts is recognised
+  on both sides. Confirm the proposals one by one or in bulk, complete the
+  rest, create a rule or a debt from a line. Validation works offline, on the
+  phone.
 - **Two views of a year.** The cash-flow view shows what was paid in the
   year; the economic view shows what the year cost: a payment that concerns
   twelve months from September counts four months this year and eight the
@@ -71,9 +75,9 @@ copy of the data, so a lost server is rebuilt from any of them.
 
 ## First steps
 
-1. « Plus › Comptes »: create your accounts. Enable the import of statements
-   on the bank account: it becomes the *detailed* account, the one whose
-   every line is imported.
+1. « Plus › Comptes »: create your accounts. Choose the import of each bank
+   account (PDF statements of PostFinance, CSV exports of Neon): it becomes a
+   *detailed* account, whose every line is imported.
 2. « Plus › Catégories et règles »: build the tree of the year, under groups
    of income and of expenses. batz comes with no tree: yours is the right one. It is
    copied to the next year at the first transaction dated there.

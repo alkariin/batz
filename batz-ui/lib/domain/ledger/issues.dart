@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-import 'account.dart';
 import 'category.dart';
 
 /// An inconsistency that merging the data of several devices can produce.
@@ -24,18 +23,6 @@ class DuplicateCategoryName extends LedgerIssue {
 
   @override
   List<Object?> get props => [year, categories];
-}
-
-/// More than one account is detailed (import enabled), each enabled on its
-/// own device.
-class SeveralDetailedAccounts extends LedgerIssue {
-  const SeveralDetailedAccounts(this.accounts);
-
-  /// At least two, by name.
-  final List<Account> accounts;
-
-  @override
-  List<Object?> get props => [accounts];
 }
 
 /// Categories of a year detached from its tree, to move back (see

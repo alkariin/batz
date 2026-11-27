@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/server/server_client.dart';
+import '../../domain/ledger/account.dart';
 import '../../domain/ledger/ledger.dart';
 import '../../domain/ledger/statement.dart';
 import '../../helpers/formats.dart';
@@ -11,8 +12,8 @@ import '../ledger_cubit.dart';
 import '../ledger_texts.dart';
 
 /// The statements of a detailed account, latest first: period, balances,
-/// number of lines; the original PDF can be saved, the latest statement
-/// deleted.
+/// number of lines; the original file (PDF or CSV) can be saved, the latest
+/// statement deleted.
 class StatementsPage extends StatelessWidget {
   const StatementsPage({super.key, required this.accountId});
 
@@ -81,8 +82,11 @@ class StatementsPage extends StatelessWidget {
         showMessage(context, l.statementPdfMissing);
         return;
       }
-      final name = 'releve-${s.periodStart.encode()}-${s.periodEnd.encode()}.pdf';
-      if (await services.files.savePdf(name, pdf) && context.mounted) showMessage(context, l.statementPdfSaved);
+      final printsBalances = ImportFormat.values.asNameMap()[s.format]?.printsBalances ?? true;
+      final name = printsBalances
+          ? 'releve-${s.periodStart.encode()}-${s.periodEnd.encode()}.pdf'
+          : 'export-${s.periodStart.encode()}-${s.periodEnd.encode()}.csv';
+      if (await services.files.saveStatement(name, pdf) && context.mounted) showMessage(context, l.statementPdfSaved);
     } on ServerUnreachableException {
       if (context.mounted) showMessage(context, l.statementPdfUnreachable);
     } on ServerException catch (e) {

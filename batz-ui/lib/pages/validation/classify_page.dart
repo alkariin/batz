@@ -237,7 +237,7 @@ class _ClassifyPageState extends State<ClassifyPage> {
     final categories = tree?.assignable ?? const [];
     final accounts = [
       for (final a in ledger.sortedAccounts)
-        if (!a.isDetailed && a.id != t.accountId && (!a.archived || a.id == t.counterpartAccountId)) a,
+        if (a.id != t.accountId && (!a.archived || a.id == t.counterpartAccountId)) a,
     ];
     final outcome = ledger.proposals[t.id];
     return Scaffold(
@@ -268,6 +268,10 @@ class _ClassifyPageState extends State<ClassifyPage> {
           if (outcome case Proposed(:final rule)) ...[
             const SizedBox(height: 8),
             Text(l.validationRule(keywordsText(l, rule)), style: theme.textTheme.bodySmall),
+          ],
+          if (outcome case PairedTransfer(:final otherId)) ...[
+            const SizedBox(height: 8),
+            Text(pairedText(l, ledger, otherId), key: const Key('classifyPaired'), style: theme.textTheme.bodySmall),
           ],
           const SizedBox(height: 16),
           SegmentedButton<_Mode>(

@@ -40,7 +40,6 @@ void main() {
       );
       expect(ledger.issues, [
         DuplicateCategoryName(2026, [ledger.categories['food-pf-a']!, ledger.categories['food-pf-b']!]),
-        SeveralDetailedAccounts([ledger.accounts['pf-a']!, ledger.accounts['pf-b']!]),
       ]);
 
       wallA = 5000;

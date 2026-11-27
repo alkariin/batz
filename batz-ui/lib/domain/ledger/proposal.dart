@@ -67,6 +67,22 @@ class Proposed extends RuleOutcome {
   List<Object?> get props => [rule, classification];
 }
 
+/// The line is the other side of a transfer between two detailed accounts:
+/// the line [otherId] of the other account went the other way, for the
+/// same amount, a few days apart (see transfer_pairs.dart). The line is «
+/// proposée » as a transfer with that account, whatever its rules say.
+class PairedTransfer extends RuleOutcome {
+  const PairedTransfer(this.otherId, this.classification);
+
+  final String otherId;
+
+  /// The transfer with the account of [otherId].
+  final Classification classification;
+
+  @override
+  List<Object?> get props => [otherId, classification];
+}
+
 /// Rules of equal weight give different results: the line is « à compléter
 /// », with the rules in competition.
 class Conflict extends RuleOutcome {

@@ -246,8 +246,8 @@ void main() {
       (d(2025, 12, 31), 200000, true),
       (d(2026, 2, 15), 999900, true),
     ]);
-    expect(account.variationAt(1), 200000 - january.statement.openingBalance);
-    final closing = 200000 + january.statement.closingBalance - january.statement.openingBalance;
+    expect(account.variationAt(1), 200000 - january.statement.openingBalance!);
+    final closing = 200000 + january.statement.closingBalance! - january.statement.openingBalance!;
     expect(account.balanceAt(d(2026, 1, 31)), closing);
     expect(account.variationAt(2), 999900 - closing);
 

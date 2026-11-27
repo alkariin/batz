@@ -35,36 +35,21 @@ void main() {
     expect(_cash.isDetailed, isFalse);
   });
 
-  test('a second detailed account is refused, on creation and on modification', () {
+  test('several accounts are detailed, each with its format', () {
     final ledger = Ledger(accounts: [_bank, _cash]);
-    const detailed = AccountDraft(
-      name: 'UBS',
-      type: AccountType.privateAccount,
-      importFormat: ImportFormat.postfinance,
-    );
-    expect(() => ledger.createAccount('a3', detailed), refusedWith(LedgerError.secondDetailedAccount));
+    const neon = AccountDraft(name: 'Neon', type: AccountType.privateAccount, importFormat: ImportFormat.neon);
+    expect(fields(ledger.createAccount('a3', neon))['importFormat'], 'neon');
     expect(
-      () => ledger.updateAccount(
-        'cash',
-        const AccountDraft(name: 'Espèces', type: AccountType.cash, importFormat: ImportFormat.postfinance),
-      ),
-      refusedWith(LedgerError.secondDetailedAccount),
-    );
-    // The detailed account itself can still be modified, and an archived
-    // detailed account still counts.
-    expect(fields(ledger.updateAccount('bank', AccountDraft.of(_bank)))['importFormat'], 'postfinance');
-    final archived = Ledger(
-      accounts: [
-        const Account(
-          id: 'bank',
-          name: 'Old',
-          type: AccountType.privateAccount,
-          importFormat: ImportFormat.postfinance,
-          archived: true,
+      fields(
+        ledger.updateAccount(
+          'cash',
+          const AccountDraft(name: 'Espèces', type: AccountType.cash, importFormat: ImportFormat.postfinance),
         ),
-      ],
+      )['importFormat'],
+      'postfinance',
     );
-    expect(() => archived.createAccount('a3', detailed), refusedWith(LedgerError.secondDetailedAccount));
+    expect(ImportFormat.postfinance.printsBalances, isTrue);
+    expect(ImportFormat.neon.printsBalances, isFalse);
   });
 
   test('an unused account is deleted', () {

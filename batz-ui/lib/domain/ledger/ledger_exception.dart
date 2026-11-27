@@ -4,7 +4,6 @@ import '../calendar_date.dart';
 /// message for the user.
 enum LedgerError {
   nameRequired,
-  secondDetailedAccount,
   unknownAccount,
   unknownCategory,
   categoryNameTaken,
@@ -38,6 +37,11 @@ enum LedgerError {
   statementSumMismatch,
   statementTooLarge,
   statementNotLast,
+  statementNoNewLines,
+  statementLinesBeforeFirst,
+  statementImportedToday,
+  statementBalanceRequired,
+  statementBalanceMismatch,
   unknownStatement,
   importedTransaction,
 
@@ -133,6 +137,9 @@ class StatementRefusedException extends LedgerException {
     this.foundOpening,
     this.expectedIban,
     this.foundIban,
+    this.expectedBalance,
+    this.foundBalance,
+    super.count,
   });
 
   /// For [LedgerError.statementNotContiguous]: the day after the previous
@@ -146,10 +153,19 @@ class StatementRefusedException extends LedgerException {
   final String? expectedIban;
   final String? foundIban;
 
+  /// For [LedgerError.statementBalanceMismatch]: the balance of the latest
+  /// import plus the new lines ([count] of them), and the balance typed.
+  /// For [LedgerError.statementLinesBeforeFirst], [foundStart] is the date
+  /// of the earliest new line, [expectedStart] the start of the account's
+  /// first statement.
+  final int? expectedBalance;
+  final int? foundBalance;
+
   @override
   String toString() =>
       'StatementRefusedException: ${error.name}'
       '${expectedStart == null ? '' : ' (start $foundStart, expected $expectedStart)'}'
       '${expectedOpening == null ? '' : ' (opening $foundOpening, expected $expectedOpening)'}'
-      '${expectedIban == null ? '' : ' (IBAN $foundIban, expected $expectedIban)'}';
+      '${expectedIban == null ? '' : ' (IBAN $foundIban, expected $expectedIban)'}'
+      '${expectedBalance == null ? '' : ' (balance $foundBalance, expected $expectedBalance)'}';
 }

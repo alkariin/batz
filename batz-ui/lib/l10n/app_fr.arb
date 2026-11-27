@@ -100,8 +100,11 @@
   "accountEdit": "Modifier le compte",
   "accountName": "Nom",
   "accountType": "Type",
-  "accountImport": "Import des relevés PostFinance",
-  "accountImportHint": "Compte détaillé : ses transactions viennent uniquement des relevés. Un seul compte peut l'être.",
+  "accountImport": "Import",
+  "accountImportHint": "Compte détaillé : ses transactions viennent uniquement des relevés importés.",
+  "accountImportNone": "Aucun : solde déclaré",
+  "accountImportPostfinance": "Relevés PDF PostFinance",
+  "accountImportNeon": "Exports CSV Neon",
   "accountArchived": "Archivé",
   "accountDeclared": "Déclaré aux impôts",
   "accountDeclaredHint": "Son nom et son solde s'affichent dans une autre couleur dans « Fortune ».",
@@ -134,7 +137,6 @@
   "accountTypeDebts": "Dettes",
   "accountTypeOther": "Autre",
   "errorNameRequired": "Le nom est obligatoire.",
-  "errorSecondDetailedAccount": "Un seul compte peut être détaillé : l'import est déjà activé sur un autre compte.",
   "errorUnknownAccount": "Ce compte n'existe plus.",
   "categoriesTitle": "Catégories et règles",
   "categoriesTransfers": "Transferts",
@@ -307,6 +309,34 @@
   "errorStatementSumMismatch": "Les lignes du relevé ne donnent pas l'écart entre ses soldes initial et final.",
   "errorStatementTooLarge": "Ce relevé compte trop de lignes pour être importé en une fois.",
   "errorStatementNotLast": "Seul le dernier relevé du compte peut être supprimé.",
+  "errorStatementNoNewLines": "Cet export n'apporte aucune nouvelle ligne : toutes sont déjà importées.",
+  "errorStatementLinesBeforeFirst": "Cet export a des lignes du {found}, avant le premier import de ce compte, qui commence le {expected} : exportez à partir du {expected}.",
+  "@errorStatementLinesBeforeFirst": {
+    "placeholders": {
+      "found": {
+        "type": "String"
+      },
+      "expected": {
+        "type": "String"
+      }
+    }
+  },
+  "errorStatementImportedToday": "Un export de ce compte a déjà été importé aujourd'hui : importez le suivant demain, ou supprimez le dernier import pour le remplacer.",
+  "errorStatementBalanceRequired": "Saisissez le solde du compte pour importer cet export.",
+  "errorStatementBalanceMismatch": "Le solde saisi, {found}, ne correspond pas : le solde du dernier import plus les nouvelles lignes ({count}) donne {expected}. Exportez jusqu'à aujourd'hui, sans paiement en attente, et saisissez le solde affiché à ce moment.",
+  "@errorStatementBalanceMismatch": {
+    "placeholders": {
+      "found": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "expected": {
+        "type": "String"
+      }
+    }
+  },
   "errorUnknownStatement": "Ce relevé n'existe plus.",
   "errorImportedTransaction": "Une ligne importée garde le montant, la date, le compte et le texte de la banque ; seules sa catégorie, sa période, sa description et sa note se modifient.",
   "errorUnknownRule": "Cette règle n'existe plus.",
@@ -498,15 +528,6 @@
     }
   },
   "taskDuplicateNameHint": "Un nom n'apparaît qu'une fois dans l'arbre d'une année : renommez ou supprimez l'une d'elles.",
-  "taskDetailedAccounts": "{count} comptes détaillés",
-  "@taskDetailedAccounts": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "taskDetailedAccountsHint": "Un seul compte reçoit les relevés : désactivez l'import sur les autres.",
   "taskDetached": "{count, plural, =1{Une catégorie à replacer} other{{count} catégories à replacer}} en {year}",
   "@taskDetached": {
     "placeholders": {
@@ -533,7 +554,7 @@
   "importRetry": "Réessayer",
   "importNoDetailedAccount": "Aucun compte détaillé : activez l'import d'un compte dans Plus › Comptes.",
   "importAccount": "Compte",
-  "importChoose": "Choisir le relevé PDF",
+  "importChoose": "Choisir le relevé PDF ou l'export CSV",
   "importSending": "Le serveur lit et vérifie le relevé…",
   "importRefusedTitle": "Relevé refusé",
   "importDoneTitle": "Relevé importé",
@@ -576,8 +597,21 @@
     }
   },
   "importFirstConfirm": "Importer",
+  "importBalanceTitle": "Solde du compte",
+  "importBalanceLines": "{count, plural, =1{Une nouvelle ligne.} other{{count} nouvelles lignes.}}",
+  "@importBalanceLines": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importBalanceFirstHint": "Premier import de ce compte : saisissez le solde affiché maintenant par la banque. Il fixe le solde de départ du compte ; aucune ligne antérieure ne pourra être importée ensuite.",
+  "importBalanceNextHint": "Saisissez le solde affiché maintenant par la banque : il doit être celui du dernier import plus ces lignes, sinon rien n'est importé.",
+  "importBalanceField": "Solde actuel",
+  "importBalanceInvalid": "Montant invalide : saisissez par exemple 1234.50.",
   "importUnreadable": "Ce fichier n'est pas un PDF lisible.",
-  "importUnknownFormat": "Ce PDF n'est pas un relevé PostFinance.",
+  "importUnknownFormat": "Ce fichier n'est ni un relevé PDF PostFinance ni un export CSV Neon.",
   "importInconsistent": "Relevé incohérent, rien n'est importé : {reason}.",
   "@importInconsistent": {
     "placeholders": {
@@ -644,11 +678,11 @@
       }
     }
   },
-  "statementSavePdf": "Enregistrer le PDF d'origine",
-  "statementPdfSaved": "PDF enregistré.",
-  "statementPdfMissing": "Le serveur n'a plus ce PDF : il a sans doute été reconstruit depuis l'import.",
-  "statementPdfNotPaired": "Associez un serveur pour récupérer le PDF d'origine.",
-  "statementPdfUnreachable": "Le serveur ne répond pas : le PDF n'a pas pu être récupéré.",
+  "statementSavePdf": "Enregistrer le fichier d'origine",
+  "statementPdfSaved": "Fichier enregistré.",
+  "statementPdfMissing": "Le serveur n'a plus ce fichier : il a sans doute été reconstruit depuis l'import.",
+  "statementPdfNotPaired": "Associez un serveur pour récupérer le fichier d'origine.",
+  "statementPdfUnreachable": "Le serveur ne répond pas : le fichier n'a pas pu être récupéré.",
   "statementDeleteLast": "Supprimer le dernier relevé",
   "statementDeleteConfirm": "Supprimer le relevé du {start} au {end} et ses {lines} lignes ? Leurs classements sont perdus ; le relevé pourra être importé de nouveau.",
   "@statementDeleteConfirm": {
@@ -694,6 +728,48 @@
     }
   },
   "validationConfirmOne": "Valider cette proposition",
+  "validationPaired": "Autre côté du transfert du {date} sur {account}",
+  "@validationPaired": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "pairedTitle": "Autre côté du transfert",
+  "pairedMissing": "Autre côté introuvable sur {account} : même montant, de signe opposé, à {days} jours au plus.",
+  "@pairedMissing": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "unpairedTitle": "Transferts sans autre côté",
+  "unpairedHint": "Un transfert entre deux comptes importés figure sur les deux relevés : même montant, de signe opposé, à {days} jours au plus. Ceux-ci n'ont pas leur ligne sur l'autre compte : importez son relevé, ou corrigez leur classification.",
+  "@unpairedHint": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "unpairedEmpty": "Aucun transfert sans son autre côté.",
+  "taskUnpairedTransfers": "{count, plural, =1{Un transfert entre comptes importés sans son autre côté} other{{count} transferts entre comptes importés sans leur autre côté}}",
+  "@taskUnpairedTransfers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "taskUnpairedTransfersHint": "L'autre compte n'a pas la ligne correspondante : importez son relevé, ou corrigez la classification.",
   "validationConfirmed": "{count, plural, =1{Une ligne validée} other{{count} lignes validées}}.",
   "@validationConfirmed": {
     "placeholders": {

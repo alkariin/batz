@@ -16,6 +16,14 @@ String ruleTargetText(AppLocalizations l, Ledger ledger, MappingRule rule) {
   return category?.name ?? '?';
 }
 
+/// Where a line proposed as the other side of a transfer comes from: the
+/// line [otherId] of the other account.
+String pairedText(AppLocalizations l, Ledger ledger, String otherId) {
+  final other = ledger.transactions[otherId];
+  if (other == null) return '';
+  return l.validationPaired(formatDate(other.date.toDateTime()), ledger.accounts[other.accountId]?.name ?? '?');
+}
+
 /// A classification in a few words: the category and its period, or the
 /// transfer.
 String classificationText(AppLocalizations l, Ledger ledger, Classification c) {

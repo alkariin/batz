@@ -400,14 +400,32 @@ abstract class AppLocalizations {
   /// No description provided for @accountImport.
   ///
   /// In fr, this message translates to:
-  /// **'Import des relevés PostFinance'**
+  /// **'Import'**
   String get accountImport;
 
   /// No description provided for @accountImportHint.
   ///
   /// In fr, this message translates to:
-  /// **'Compte détaillé : ses transactions viennent uniquement des relevés. Un seul compte peut l\'être.'**
+  /// **'Compte détaillé : ses transactions viennent uniquement des relevés importés.'**
   String get accountImportHint;
+
+  /// No description provided for @accountImportNone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun : solde déclaré'**
+  String get accountImportNone;
+
+  /// No description provided for @accountImportPostfinance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Relevés PDF PostFinance'**
+  String get accountImportPostfinance;
+
+  /// No description provided for @accountImportNeon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exports CSV Neon'**
+  String get accountImportNeon;
 
   /// No description provided for @accountArchived.
   ///
@@ -516,12 +534,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le nom est obligatoire.'**
   String get errorNameRequired;
-
-  /// No description provided for @errorSecondDetailedAccount.
-  ///
-  /// In fr, this message translates to:
-  /// **'Un seul compte peut être détaillé : l\'import est déjà activé sur un autre compte.'**
-  String get errorSecondDetailedAccount;
 
   /// No description provided for @errorUnknownAccount.
   ///
@@ -947,6 +959,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Seul le dernier relevé du compte peut être supprimé.'**
   String get errorStatementNotLast;
+
+  /// No description provided for @errorStatementNoNewLines.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet export n\'apporte aucune nouvelle ligne : toutes sont déjà importées.'**
+  String get errorStatementNoNewLines;
+
+  /// No description provided for @errorStatementLinesBeforeFirst.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet export a des lignes du {found}, avant le premier import de ce compte, qui commence le {expected} : exportez à partir du {expected}.'**
+  String errorStatementLinesBeforeFirst(String found, String expected);
+
+  /// No description provided for @errorStatementImportedToday.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un export de ce compte a déjà été importé aujourd\'hui : importez le suivant demain, ou supprimez le dernier import pour le remplacer.'**
+  String get errorStatementImportedToday;
+
+  /// No description provided for @errorStatementBalanceRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le solde du compte pour importer cet export.'**
+  String get errorStatementBalanceRequired;
+
+  /// No description provided for @errorStatementBalanceMismatch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le solde saisi, {found}, ne correspond pas : le solde du dernier import plus les nouvelles lignes ({count}) donne {expected}. Exportez jusqu\'à aujourd\'hui, sans paiement en attente, et saisissez le solde affiché à ce moment.'**
+  String errorStatementBalanceMismatch(String found, int count, String expected);
 
   /// No description provided for @errorUnknownStatement.
   ///
@@ -1560,18 +1602,6 @@ abstract class AppLocalizations {
   /// **'Un nom n\'apparaît qu\'une fois dans l\'arbre d\'une année : renommez ou supprimez l\'une d\'elles.'**
   String get taskDuplicateNameHint;
 
-  /// No description provided for @taskDetailedAccounts.
-  ///
-  /// In fr, this message translates to:
-  /// **'{count} comptes détaillés'**
-  String taskDetailedAccounts(int count);
-
-  /// No description provided for @taskDetailedAccountsHint.
-  ///
-  /// In fr, this message translates to:
-  /// **'Un seul compte reçoit les relevés : désactivez l\'import sur les autres.'**
-  String get taskDetailedAccountsHint;
-
   /// No description provided for @taskDetached.
   ///
   /// In fr, this message translates to:
@@ -1629,7 +1659,7 @@ abstract class AppLocalizations {
   /// No description provided for @importChoose.
   ///
   /// In fr, this message translates to:
-  /// **'Choisir le relevé PDF'**
+  /// **'Choisir le relevé PDF ou l\'export CSV'**
   String get importChoose;
 
   /// No description provided for @importSending.
@@ -1686,6 +1716,42 @@ abstract class AppLocalizations {
   /// **'Importer'**
   String get importFirstConfirm;
 
+  /// No description provided for @importBalanceTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde du compte'**
+  String get importBalanceTitle;
+
+  /// No description provided for @importBalanceLines.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une nouvelle ligne.} other{{count} nouvelles lignes.}}'**
+  String importBalanceLines(int count);
+
+  /// No description provided for @importBalanceFirstHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Premier import de ce compte : saisissez le solde affiché maintenant par la banque. Il fixe le solde de départ du compte ; aucune ligne antérieure ne pourra être importée ensuite.'**
+  String get importBalanceFirstHint;
+
+  /// No description provided for @importBalanceNextHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le solde affiché maintenant par la banque : il doit être celui du dernier import plus ces lignes, sinon rien n\'est importé.'**
+  String get importBalanceNextHint;
+
+  /// No description provided for @importBalanceField.
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde actuel'**
+  String get importBalanceField;
+
+  /// No description provided for @importBalanceInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant invalide : saisissez par exemple 1234.50.'**
+  String get importBalanceInvalid;
+
   /// No description provided for @importUnreadable.
   ///
   /// In fr, this message translates to:
@@ -1695,7 +1761,7 @@ abstract class AppLocalizations {
   /// No description provided for @importUnknownFormat.
   ///
   /// In fr, this message translates to:
-  /// **'Ce PDF n\'est pas un relevé PostFinance.'**
+  /// **'Ce fichier n\'est ni un relevé PDF PostFinance ni un export CSV Neon.'**
   String get importUnknownFormat;
 
   /// No description provided for @importInconsistent.
@@ -1791,31 +1857,31 @@ abstract class AppLocalizations {
   /// No description provided for @statementSavePdf.
   ///
   /// In fr, this message translates to:
-  /// **'Enregistrer le PDF d\'origine'**
+  /// **'Enregistrer le fichier d\'origine'**
   String get statementSavePdf;
 
   /// No description provided for @statementPdfSaved.
   ///
   /// In fr, this message translates to:
-  /// **'PDF enregistré.'**
+  /// **'Fichier enregistré.'**
   String get statementPdfSaved;
 
   /// No description provided for @statementPdfMissing.
   ///
   /// In fr, this message translates to:
-  /// **'Le serveur n\'a plus ce PDF : il a sans doute été reconstruit depuis l\'import.'**
+  /// **'Le serveur n\'a plus ce fichier : il a sans doute été reconstruit depuis l\'import.'**
   String get statementPdfMissing;
 
   /// No description provided for @statementPdfNotPaired.
   ///
   /// In fr, this message translates to:
-  /// **'Associez un serveur pour récupérer le PDF d\'origine.'**
+  /// **'Associez un serveur pour récupérer le fichier d\'origine.'**
   String get statementPdfNotPaired;
 
   /// No description provided for @statementPdfUnreachable.
   ///
   /// In fr, this message translates to:
-  /// **'Le serveur ne répond pas : le PDF n\'a pas pu être récupéré.'**
+  /// **'Le serveur ne répond pas : le fichier n\'a pas pu être récupéré.'**
   String get statementPdfUnreachable;
 
   /// No description provided for @statementDeleteLast.
@@ -1883,6 +1949,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Valider cette proposition'**
   String get validationConfirmOne;
+
+  /// No description provided for @validationPaired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre côté du transfert du {date} sur {account}'**
+  String validationPaired(String date, String account);
+
+  /// No description provided for @pairedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre côté du transfert'**
+  String get pairedTitle;
+
+  /// No description provided for @pairedMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre côté introuvable sur {account} : même montant, de signe opposé, à {days} jours au plus.'**
+  String pairedMissing(String account, int days);
+
+  /// No description provided for @unpairedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transferts sans autre côté'**
+  String get unpairedTitle;
+
+  /// No description provided for @unpairedHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un transfert entre deux comptes importés figure sur les deux relevés : même montant, de signe opposé, à {days} jours au plus. Ceux-ci n\'ont pas leur ligne sur l\'autre compte : importez son relevé, ou corrigez leur classification.'**
+  String unpairedHint(int days);
+
+  /// No description provided for @unpairedEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun transfert sans son autre côté.'**
+  String get unpairedEmpty;
+
+  /// No description provided for @taskUnpairedTransfers.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Un transfert entre comptes importés sans son autre côté} other{{count} transferts entre comptes importés sans leur autre côté}}'**
+  String taskUnpairedTransfers(int count);
+
+  /// No description provided for @taskUnpairedTransfersHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'autre compte n\'a pas la ligne correspondante : importez son relevé, ou corrigez la classification.'**
+  String get taskUnpairedTransfersHint;
 
   /// No description provided for @validationConfirmed.
   ///

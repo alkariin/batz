@@ -38,6 +38,19 @@ func TestStatementFiles(t *testing.T) {
 	require.Len(t, entries, 1, "no temporary file left")
 	assert.Equal(t, fp+".pdf", entries[0].Name())
 
+	// An export is kept as CSV, found the same way.
+	export := []byte("\"Date\";\"Amount\"\n")
+	csvFP := application.Fingerprint(export)
+	require.NoError(t, files.Save(csvFP, export))
+	has, err = files.Has(csvFP)
+	require.NoError(t, err)
+	assert.True(t, has)
+	read, err := files.Read(csvFP)
+	require.NoError(t, err)
+	assert.Equal(t, export, read)
+	_, err = os.Stat(filepath.Join(dir, csvFP+".csv"))
+	assert.NoError(t, err)
+
 	assert.Error(t, files.Save("../escape", []byte("x")))
 	_, err = files.Has("../escape")
 	assert.Error(t, err)

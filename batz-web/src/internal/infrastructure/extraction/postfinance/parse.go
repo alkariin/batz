@@ -132,23 +132,25 @@ func (p *parser) line(line string) error {
 			return err
 		}
 		if !p.opening {
-			p.st.OpeningBalance, p.opening = amount, true
+			p.st.OpeningBalance, p.opening = statement.Amount(amount), true
 		} else {
-			p.st.ClosingBalance, p.closing = amount, true
+			p.st.ClosingBalance, p.closing = statement.Amount(amount), true
 		}
 		p.current = nil
 		return nil
 	}
 	if totalRe.MatchString(stripped) {
+		// A column without total prints nothing: zero.
+		p.st.TotalCredits, p.st.TotalDebits = statement.Amount(0), statement.Amount(0)
 		for _, loc := range amountRe.FindAllStringIndex(line, -1) {
 			amount, err := cents(line[loc[0]:loc[1]])
 			if err != nil {
 				return err
 			}
 			if p.isCredit(utf8.RuneCountInString(line[:loc[1]])) {
-				p.st.TotalCredits = amount
+				p.st.TotalCredits = statement.Amount(amount)
 			} else {
-				p.st.TotalDebits = amount
+				p.st.TotalDebits = statement.Amount(amount)
 			}
 		}
 		p.totals = true
@@ -255,6 +257,10 @@ func (p *parser) finish() (statement.Statement, error) {
 		return statement.Statement{}, layout("the closing balance is missing")
 	case !p.totals && len(p.movements) > 0:
 		return statement.Statement{}, layout("the totals are missing")
+	}
+	if !p.totals {
+		// A statement without movement prints no totals.
+		p.st.TotalCredits, p.st.TotalDebits = statement.Amount(0), statement.Amount(0)
 	}
 	p.st.Lines = make([]statement.Line, len(p.movements))
 	for i, m := range p.movements {

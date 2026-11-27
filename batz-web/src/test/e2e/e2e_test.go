@@ -188,7 +188,7 @@ func TestHealthzOverHTTPS(t *testing.T) {
 	assert.Equal(t, "v0.0.0-e2e", body["version"])
 	assert.Equal(t, version.MinAppVersion, body["minAppVersion"])
 	assert.Equal(t, float64(1), body["syncProtocol"])
-	assert.Equal(t, []any{"postfinance"}, body["importFormats"])
+	assert.Equal(t, []any{"postfinance", "neon"}, body["importFormats"])
 
 	// HTTPS only: a plain HTTP request gets no API answer.
 	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/healthz", s.port))
@@ -375,6 +375,11 @@ func TestExtractCommand(t *testing.T) {
 	out, err := exec.Command(binary, "extract", "-summary", files[0]).Output()
 	require.NoError(t, err)
 	assert.Regexp(t, `^accepted, \d+ lines\n$`, string(out))
+
+	// A Neon export: its format is told by its content.
+	out, err = exec.Command(binary, "extract", "-summary", "../../internal/infrastructure/extraction/neon/testdata/2026-export.csv").Output()
+	require.NoError(t, err)
+	assert.Equal(t, "accepted, 6 lines\n", string(out))
 }
 
 // An app sends a statement over HTTPS: the server answers with its lines,

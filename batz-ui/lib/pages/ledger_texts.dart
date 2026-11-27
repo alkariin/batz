@@ -12,7 +12,6 @@ import 'ledger_cubit.dart';
 
 String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error) {
   LedgerError.nameRequired => l.errorNameRequired,
-  LedgerError.secondDetailedAccount => l.errorSecondDetailedAccount,
   LedgerError.unknownAccount => l.errorUnknownAccount,
   LedgerError.unknownCategory => l.errorUnknownCategory,
   LedgerError.categoryNameTaken => l.errorCategoryNameTaken,
@@ -62,6 +61,21 @@ String ledgerErrorText(AppLocalizations l, LedgerException e) => switch (e.error
   LedgerError.statementSumMismatch => l.errorStatementSumMismatch,
   LedgerError.statementTooLarge => l.errorStatementTooLarge,
   LedgerError.statementNotLast => l.errorStatementNotLast,
+  LedgerError.statementNoNewLines => l.errorStatementNoNewLines,
+  LedgerError.statementLinesBeforeFirst => switch (e) {
+    StatementRefusedException(:final foundStart?, :final expectedStart?) => l.errorStatementLinesBeforeFirst(
+      formatDate(foundStart.toDateTime()),
+      formatDate(expectedStart.toDateTime()),
+    ),
+    _ => l.errorStatementLinesBeforeFirst('?', '?'),
+  },
+  LedgerError.statementImportedToday => l.errorStatementImportedToday,
+  LedgerError.statementBalanceRequired => l.errorStatementBalanceRequired,
+  LedgerError.statementBalanceMismatch => switch (e) {
+    StatementRefusedException(:final foundBalance?, :final expectedBalance?, :final count) =>
+      l.errorStatementBalanceMismatch(formatAmount(foundBalance), count, formatAmount(expectedBalance)),
+    _ => l.errorStatementBalanceMismatch('?', 0, '?'),
+  },
   LedgerError.unknownStatement => l.errorUnknownStatement,
   LedgerError.importedTransaction => l.errorImportedTransaction,
   LedgerError.unknownRule => l.errorUnknownRule,

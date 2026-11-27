@@ -9,12 +9,12 @@ import '../../domain/views/wealth.dart';
 import '../../components/date_field.dart';
 import '../../services.dart';
 import '../../l10n/app_localizations.dart';
-import '../accounts/accounts_page.dart';
 import '../categories/categories_page.dart';
 import '../ledger_cubit.dart';
 import '../lock/lock_cubit.dart';
 import '../redistribution/redistribution_page.dart';
 import '../refunds/broken_refunds_page.dart';
+import '../transactions/unpaired_transfers_page.dart';
 import '../shares/shares_page.dart';
 import '../validation/validation_page.dart';
 import '../wealth/account_page.dart';
@@ -22,9 +22,14 @@ import '../wealth/account_page.dart';
 /// The tasks of the home screen: the lines to validate, the lines whose
 /// rules compete, the rules that propose nothing any more, the shares to
 /// classify, the redistribution rules that do not apply, the refunds that
-/// lost their expense, the balances declared more than six months ago, and
-/// the inconsistencies a merge can leave, each leading to the screen that
-/// deals with it.
+/// lost their expense, the transfers between imported accounts without
+/// their other side after [unpairedTaskDays] days, the balances declared
+/// more than six months ago, and the inconsistencies a merge can leave,
+/// each leading to the screen that deals with it.
+/// The days a transfer between imported accounts waits for its other side
+/// before it is a task.
+const unpairedTaskDays = 10;
+
 class TasksCard extends StatelessWidget {
   const TasksCard({super.key});
 
@@ -51,6 +56,9 @@ class TasksCard extends StatelessWidget {
         }
         final shares = ledger.pendingShareCount;
         final broken = ledger.brokenRefunds.length;
+        // The other statement takes some days to be imported.
+        final unpairedSince = today.addDays(-unpairedTaskDays);
+        final unpaired = ledger.unpairedTransfers.where((t) => !t.date.isAfter(unpairedSince)).length;
         final old = ledger.wealth(today).oldBalances;
         final tasks = [
           if (noScreenLock)
@@ -116,6 +124,16 @@ class TasksCard extends StatelessWidget {
               warning: true,
               key: const Key('taskBrokenRefunds'),
             ),
+          if (unpaired > 0)
+            _tile(
+              context,
+              Icons.link_off,
+              l.taskUnpairedTransfers(unpaired),
+              l.taskUnpairedTransfersHint,
+              const UnpairedTransfersPage(),
+              warning: true,
+              key: const Key('taskUnpairedTransfers'),
+            ),
           for (final balance in old)
             _tile(
               context,
@@ -146,11 +164,6 @@ class TasksCard extends StatelessWidget {
         l.taskDuplicateName(categories.length, name, year),
         l.taskDuplicateNameHint,
         CategoriesPage(initialYear: year) as Widget,
-      ),
-      SeveralDetailedAccounts(:final accounts) => (
-        l.taskDetailedAccounts(accounts.length),
-        l.taskDetailedAccountsHint,
-        const AccountsPage(),
       ),
       DetachedCategories(:final year, :final heads) => (
         l.taskDetached(heads.length, year),

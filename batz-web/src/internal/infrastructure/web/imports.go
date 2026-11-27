@@ -1,6 +1,7 @@
 package web
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"log/slog"
@@ -51,14 +52,19 @@ func (h *importHandler) importStatement(c *gin.Context) {
 	c.JSON(http.StatusOK, importResponse{Fingerprint: res.Fingerprint, Statement: res.Statement})
 }
 
-// pdf returns the original file of a statement.
+// pdf returns the original file of a statement: a PDF, or the CSV of an
+// export (the route keeps its name).
 func (h *importHandler) pdf(c *gin.Context) {
 	fingerprint := c.Param("fingerprint")
-	pdf, err := h.imports.PDF(c.Request.Context(), fingerprint)
+	file, err := h.imports.PDF(c.Request.Context(), fingerprint)
 	if err != nil {
 		fail(c, err)
 		return
 	}
-	c.Header("Content-Disposition", `attachment; filename="`+fingerprint+`.pdf"`)
-	c.Data(http.StatusOK, "application/pdf", pdf)
+	extension, contentType := ".csv", "text/csv; charset=utf-8"
+	if bytes.HasPrefix(file, []byte("%PDF-")) {
+		extension, contentType = ".pdf", "application/pdf"
+	}
+	c.Header("Content-Disposition", `attachment; filename="`+fingerprint+extension+`"`)
+	c.Data(http.StatusOK, contentType, file)
 }

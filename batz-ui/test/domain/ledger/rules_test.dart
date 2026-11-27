@@ -324,7 +324,7 @@ void main() {
           periodStart: d(2026, 4, 1),
           periodEnd: d(2026, 4, 30),
           openingBalance: march.closingBalance,
-          closingBalance: march.closingBalance + lines.fold(0, (sum, line) => sum + line.$2),
+          closingBalance: march.closingBalance! + lines.fold(0, (sum, line) => sum + line.$2),
           totalCredits: 500000,
           totalDebits: 3150,
           lines: [
@@ -524,7 +524,9 @@ void main() {
         refusal(() => ledger.createRule('r', rule(['x'], category: 'housing'))),
         LedgerError.categoryNotAssignable,
       );
-      expect(refusal(() => ledger.createRule('r', rule(['x'], account: 'bank'))), LedgerError.detailedAccountManual);
+      // A detailed account is a target: a transfer between two imported
+      // accounts is paired with its other side.
+      expect(ledger.createRule('r', rule(['x'], account: 'bank')).changes, isNotEmpty);
       expect(refusal(() => ledger.createRule('r', rule(['x']))), LedgerError.ruleTargetRequired);
       expect(
         refusal(() => ledger.createRule('r', rule(['x'], category: 'food', account: 'cash'))),

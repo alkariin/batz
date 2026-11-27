@@ -70,17 +70,11 @@ void main() {
 
     expect(find.text('2 catégories « Nourriture » en $year'), findsOneWidget);
     expect(find.text('2 catégories à replacer en $year'), findsOneWidget);
-    expect(find.text('2 comptes détaillés'), findsOneWidget);
+    expect(find.textContaining('comptes détaillés'), findsNothing, reason: 'several detailed accounts are no task');
 
     await tester.tap(find.text('2 catégories « Nourriture » en $year'));
     await tester.pumpAndSettle();
     expect(find.text('Nom en double dans cette année'), findsNWidgets(2));
-    await tester.tap(find.byType(BackButton));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('2 comptes détaillés'));
-    await tester.pumpAndSettle();
-    expect(find.text('Compte privé · Détaillé'), findsNWidgets(2));
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
 
@@ -95,7 +89,6 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await settle(tester);
     expect(find.textContaining('à replacer'), findsNothing);
-    expect(find.text('2 comptes détaillés'), findsOneWidget);
   });
 
   testWidgets('after a merge, redistribution rules that no longer apply and a refund that lost its expense are tasks', (

@@ -3,8 +3,16 @@ import 'package:equatable/equatable.dart';
 /// The ten account types. The name is what the journal stores.
 enum AccountType { privateAccount, savings, pillar3, pillar2, investments, vehicle, rentDeposit, cash, debts, other }
 
-/// Bank statement formats the server can read.
-enum ImportFormat { postfinance }
+/// Bank statement formats the server can read: the PDF statements of
+/// PostFinance, which print their balances, and the CSV exports of Neon,
+/// which print none (the user types the balance at each import).
+enum ImportFormat {
+  postfinance,
+  neon;
+
+  /// Whether a file of this format prints its opening and closing balances.
+  bool get printsBalances => this == postfinance;
+}
 
 /// Journal entity and fields of an account.
 abstract final class AccountFields {

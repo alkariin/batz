@@ -8,16 +8,21 @@ import 'package:batz/data/server/import_protocol.dart';
 import 'package:batz/data/server/server_client.dart';
 import 'package:batz/data/server/server_repository.dart';
 import 'package:batz/data/sync/sync_protocol.dart';
+import 'package:batz/domain/calendar_date.dart';
 import 'package:batz/domain/ledger/account.dart';
+import 'package:batz/pages/ledger_cubit.dart';
+import 'package:batz/pages/shell.dart';
 import 'package:batz/services.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/fake_server.dart';
 import '../../support/ledger_harness.dart';
 import '../../support/services.dart';
 import '../../support/statements.dart';
+import '../../domain/ledger/exports_test.dart' show early, export, later;
 import '../accounts/accounts_page_test.dart' show settle;
 import '../sync/sync_cubit_test.dart' show pairing;
 
@@ -61,10 +66,10 @@ class FakeFiles implements FileAccess {
   void pick(FixtureStatement f) => queue.add(PickedFile('${f.name}.pdf', Uint8List.fromList(f.pdf)));
 
   @override
-  Future<PickedFile?> pickPdf() async => queue.isEmpty ? null : queue.removeAt(0);
+  Future<PickedFile?> pickStatement() async => queue.isEmpty ? null : queue.removeAt(0);
 
   @override
-  Future<bool> savePdf(String fileName, Uint8List bytes) async {
+  Future<bool> saveStatement(String fileName, Uint8List bytes) async {
     saved[fileName] = bytes;
     return true;
   }
@@ -84,6 +89,7 @@ void main() {
   late FakeImportServer imports;
   late FakeFiles files;
   late AppServices services;
+  var today = CalendarDate(2026, 3, 15);
 
   Future<void> open(WidgetTester tester) async {
     tester.view.physicalSize = const Size(500, 1000);
@@ -102,7 +108,13 @@ void main() {
     files = FakeFiles();
     final secrets = MemorySecretStore()..values[pairingSecretKey] = jsonEncode(pairing.toJson());
     services = (await tester.runAsync(
-      () => testServices(secrets: secrets, syncTransport: (_) => sync, importTransport: (_) => imports, files: files),
+      () => testServices(
+        secrets: secrets,
+        syncTransport: (_) => sync,
+        importTransport: (_) => imports,
+        files: files,
+        today: () => today,
+      ),
     ))!;
     addTearDown(() => tester.runAsync(services.database.close));
     await tester.runAsync(() async {
@@ -193,18 +205,21 @@ void main() {
     await tester.tap(find.byKey(ValueKey('statementMenu-${janStatement.id}')));
     await settle(tester);
     expect(find.text('Supprimer le dernier relevé'), findsNothing, reason: 'only the last one');
-    await tester.tap(find.text("Enregistrer le PDF d'origine"));
+    await tester.tap(find.text("Enregistrer le fichier d'origine"));
     await settle(tester);
     expect(files.saved['releve-2026-01-01-2026-01-31.pdf'], jan.pdf);
-    expect(find.text('PDF enregistré.'), findsOneWidget);
+    expect(find.text('Fichier enregistré.'), findsOneWidget);
 
     // A rebuilt server no longer has the file: said without error.
     imports.held.clear();
     await tester.tap(find.byKey(ValueKey('statementMenu-${janStatement.id}')));
     await settle(tester);
-    await tester.tap(find.text("Enregistrer le PDF d'origine"));
+    await tester.tap(find.text("Enregistrer le fichier d'origine"));
     await settle(tester);
-    expect(find.text("Le serveur n'a plus ce PDF : il a sans doute été reconstruit depuis l'import."), findsOneWidget);
+    expect(
+      find.text("Le serveur n'a plus ce fichier : il a sans doute été reconstruit depuis l'import."),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byKey(ValueKey('statementMenu-${febStatement.id}')));
     await settle(tester);
@@ -246,5 +261,81 @@ void main() {
       tester.widget<Text>(find.byKey(const Key('importRefusal'))).data,
       'Le serveur (version v0.4.0) est trop ancien pour importer des relevés : installez la version 0.4.0 ou une suivante.',
     );
+  });
+
+  testWidgets('a Neon export: the balance typed sets the start, then a later export brings its new lines if they lead '
+      'to the balance typed', (tester) async {
+    today = CalendarDate(2026, 3, 15);
+    await open(tester);
+    await tester.runAsync(() async {
+      final ledger = await services.ledger.load();
+      await services.ledger.write(
+        ledger.createAccount(
+          'neon',
+          const AccountDraft(name: 'Neon', type: AccountType.privateAccount, importFormat: ImportFormat.neon),
+        ),
+      );
+    });
+    await tester.runAsync(() => tester.element(find.byType(AppShell)).read<LedgerCubit>().load());
+    await settle(tester);
+    imports.formats = ['postfinance', 'neon'];
+    final first = FixtureStatement('export', export(early), 'a' * 64, utf8.encode('"Date";"Amount" first'));
+    final second = FixtureStatement('export', export(later), 'b' * 64, utf8.encode('"Date";"Amount" second'));
+    imports.byFingerprint[sha256.convert(first.pdf).toString()] = first;
+    imports.byFingerprint[sha256.convert(second.pdf).toString()] = second;
+    Future<void> pick(FixtureStatement f) async {
+      files.queue.add(PickedFile('export.csv', Uint8List.fromList(f.pdf)));
+      await choose(tester);
+    }
+
+    Future<void> typeBalance(String balance) async {
+      await tester.enterText(find.byKey(const Key('importBalance')), balance);
+      await tester.tap(find.byKey(const Key('importBalanceConfirm')));
+      await settle(tester);
+    }
+
+    await tester.tap(find.byKey(const Key('importStatement')));
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('importAccount')));
+    await settle(tester);
+    await tester.tap(find.text('Neon').last);
+    await settle(tester);
+
+    await pick(first);
+    expect(tester.widget<Text>(find.byKey(const Key('importBalanceLines'))).data, '6 nouvelles lignes.');
+    expect(find.textContaining('Premier import de ce compte'), findsOneWidget);
+    await typeBalance('abc');
+    expect(find.text('Montant invalide : saisissez par exemple 1234.50.'), findsOneWidget);
+    await typeBalance("1'200");
+    expect(
+      tester.widget<Text>(find.byKey(const Key('importResult'))).data,
+      'Du 05.01.2026 au 15.03.2026\n6 lignes : 0 proposée, 6 à compléter.',
+    );
+
+    // Two weeks later, the export of the year again.
+    today = CalendarDate(2026, 3, 29);
+    await pick(second);
+    expect(tester.widget<Text>(find.byKey(const Key('importBalanceLines'))).data, '2 nouvelles lignes.');
+    await typeBalance('1160');
+    expect(
+      tester.widget<Text>(find.byKey(const Key('importRefusal'))).data,
+      startsWith(
+        "Le solde saisi, 1'160.00, ne correspond pas : le solde du dernier import plus les nouvelles lignes (2) "
+        "donne 1'161.50.",
+      ),
+    );
+    await pick(second);
+    await typeBalance('1161.50');
+    expect(tester.widget<Text>(find.byKey(const Key('importResult'))).data, contains('2 lignes'));
+
+    // The original file is saved as CSV.
+    await tester.tap(find.text('Relevés du compte'));
+    await settle(tester);
+    final statement = (await tester.runAsync(services.ledger.load))!.statementsOf('neon').last;
+    await tester.tap(find.byKey(ValueKey('statementMenu-${statement.id}')));
+    await settle(tester);
+    await tester.tap(find.text("Enregistrer le fichier d'origine"));
+    await settle(tester);
+    expect(files.saved['export-2026-03-16-2026-03-29.csv'], second.pdf);
   });
 }

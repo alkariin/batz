@@ -13,6 +13,7 @@ import 'rule.dart';
 import 'share_classification.dart';
 import 'statement.dart';
 import 'transaction.dart';
+import 'transfer_pairs.dart';
 
 /// Everything the user has entered, as read from the derived tables at one
 /// moment. Immutable; the rules below check an operation against it and
@@ -23,7 +24,8 @@ class Ledger {
   /// [lines] are attached to their transaction, largest amount first; a
   /// line whose transaction is absent is left out.
   /// [deletedStatementIds] are the statements deleted from the journal: one
-  /// imported again must bring its records back explicitly.
+  /// imported again must bring its records back explicitly; so must an
+  /// export that brings back lines of [deletedImportedTransactionIds].
   Ledger({
     Iterable<Account> accounts = const [],
     Iterable<Category> categories = const [],
@@ -31,6 +33,7 @@ class Ledger {
     Iterable<TransactionLine> lines = const [],
     Iterable<Statement> statements = const [],
     Iterable<String> deletedStatementIds = const [],
+    Iterable<String> deletedImportedTransactionIds = const [],
     Iterable<MappingRule> rules = const [],
     Iterable<RedistributionRule> redistributions = const [],
     Iterable<ShareClassification> shareClassifications = const [],
@@ -44,6 +47,7 @@ class Ledger {
          lines,
          statements,
          deletedStatementIds,
+         deletedImportedTransactionIds,
          rules,
          redistributions,
          shareClassifications,
@@ -59,6 +63,7 @@ class Ledger {
     Iterable<TransactionLine> lines,
     Iterable<Statement> statements,
     Iterable<String> deletedStatementIds,
+    Iterable<String> deletedImportedTransactionIds,
     Iterable<MappingRule> rules,
     Iterable<RedistributionRule> redistributions,
     Iterable<ShareClassification> shareClassifications,
@@ -70,6 +75,7 @@ class Ledger {
       transactions = _attach(transactions, lines),
       statements = {for (final s in statements) s.id: s},
       deletedStatementIds = Set.unmodifiable(deletedStatementIds),
+      deletedImportedTransactionIds = Set.unmodifiable(deletedImportedTransactionIds),
       rules = {for (final r in rules) r.id: r},
       redistributions = {for (final r in redistributions) r.id: r},
       shareClassifications = {for (final c in shareClassifications) (c.lineId, c.year): c},
@@ -109,6 +115,9 @@ class Ledger {
 
   final Map<String, Statement> statements;
   final Set<String> deletedStatementIds;
+
+  /// The imported lines deleted with their statement.
+  final Set<String> deletedImportedTransactionIds;
 
   /// The mapping rules of every year, by identifier.
   final Map<String, MappingRule> rules;
@@ -200,15 +209,12 @@ class Ledger {
       final heads = forest.detachedHeads(year);
       if (heads.isNotEmpty) result.add(DetachedCategories(year, heads));
     }
-    final detailed = sortedAccounts.where((a) => a.isDetailed).toList();
-    if (detailed.length > 1) result.add(SeveralDetailedAccounts(detailed));
     return result;
   }();
 
   // ---------------------------------------------------------------- accounts
 
-  /// Creates the account [id]. Refused if the name is empty, or if import is
-  /// enabled while another account is already detailed.
+  /// Creates the account [id]. Refused if the name is empty.
   Modification createAccount(String id, AccountDraft draft) {
     _checkAccount(id, draft);
     return Modification.set(AccountFields.entity, id, _accountFields(draft));
@@ -241,15 +247,9 @@ class Ledger {
   int transactionsUsingAccount(String accountId) =>
       transactions.values.where((t) => t.accountId == accountId || t.counterpartAccountId == accountId).length;
 
-  /// A second detailed account is refused. An account that already is one
-  /// stays editable even when a merge left another detailed account
-  /// (never blocking).
+  /// Several accounts can be detailed, each with its format.
   void _checkAccount(String id, AccountDraft draft) {
     if (draft.name.trim().isEmpty) throw const LedgerException(LedgerError.nameRequired);
-    final alreadyDetailed = accounts[id]?.isDetailed ?? false;
-    if (draft.importFormat != null && !alreadyDetailed && accounts.values.any((a) => a.id != id && a.isDetailed)) {
-      throw const LedgerException(LedgerError.secondDetailedAccount);
-    }
   }
 
   // -------------------------------------------------------------- categories
@@ -943,15 +943,72 @@ class Ledger {
   /// statements; it does not follow the latest one (the day after it and its
   /// closing balance are expected); its lines do not add up to the difference
   /// of its balances; it is too large for one modification.
-  StatementImport importStatement(String accountId, ExtractedStatement extracted, {required String fingerprint}) {
+  ///
+  /// An export without balances (Neon) is imported by [_importExport]: the
+  /// user typed [closingBalance], and [today] ends its period.
+  StatementImport importStatement(
+    String accountId,
+    ExtractedStatement extracted, {
+    required String fingerprint,
+    int? closingBalance,
+    CalendarDate? today,
+  }) {
+    final account = _checkImport(accountId, extracted, fingerprint);
+    if (!account.importFormat!.printsBalances) {
+      if (closingBalance == null || today == null) {
+        throw const StatementRefusedException(LedgerError.statementBalanceRequired);
+      }
+      return _importExport(accountId, extracted, fingerprint, closingBalance, today);
+    }
+    final id = statementId(accountId, fingerprint);
+    final last = lastStatementOf(accountId);
+    final opening = extracted.openingBalance, closing = extracted.closingBalance;
+    if (opening == null || closing == null) throw const StatementRefusedException(LedgerError.statementSumMismatch);
+    if (last != null) {
+      final expectedStart = last.periodEnd.addDays(1);
+      if (extracted.periodStart != expectedStart || opening != last.closingBalance) {
+        throw StatementRefusedException(
+          LedgerError.statementNotContiguous,
+          expectedStart: expectedStart,
+          foundStart: extracted.periodStart,
+          expectedOpening: last.closingBalance,
+          foundOpening: opening,
+        );
+      }
+    }
+    final sum = extracted.lines.fold(0, (total, line) => total + line.amount);
+    if (sum != closing - opening) {
+      throw const StatementRefusedException(LedgerError.statementSumMismatch);
+    }
+    // Imported again after a deletion: its records come back, reset.
+    final again = deletedStatementIds.contains(id);
+    return _statementImport(
+      accountId,
+      id,
+      extracted,
+      fingerprint,
+      periodStart: extracted.periodStart,
+      periodEnd: extracted.periodEnd,
+      opening: opening,
+      closing: closing,
+      lines: [for (final (rank, line) in extracted.lines.indexed) (importedTransactionId(id, rank), line)],
+      again: again,
+      first: last == null,
+    );
+  }
+
+  /// The checks of every import: a detailed account of the file's format,
+  /// a file not imported yet, the IBAN of the account's statements.
+  Account _checkImport(String accountId, ExtractedStatement extracted, String fingerprint) {
     final account = accounts[accountId];
     if (account == null) throw const LedgerException(LedgerError.unknownAccount);
     if (!account.isDetailed) throw const StatementRefusedException(LedgerError.accountNotDetailed);
     if (account.importFormat!.name != extracted.format) {
       throw const StatementRefusedException(LedgerError.statementOtherFormat);
     }
-    final id = statementId(accountId, fingerprint);
-    if (statements.containsKey(id)) throw const StatementRefusedException(LedgerError.statementAlreadyImported);
+    if (statements.containsKey(statementId(accountId, fingerprint))) {
+      throw const StatementRefusedException(LedgerError.statementAlreadyImported);
+    }
     final last = lastStatementOf(accountId);
     if (last != null && last.iban != extracted.iban) {
       throw StatementRefusedException(
@@ -960,41 +1017,130 @@ class Ledger {
         foundIban: extracted.iban,
       );
     }
-    if (last != null) {
-      final expectedStart = last.periodEnd.addDays(1);
-      if (extracted.periodStart != expectedStart || extracted.openingBalance != last.closingBalance) {
+    return account;
+  }
+
+  /// What the export [extracted] would bring to [accountId], before the user
+  /// types its balance. Refused, besides the checks of every import, when
+  /// it brings no new line, when a new line is dated before the account's
+  /// first import (the balances before it are unknown), or when the
+  /// account's latest import is of [today] (the next one starts tomorrow:
+  /// delete that one to replace it).
+  ImportPreview previewImport(
+    String accountId,
+    ExtractedStatement extracted, {
+    required String fingerprint,
+    required CalendarDate today,
+  }) {
+    _checkImport(accountId, extracted, fingerprint);
+    final lines = _newExportLines(accountId, extracted, today);
+    final last = lastStatementOf(accountId);
+    return ImportPreview(newLines: lines.length, first: last == null, previousClosing: last?.closingBalance);
+  }
+
+  /// The lines of [extracted] that no import of [accountId] holds, with
+  /// their identifiers: an identical line counts once per occurrence in the
+  /// file, so that two identical payments of a day stay two.
+  List<(String, ExtractedLine)> _newExportLines(String accountId, ExtractedStatement extracted, CalendarDate today) {
+    final occurrences = <String, int>{};
+    final lines = <(String, ExtractedLine)>[];
+    for (final line in extracted.lines) {
+      final key = '${line.date.encode()}/${line.amount}/${line.rawText}';
+      final occurrence = occurrences[key] = (occurrences[key] ?? -1) + 1;
+      final id = exportedTransactionId(accountId, line.date, line.amount, line.rawText, occurrence);
+      if (!transactions.containsKey(id)) lines.add((id, line));
+    }
+    if (lines.isEmpty) throw const StatementRefusedException(LedgerError.statementNoNewLines);
+    final first = statementsOf(accountId).firstOrNull;
+    if (first != null) {
+      final earliest = lines.map((l) => l.$2.date).reduce((a, b) => a.isBefore(b) ? a : b);
+      if (earliest.isBefore(first.periodStart)) {
         throw StatementRefusedException(
-          LedgerError.statementNotContiguous,
-          expectedStart: expectedStart,
-          foundStart: extracted.periodStart,
-          expectedOpening: last.closingBalance,
-          foundOpening: extracted.openingBalance,
+          LedgerError.statementLinesBeforeFirst,
+          expectedStart: first.periodStart,
+          foundStart: earliest,
         );
       }
     }
-    final sum = extracted.lines.fold(0, (total, line) => total + line.amount);
-    if (sum != extracted.closingBalance - extracted.openingBalance) {
-      throw const StatementRefusedException(LedgerError.statementSumMismatch);
+    final last = lastStatementOf(accountId);
+    if (last != null && !last.periodEnd.isBefore(today)) {
+      throw const StatementRefusedException(LedgerError.statementImportedToday);
     }
+    return lines;
+  }
 
-    // Imported again after a deletion: its records come back, reset.
-    final again = deletedStatementIds.contains(id);
+  /// Imports the new lines of an export without balances: the balance of
+  /// the previous import plus the new lines must give [closingBalance], the
+  /// balance the user typed; the first import takes it as given, its
+  /// opening balance being [closingBalance] less the lines. Its period runs
+  /// from the day after the previous import (from its earliest line for the
+  /// first one) to [today].
+  StatementImport _importExport(
+    String accountId,
+    ExtractedStatement extracted,
+    String fingerprint,
+    int closingBalance,
+    CalendarDate today,
+  ) {
+    final lines = _newExportLines(accountId, extracted, today);
+    final last = lastStatementOf(accountId);
+    final sum = lines.fold(0, (total, line) => total + line.$2.amount);
+    if (last != null && last.closingBalance + sum != closingBalance) {
+      throw StatementRefusedException(
+        LedgerError.statementBalanceMismatch,
+        expectedBalance: last.closingBalance + sum,
+        foundBalance: closingBalance,
+        count: lines.length,
+      );
+    }
+    final start = last?.periodEnd.addDays(1) ?? lines.map((l) => l.$2.date).reduce((a, b) => a.isBefore(b) ? a : b);
+    final id = statementId(accountId, fingerprint);
+    return _statementImport(
+      accountId,
+      id,
+      extracted,
+      fingerprint,
+      periodStart: start,
+      periodEnd: today.isBefore(start) ? start : today,
+      opening: last?.closingBalance ?? closingBalance - sum,
+      closing: closingBalance,
+      lines: lines,
+      again: deletedStatementIds.contains(id),
+      first: last == null,
+    );
+  }
+
+  /// The statement [id] and its [lines], each with its identifier, to
+  /// validate; brought back and reset if they were deleted.
+  StatementImport _statementImport(
+    String accountId,
+    String id,
+    ExtractedStatement extracted,
+    String fingerprint, {
+    required CalendarDate periodStart,
+    required CalendarDate periodEnd,
+    required int opening,
+    required int closing,
+    required List<(String, ExtractedLine)> lines,
+    required bool again,
+    required bool first,
+  }) {
     final changes = <FieldChange>[
       for (final field in {
         StatementFields.accountId: accountId,
         StatementFields.format: extracted.format,
         StatementFields.iban: extracted.iban,
-        StatementFields.periodStart: extracted.periodStart.encode(),
-        StatementFields.periodEnd: extracted.periodEnd.encode(),
-        StatementFields.openingBalance: extracted.openingBalance,
-        StatementFields.closingBalance: extracted.closingBalance,
+        StatementFields.periodStart: periodStart.encode(),
+        StatementFields.periodEnd: periodEnd.encode(),
+        StatementFields.openingBalance: opening,
+        StatementFields.closingBalance: closing,
         StatementFields.fingerprint: fingerprint,
         if (again) deletedField: false,
       }.entries)
         FieldChange(StatementFields.entity, id, field.key, field.value),
     ];
-    for (final (rank, line) in extracted.lines.indexed) {
-      final transactionId = importedTransactionId(id, rank);
+    for (final (rank, (transactionId, line)) in lines.indexed) {
+      final reset = again || deletedImportedTransactionIds.contains(transactionId);
       for (final field in {
         TransactionFields.accountId: accountId,
         TransactionFields.date: line.date.encode(),
@@ -1004,16 +1150,16 @@ class Ledger {
         TransactionFields.status: TransactionStatus.toValidate.name,
         TransactionFields.statementId: id,
         TransactionFields.statementRank: rank,
-        if (again) ...{deletedField: false, TransactionFields.counterpartAccountId: null, TransactionFields.note: ''},
+        if (reset) ...{deletedField: false, TransactionFields.counterpartAccountId: null, TransactionFields.note: ''},
       }.entries) {
         changes.add(FieldChange(TransactionFields.entity, transactionId, field.key, field.value));
       }
     }
-    for (final year in {for (final line in extracted.lines) line.date.year}.toList()..sort()) {
+    for (final year in {for (final (_, line) in lines) line.date.year}.toList()..sort()) {
       changes.addAll(treeChangesFor(year));
     }
     if (changes.length > maxModificationChanges) throw const StatementRefusedException(LedgerError.statementTooLarge);
-    return StatementImport(modification: Modification(changes), statementId: id, first: last == null);
+    return StatementImport(modification: Modification(changes), statementId: id, first: first);
   }
 
   /// Deletes the statement [id] and all its lines: only the latest statement
@@ -1065,11 +1211,11 @@ class Ledger {
   /// What [rule] classifies a payment of [payment] as, for the payment
   /// date, or null when its target can no longer be used: a category that
   /// is deleted, detached, a group or not of its year's tree; an account
-  /// that is gone, archived or detailed.
+  /// that is gone or archived.
   Classification? ruleClassification(MappingRule rule, CalendarDate payment) {
     if (rule.targetAccountId case final accountId?) {
       final account = accounts[accountId];
-      if (account == null || account.archived || account.isDetailed) return null;
+      if (account == null || account.archived) return null;
       return Classification.transfer(accountId);
     }
     final categoryId = rule.targetCategoryId;
@@ -1087,8 +1233,9 @@ class Ledger {
   ];
 
   /// What the rules say of each line to validate, recomputed at each load
-  /// from its raw text and the rules of its payment year.
-  late final Map<String, RuleOutcome> proposals = () {
+  /// from its raw text and the rules of its payment year. A rule that sends
+  /// a line to its own account proposes nothing for it.
+  late final Map<String, RuleOutcome> _ruleOutcomes = () {
     final byYear = <int, List<MappingRule>>{};
     for (final rule in rules.values) {
       (byYear[rule.year] ??= []).add(rule);
@@ -1096,20 +1243,62 @@ class Ledger {
     return {
       for (final t in transactions.values)
         if (!t.isValidated)
-          t.id: outcomeOf(t.rawText ?? '', byYear[t.date.year] ?? const [], (r) => ruleClassification(r, t.date)),
+          t.id: outcomeOf(
+            t.rawText ?? '',
+            byYear[t.date.year] ?? const [],
+            (r) => r.targetAccountId == t.accountId ? null : ruleClassification(r, t.date),
+          ),
     };
   }();
 
-  /// The classification the rules propose for [transaction], if any.
+  /// The two lines of each transfer between detailed accounts, each to the
+  /// other (see transfer_pairs.dart).
+  late final Map<String, String> transferPairs = pairTransfers(this, _ruleOutcomes);
+
+  /// What is proposed for each line to validate: what its rules say, unless
+  /// it is the other side of a transfer between detailed accounts.
+  late final Map<String, RuleOutcome> proposals = {
+    for (final MapEntry(key: id, value: outcome) in _ruleOutcomes.entries) id: _pairedOutcome(id) ?? outcome,
+  };
+
+  RuleOutcome? _pairedOutcome(String id) {
+    final other = transactions[transferPairs[id]];
+    if (other == null) return null;
+    final transfer = Classification.transfer(other.accountId);
+    if (_ruleOutcomes[id] case Proposed(:final classification) when classification == transfer) return null;
+    return PairedTransfer(other.id, transfer);
+  }
+
+  /// The line of the other account paired with [transaction], when it is
+  /// one side of a transfer between detailed accounts.
+  LedgerTransaction? pairedLineOf(LedgerTransaction transaction) => transactions[transferPairs[transaction.id]];
+
+  /// The validated transfers between two detailed accounts whose line on
+  /// the other account is not found, by date: the other statement is not
+  /// imported yet, or the two lines differ (amount, more than
+  /// [pairWindowDays] days apart, classified otherwise).
+  late final List<LedgerTransaction> unpairedTransfers = [
+    for (final t in transactions.values)
+      if (t.isValidated &&
+          t.isImported &&
+          t.isTransfer &&
+          t.counterpartAccountId != t.accountId &&
+          (accounts[t.accountId]?.isDetailed ?? false) &&
+          (accounts[t.counterpartAccountId]?.isDetailed ?? false) &&
+          !transferPairs.containsKey(t.id))
+        t,
+  ]..sort((a, b) => a.date.compareTo(b.date) != 0 ? a.date.compareTo(b.date) : a.id.compareTo(b.id));
+
+  /// The classification proposed for [transaction], if any.
   Classification? proposalOf(LedgerTransaction transaction) => switch (proposals[transaction.id]) {
-    Proposed(:final classification) => classification,
+    Proposed(:final classification) || PairedTransfer(:final classification) => classification,
     _ => null,
   };
 
   /// Where [transaction] stands in the validation.
   ValidationState validationStateOf(LedgerTransaction transaction) {
     if (transaction.isValidated) return ValidationState.validated;
-    return proposals[transaction.id] is Proposed ? ValidationState.proposed : ValidationState.toComplete;
+    return proposalOf(transaction) != null ? ValidationState.proposed : ValidationState.toComplete;
   }
 
   /// The lines to validate, by date then rank.
@@ -1166,7 +1355,6 @@ class Ledger {
       final unchanged = accountId == existing?.targetAccountId;
       if (account == null) throw const LedgerException(LedgerError.unknownAccount);
       if (account.archived && !unchanged) throw const LedgerException(LedgerError.archivedAccount);
-      if (account.isDetailed) throw const LedgerException(LedgerError.detailedAccountManual);
     }
     return {
       RuleFields.year: draft.year,
@@ -1246,11 +1434,19 @@ class Ledger {
   /// which case each modification holds whole lines.
   List<Modification> confirmProposals(Iterable<String> ids) {
     final groups = <List<FieldChange>>[];
+    // A line validated with the other side of its transfer is not validated
+    // twice.
+    final done = <String>{};
     for (final id in ids) {
       final transaction = transactions[id];
-      final outcome = proposals[id];
-      if (transaction == null || transaction.isValidated || outcome is! Proposed) continue;
-      groups.add(_classificationChanges(transaction, outcome.classification));
+      final classification = transaction == null ? null : proposalOf(transaction);
+      if (transaction == null || transaction.isValidated || classification == null || done.contains(id)) continue;
+      final group = _classificationChanges(transaction, classification);
+      done.addAll({
+        for (final change in group)
+          if (change.entity == TransactionFields.entity) change.recordId,
+      });
+      groups.add(group);
     }
     final modifications = <Modification>[];
     var current = <FieldChange>[];
@@ -1276,14 +1472,17 @@ class Ledger {
       if (account.archived && accountId != t.counterpartAccountId) {
         throw const LedgerException(LedgerError.archivedAccount);
       }
-      if (account.isDetailed) throw const LedgerException(LedgerError.detailedAccountManual);
-      // The amount keeps the statement's sign: negative, the money goes to
-      // the counterpart; positive, it comes from it. A transfer has no line.
-      changes.add(FieldChange(TransactionFields.entity, t.id, TransactionFields.counterpartAccountId, accountId));
-      for (final line in t.lines) {
-        changes.add(FieldChange(LineFields.entity, line.id, deletedField, true));
-      }
-      return changes;
+      // A transfer to another detailed account validates with it the line
+      // of that account that is its other side, if it is to validate.
+      final partner = account.isDetailed ? _transferPartner(t, accountId) : null;
+      return [
+        ...changes,
+        ..._transferSide(t, accountId),
+        if (partner != null) ...[
+          FieldChange(TransactionFields.entity, partner.id, TransactionFields.status, TransactionStatus.validated.name),
+          ..._transferSide(partner, t.accountId),
+        ],
+      ];
     }
     final tree = trees[t.date.year];
     if (c.isSplit) {
@@ -1321,6 +1520,41 @@ class Ledger {
     }
     // A split line brought back to one category.
     return [...changes, ..._otherLinesDeleted(t, lineId)];
+  }
+
+  /// The amount keeps the statement's sign: negative, the money goes to the
+  /// counterpart; positive, it comes from it. A transfer has no line.
+  static List<FieldChange> _transferSide(LedgerTransaction t, String accountId) => [
+    FieldChange(TransactionFields.entity, t.id, TransactionFields.counterpartAccountId, accountId),
+    for (final line in t.lines) FieldChange(LineFields.entity, line.id, deletedField, true),
+  ];
+
+  /// The line to validate of the detailed account [accountId] that is the
+  /// other side of [t] once [t] is a transfer to it: the one paired with it
+  /// already, or the unpaired line of the opposite amount closest in date,
+  /// at most [pairWindowDays] days apart, that no rule sends to another
+  /// account.
+  LedgerTransaction? _transferPartner(LedgerTransaction t, String accountId) {
+    final paired = pairedLineOf(t);
+    if (paired != null) return paired.accountId == accountId && !paired.isValidated ? paired : null;
+    LedgerTransaction? best;
+    var bestGap = 0;
+    for (final b in transactions.values) {
+      if (b.accountId != accountId || b.isValidated || b.amount != -t.amount || b.amount == 0) continue;
+      if (transferPairs.containsKey(b.id)) continue;
+      final proposed = proposalOf(b);
+      if (proposed != null && proposed.isTransfer && proposed.counterpartAccountId != t.accountId) continue;
+      final gap = daysBetween(t.date, b.date).abs();
+      if (gap > pairWindowDays) continue;
+      final byDate = best == null ? 0 : b.date.compareTo(best.date);
+      if (best == null ||
+          gap < bestGap ||
+          (gap == bestGap && (byDate < 0 || (byDate == 0 && b.id.compareTo(best.id) < 0)))) {
+        best = b;
+        bestGap = gap;
+      }
+    }
+    return best;
   }
 
   static int _nextPosition(Iterable<Category> siblings) =>

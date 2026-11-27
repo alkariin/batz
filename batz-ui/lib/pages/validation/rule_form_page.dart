@@ -107,7 +107,7 @@ class _RuleFormPageState extends State<RuleFormPage> {
     ];
     final accounts = [
       for (final a in ledger.sortedAccounts)
-        if (!a.isDetailed && (!a.archived || a.id == _accountId)) a,
+        if (!a.archived || a.id == _accountId) a,
     ];
     final categories = tree?.assignable ?? const [];
     final accountPicker = DropdownButtonFormField<String>(

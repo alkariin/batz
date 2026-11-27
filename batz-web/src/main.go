@@ -29,7 +29,7 @@ import (
 	"github.com/alkariin/batz/batz-web/internal/domain/device"
 	"github.com/alkariin/batz/batz-web/internal/domain/statement"
 	"github.com/alkariin/batz/batz-web/internal/infrastructure/config"
-	"github.com/alkariin/batz/batz-web/internal/infrastructure/extraction/postfinance"
+	"github.com/alkariin/batz/batz-web/internal/infrastructure/extraction"
 	"github.com/alkariin/batz/batz-web/internal/infrastructure/persistence"
 	"github.com/alkariin/batz/batz-web/internal/infrastructure/tlscert"
 	"github.com/alkariin/batz/batz-web/internal/infrastructure/web"
@@ -97,13 +97,13 @@ func extract(args []string, out io.Writer) error {
 		return err
 	}
 	if fs.NArg() != 1 {
-		return errors.New("usage: batz-web extract [-summary | -amounts] <statement.pdf>")
+		return errors.New("usage: batz-web extract [-summary | -amounts] <statement file>")
 	}
 	pdf, err := os.ReadFile(fs.Arg(0))
 	if err != nil {
 		return err
 	}
-	st, err := postfinance.New().Extract(context.Background(), pdf)
+	st, err := extraction.New().Extract(context.Background(), pdf)
 	result := statement.Result{Accepted: err == nil}
 	if err == nil {
 		result.Statement = &st
@@ -155,9 +155,9 @@ func serve(cfg config.Config) error {
 	defer db.Close()
 	devices := application.NewDevices(persistence.NewDeviceStore(db), time.Now)
 	sync := application.NewSync(persistence.NewJournalStore(db), time.Now)
-	extractor := postfinance.New()
+	extractor := extraction.New()
 	if err := extractor.Available(); err != nil {
-		slog.Warn("pdftotext not found: statements cannot be imported", "error", err)
+		slog.Warn("pdftotext not found: PDF statements cannot be imported", "error", err)
 	}
 	imports := application.NewImports(extractor,
 		persistence.NewStatementFiles(filepath.Join(cfg.DataDir, statementsDir)),
@@ -179,7 +179,7 @@ func serve(cfg config.Config) error {
 	router := web.NewRouter(devices, sync, imports, web.Health{
 		Version:       version.Version,
 		MinAppVersion: version.MinAppVersion,
-		ImportFormats: []string{postfinance.Format},
+		ImportFormats: extractor.Formats(),
 	})
 	err = web.Serve(ctx, web.NewServer(router, cert), ln)
 	slog.Info("batz-web stopped")

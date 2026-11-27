@@ -31,7 +31,7 @@ Future<void> openAccounts(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> createAccount(WidgetTester tester, String name, {String? type, bool detailed = false}) async {
+Future<void> createAccount(WidgetTester tester, String name, {String? type, String? import}) async {
   await tester.tap(find.byTooltip('Nouveau compte'));
   await tester.pumpAndSettle();
   await tester.enterText(find.byKey(const Key('accountName')), name);
@@ -41,33 +41,36 @@ Future<void> createAccount(WidgetTester tester, String name, {String? type, bool
     await tester.tap(find.text(type).last);
     await tester.pumpAndSettle();
   }
-  if (detailed) await tester.tap(find.text('Import des relevés PostFinance'));
+  if (import != null) {
+    await tester.tap(find.byKey(const Key('accountImport')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(import).last);
+    await tester.pumpAndSettle();
+  }
   await tester.tap(find.text('Enregistrer'));
   await settle(tester);
 }
 
 void main() {
-  testWidgets('accounts: create, refuse a second detailed account, delete', (tester) async {
+  testWidgets('accounts: create, two detailed accounts of different formats, delete', (tester) async {
     await pumpApp(tester);
     await openAccounts(tester);
     expect(find.text('Aucun compte. Créez-en un avec le bouton +.'), findsOneWidget);
 
-    await createAccount(tester, 'PostFinance', detailed: true);
+    await createAccount(tester, 'PostFinance', import: 'Relevés PDF PostFinance');
     expect(find.text('PostFinance'), findsOneWidget);
     expect(find.text('Compte privé · Détaillé'), findsOneWidget);
 
     await createAccount(tester, 'Espèces', type: 'Espèces');
     expect(find.text('Espèces'), findsNWidgets(2), reason: 'name and type');
 
-    await createAccount(tester, 'UBS', detailed: true);
-    expect(
-      find.text("Un seul compte peut être détaillé : l'import est déjà activé sur un autre compte."),
-      findsOneWidget,
-    );
-    expect(find.text('Nouveau compte'), findsOneWidget, reason: 'the form stays open');
+    await createAccount(tester, 'Neon', import: 'Exports CSV Neon');
+    expect(find.text('Compte privé · Détaillé'), findsNWidgets(2));
+    await tester.tap(find.text('Neon'));
+    await tester.pumpAndSettle();
+    expect(find.text('Exports CSV Neon'), findsOneWidget, reason: 'the format chosen');
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
-    expect(find.text('UBS'), findsNothing);
 
     await tester.tap(find.text('PostFinance'));
     await tester.pumpAndSettle();

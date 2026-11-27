@@ -47,7 +47,7 @@ func TestComputedBalancesAreThePrintedOnes(t *testing.T) {
 		require.NoError(t, err)
 		st, err := New().Extract(context.Background(), pdf)
 		require.NoError(t, err)
-		balance, printed := st.OpeningBalance, 0
+		balance, printed := *st.OpeningBalance, 0
 		for _, l := range st.Lines {
 			balance += l.Amount
 			if l.Balance != nil {
@@ -55,7 +55,7 @@ func TestComputedBalancesAreThePrintedOnes(t *testing.T) {
 				assert.Equal(t, *l.Balance, balance, name)
 			}
 		}
-		assert.Equal(t, st.ClosingBalance, balance, name)
+		assert.Equal(t, *st.ClosingBalance, balance, name)
 		assert.Greater(t, printed, 5, name)
 	}
 }
@@ -173,7 +173,7 @@ func TestParseThe2025Layout(t *testing.T) {
 	assert.Equal(t, "CHF", st.Currency)
 	assert.Equal(t, "2026-03-01", st.PeriodStart.String())
 	assert.Equal(t, "2026-03-31", st.PeriodEnd.String())
-	assert.Equal(t, []int64{100000, 105000, 143450, 138450}, []int64{st.OpeningBalance, st.ClosingBalance, st.TotalCredits, st.TotalDebits})
+	assert.Equal(t, []int64{100000, 105000, 143450, 138450}, []int64{*st.OpeningBalance, *st.ClosingBalance, *st.TotalCredits, *st.TotalDebits})
 	require.Len(t, st.Lines, 4)
 	assert.Equal(t, []int64{-5000, -10000, -123450, 143450}, []int64{st.Lines[0].Amount, st.Lines[1].Amount, st.Lines[2].Amount, st.Lines[3].Amount})
 	assert.Equal(t, "2026-03-02", st.Lines[2].Date.String(), "the day goes on over the page")

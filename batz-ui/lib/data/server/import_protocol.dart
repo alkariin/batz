@@ -30,10 +30,10 @@ ExtractedStatement extractedStatementFromJson(Object? json) {
     currency: _string(map, 'currency'),
     periodStart: _date(map, 'periodStart'),
     periodEnd: _date(map, 'periodEnd'),
-    openingBalance: _int(map, 'openingBalance'),
-    closingBalance: _int(map, 'closingBalance'),
-    totalCredits: _int(map, 'totalCredits'),
-    totalDebits: _int(map, 'totalDebits'),
+    openingBalance: _optionalInt(map, 'openingBalance'),
+    closingBalance: _optionalInt(map, 'closingBalance'),
+    totalCredits: _optionalInt(map, 'totalCredits'),
+    totalDebits: _optionalInt(map, 'totalDebits'),
     lines: [
       for (final line in lines)
         () {
@@ -68,6 +68,9 @@ int _int(Map<String, Object?> map, String key) {
   if (value is! int) throw FormatException('$key is not an integer');
   return value;
 }
+
+/// Absent for an export without balances.
+int? _optionalInt(Map<String, Object?> map, String key) => map[key] == null ? null : _int(map, key);
 
 CalendarDate _date(Map<String, Object?> map, String key) {
   final date = CalendarDate.tryParse(map[key] is String ? map[key]! as String : null);

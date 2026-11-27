@@ -180,11 +180,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get accountType => 'Type';
 
   @override
-  String get accountImport => 'Import des relevés PostFinance';
+  String get accountImport => 'Import';
 
   @override
-  String get accountImportHint =>
-      'Compte détaillé : ses transactions viennent uniquement des relevés. Un seul compte peut l\'être.';
+  String get accountImportHint => 'Compte détaillé : ses transactions viennent uniquement des relevés importés.';
+
+  @override
+  String get accountImportNone => 'Aucun : solde déclaré';
+
+  @override
+  String get accountImportPostfinance => 'Relevés PDF PostFinance';
+
+  @override
+  String get accountImportNeon => 'Exports CSV Neon';
 
   @override
   String get accountArchived => 'Archivé';
@@ -249,10 +257,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorNameRequired => 'Le nom est obligatoire.';
-
-  @override
-  String get errorSecondDetailedAccount =>
-      'Un seul compte peut être détaillé : l\'import est déjà activé sur un autre compte.';
 
   @override
   String get errorUnknownAccount => 'Ce compte n\'existe plus.';
@@ -515,6 +519,26 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorStatementNotLast => 'Seul le dernier relevé du compte peut être supprimé.';
+
+  @override
+  String get errorStatementNoNewLines => 'Cet export n\'apporte aucune nouvelle ligne : toutes sont déjà importées.';
+
+  @override
+  String errorStatementLinesBeforeFirst(String found, String expected) {
+    return 'Cet export a des lignes du $found, avant le premier import de ce compte, qui commence le $expected : exportez à partir du $expected.';
+  }
+
+  @override
+  String get errorStatementImportedToday =>
+      'Un export de ce compte a déjà été importé aujourd\'hui : importez le suivant demain, ou supprimez le dernier import pour le remplacer.';
+
+  @override
+  String get errorStatementBalanceRequired => 'Saisissez le solde du compte pour importer cet export.';
+
+  @override
+  String errorStatementBalanceMismatch(String found, int count, String expected) {
+    return 'Le solde saisi, $found, ne correspond pas : le solde du dernier import plus les nouvelles lignes ($count) donne $expected. Exportez jusqu\'à aujourd\'hui, sans paiement en attente, et saisissez le solde affiché à ce moment.';
+  }
 
   @override
   String get errorUnknownStatement => 'Ce relevé n\'existe plus.';
@@ -871,14 +895,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Un nom n\'apparaît qu\'une fois dans l\'arbre d\'une année : renommez ou supprimez l\'une d\'elles.';
 
   @override
-  String taskDetailedAccounts(int count) {
-    return '$count comptes détaillés';
-  }
-
-  @override
-  String get taskDetailedAccountsHint => 'Un seul compte reçoit les relevés : désactivez l\'import sur les autres.';
-
-  @override
   String taskDetached(int count, int year) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -916,7 +932,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get importAccount => 'Compte';
 
   @override
-  String get importChoose => 'Choisir le relevé PDF';
+  String get importChoose => 'Choisir le relevé PDF ou l\'export CSV';
 
   @override
   String get importSending => 'Le serveur lit et vérifie le relevé…';
@@ -960,10 +976,38 @@ class AppLocalizationsFr extends AppLocalizations {
   String get importFirstConfirm => 'Importer';
 
   @override
+  String get importBalanceTitle => 'Solde du compte';
+
+  @override
+  String importBalanceLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nouvelles lignes.',
+      one: 'Une nouvelle ligne.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get importBalanceFirstHint =>
+      'Premier import de ce compte : saisissez le solde affiché maintenant par la banque. Il fixe le solde de départ du compte ; aucune ligne antérieure ne pourra être importée ensuite.';
+
+  @override
+  String get importBalanceNextHint =>
+      'Saisissez le solde affiché maintenant par la banque : il doit être celui du dernier import plus ces lignes, sinon rien n\'est importé.';
+
+  @override
+  String get importBalanceField => 'Solde actuel';
+
+  @override
+  String get importBalanceInvalid => 'Montant invalide : saisissez par exemple 1234.50.';
+
+  @override
   String get importUnreadable => 'Ce fichier n\'est pas un PDF lisible.';
 
   @override
-  String get importUnknownFormat => 'Ce PDF n\'est pas un relevé PostFinance.';
+  String get importUnknownFormat => 'Ce fichier n\'est ni un relevé PDF PostFinance ni un export CSV Neon.';
 
   @override
   String importInconsistent(String reason) {
@@ -1025,19 +1069,20 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get statementSavePdf => 'Enregistrer le PDF d\'origine';
+  String get statementSavePdf => 'Enregistrer le fichier d\'origine';
 
   @override
-  String get statementPdfSaved => 'PDF enregistré.';
+  String get statementPdfSaved => 'Fichier enregistré.';
 
   @override
-  String get statementPdfMissing => 'Le serveur n\'a plus ce PDF : il a sans doute été reconstruit depuis l\'import.';
+  String get statementPdfMissing =>
+      'Le serveur n\'a plus ce fichier : il a sans doute été reconstruit depuis l\'import.';
 
   @override
-  String get statementPdfNotPaired => 'Associez un serveur pour récupérer le PDF d\'origine.';
+  String get statementPdfNotPaired => 'Associez un serveur pour récupérer le fichier d\'origine.';
 
   @override
-  String get statementPdfUnreachable => 'Le serveur ne répond pas : le PDF n\'a pas pu être récupéré.';
+  String get statementPdfUnreachable => 'Le serveur ne répond pas : le fichier n\'a pas pu être récupéré.';
 
   @override
   String get statementDeleteLast => 'Supprimer le dernier relevé';
@@ -1079,6 +1124,45 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get validationConfirmOne => 'Valider cette proposition';
+
+  @override
+  String validationPaired(String date, String account) {
+    return 'Autre côté du transfert du $date sur $account';
+  }
+
+  @override
+  String get pairedTitle => 'Autre côté du transfert';
+
+  @override
+  String pairedMissing(String account, int days) {
+    return 'Autre côté introuvable sur $account : même montant, de signe opposé, à $days jours au plus.';
+  }
+
+  @override
+  String get unpairedTitle => 'Transferts sans autre côté';
+
+  @override
+  String unpairedHint(int days) {
+    return 'Un transfert entre deux comptes importés figure sur les deux relevés : même montant, de signe opposé, à $days jours au plus. Ceux-ci n\'ont pas leur ligne sur l\'autre compte : importez son relevé, ou corrigez leur classification.';
+  }
+
+  @override
+  String get unpairedEmpty => 'Aucun transfert sans son autre côté.';
+
+  @override
+  String taskUnpairedTransfers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transferts entre comptes importés sans leur autre côté',
+      one: 'Un transfert entre comptes importés sans son autre côté',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get taskUnpairedTransfersHint =>
+      'L\'autre compte n\'a pas la ligne correspondante : importez son relevé, ou corrigez la classification.';
 
   @override
   String validationConfirmed(int count) {

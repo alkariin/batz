@@ -131,10 +131,9 @@ reinstalled or restored from a copy is rebuilt by the devices' next exchanges.
 
 ### Inconsistencies after a merge are tasks, never refusals
 
-Duplicate category names, detached categories, several detailed accounts,
-rules that no longer apply, broken refund links, overlapping tranches: all
-computed on the snapshot and listed as tasks; only an entry that would
-create one (a second detailed account, say) is refused.
+Duplicate category names, detached categories, rules that no longer apply,
+broken refund links, overlapping tranches: all computed on the snapshot and
+listed as tasks; only an entry that would create one is refused.
 Detached categories are kept, never dropped, and only move under a category
 of their year's tree, so a move cannot create a loop.
 
@@ -173,10 +172,40 @@ The test set comes from a Go generator (`extraction/postfinance/fake`) that
 draws PDF files with the geometry of real statements and invented content;
 `TestFixturesAreUpToDate` regenerates it byte for byte.
 
+### Neon exports: the format told by the content, the lines by theirs
+
+The server tells the format by the content (`%PDF-`, or a CSV header naming
+Neon's columns): one route, no format to send, and `/healthz` lists both.
+A Neon export prints no balance, no total, no IBAN and no period, so these
+fields of the answer are optional and absent for it, and the app asks the
+balance the bank shows. Exports overlap (the year so far, again two weeks
+later): a line is identified by its account, date, amount, raw text and
+rank among the identical lines of the file, and only new lines are written.
+The raw text leaves out what the user can change in Neon or what can vary
+(category, tags, exchange rate); changing how it is built would import every
+line again, so it is frozen. The period of an import runs from the day after
+the previous one to the day of the import: imports stay ordered, the latest
+one alone can be deleted, and one import a day is the price. The balance
+typed is checked like the continuity of a statement: the previous closing
+balance plus the new lines must give it.
+
+### Several detailed accounts; transfers between them paired at load
+
+One detailed account was the rule of the MVP; Neon makes two. A transfer
+between them is two lines, one per statement, each a transfer to the other
+account, and each counts on its own account only. The pairing is computed at
+each load from the amounts, signs and dates (7 days at most, by date then
+identifier), like the proposals: no journal field, so no link to break when
+a statement is deleted or two devices merge. A transfer without its other
+side arrives on the other account as before, so the wealth stays right
+until the other statement is imported, and becomes a task after 10 days.
+Validating one side validates the other side if it is to validate, in the
+same modification; a bulk confirmation writes each line once.
+
 ### Sending a file with Dio
 
-The PDF is the raw body of `POST /api/v1/imports` (`application/pdf`), not a
-multipart form: one file, read without parsing a form. Dio 5.11.1 delivered
+The file is the raw body of `POST /api/v1/imports` (`application/pdf`), not
+a multipart form: one file, read without parsing a form. Dio 5.11.1 delivered
 300 000 bytes unchanged.
 
 ### Choosing and saving a file: `file_picker`
@@ -185,7 +214,7 @@ multipart form: one file, read without parsing a form. Dio 5.11.1 delivered
 Android, Windows and Ubuntu: the system document picker on Android (no
 storage permission), the XDG portal over D-Bus on Ubuntu (no `zenity`),
 native dialogs on Windows. `file_selector` cannot save on Android. It serves
-the PDF to import, the original PDF and the export.
+the statement to import (PDF or CSV), the original file and the export.
 
 ### Mapping rules and proposals
 
@@ -211,7 +240,7 @@ it, in the same modification; the redistribution rules still refuse it.
 
 ### Manual entries refused on the detailed account and on debts accounts
 
-`Ledger._checkManualAccount`. The detailed account is fed only by statements:
+`Ledger._checkManualAccount`. A detailed account is fed only by statements:
 it is refused on both sides of a manual transfer, since a transfer from cash
 to it would be counted again when the statement showing the deposit is
 imported. A debts account refuses manual expenses and incomes (it changes

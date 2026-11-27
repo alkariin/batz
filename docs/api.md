@@ -51,7 +51,7 @@ for humans.
 No authentication.
 
 ```json
-{ "status": "ok", "version": "v0.8.0-alpha", "minAppVersion": "0.7.0", "syncProtocol": 1, "importFormats": ["postfinance"] }
+{ "status": "ok", "version": "v0.8.0-alpha", "minAppVersion": "0.7.0", "syncProtocol": 1, "importFormats": ["postfinance", "neon"] }
 ```
 
 | Field | Meaning |
@@ -59,7 +59,7 @@ No authentication.
 | `version` | The server build (`dev` for a local build). |
 | `minAppVersion` | The oldest app version the server works with. |
 | `syncProtocol` | The version of the exchange protocol it speaks (absent before 0.3.0). |
-| `importFormats` | The statement formats it reads (absent before 0.4.0). |
+| `importFormats` | The statement formats it reads (absent before 0.4.0; `neon` since 0.11.0). |
 
 The app checks them before synchronising and importing, and says why it
 refuses ([protocol](architecture.md#protocol)).
@@ -185,9 +185,10 @@ Response `200`:
 
 ## `POST /api/v1/imports`
 
-Sends a bank statement: the PDF file is the raw request body
-(`Content-Type: application/pdf`), 10 MiB at most. The flow, the checks and
-the format: [Import of statements](architecture.md#import-of-statements).
+Sends a bank statement: the file is the raw request body, 10 MiB at most: a
+PDF statement of PostFinance (`Content-Type: application/pdf`) or a CSV
+export of Neon. The server tells the format by the content. The flow, the
+checks and the formats: [Import of statements](architecture.md#import-of-statements).
 
 Response `200`:
 
@@ -220,9 +221,10 @@ Response `200`:
 | Field | Meaning |
 |---|---|
 | `fingerprint` | SHA-256 of the file, lower-case hex: the server keeps the file under it. |
-| `iban` | The account's IBAN, without spaces. |
-| `periodStart`, `periodEnd` | The period of the statement. |
-| `openingBalance`, `closingBalance`, `totalCredits`, `totalDebits` | Integer cents; totals as printed, both positive. |
+| `format` | `postfinance` or `neon`. |
+| `iban` | The account's IBAN, without spaces; empty for an export. |
+| `periodStart`, `periodEnd` | The period of the statement; for an export, the dates of its first and last lines. |
+| `openingBalance`, `closingBalance`, `totalCredits`, `totalDebits` | Integer cents; totals as printed, both positive. Absent for an export, which prints none. |
 | `lines[].date` | Booking date. |
 | `lines[].amount` | Signed integer cents: positive for a credit. |
 | `lines[].rawText` | The bank's text, lines separated by `\n`, page furniture removed. |
@@ -243,5 +245,6 @@ Refusals: `422` with `IMPORT_UNREADABLE`, `IMPORT_UNKNOWN_FORMAT` or
 
 ## `GET /api/v1/imports/{fingerprint}/pdf`
 
-The original file of a statement, as `application/pdf`;
+The original file of a statement, as `application/pdf`, or as
+`text/csv; charset=utf-8` for an export (the route keeps its name);
 `404 IMPORT_PDF_NOT_FOUND` when the server does not hold it.

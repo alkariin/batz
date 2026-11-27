@@ -43,17 +43,18 @@ func (s Statement) Expected() statement.Statement {
 		Currency:       s.Currency,
 		PeriodStart:    dateOf(s.Start),
 		PeriodEnd:      dateOf(s.End),
-		OpeningBalance: s.Opening,
-		ClosingBalance: s.Closing(),
+		OpeningBalance: statement.Amount(s.Opening),
+		ClosingBalance: statement.Amount(s.Closing()),
 		Lines:          []statement.Line{},
 	}
 	balance := s.Opening
+	var credits, debits int64
 	for i, e := range s.Entries {
 		balance += e.Amount
 		if e.Amount > 0 {
-			st.TotalCredits += e.Amount
+			credits += e.Amount
 		} else {
-			st.TotalDebits -= e.Amount
+			debits -= e.Amount
 		}
 		line := statement.Line{
 			Date:    dateOf(e.Date),
@@ -67,6 +68,7 @@ func (s Statement) Expected() statement.Statement {
 		}
 		st.Lines = append(st.Lines, line)
 	}
+	st.TotalCredits, st.TotalDebits = statement.Amount(credits), statement.Amount(debits)
 	return st
 }
 

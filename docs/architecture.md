@@ -11,7 +11,7 @@ the technical choices in [decisions](decisions.md).
 | Part | Does | Does not |
 |---|---|---|
 | App (`batz-ui`) | Every calculation, on a full local copy of the data. | Depend on the server to work. |
-| Server (`batz-web`) | Pair devices; keep the reference copy of the change journal; extract and check PDF statements, keep the original files. | Interpret the journal, decide what is imported, or compute anything accounting-related. |
+| Server (`batz-web`) | Pair devices; keep the reference copy of the change journal; extract and check statements (PDF) and exports (CSV), keep the original files. | Interpret the journal, decide what is imported, or compute anything accounting-related. |
 
 The server is on the home network only and runs at weekends; the app needs
 it only to synchronise and to import statements.
@@ -31,8 +31,10 @@ batz-web/src
     ├── application               use cases (Devices, Sync, Imports) and their ports
     └── infrastructure
         ├── config                environment, read once at start-up
-        ├── extraction/postfinance  pdftotext and the reading of PostFinance statements
-        │   └── fake              generator of fictitious statements (test set in testdata/)
+        ├── extraction            the module of each file, told by its content
+        │   ├── postfinance       pdftotext and the reading of PostFinance statements
+        │   │   └── fake          generator of fictitious statements (test set in testdata/)
+        │   └── neon              the reading of Neon's CSV exports (fictitious ones in testdata/)
         ├── persistence           SQLite stores (devices, journal), embedded migrations,
         │                         original files, dated copies of the database
         ├── tlscert               self-signed certificate, pinning helpers
@@ -42,8 +44,8 @@ batz-web/src
 - **Configuration**: `BATZ_DATA_DIR` (default `data`), `BATZ_PORT` (`8443`)
   and `BATZ_BACKUPS` (`12`), read once by `config.Load`.
 - **Data directory**, the only state to back up: `batz.db` (SQLite, WAL),
-  `tls/server.crt` and `tls/server.key`, `statements/<fingerprint>.pdf` (the
-  original files) and `backups/batz-<time>.db` (dated copies of the database).
+  `tls/server.crt` and `tls/server.key`, `statements/<fingerprint>.pdf` or
+  `.csv` (the original files) and `backups/batz-<time>.db` (dated copies of the database).
 - **Migrations** are embedded in the binary (`go:embed`) and applied at start
   by golang-migrate: an image carries exactly the schema of its version.
 - **HTTPS only**, with no plain HTTP listener: the certificate (ECDSA P-256,
@@ -390,15 +392,17 @@ screen, with the action that moves them back.
 
 ## Import of statements
 
-Each month the user sends the PDF statement of the bank to the server, which
-reads and checks it; the app checks that it follows the previous one and
-writes the statement and its lines into the journal, where they wait to be
-validated ([`POST /api/v1/imports`](api.md#post-apiv1imports)).
+Each month the user sends the PDF statement of the bank (PostFinance), or
+from time to time the CSV export of the transactions of an account (Neon), to
+the server, which reads and checks it; the app checks that it follows the
+previous one and writes the statement and its lines into the journal, where
+they wait to be validated ([`POST /api/v1/imports`](api.md#post-apiv1imports)).
+Several accounts can be detailed, each with its format.
 
 | Part | Does | Does not |
 |---|---|---|
-| Server | Reads the PDF with `pdftotext`, checks its internal consistency, keeps the file under its fingerprint after a dated copy of its database, answers with the lines. | Write anything to the journal; know which statements were imported. |
-| App | Checks the continuity with the account's previous statement, writes the statement and all its lines in **one** modification, proposes a classification from the rules, validates. | Read PDF files. |
+| Server | Tells the format by the content of the file, reads it (a PDF with `pdftotext`), checks its internal consistency, keeps the file under its fingerprint after a dated copy of its database, answers with the lines. | Write anything to the journal; know which statements were imported. |
+| App | Checks the continuity with the account's previous statement (for an export, the balance the user types), writes the statement and all its lines in **one** modification, proposes a classification from the rules, validates. | Read PDF or CSV files. |
 
 The rules of the domain stay in the app, in one implementation. Writing the
 statement in one modification makes the import all or nothing, on this
@@ -410,9 +414,10 @@ device and on every device that receives it.
    does not go to its end (no server, unreachable, revoked, other server,
    incompatible versions, a question pending), the import does not start and
    the screen says why.
-2. The user picks the detailed account and the PDF file. The app computes its
-   fingerprint (SHA-256) and refuses a statement its journal already holds,
-   without sending it: the journal knows, even after the server was rebuilt.
+2. The user picks the detailed account and the file (PDF or CSV). The app
+   computes its fingerprint (SHA-256) and refuses a statement its journal
+   already holds, without sending it: the journal knows, even after the
+   server was rebuilt.
 3. The app checks that `/healthz` announces the account's format
    (`importFormats`), then sends the file. The server extracts and checks the
    statement; accepted, it keeps the file and answers with the statement and
@@ -420,6 +425,9 @@ device and on every device that receives it.
 4. `Ledger.importStatement` checks the statement against the ledger. The
    first statement of an account asks for a confirmation: it sets the
    starting balance, and no earlier statement can be imported afterwards.
+   For an export, the app first counts its new lines
+   (`Ledger.previewImport`), then asks the balance the bank shows now
+   ([the Neon format](#the-neon-format)).
 5. The app writes the statement, its lines (« à valider ») and the copy of
    the category tree of each year a line opens, in one modification, and
    shows the period, the number of lines, how many the rules propose and how
@@ -448,8 +456,8 @@ reads; a refused statement writes nothing.
 
 | Refusal | When | Message |
 |---|---|---|
-| `IMPORT_UNREADABLE` | The file is not a PDF pdftotext can read. | Ce fichier n'est pas un PDF lisible. |
-| `IMPORT_UNKNOWN_FORMAT` | The PDF is not a PostFinance statement. | Ce PDF n'est pas un relevé PostFinance. |
+| `IMPORT_UNREADABLE` | The file is a PDF pdftotext cannot read. | Ce fichier n'est pas un PDF lisible. |
+| `IMPORT_UNKNOWN_FORMAT` | The file is neither a PostFinance statement nor a Neon export. | Ce fichier n'est ni un relevé PDF PostFinance ni un export CSV Neon. |
 | `IMPORT_INCONSISTENT` | A check above fails. | Relevé incohérent, rien n'est importé : *the check in cause*. |
 | `IMPORT_TOO_LARGE` | The file is over 10 MiB. | Ce fichier dépasse 10 Mo. |
 | Server too old | `/healthz` has no `importFormats`. | Le serveur (version …) est trop ancien pour importer des relevés. |
@@ -461,12 +469,18 @@ reads; a refused statement writes nothing.
 | Not contiguous | It does not start the day after the latest statement, or its opening balance is not that one's closing balance. | Ce relevé ne suit pas le précédent : il commence le … avec un solde de …, alors que le suivant doit commencer le … avec un solde de …. |
 | Sum | Its lines do not add up to the difference between its balances. | Les lignes du relevé ne donnent pas l'écart entre ses soldes initial et final. |
 | Too large | It would not fit in one modification (about 1 200 lines). | Ce relevé compte trop de lignes pour être importé en une fois. |
+| No new line | An export whose lines are all imported already. | Cet export n'apporte aucune nouvelle ligne : toutes sont déjà importées. |
+| Before the first import | An export with a new line dated before the account's first import. | Cet export a des lignes du …, avant le premier import de ce compte, qui commence le … : exportez à partir du …. |
+| Imported today | The account's latest import is of today. | Un export de ce compte a déjà été importé aujourd'hui : importez le suivant demain, ou supprimez le dernier import pour le remplacer. |
+| Balance | The balance of the latest import plus the new lines differs from the balance typed. | Le solde saisi, …, ne correspond pas : le solde du dernier import plus les nouvelles lignes (…) donne …. Exportez jusqu'à aujourd'hui, sans paiement en attente, et saisissez le solde affiché à ce moment. |
 
 ### The PostFinance format
 
-The only format is PostFinance, PDF, in French; each format is a module of
-the server (`internal/infrastructure/extraction/postfinance`). The text comes
-from `pdftotext -layout -enc UTF-8 - -`: the PDF on standard input, the text
+A PostFinance statement is a PDF, in French; each format is a module of the
+server (`internal/infrastructure/extraction/postfinance`, `…/neon`), and
+`extraction` hands each file to the module of its format: a PDF to
+PostFinance, a CSV whose header names the columns of Neon to Neon. The text
+of a PDF comes from `pdftotext -layout -enc UTF-8 - -`: the PDF on standard input, the text
 on standard output, without a shell, within 30 seconds and 8 MiB of text.
 `pdftotext` 24.02 (Ubuntu 24.04) and 25.12 (the image) give the same text.
 
@@ -499,13 +513,49 @@ layout, the statements are refused (`layout` or `IMPORT_UNKNOWN_FORMAT`)
 rather than read wrongly: the checks of balances and totals catch a line
 read in the wrong column.
 
+### The Neon format
+
+The export of the transactions of a Neon account (`…/neon`): one line per
+transaction, the most recent first, fields quoted and separated by
+semicolons, after a header (« Date », « Amount », « Original amount »,
+« Original currency », « Exchange rate », « Description », « Subject »,
+« Category », « Tags », « Wise », « Spaces »). The columns are found by
+their name. A line's date is « Date », its amount « Amount » (francs, signed);
+its raw text is the description, the subject when there is one, and for a
+payment in another currency its original amount and currency (« -60.00
+DKK »); its short label is the description. The exchange rate, Neon's own
+category and the tags are left out: the user changes them in Neon, and the
+text of a line must not change from one export to the next. The lines are
+answered oldest first, the period from the first to the last; an export
+prints no balance, no total and no IBAN, so the answer has none.
+
+An export covers the dates the user chose, the whole year so far for
+instance, and the next one covers them again. So the app identifies a line
+by its content: the account, the date, the amount, the raw text and its rank
+among the identical lines of the file (two coffees of the same price, the
+same day, in the same café, stay two). An import writes only the lines no
+earlier import holds; an import that brings none is refused. Its period runs
+from the day after the previous import (from its earliest line for the
+first) to the day of the import, one import per account and per day; a new
+line dated before the account's first import is refused, the balance before
+it being unknown.
+
+The user types the balance the bank shows when exporting. The first import
+takes it as given: its opening balance is that balance less its lines, and
+it enters the wealth the day before its first line, like a first statement.
+Each later import checks it: the closing balance of the previous import plus
+the new lines must give it, or nothing is imported. A line booked late,
+dated in an earlier period, is new and counts. A payment still pending can
+make the balance differ: export once it is booked.
+
 ### The lines in the app
 
 - A `statement` (account, format, IBAN, period, balances, fingerprint) and
   one `transaction` per line (account, date, amount, raw text, description,
   status, statement, rank), with identifiers computed from the account, the
-  fingerprint and the rank: two devices importing the same file write the
-  same records, never a line twice.
+  fingerprint and the rank (for an export, from the content of the line):
+  two devices importing the same file write the same records, never a line
+  twice.
 - On the detailed account, the amount, date, account and raw text of a line
   never change, and no line is entered or deleted by hand; category, period,
   description and note change.
@@ -529,9 +579,10 @@ read in the wrong column.
 
 ### The original files
 
-The server keeps each accepted file as `statements/<fingerprint>.pdf`. The
-fingerprint is in the journal's statement, which is all the app needs to
-fetch it again: Relevés du compte › « Enregistrer le PDF d'origine »
+The server keeps each accepted file as `statements/<fingerprint>.pdf`, or
+`.csv` for an export. The fingerprint is in the journal's statement, which
+is all the app needs to fetch it again: Relevés du compte › « Enregistrer le
+fichier d'origine »
 ([`GET /api/v1/imports/{fingerprint}/pdf`](api.md#get-apiv1importsfingerprintpdf)).
 A server rebuilt since the import no longer has the file: the app says so,
 without error. Losing the original files is accepted.
@@ -567,8 +618,11 @@ amount, a total, a closing balance) and an invoice; it covers a day going on
 over a new page without its date, labels of up to five lines, and an amount
 that pdftotext separates from its label. `TestFixturesAreUpToDate`
 regenerates the set and compares it byte for byte (`-update` rewrites it).
+The fictitious Neon exports (`…/neon/testdata`) are written by hand, with
+invented shops, two identical lines of a day and payments in euros and
+Danish crowns; the later one repeats the earlier one and adds two lines.
 
-`batz-web extract <file.pdf>` prints the JSON of the result (exit code 2 when
+`batz-web extract <file>` prints the JSON of the result (exit code 2 when
 the statement is refused; `-summary` prints only the verdict and the number
 of lines, `-amounts` the date and amount of each line). CI runs it on every
 file of the set inside the server image and compares the output with its
@@ -613,7 +667,7 @@ paired once, by someone who could read a code on the server.
   recent apps. Screenshots are possible on every version.
 - **The clock of the devices**: see [known limits](#known-limits).
 - **Losing everything at home.** No copy leaves the home network. Each device
-  holds the whole journal and can rebuild the server; the original PDF files
+  holds the whole journal and can rebuild the server; the original files
   exist only on the server.
 
 ### The Android lock, in short
@@ -621,8 +675,8 @@ paired once, by someone who could read a code on the server.
 - `LockGate` stands in front of the navigator and draws none of the screens
   while `LockCubit` says the app is locked: at opening, and when it comes
   back after more than 60 seconds away (or the phone's clock went back
-  meanwhile). Choosing a PDF or saving an export within a minute does not
-  lock.
+  meanwhile). Choosing a statement or saving an export within a minute does
+  not lock.
 - `DeviceLock` (`local_auth_android`) shows the dialog of Android:
   fingerprint, face, or the phone's PIN, pattern or password. A cancelled or
   refused dialog leaves the app locked, with a button to try again; an

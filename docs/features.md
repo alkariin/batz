@@ -282,12 +282,13 @@ The *points* of an account are the balances it is known to hold:
   same day replaces it, on one device or two;
 - for an account with statements, the **opening balance of its first
   statement, the day before it starts** (31.12.2025 for a statement starting
-  on 1.1.2026). The detailed account enters the wealth that way; no balance
-  is declared on it.
+  on 1.1.2026; for a Neon export, the balance typed at the first import less
+  its lines, the day before its first line). A detailed account enters the
+  wealth that way; no balance is declared on it.
 
 A debts account has no point (the debts table counts instead), nor has an
 account that no longer exists. A balance is refused, with its reason, on an
-unknown account, the detailed account or a debts account, and for a date
+unknown account, a detailed account or a debts account, and for a date
 after today. An archived account accepts one: it stays in the wealth with
 its last balance, and a balance of 0 takes it out. An account with declared
 balances is archived rather than deleted.
@@ -295,11 +296,45 @@ balances is archived rather than deleted.
 The *movements* of an account are the amount of each transaction on it and
 the opposite of each transfer of which it is the counterpart, validated or
 proposed (a line to validate whose rules propose a transfer counts as that
-transfer). Before the first point, the account is not in the wealth. After
+transfer), except a transfer between two detailed accounts paired with its
+other side: each of its two lines counts on its own account only
+([transfers between imported accounts](#transfers-between-imported-accounts)). Before the first point, the account is not in the wealth. After
 it, the **balance at a date** is the last point at or before that date plus
 the movements dated after that point, up to the date included: a movement
 of the day of a point is part of that point. The wealth, the curve and the
 table all use this one calculation.
+
+### Transfers between imported accounts
+
+Several accounts can be detailed (PostFinance, Neon). Money sent from one to
+the other appears in both: −500.00 in the PostFinance statement, +500.00 in
+the Neon export. Each line is validated as a **transfer** to the other
+account, so neither counts in the annual view, and the two lines are
+**paired**: computed at each load, never stored, a line that is a transfer
+(validated, or proposed by its rules) to another detailed account takes, on
+that account, the unpaired line of the opposite amount closest in date, at
+most 7 days apart, that is a transfer back or a line to validate that no rule
+sends to a third account. Lines are taken by date, then identifier, so every
+device pairs the same ones.
+
+- A paired line to validate is « proposée » as a transfer with the other
+  account, « Autre côté du transfert du … sur … », whatever its rules say.
+- Validating one line as a transfer to another detailed account validates in
+  the same modification the line of that account that is its other side, if
+  it is to validate.
+- Each line counts on its own account only, so each balance stays the
+  bank's. A transfer without its other side (the other statement not
+  imported yet) arrives on the other account as any transfer does; after 10
+  days it is a task of the home screen, « transferts entre comptes importés
+  sans leur autre côté », whose screen lists them.
+- A rule may send to a detailed account; a rule that would send a line to
+  its own account proposes nothing for it. The screen of a transaction shows
+  its other side, or that it is missing.
+
+**Example.** On 1.3 PostFinance sends 500.00 to Neon, credited on 2.3. The
+PostFinance line, validated « transfert vers Neon », takes the Neon line,
+which is proposed « transfert avec PostFinance ». PostFinance counts −500.00
+on 1.3, Neon +500.00 on 2.3, and the wealth stays the same.
 
 ### Value variation and old balances
 
@@ -369,7 +404,7 @@ The **wealth at a date** is the balance of every account that has one at
 that date plus the debts that count that day. It starts on the first point
 of an account or the first day a debt counts. « Fortune » shows the wealth
 of the day and its change since 31 December, each account with its balance
-and its date (the end of the last statement for the detailed account), the
+and its date (the end of the last statement for a detailed account), the
 accounts without balance, the line « Dettes », the **curve**, which gives
 the wealth at the end of each month up to the current one, valued today,
 and the table of each year from the first to the current one.

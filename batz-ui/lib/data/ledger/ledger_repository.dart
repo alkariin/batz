@@ -47,7 +47,7 @@ class LedgerRepository {
   /// own.
   Future<Ledger> load() async {
     final (
-      (accounts, categories, transactions, lines, statements, deleted),
+      (accounts, categories, transactions, lines, statements, deleted, deletedLines),
       (rules, redistributions, answers, balances, debts),
       modules,
     ) = await (
@@ -58,6 +58,7 @@ class LedgerRepository {
         _rows(transactionLinesTable, _line),
         _rows(statementsTable, _statement),
         _db.customSelect('SELECT id FROM statements WHERE deleted = 1').get(),
+        _db.customSelect('SELECT id FROM transactions WHERE deleted = 1 AND statement_id IS NOT NULL').get(),
       ).wait,
       (
         _rows(rulesTable, _rule),
@@ -75,6 +76,7 @@ class LedgerRepository {
       lines: lines,
       statements: statements,
       deletedStatementIds: [for (final row in deleted) row.read<String>('id')],
+      deletedImportedTransactionIds: [for (final row in deletedLines) row.read<String>('id')],
       rules: rules,
       redistributions: redistributions,
       shareClassifications: answers,

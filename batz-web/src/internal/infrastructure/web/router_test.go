@@ -16,7 +16,7 @@ import (
 
 	"github.com/alkariin/batz/batz-web/internal/application"
 	"github.com/alkariin/batz/batz-web/internal/domain/device"
-	"github.com/alkariin/batz/batz-web/internal/infrastructure/extraction/postfinance"
+	"github.com/alkariin/batz/batz-web/internal/infrastructure/extraction"
 	"github.com/alkariin/batz/batz-web/internal/infrastructure/persistence"
 )
 
@@ -42,8 +42,8 @@ func newFixture(t *testing.T) *fixture {
 		f.now = f.now.Add(time.Second)
 		return f.now
 	})
-	f.imports = application.NewImports(postfinance.New(), persistence.NewStatementFiles(filepath.Join(dir, "statements")), f.backups)
-	f.handler = NewRouter(f.devices, sync, f.imports, Health{Version: "v9.9.9", MinAppVersion: "0.1.0", ImportFormats: []string{"postfinance"}})
+	f.imports = application.NewImports(extraction.New(), persistence.NewStatementFiles(filepath.Join(dir, "statements")), f.backups)
+	f.handler = NewRouter(f.devices, sync, f.imports, Health{Version: "v9.9.9", MinAppVersion: "0.1.0", ImportFormats: []string{"postfinance", "neon"}})
 	return f
 }
 
@@ -94,7 +94,7 @@ func TestHealthz(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, map[string]any{
 		"status": "ok", "version": "v9.9.9", "minAppVersion": "0.1.0", "syncProtocol": float64(1),
-		"importFormats": []any{"postfinance"},
+		"importFormats": []any{"postfinance", "neon"},
 	}, body)
 }
 

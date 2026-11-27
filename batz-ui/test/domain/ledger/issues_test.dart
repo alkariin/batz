@@ -2,10 +2,9 @@ import 'package:batz/domain/ledger/account.dart';
 import 'package:batz/domain/ledger/category.dart';
 import 'package:batz/domain/ledger/issues.dart';
 import 'package:batz/domain/ledger/ledger.dart';
-import 'package:batz/domain/ledger/ledger_exception.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'categories_test.dart' show expenses2026, income2026, refusedWith, sample;
+import 'categories_test.dart' show expenses2026, income2026, sample;
 
 const _g = Category(id: 'g', year: 2026, name: 'Dépenses', nature: CategoryNature.expense);
 
@@ -31,7 +30,7 @@ void main() {
     expect((l.issues.single as DuplicateCategoryName).name, 'Impôts');
   });
 
-  test('several detailed accounts, archived ones included', () {
+  test('several detailed accounts are no issue', () {
     final l = Ledger(
       accounts: const [
         Account(
@@ -40,46 +39,10 @@ void main() {
           type: AccountType.privateAccount,
           importFormat: ImportFormat.postfinance,
         ),
-        Account(
-          id: 'old',
-          name: 'Ancien',
-          type: AccountType.privateAccount,
-          importFormat: ImportFormat.postfinance,
-          archived: true,
-        ),
-        Account(id: 'cash', name: 'Espèces', type: AccountType.cash),
+        Account(id: 'neon', name: 'Neon', type: AccountType.privateAccount, importFormat: ImportFormat.neon),
       ],
     );
-    expect(l.issues, [
-      SeveralDetailedAccounts([l.accounts['pf']!, l.accounts['old']!]),
-    ]);
-
-    // Never blocking: a detailed account stays editable, and disabling the
-    // import on one solves it; a third one is still refused.
-    expect(
-      l
-          .updateAccount(
-            'pf',
-            const AccountDraft(name: 'PF', type: AccountType.privateAccount, importFormat: ImportFormat.postfinance),
-          )
-          .changes,
-      isNotEmpty,
-    );
-    expect(
-      () => l.updateAccount(
-        'cash',
-        const AccountDraft(name: 'Espèces', type: AccountType.cash, importFormat: ImportFormat.postfinance),
-      ),
-      refusedWith(LedgerError.secondDetailedAccount),
-    );
-    final fixed = Ledger(
-      accounts: [
-        l.accounts['pf']!,
-        const Account(id: 'old', name: 'Ancien', type: AccountType.privateAccount, archived: true),
-        l.accounts['cash']!,
-      ],
-    );
-    expect(fixed.issues, isEmpty);
+    expect(l.issues, isEmpty);
   });
 
   test('detached categories, per year, with their heads', () {
@@ -95,12 +58,8 @@ void main() {
     expect((l.issues.first as DetachedCategories).heads.map((d) => d.category.id), ['a', 'b']);
   });
 
-  test('issues come by year, then accounts', () {
+  test('issues come by year', () {
     final l = Ledger(
-      accounts: const [
-        Account(id: 'x', name: 'X', type: AccountType.other, importFormat: ImportFormat.postfinance),
-        Account(id: 'y', name: 'Y', type: AccountType.other, importFormat: ImportFormat.postfinance),
-      ],
       categories: [
         _g,
         const Category(id: 'a', year: 2026, name: 'Loyer', parentId: 'g'),
@@ -108,7 +67,7 @@ void main() {
         const Category(id: 'c', year: 2026, name: 'C', parentId: 'missing'),
       ],
     );
-    expect(l.issues.map((i) => i.runtimeType), [DuplicateCategoryName, DetachedCategories, SeveralDetailedAccounts]);
+    expect(l.issues.map((i) => i.runtimeType), [DuplicateCategoryName, DetachedCategories]);
   });
 
   test('the default groups never count as duplicates', () {
