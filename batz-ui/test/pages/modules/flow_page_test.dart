@@ -61,6 +61,12 @@ void main() {
     expect(text(tester, 'flowAmount-right-savings'), "21'000.00");
     expect(find.text('Obligations hors Impôts'), findsOneWidget);
     expect(find.text('Revenus hors Salaire'), findsOneWidget);
+    // The subcategories, under their group in the list.
+    expect(text(tester, 'flowAmount-right-category-rent'), "24'000.00");
+    expect(text(tester, 'flowAmount-right-category-insurance'), "6'000.00");
+    final group = tester.getTopLeft(find.byKey(const ValueKey('flowNode-right-group-duties')));
+    final child = tester.getTopLeft(find.byKey(const ValueKey('flowNode-right-category-insurance')));
+    expect((child.dy > group.dy, child.dx), (true, group.dx), reason: 'right under its group, indented inside');
   }
 
   testWidgets('on a phone, from « Année »: the diagram of the example starts from the gross, in both views', (
@@ -68,6 +74,7 @@ void main() {
   ) async {
     await openFlow(tester, const Size(400, 900));
     expect(find.text('Le diagramme part du salaire brut de la fiche 2026.'), findsOneWidget);
+    expect(find.byKey(const Key('flowScroll')), findsOneWidget, reason: 'three columns scroll sideways on a phone');
     await expectExample(tester);
     await tester.scrollUntilVisible(find.byKey(const Key('flowKind')), -300, scrollable: find.byType(Scrollable).first);
     await tester.tap(find.text('Trésorerie'));
@@ -81,5 +88,6 @@ void main() {
     expect(text(tester, 'flowTotal-left'), "Total : 84'000.00");
     expect(text(tester, 'flowAmount-left-salary'), "83'856.00");
     expect(find.byKey(const Key('flowGrossGap')), findsNothing);
+    expect(find.byKey(const Key('flowScroll')), findsNothing, reason: 'room enough on a desktop');
   });
 }

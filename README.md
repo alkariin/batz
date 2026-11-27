@@ -38,7 +38,7 @@ PostFinance and the CSV exports of Neon, in Swiss francs.
   Debts, a monthly curve, and for each year a table that explains the change
   of the wealth to the cent ([wealth](docs/features.md#wealth)).
 - **Modules.** The annual salary sheet, a flow diagram from the gross salary
-  to the taxes, the expenses and the savings, taxes by fiscal year, trips,
+  to the taxes, the expenses down to their finest categories and the savings, taxes by fiscal year, trips,
   electricity with its kWh, subscriptions, insurances with their contracts,
   policies and links, tranche by tranche ([modules](docs/features.md#modules)).
 - **Monthly follow-up.** Your own list of what to do each month, a box per

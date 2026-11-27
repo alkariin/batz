@@ -1,7 +1,8 @@
 /// The flow diagram of a year: from the income, on the left, to the taxes,
-/// the expenses and the savings, on the right, with the amounts of the «
-/// Année » screen in the view shown. Computed when its screen opens, never
-/// stored.
+/// the expenses and the savings, on the right, then each group of expenses
+/// to its subcategories, one column per level of the tree, with the amounts
+/// of the « Année » screen in the view shown. Computed when its screen
+/// opens, never stored.
 library;
 
 import '../ledger/category.dart';
@@ -31,6 +32,16 @@ enum FlowNodeKind {
   /// A top-level group without the designated categories it holds.
   groupRest,
 
+  /// A category below a group of expenses (or below the taxes), whole.
+  subcategory,
+
+  /// Such a category without the designated categories it holds.
+  subcategoryRest,
+
+  /// What a category with subcategories holds directly (only a merge of two
+  /// devices leaves some).
+  direct,
+
   /// « À classer » of a nature.
   toClassify,
 
@@ -55,6 +66,9 @@ class FlowNode {
     this.without = const [],
     this.label,
     this.nature,
+    this.parent,
+    this.branch,
+    this.reverse = false,
   });
 
   final FlowNodeKind kind;
@@ -81,6 +95,19 @@ class FlowNode {
   /// The nature its amount belongs to; null for the savings and what is
   /// taken from the wealth.
   final CategoryNature? nature;
+
+  /// For a node of a column of subcategories: the index of its parent in
+  /// the column before.
+  final int? parent;
+
+  /// For a node of a column of subcategories: the index, in the right
+  /// column, of the node it comes from.
+  final int? branch;
+
+  /// A subcategory whose amount goes the other way from its parent's (a
+  /// category of expenses with more refunds than expenses): shown without
+  /// band, its parent's bands to the others narrowed as much.
+  final bool reverse;
 }
 
 /// A band from a node on the left to a node on the right.
@@ -97,9 +124,8 @@ class FlowDiagram {
   FlowDiagram({
     required this.year,
     required this.kind,
-    required this.left,
-    required this.right,
-    required this.links,
+    required this.columns,
+    required this.bands,
     required this.salaryCategory,
     required this.taxesCategory,
     required this.sheet,
@@ -108,9 +134,20 @@ class FlowDiagram {
 
   final int year;
   final ViewKind kind;
-  final List<FlowNode> left;
-  final List<FlowNode> right;
-  final List<FlowLink> links;
+
+  /// The left column, the right one, then one column per level of
+  /// subcategories of the expenses.
+  final List<List<FlowNode>> columns;
+
+  /// The bands between each column and the next: [bands] `[c]` goes from
+  /// [columns] `[c]` to [columns] `[c + 1]`.
+  final List<List<FlowLink>> bands;
+
+  List<FlowNode> get left => columns[0];
+  List<FlowNode> get right => columns[1];
+
+  /// The bands from the left to the right.
+  List<FlowLink> get links => bands[0];
 
   /// The categories of the salary and the taxes modules in the tree of the
   /// year, null when the tree has no such name.
@@ -255,12 +292,78 @@ FlowDiagram? flowDiagram(Ledger ledger, int year, ViewKind kind) {
     );
   }
 
+  // The subcategories of the expenses, level by level: each node of a
+  // category splits into its children, those shown on the right apart.
+  final columns = [left, right];
+  final bands = [_links(left, right)];
+  while (true) {
+    final previous = columns.last;
+    final column = <FlowNode>[];
+    final links = <FlowLink>[];
+    for (final (index, parent) in previous.indexed) {
+      final category = parent.category;
+      if (category == null || parent.reverse || parent.nature != CategoryNature.expense) continue;
+      if (!const {
+        FlowNodeKind.taxes,
+        FlowNodeKind.group,
+        FlowNodeKind.groupRest,
+        FlowNodeKind.subcategory,
+        FlowNodeKind.subcategoryRest,
+      }.contains(parent.kind)) {
+        continue;
+      }
+      final branch = parent.branch ?? index;
+      final children = tree.childrenOf(category.id);
+      if (children.isEmpty) continue;
+      var rest = parent.signed;
+      void child(FlowNodeKind kind, String key, int signed, {Category? category, List<Category> without = const []}) {
+        rest -= signed;
+        if (signed == 0) return;
+        final reverse = (signed > 0) != (parent.signed > 0);
+        column.add(
+          FlowNode(
+            kind: kind,
+            key: key,
+            side: FlowSide.right,
+            amount: signed.abs(),
+            signed: signed,
+            category: category,
+            without: without,
+            nature: parent.nature,
+            parent: index,
+            branch: branch,
+            reverse: reverse,
+          ),
+        );
+        if (!reverse) links.add(FlowLink(index, column.length - 1, signed.abs()));
+      }
+
+      for (final c in children) {
+        if (parent.without.any((d) => d.id == c.id)) continue;
+        final inside = [
+          for (final d in parent.without)
+            if (tree.subtreeOf(c.id).contains(d.id)) d,
+        ];
+        child(
+          inside.isEmpty ? FlowNodeKind.subcategory : FlowNodeKind.subcategoryRest,
+          'category-${c.id}',
+          inside.fold(weight(c.id), (sum, d) => sum - weight(d.id)),
+          category: c,
+          without: inside,
+        );
+      }
+      if (rest != 0) child(FlowNodeKind.direct, 'direct-${category.id}', rest, category: category);
+    }
+    if (column.isEmpty) break;
+    columns.add(column);
+    bands.add(links);
+  }
+
   return FlowDiagram(
     year: year,
     kind: kind,
-    left: left,
-    right: right,
-    links: _links(left, right),
+    columns: columns,
+    bands: bands,
     salaryCategory: salary,
     taxesCategory: taxes,
     sheet: sheet,

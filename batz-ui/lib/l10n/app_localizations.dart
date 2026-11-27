@@ -4314,6 +4314,12 @@ abstract class AppLocalizations {
   /// **' et '**
   String get flowAnd;
 
+  /// No description provided for @flowDirect.
+  ///
+  /// In fr, this message translates to:
+  /// **'Directement dans {category}'**
+  String flowDirect(String category);
+
   /// No description provided for @flowFromWealth.
   ///
   /// In fr, this message translates to:

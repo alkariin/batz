@@ -20,7 +20,9 @@ import '../../support/random_ledger.dart';
   switch (n.kind) {
     FlowNodeKind.grossSalary => 'Salaire brut',
     FlowNodeKind.deduction => n.label!,
-    FlowNodeKind.groupRest => '${n.category!.name} hors ${n.without.map((c) => c.name).join(' et ')}',
+    FlowNodeKind.groupRest ||
+    FlowNodeKind.subcategoryRest => '${n.category!.name} hors ${n.without.map((c) => c.name).join(' et ')}',
+    FlowNodeKind.direct => 'Directement dans ${n.category!.name}',
     FlowNodeKind.toClassify => 'À classer ${n.nature!.name}',
     FlowNodeKind.fromWealth => 'Puisé dans la fortune',
     FlowNodeKind.savings => 'Épargne',
@@ -47,6 +49,34 @@ void checkDiagram(Ledger ledger, FlowDiagram diagram, {required String reason}) 
   expect(signed(CategoryNature.expense), view.expenses.total, reason: '$reason: expenses');
   expect(-signed(null), view.savings.total, reason: '$reason: savings');
   expect(all.every((n) => n.amount > 0), isTrue, reason: '$reason: no node of zero');
+
+  // Each column of subcategories: every node of a parent, its children add
+  // up to it; a band leads to each child going the parent's way, as thick
+  // as the child.
+  for (var c = 2; c < diagram.columns.length; c++) {
+    final parents = diagram.columns[c - 1], children = diagram.columns[c];
+    expect(children.every((n) => n.amount > 0 && n.parent != null && n.branch != null), isTrue, reason: reason);
+    for (final (p, parent) in parents.indexed) {
+      final mine = [
+        for (final n in children)
+          if (n.parent == p) n,
+      ];
+      if (mine.isEmpty) continue;
+      expect(parent.nature, CategoryNature.expense, reason: '$reason: only expenses split');
+      expect(mine.fold(0, (s, n) => s + n.signed), parent.signed, reason: '$reason: the children of ${parent.key}');
+      for (final n in mine) {
+        expect(n.reverse, (n.signed > 0) != (parent.signed > 0), reason: reason);
+      }
+    }
+    expect(
+      [for (final l in diagram.bands[c - 1]) (children[l.to].key, l.amount)],
+      [
+        for (final n in children)
+          if (!n.reverse) (n.key, n.amount),
+      ],
+      reason: '$reason: a band per child going the parent\'s way',
+    );
+  }
 }
 
 void main() {
@@ -83,6 +113,91 @@ void main() {
       ].take(3),
       [(true, 508800), (true, 105600), (true, 600000)],
     );
+  });
+
+  test('the groups of expenses split into their subcategories, the designated ones apart', () async {
+    final ledger = await flowExample(h.apply);
+    final diagram = flowDiagram(ledger, 2026, ViewKind.economic)!;
+    expect(diagram.columns, hasLength(3));
+    expect(
+      [for (final n in diagram.columns[2]) (node(n), node(diagram.right[n.parent!]).$1)],
+      [
+        (('Loyer', 2400000), 'Logement'),
+        (('Courses', 1800000), 'Quotidien'),
+        (('Assurances', 600000), 'Obligations hors Impôts'),
+      ],
+      reason: '« Divers » is empty; « Impôts » stays on the right',
+    );
+  });
+
+  test('every level of the tree is a column; a subcategory in gain has no band', () async {
+    await flowExample(h.apply);
+    await h.apply((l) => l.addCategory('energy', year: 2026, name: 'Énergie', parentId: 'housing'));
+    await h.apply((l) => l.addCategory('power', year: 2026, name: 'Électricité', parentId: 'energy'));
+    await h.apply((l) => l.addCategory('heating', year: 2026, name: 'Chauffage', parentId: 'energy'));
+    await h.apply((l) => l.addCategory('refunds', year: 2026, name: 'Remboursements', parentId: 'daily'));
+    for (final (id, category, cents, direction) in [
+      ('t-power', 'power', 120000, Direction.outflow),
+      ('t-heating', 'heating', 80000, Direction.outflow),
+      ('t-refund', 'refunds', 50000, Direction.inflow),
+    ]) {
+      await h.apply(
+        (l) => l.recordEntry(
+          id,
+          '$id-line',
+          EntryDraft(
+            accountId: 'cash',
+            date: CalendarDate(2026, 6, 15),
+            cents: cents,
+            direction: direction,
+            categoryId: category,
+          ),
+        ),
+      );
+    }
+    final ledger = await h.ledger();
+    final diagram = flowDiagram(ledger, 2026, ViewKind.cash)!;
+    checkDiagram(ledger, diagram, reason: 'deeper');
+    expect(diagram.columns, hasLength(4));
+    expect(diagram.right.map(node), containsAll([('Logement', 2600000), ('Quotidien', 1750000)]));
+    expect(
+      [for (final n in diagram.columns[2]) (node(n), n.reverse)],
+      [
+        (('Loyer', 2400000), false),
+        (('Énergie', 200000), false),
+        (('Courses', 1800000), false),
+        (('Remboursements', 50000), true),
+        (('Assurances', 600000), false),
+      ],
+    );
+    expect(diagram.columns[3].map(node), [('Électricité', 120000), ('Chauffage', 80000)]);
+    expect(diagram.columns[3].map((n) => diagram.columns[2][n.parent!].key).toSet(), {'category-energy'});
+  });
+
+  test('what a category with subcategories holds directly, after a merge, has a node of its own', () {
+    final tree = [
+      const Category(id: 'expenses', year: 2026, name: 'Dépenses', nature: CategoryNature.expense),
+      const Category(id: 'housing', year: 2026, name: 'Logement', parentId: 'expenses'),
+      const Category(id: 'rent', year: 2026, name: 'Loyer', parentId: 'housing'),
+    ];
+    LedgerTransaction paid(String id, int cents) =>
+        LedgerTransaction(id: id, accountId: 'cash', date: CalendarDate(2026, 3, 1), amount: -cents);
+    TransactionLine line(String id, String category, int cents) => TransactionLine(
+      id: '$id-line',
+      transactionId: id,
+      categoryId: category,
+      amount: -cents,
+      periodStart: CalendarDate(2026, 3, 1),
+      periodEnd: CalendarDate(2026, 3, 1),
+    );
+    final ledger = Ledger(
+      categories: tree,
+      transactions: [paid('a', 1000), paid('b', 300)],
+      lines: [line('a', 'rent', 1000), line('b', 'housing', 300)],
+    );
+    final diagram = flowDiagram(ledger, 2026, ViewKind.cash)!;
+    checkDiagram(ledger, diagram, reason: 'direct');
+    expect(diagram.columns[3].map(node), [('Loyer', 1000), ('Directement dans Logement', 300)]);
   });
 
   test('without salary sheet it starts from the net: 84\'000.00 on each side', () async {

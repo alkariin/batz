@@ -1325,6 +1325,8 @@
   "flowGroupWithout": "{group} hors {categories}",
   "@flowGroupWithout": {"placeholders": {"group": {"type": "String"}, "categories": {"type": "String"}}},
   "flowAnd": " et ",
+  "flowDirect": "Directement dans {category}",
+  "@flowDirect": {"placeholders": {"category": {"type": "String"}}},
   "flowFromWealth": "Puisé dans la fortune",
   "flowFromGross": "Le diagramme part du salaire brut de la fiche {year}.",
   "@flowFromGross": {"placeholders": {"year": {"type": "String"}}},

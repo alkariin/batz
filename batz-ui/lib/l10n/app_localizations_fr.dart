@@ -2591,6 +2591,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flowAnd => ' et ';
 
   @override
+  String flowDirect(String category) {
+    return 'Directement dans $category';
+  }
+
+  @override
   String get flowFromWealth => 'Puisé dans la fortune';
 
   @override

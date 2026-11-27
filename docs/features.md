@@ -546,6 +546,13 @@ positive amount; a node of zero is left out.
   income; « Puisé dans la fortune » when the expenses exceed the income.
 - **Right**: « Impôts »; each top-level group of expenses; « À classer » of
   expenses; « Épargne » when the income exceeds the expenses.
+- **Then the subcategories**, one column per level of the tree: each group
+  of expenses on the right (and « Impôts ») splits into its children, each
+  child with children into its own, down to the finest categories; every
+  intermediate category stays a node. A designated category shown on the
+  right is not shown again under its group (« Obligations hors Impôts »
+  splits into its other children), and a category that holds one is « …
+  hors Impôts ». The income is not detailed.
 - A designated category (salary, taxes) weighs what it adds to its
   top-level group, its redistribution lines included; its group is shown
   for the rest, « Groupe hors Catégorie ».
@@ -564,7 +571,18 @@ positive amount; a node of zero is left out.
 
 The bands match both columns stacked in their order: each part of the left
 stack flows to the part of the right stack at the same height, so the gross
-flows first into the deductions.
+flows first into the deductions. From the right on, each node sends a band
+to each of its children, as thick as the child, and the children of a node
+are placed beside it. A subcategory in gain (more refunds than expenses)
+is shown with its amount negative and without band, and its parent's bands
+to the others are narrowed as much; what a category with subcategories
+holds directly (only a merge of two devices can leave some) is a node of
+its own, « Directement dans … ». A parent always equals the sum of its
+children; tests check it on random data.
+
+On a screen too narrow for the columns, the drawing keeps a readable width
+per column and scrolls sideways. Under it, the list of the right shows each
+node followed by its subcategories, indented level by level.
 
 **Example**, 2026: « Revenus » holds « Salaire » (83'856.00 received) and
 « Intérêts » (144.00). Expenses: « Logement » 24'000.00, « Quotidien »
@@ -576,6 +594,10 @@ flows first into the deductions.
 | Left | Salaire brut 96'000.00; Revenus hors Salaire 144.00 | Salaire 83'856.00; Revenus hors Salaire 144.00 |
 | Right | AVS 5'088.00; AC 1'056.00; LPP 6'000.00; Impôts 15'000.00; Logement 24'000.00; Quotidien 18'000.00; Obligations hors Impôts 6'000.00; Épargne 21'000.00 | Impôts 15'000.00; Logement 24'000.00; Quotidien 18'000.00; Obligations hors Impôts 6'000.00; Épargne 21'000.00 |
 | Total of each side | 96'144.00 | 84'000.00 |
+
+The subcategories of the example: « Logement » goes to « Loyer » 24'000.00,
+« Quotidien » to « Courses » 18'000.00, « Obligations hors Impôts » to
+« Assurances » 6'000.00; « Impôts » has no subcategory.
 
 With only 83'000.00 received in « Salaire », the gross of the diagram is
 95'144.00 and the gap with the gross entered, −856.00, is signalled.
