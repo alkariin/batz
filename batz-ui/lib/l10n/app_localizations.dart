@@ -1878,6 +1878,12 @@ abstract class AppLocalizations {
   /// **'Confirmer les propositions ({count})'**
   String validationConfirm(int count);
 
+  /// No description provided for @validationConfirmOne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider cette proposition'**
+  String get validationConfirmOne;
+
   /// No description provided for @validationConfirmed.
   ///
   /// In fr, this message translates to:

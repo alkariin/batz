@@ -693,6 +693,7 @@
       }
     }
   },
+  "validationConfirmOne": "Valider cette proposition",
   "validationConfirmed": "{count, plural, =1{Une ligne validée} other{{count} lignes validées}}.",
   "@validationConfirmed": {
     "placeholders": {

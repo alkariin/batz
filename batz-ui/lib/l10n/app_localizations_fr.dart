@@ -1078,6 +1078,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get validationConfirmOne => 'Valider cette proposition';
+
+  @override
   String validationConfirmed(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

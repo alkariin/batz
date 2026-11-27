@@ -292,4 +292,33 @@ void main() {
       [(Ledger.fallbackLineId(epicerie.id), 'food', -(cents - 100)), (t.lines.last.id, 'rent', -100)],
     );
   });
+
+  testWidgets('a proposal is confirmed alone from the list; the others stay proposed', (tester) async {
+    await open(tester);
+    await write(
+      tester,
+      (l) => l.createRule('bread', const RuleDraft(year: 2026, lines: ['boulangerie'], targetCategoryId: 'food')),
+    );
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('taskLinesToValidate')));
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('tabProposed')));
+    await settle(tester);
+    expect(find.text('Proposées (3)'), findsOneWidget);
+    final bread = [
+      for (final t in (await ledger(tester)).linesToValidate)
+        if (t.rawText!.contains('Boulangerie')) t.id,
+    ];
+    expect(bread, hasLength(3));
+
+    await tester.tap(find.byKey(ValueKey('confirmProposal-${bread.first}')));
+    await settle(tester);
+    expect(find.text('Une ligne validée.'), findsOneWidget);
+    expect(find.text('Proposées (2)'), findsOneWidget);
+    expect(find.byKey(ValueKey('proposed-${bread.first}')), findsNothing);
+    final after = await ledger(tester);
+    final confirmed = after.transactions[bread.first]!;
+    expect((confirmed.isValidated, confirmed.line?.categoryId), (true, 'food'));
+    expect([for (final id in bread.skip(1)) after.transactions[id]!.isValidated], [false, false]);
+  });
 }

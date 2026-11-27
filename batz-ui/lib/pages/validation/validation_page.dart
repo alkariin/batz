@@ -14,8 +14,8 @@ import 'validation_texts.dart';
 /// The validation of imported lines, in two parts: the lines to complete,
 /// one by one, with their whole bank text; the proposed lines, with their
 /// proposal and the rule that gives it, corrected if need be and confirmed
-/// in bulk. Everything is local: it works offline and can be left at any
-/// time.
+/// one by one or in bulk. Everything is local: it works offline and can be
+/// left at any time.
 class ValidationPage extends StatelessWidget {
   const ValidationPage({super.key});
 
@@ -145,7 +145,18 @@ class ValidationPage extends StatelessWidget {
         '${l.validationRule(keywordsText(l, p.rule))}',
       ),
       isThreeLine: true,
-      trailing: Text(formatAmount(t.amount), style: Theme.of(context).textTheme.titleSmall),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(formatAmount(t.amount), style: Theme.of(context).textTheme.titleSmall),
+          IconButton(
+            key: ValueKey('confirmProposal-${t.id}'),
+            tooltip: l.validationConfirmOne,
+            icon: const Icon(Icons.check_circle_outline),
+            onPressed: () => _confirm(context, [t.id]),
+          ),
+        ],
+      ),
       onTap: () => _open(context, t),
     );
   }

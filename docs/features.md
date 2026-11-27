@@ -35,6 +35,9 @@ category deletes its rules with it. A button explains the rules.
   changed on the line itself.
 - Proposals are computed at each load, never stored: a rule created,
   modified or deleted changes only the lines still to validate.
+- The list « Proposées » confirms the proposals all at once, or one line at
+  a time with its own button; a line opened is corrected before it is
+  validated.
 - A rule written by version 0.8 or earlier had keywords, all required: it
   reads as the single line `a ET b`, and its period model is no longer read.
   Modified, it is written as lines.

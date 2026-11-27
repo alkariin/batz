@@ -21,7 +21,8 @@ PostFinance, in Swiss francs.
   server, which reads and checks it; its lines arrive « à valider », already
   classified by your mapping rules (lines of keywords, each line an
   alternative, under the category or account they classify in). Confirm the
-  proposals in bulk, complete the rest, create a rule from a line. Validation works offline, on the phone.
+  proposals one by one or in bulk, complete the rest, create a rule from a line. Validation works offline, on the
+  phone.
 - **Two views of a year.** The cash-flow view shows what was paid in the
   year; the economic view shows what the year cost: a payment that concerns
   twelve months from September counts four months this year and eight the
