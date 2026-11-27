@@ -292,7 +292,7 @@ func (s *server) exchange(key string, known map[string]string, since map[string]
 		entries = []map[string]string{}
 	}
 	status, body := s.call("POST", "/api/v1/sync", key, map[string]any{
-		"protocol": 1, "appVersion": "0.10.0-alpha", "known": known, "since": since, "entries": entries, "limit": 2,
+		"protocol": 1, "appVersion": "0.11.0-alpha", "known": known, "since": since, "entries": entries, "limit": 2,
 	})
 	require.Equal(s.t, http.StatusOK, status, body)
 	return body

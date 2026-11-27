@@ -181,15 +181,16 @@ func TestProtocolAndAppVersion(t *testing.T) {
 	req.Protocol = 2
 	_, err := s.Exchange(t.Context(), phone, req)
 	assert.ErrorIs(t, err, application.ErrProtocolUnsupported)
-	for _, v := range []string{"0.9.0-alpha", "0.9.1", "0.8.0-alpha", "0.7.0", "0.5.0", "0.3.0", "0.0.9", "", "dev"} {
+	for _, v := range []string{"0.10.0-alpha", "0.10.1", "0.9.0-alpha", "0.8.0-alpha", "0.5.0", "0.3.0", "0.0.9", "", "dev"} {
 		req = request(nil, nil)
 		req.AppVersion = v
 		_, err = s.Exchange(t.Context(), phone, req)
 		assert.ErrorIs(t, err, application.ErrAppTooOld, v)
 	}
-	// The server 0.10.0-alpha needs the app 0.10.0, which keeps split
-	// transactions; the suffix of 0.10.0-alpha does not count.
-	for _, v := range []string{"0.10.0", "0.10.0-alpha", "v0.10.0-alpha", "0.10.1-alpha", "1.0.0"} {
+	// The server 0.11.0-alpha needs the app 0.11.0, which reads the accounts
+	// of Neon and pairs the transfers between imported accounts; the suffix
+	// of 0.11.0-alpha does not count.
+	for _, v := range []string{"0.11.0", "0.11.0-alpha", "v0.11.0-alpha", "0.11.1-alpha", "1.0.0"} {
 		req = request(nil, nil)
 		req.AppVersion = v
 		_, err = s.Exchange(t.Context(), phone, req)

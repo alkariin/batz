@@ -3,10 +3,10 @@ description: "Personal accounting: where the money goes, what each year costs, h
 publish_to: 'none'
 
 # 0.MINOR.PATCH-alpha until 1.0: the suffix is part of the version name and
-# of the release tag (v0.10.0-alpha), so that Obtainium reads the same version
+# of the release tag (v0.11.0-alpha), so that Obtainium reads the same version
 # in both. The build number (+N) must increase on every Android release, or
 # the phone refuses the update (checked by the release workflow).
-version: 0.10.0-alpha+11
+version: 0.11.0-alpha+12
 
 environment:
   sdk: ^3.13.5

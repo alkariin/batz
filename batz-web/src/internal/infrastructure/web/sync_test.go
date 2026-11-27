@@ -25,7 +25,7 @@ func syncBody(known map[string]string, entries ...map[string]string) map[string]
 	if entries == nil {
 		entries = []map[string]string{}
 	}
-	return map[string]any{"protocol": 1, "appVersion": "0.10.0-alpha", "known": known, "since": map[string]string{}, "entries": entries}
+	return map[string]any{"protocol": 1, "appVersion": "0.11.0-alpha", "known": known, "since": map[string]string{}, "entries": entries}
 }
 
 // everything returns what a device that holds nothing receives.
@@ -95,7 +95,7 @@ func TestSyncRefusesAnIncorrectPageWhole(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Equal(t, CodeSyncPageInvalid, body["code"])
 
-	w, body = f.do("POST", "/api/v1/sync", phone, `{"protocol": 1, "appVersion": "0.10.0-alpha", "extra": true}`)
+	w, body = f.do("POST", "/api/v1/sync", phone, `{"protocol": 1, "appVersion": "0.11.0-alpha", "extra": true}`)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Equal(t, CodeBadRequest, body["code"])
 
@@ -124,7 +124,7 @@ func TestSyncChecksProtocolAndAppVersion(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Equal(t, CodeSyncProtocolUnsupported, body["code"])
 
-	for _, old := range []string{"0.2.0", "0.6.0", "0.8.0-alpha", "0.9.0", "0.9.0-alpha"} {
+	for _, old := range []string{"0.2.0", "0.8.0-alpha", "0.9.0", "0.10.0", "0.10.0-alpha"} {
 		req = syncBody(nil)
 		req["appVersion"] = old
 		w, body = f.do("POST", "/api/v1/sync", phone, req)
@@ -133,10 +133,10 @@ func TestSyncChecksProtocolAndAppVersion(t *testing.T) {
 		assert.Contains(t, body["message"], version.MinAppVersion)
 	}
 
-	// The server 0.10.0-alpha accepts apps 0.10.0, and apps 0.10.0-alpha,
+	// The server 0.11.0-alpha accepts apps 0.11.0, and apps 0.11.0-alpha,
 	// whose suffix does not count.
-	assert.Equal(t, "0.10.0", version.MinAppVersion)
-	for _, accepted := range []string{"0.10.0", "0.10.0-alpha"} {
+	assert.Equal(t, "0.11.0", version.MinAppVersion)
+	for _, accepted := range []string{"0.11.0", "0.11.0-alpha"} {
 		req = syncBody(nil)
 		req["appVersion"] = accepted
 		w, _ = f.do("POST", "/api/v1/sync", phone, req)
@@ -156,7 +156,7 @@ func TestSyncSizeLimits(t *testing.T) {
 	assert.Equal(t, http.StatusRequestEntityTooLarge, w.Code)
 	assert.Equal(t, CodeSyncPageTooLarge, body["code"])
 
-	huge := `{"protocol": 1, "appVersion": "0.10.0-alpha", "entries": [{"hlc": "` + strings.Repeat("0", 33<<20) + `"}]}`
+	huge := `{"protocol": 1, "appVersion": "0.11.0-alpha", "entries": [{"hlc": "` + strings.Repeat("0", 33<<20) + `"}]}`
 	w, body = f.do("POST", "/api/v1/sync", phone, huge)
 	assert.Equal(t, http.StatusRequestEntityTooLarge, w.Code)
 	assert.Equal(t, CodeSyncPageTooLarge, body["code"])
